@@ -1,0 +1,93 @@
+.icon-user {
+    background-image: url("../../images/header/user.svg");
+    background-size: contain;
+    width: 16px;
+    height: 16px;
+}
+.icon-lang {
+    background-image: url("../../images/header/lang.svg");
+    background-size: contain;
+    width: 16px;
+    height: 16px;
+}
+.icon-arrow-down {
+    background-image: url("../../images/header/dropdown.svg");
+    background-repeat: no-repeat;
+    background-size: contain;
+
+    @apply -me-0.5 ms-2 h-4 w-4;
+}
+.icon-back {
+    background-image: url("../../images/action-icons/back.svg");
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 15px;
+    height: 25px;
+    margin-right: 10px;
+    background-position-y: 3px;
+    display: inline-block;
+}
+.icon-doc {
+    width: auto;
+    height: 20px;
+}
+.icon-psr {
+    display: inline-block;
+    background-image: url("../../images/patients/psr.svg");
+    width: 25px;
+    height: 25px;
+    margin-right: 10px;
+    margin-top: 10px;
+    position: absolute;
+    top:-13px;
+}
+.icon-perio {
+    display: inline-block;
+    background-image: url("../../images/patients/perio.svg");
+    width: 25px;
+    height: 25px;
+    margin-right: 10px;
+    margin-top: 10px;
+    position: absolute;
+    top:-13px;
+}
+.icon-formula {
+    display: inline-block;
+    background-image: url("../../images/patients/formula.svg");
+    width: 25px;
+    height: 25px;
+    margin-right: 10px;
+    margin-top: 10px;
+    position: absolute;
+    top:-13px;
+}
+.icon-plan-treatment {
+    display: inline-block;
+    background-image: url("../../images/patients/treatment.svg");
+    width: 25px;
+    height: 25px;
+    margin-right: 10px;
+    margin-top: 10px;
+    position: absolute;
+    top:-13px;
+}
+
+.icon-tooth {
+    display: inline-block;
+    background-image: url("../../images/action-icons/icon-tooth.svg");
+    width: 20px;
+    height: 20px;
+    background-size: contain;
+    margin-right: 0;
+}
+.aw-small {
+    color: #d3cfcf;
+    width: 12px;
+    margin-left: 5px;
+
+}
+.white-icon {
+    color: whitesmoke;
+    padding: 4px;
+    border-radius: 3px;
+}

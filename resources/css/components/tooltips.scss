@@ -1,0 +1,52 @@
+/* HTML: <div class="tooltip">This is a Tooltip with a gradient or solid coloration and with border radius </div> */
+.tooltip-left {
+  color: #fff;
+  font-size: 18px;
+  max-width: 28ch;
+  text-align: center;
+}
+.tooltip-left {
+  --s: 1.5em; /* triangle size */
+  --r: 1em; /* the radius */
+
+  padding: 1em;
+  border: var(--s) solid #0000;
+  border-radius: calc(var(--r) + var(--s));
+  border-bottom-right-radius: 0;
+  background: border-box linear-gradient(56deg, #083b52, #e7f5fc); /* the coloration */
+  -webkit-mask:
+          radial-gradient(100% 100% at 100% 0,#0000 99%,#000 102%)
+          100% calc(100% - var(--s))/var(--s) var(--s) no-repeat border-box,
+          linear-gradient(#000 0 0) padding-box;
+}
+
+.tooltip-right {
+  color: #fff;
+  font-size: 18px;
+  max-width: 28ch;
+  text-align: center;
+}
+.tooltip-right {
+  --s: 1.5em; /* triangle size */
+  --r: 1em; /* the radius */
+
+  padding: 1em;
+  border: var(--s) solid #0000;
+  border-radius: calc(var(--r) + var(--s));
+  border-top-left-radius: 0;
+  background: border-box linear-gradient(-45deg, #fcf9f8, #203d4b); /* the coloration */
+  -webkit-mask:
+          radial-gradient(100% 100% at 0 100%,#0000 99%,#000 102%)
+          0 var(--s)/var(--s) var(--s) no-repeat border-box,
+          linear-gradient(#000 0 0) padding-box;
+}
+
+.tooltip-main {
+  min-width: 100%;
+  text-align: left;
+  padding: 50px;
+}
+
+.m-b-image {
+  border: solid 1px #a6d2e6;
+}

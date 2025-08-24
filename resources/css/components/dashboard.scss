@@ -1,0 +1,131 @@
+.row {
+    --bs-gutter-x: 1.5rem;
+    --bs-gutter-y: 0;
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: calc(-1 * var(--bs-gutter-y));
+    margin-right: calc(-.5 * var(--bs-gutter-x));
+    margin-left: calc(-.5 * var(--bs-gutter-x));
+}
+.card {
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,.1),0 1px 2px -1px rgba(0,0,0,.1);
+}
+.card {
+    --bs-card-spacer-y: 1rem;
+    --bs-card-spacer-x: 1rem;
+    --bs-card-title-spacer-y: 0.5rem;
+    --bs-card-border-width: 0;
+    --bs-card-border-color: rgba(0,0,0,.125);
+    --bs-card-border-radius: 0.75rem;
+    --bs-card-box-shadow: 0 20px 27px 0 rgba(0,0,0,.05);
+    --bs-card-inner-border-radius: 0.75rem;
+    --bs-card-cap-padding-y: 0.5rem;
+    --bs-card-cap-padding-x: 1rem;
+    --bs-card-cap-bg: #fff;
+    --bs-card-bg: #fff;
+    --bs-card-img-overlay-padding: 1rem;
+    --bs-card-group-margin: 0.75rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: var(--bs-card-height);
+    color: var(--bs-body-color);
+    word-wrap: break-word;
+    background-color: var(--bs-card-bg);
+    background-clip: border-box;
+    border: var(--bs-card-border-width) solid var(--bs-card-border-color);
+    border-radius: var(--bs-card-border-radius);
+}
+.mask {
+    position: absolute;
+    background-size: cover;
+    background-position: 50%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: .8;
+}
+.border-radius-lg {
+    border-radius: .75rem;
+}
+.bg-primary {
+    background-color: #f97316 !important;
+}
+
+.opacity-10 {
+    opacity: 1 !important;
+}
+.border-radius-2xl {
+    border-radius: 1.5rem;
+}
+.icon-shape {
+    width: 48px;
+    height: 48px;
+    background-position: 50%;
+    border-radius: .75rem;
+}
+.shadow {
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1) !important;
+}
+.icon {
+    display: inline-block;
+    color: #111111;
+    height: 1em;
+    width: 1em;
+}
+.icon {
+    fill: currentColor;
+    stroke: none;
+}
+.h5, h5 {
+    font-size: 1.25rem;
+    line-height: 1.375;
+}
+.col-8 {
+    flex: 0 0 auto;
+    width: 66.66666667%;
+}
+.shadow-soft-xl {
+    --tw-shadow: 0 20px 27px 0 rgba(0,0,0,0.05);
+    --tw-shadow-colored: 0 20px 27px 0 var(--tw-shadow-color);
+    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 20px 27px 0px;
+}
+.bg-clip-border {
+    background-clip: border-box;
+    border: solid 1px #edf1f1
+}
+.border-gray-small-block {
+}
+.ni-money-coins::before {
+    content: "\ea41";
+}
+.icon-money {
+    background: url(../../images/dashboard/money.svg);
+    background-size: contain;
+    background-repeat: no-repeat;
+    display: inline-block;
+    width: 25px;
+    height: 35px;
+    margin-top: 8px;
+}
+.icon-users {
+    background: url(../../images/dashboard/users.svg);
+    background-size: contain;
+    background-repeat: no-repeat;
+    display: inline-block;
+    width: 25px;
+    height: 35px;
+    margin-top: 8px;
+}
+.icon-patients {
+    background: url(../../images/dashboard/patient.svg);
+    background-size: contain;
+    background-repeat: no-repeat;
+    display: inline-block;
+    width: 25px;
+    height: 35px;
+    margin-top: 8px;
+}
+

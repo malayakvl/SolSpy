@@ -1,0 +1,122 @@
+[type="file"] {
+    height: 0;
+    overflow: hidden;
+    width: 0;
+  }
+  
+  [type="file"] + label {
+    background: #f15d22;
+    border: none;
+    // border-radius: 5px;
+    color: #fff;
+    cursor: pointer;
+    display: inline-block;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    outline: none;
+    width: 197px;
+    height: 244px;
+    position: relative;
+    transition: all 0.3s;
+    vertical-align: middle;
+    
+    &:hover {
+      // background-color: rgb(#f15d22, 10%);
+    }
+    
+    &.btn-1 {
+      background-color: #f79159;
+      // box-shadow: 0 6px darken(#f79159, 10%);
+      transition: none;
+  
+      &:hover {
+        // box-shadow: 0 4px darken(#f79159, 10%);
+        top: 2px;
+      }
+    }
+    
+    &.btn-2 {
+      background-color: rgb(235, 244, 244);
+      opacity: 0.1;
+      // border: solid 1px red;
+      // border-radius: 10px;
+      overflow: hidden;
+      
+      // &::before {
+      //   color: #fff;
+      //   content: "\f382";
+      //   font-family: "Font Awesome 5 Pro";
+      //   font-size: 100%;
+      //   height: 100%;
+      //   right: 130%;
+      //   line-height: 3.3;
+      //   position: absolute;
+      //   top: 0px;
+      //   transition: all 0.3s;
+      // }
+  
+      &:hover {
+        opacity: 0.9;
+          
+        &::before {
+          right: 75%;
+        }
+      }
+    }
+    
+    &.btn-3 {
+      background-color: #ee6d9e;
+      border-radius: 0;
+      overflow: hidden;
+      
+      span {
+        display: inline-block;
+        height: 100%;
+        transition: all 0.3s;
+        width: 100%;
+      }
+      
+      &::before {
+        color: #fff;
+        content: "\f382";
+        font-family: "Font Awesome 5 Pro";
+        font-size: 130%;
+        height: 100%;
+        left: 0;
+        line-height: 2.6;
+        position: absolute;
+        top: -180%;
+        transition: all 0.3s;
+        width: 100%;
+      }
+  
+      &:hover {
+        /*background-color: darken(#ee6d9e, 30%);*/
+        
+        span {
+          transform: translateY(300%);
+        }
+          
+        &::before {
+          top: 0;
+        }
+      }
+    }
+  }
+  .file-preview {
+    margin-bottom: 10px;
+
+    img {
+      width: 197px;
+      height: 244px;
+      border: solid 1px;
+      border-color: rgb(201, 199, 199);
+    }
+  }
+  .btn-2 {
+    position: absolute;
+    left: -202px;
+    border: solid 1px blue;
+    width: 197px;
+    height: 244px;
+  }

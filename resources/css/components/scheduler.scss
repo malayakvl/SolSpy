@@ -1,0 +1,513 @@
+.css-ynh6fk .rs__cell.rs__time {
+    z-index: 10 !important;
+}
+.css-1cpvlp1 {
+    z-index: 10 !important;
+}
+.add-patient {
+    display: inline-block;
+    background-image: url("../../images/scheduler/add-patient.svg");
+    background-repeat: no-repeat;
+    width: 16px;
+    height: 16px;
+    position: absolute;
+    right: 14px;
+    top: 28px;
+    z-index: 44;
+}
+.scheduler-status {
+    z-index: 99 !important;
+}
+
+.schedule-status-circle {
+    border-color: white;
+    border-width: 3px;
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    right: 10px;
+    top: 5px;
+    //background-color: palevioletred;
+}
+.css-1mrufi {
+    z-index: 30 !Important;
+}
+
+.patients-data {
+    background: #fff;
+    border-left-color: #29425e;
+    border-width: 3px;
+    border-top: solid 1px #d2cfcf;
+    border-radius: 5px;
+    border-bottom: solid 1px #d2cfcf;
+    border-right: solid 1px #d2cfcf;
+    width: 100%;
+    height: 100px;
+
+    img {
+        height: 95px;
+        width: auto;
+        padding-left:5px;
+    }
+
+    .icon-block {
+        position: absolute;
+        top: 0;
+        right: 0;
+
+        ul li {
+            list-style: none;
+            display: inline;
+            margin-right: 20px;
+        }
+    }
+    .tabs-block {
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+
+        li {
+            list-style: none;
+            display: inline;
+            padding-right: 10px;
+            padding-left: 10px;
+            font-size: 14px;
+            padding-bottom: 11px;
+            cursor: pointer;
+        }
+        li.active {
+            border-bottom: solid 4px;
+            border-color: #29425e;
+        }
+    }
+}
+.me-2 {
+    white-space: nowrap;
+    padding-bottom: 10px;
+}
+.sh-p-tabs {
+    max-width: 1000px;
+    min-width: 100%;
+    width: 100%;
+    overflow: hidden;
+    overflow-x: scroll;
+    margin-bottom: 10px;
+    scrollbar-color: #d5c2f1 #e8e5e0;
+    scrollbar-width: thin;
+}
+.sh-p-tabs a {
+    color: #0a3622;
+    display: inline-block;
+    padding: 8px;
+    background: #f3ecfd;
+    border-radius: 4px 4px 0 0;
+    font-size: 12px;
+}
+.rbc-btn-group {
+    font-size: 12px;
+    font-weight: bold;
+}
+.date-picker {
+    font-size: 12px;
+    background: #fff;
+    border-color: #d5c2f1;
+    padding: 4px;
+    border-radius: 4px;
+}
+.rbc-timeslot-group {
+    min-width: 78px;
+}
+.rbc-time-slot {
+    text-align: center !important;
+    font-weight: bold !important;
+    font-size: 13px;
+}
+.disabled-content {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left:0;
+    background: palevioletred;
+    z-index: 80;
+}
+.form-scheduler {
+    position: fixed;
+    top: 15%;
+    left:29%;
+    border-radius: 5px;
+    //background: palevioletred;
+    z-index: 20;
+    min-width: 610px;
+    min-height: 560px;
+}
+.rbc-event {
+    font-size: 12px;
+    padding: 0 !important;
+}
+.rbc-toolbar-label, .rbc-button-link {
+    font-family: "Manrope", sans-serif;
+    font-weight: bold;
+    color: #5b28e3;
+}
+.manipulation {
+    color: #424d71;
+    cursor: pointer;
+}
+.add-services {
+    color: #424d71;
+}
+.price-popup {
+    //position: fixed;
+    //top: 30px;
+    //left: 22%;
+}
+.pricing-block {
+}
+.bg-price {
+    height: 300px;
+    max-height: 300px;
+}
+.price-container {
+    margin-bottom: 30px;
+}
+.add-minpulation-row {
+    cursor: pointer;
+}
+.add-minpulation-row.selected .price-row{
+    background: #032f62;
+    color: #fff;
+}
+.d-patient-list {
+    font-size: 13px;
+    background: #fff;
+    position: absolute;
+    width: 100%;
+    z-index: 999;
+    border: solid 1px #c9bfbf;
+    top: 57px;
+    padding: 5px;
+
+    li {
+        padding-bottom: 4px;
+        padding-left: 10px;
+        cursor: pointer;
+    }
+}
+.hover-event-popup {
+    background: #fff;
+    font-size: 12px;
+    text-align: left;
+}
+.hover-event-title {
+    text-align: left;
+    font-size: 13px;
+    font-weight: bold;
+    color: #6149d7;
+}
+.sh-doctor {
+    color: #6149d7;
+}
+.sh-patient {
+    color: palevioletred;
+}
+.rbc-event-data {
+    padding: 0px;
+    width: 100%;
+    flex: 1 1 0;
+    word-wrap: break-word;
+    line-height: 1;
+    height: 100%;
+    min-height: 1em;
+}
+.sch-time {
+    padding-left: 5px;
+    padding-top: 4px;
+    display: inline-block;
+    color: #9b0660;
+    font-weight: bold;
+}
+.rbc-event-label {
+    display: none !important;
+}
+.event-big-content {
+    font-size: 12px;
+    padding: 10px;
+    border: solid 1px purple;
+    border-radius: 5px;
+    box-shadow: 2px -3px 31px 0px rgba(60,21,204,0.46);
+    -webkit-box-shadow: 2px -3px 31px 0px rgba(60,21,204,0.46);
+    -moz-box-shadow: 2px -3px 31px 0px rgba(60,21,204,0.46);
+}
+.sh-event-status {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    //border-radius: 50%;
+    width: 13px;
+    height: 13px;
+}
+.sch-title {
+    background: #e8e8de;
+    padding: 2px 0;
+}
+.rbc-active {
+    background-image: none;
+    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    background-color: #6149d7 !important;
+    border-color: #6149d7 !important;
+    color: #fff !important;
+}
+.sch_tooltip {
+    background-color: white;
+    position: absolute;
+    z-index: 100;
+    /* width: 390px; */
+    width: 380px;
+    //height: 220px;
+    /* border: 1px solid #cfcfcf; */
+    border-radius: 7px !important;
+    box-shadow: 1px 2px 7px 3px rgba(0, 0, 0, 0.15);
+    padding: 10px;
+    top: 200px;
+    left: 300px;
+    display: none;
+}
+.sch_tooltip .sch_arrow.left {
+    left: 11px;
+    top: 15px;
+}
+.sch_tooltip .sch_arrow {
+    position: absolute;
+    display: none;
+    width: 0;
+    height: 0;
+    //margin-left: -11px;
+    min-height: 190px;
+    box-sizing: border-box;
+    border: 7px solid black;
+    border-color: transparent transparent white white;
+    transform-origin: 0 0;
+    box-shadow: -3px 3px 3px 0 rgba(0, 0, 0, 0.1);
+    top: 200px;
+    left: 30px;
+    //transform: rotate(-45deg);
+}
+.sch_tooltip {
+    //&__arrow {
+    //    width: 50px;
+    //    height: 25px;
+    //    position: absolute;
+    //    top: 100%;
+    //    left: 50%;
+    //    transform: translateX(-50%);
+    //    overflow: hidden;
+    //
+    //    &::after {
+    //        content: "";
+    //        position: absolute;
+    //        width: 20px;
+    //        height: 20px;
+    //        background: white;
+    //        transform: translateX(-50%) translateY(-50%) rotate(45deg);
+    //        top: 0;
+    //        left: 50%;
+    //        box-shadow: 1px 1px 20px 0px rgba(0,0,0,0.6);
+    //    }
+    //}
+}
+
+.sch_tooltip {
+    position: absolute;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    width: 380px; /* Фиксированная ширина поповера */
+    min-height: 200px;
+    z-index: 1000; /* Поверх других элементов */
+}
+
+.sch-content {
+    padding: 10px;
+    font-size: 14px;
+}
+.rbc-events-container {
+    //width: 100% !important;
+}
+
+.sch_arrow {
+    //position: absolute;
+    //width: 12px;
+    //height: 12px;
+    //background: white;
+    //border-top: 1px solid #ccc;
+    //border-left: 1px solid #ccc;
+    //transform: rotate(45deg); /* Ромб для стрелки, указывающей вверх */
+    //z-index: -1; /* Под поповером, чтобы не перекрывать контент */
+}
+
+/* Для стрелки, если поповер сверху (указывает вниз) */
+.sch_arrow.down {
+    transform: rotate(225deg); /* Поворот для указания вниз */
+}
+//
+//.sch_tooltip {
+//    position: absolute;
+//    width: 380px;
+//    z-index: 1000;
+//    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Тень только на внешнем контейнере */
+//}
+//
+//.sch-content {
+//    padding: 10px;
+//    font-size: 14px;
+//    background: white; /* Фон для изоляции тени */
+//    border-radius: 4px; /* Скругленные углы */
+//    position: relative; /* Для изоляции контекста */
+//}
+//
+//.sch_arrow {
+//    position: absolute;
+//    width: 0;
+//    height: 0;
+//    border: 6px solid transparent; /* Прозрачные границы для треугольника */
+//    border-bottom: 6px solid white; /* Белый треугольник, указывающий вверх */
+//    border-left: 6px solid white; /* Формирует угол */
+//    z-index: 1; /* Над поповером для видимости */
+//}
+//
+///* Для стрелки, указывающей вниз (поповер сверху) */
+//.sch_arrow.down {
+//    border: 6px solid transparent;
+//    border-top: 6px solid white; /* Треугольник вниз */
+//    border-right: 6px solid white;
+//}
+.arrow-left {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: white;
+    transform: translateX(-50%) translateY(-50%) rotate(45deg);
+    bottom: -15px;
+    left: 10%;
+    //box-shadow: 1px 1px 20px 0px rgba(0, 0, 0, 0.6);
+}
+.arrow-right {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: white;
+    transform: translateX(-50%) translateY(-50%) rotate(45deg);
+    bottom: -15px;
+    right: 10%;
+    //box-shadow: 1px 1px 20px 0px rgba(0, 0, 0, 0.6);
+}
+.p-cabinet {
+    font-weight: bold;
+    color: #5a20da;
+}
+.p-doctor {
+    font-weight: bold;
+    color: #9b180d;
+}
+.p-balance.red {
+    color: red;
+}
+.sch-services {
+    min-height: 50px;
+    height: 100px;
+    overflow: hidden;
+    overflow-y: scroll;
+    background: lightblue;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+.sch-tabs {
+    width: 100%;
+    ul {
+        width: 100%;
+
+        li {
+            width: 25%;
+            text-align: center;
+        }
+    }
+}
+
+.event-close {
+    background: url(../../images/action-icons/close.svg);
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 13px;
+    height: 13px;
+    display: inline-block;
+    position: absolute;
+    right: 15px;
+    cursor: pointer;
+}
+.sh-discount {
+    font-weight: bold;
+    color: #b90808;
+    font-style: normal;
+}
+.service-item em {
+    font-style: normal;
+    font-size: 11px;
+    display: block;
+    margin-bottom: 2px;
+    overflow: hidden;
+    width: 100px;
+    white-space: nowrap;
+}
+.sh-p-view {
+    border: solid 1px ;
+    border-color: rgb(209, 213, 219);
+    border-radius: 4px;
+    padding: 8px 10px 8px 10px;
+    font-size: 14px;
+}
+.text-discount {
+    color: #f76ab0;
+    font-weight: bold;
+    float: right;
+    position: absolute;
+    right: 8px;
+    top: 29px;
+}
+.sh-discount {
+    color: #f76ab0;
+    font-size: 11px;
+    font-weight: bolder;
+}
+.shc-form-date {
+    min-width: 120px;
+    width: 160px;
+    border-radius: 4px;
+    float: left;
+    margin-right: 10px;
+    border-color: #d1d5db;
+}
+.f-calendar {
+    background: url(../../images/action-icons/calendar.svg);
+    background-repeat: no-repeat;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-size: contain;
+    position: absolute;
+    top: 34px;
+    right: 41px;
+}
+.f-clock {
+    background: url(../../images/action-icons/clock.svg);
+    background-repeat: no-repeat;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-size: contain;
+    position: absolute;
+    top: 34px;
+    right: 41px;
+}
