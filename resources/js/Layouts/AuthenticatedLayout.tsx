@@ -57,13 +57,13 @@ export default function AuthenticatedLayout({ header, children }) {
                 id="navbarsExample09"
               >
                 <div className="flex collapsed-content">
-                  <div className="flex grow">
+                  <div className="">
                     <NavMenu />
                   </div>
-                  <div className="flex grow">
+                  <div className="">
                     <LangMenu />
                   </div>
-                  <div className="flex grow">
+                  <div className="">
                     <ProfileMenu />
                   </div>
                 </div>

@@ -5,6 +5,7 @@ import { appLangSelector } from '../Redux/Layout/selectors';
 import Lang from 'lang.js';
 import Footer from '../Components/Footer/Footer';
 import Header from '../Components/Header/Header';
+import Main from '../Components/Main/Index';
 import lngHeader from '../Lang/Header/translation';
 
 export default function Welcome({ auth, laravelVersion, phpVersion }) {
@@ -34,6 +35,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
         <main className="flex-1 bg-white p-4">
           <div className="w-full">
             <h1 className="text-2xl font-bold mb-4">Vote Accounts</h1>
+            <Main />
           </div>
         </main>
 
