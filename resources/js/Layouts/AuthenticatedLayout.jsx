@@ -4,19 +4,27 @@ import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import HeaderAdmin from "@/Components/Header/Menu/Admin.jsx";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+    faHeart, faBell, faUser,
+} from '@fortawesome/free-solid-svg-icons';
+
 
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
+    // const permissions = usePage().props.auth.can;
+    // console.log(user, permissions);
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            <nav className="border-b border-gray-100 bg-white">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 justify-between">
-                        <div className="flex">
+        <div className="min-h-screen bg-white">
+            <nav className="border-b border-gray-100 bg-gray-100">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-0">
+                    <div className="flex h-[80px] py-2 justify-between">
+                        <div className="flex items-center">
                             <div className="flex shrink-0 items-center">
                                 <Link href="/">
                                     <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800" />
@@ -24,17 +32,34 @@ export default function AuthenticatedLayout({ header, children }) {
                             </div>
 
                             <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink
-                                    href={route('dashboard')}
-                                    active={route().current('dashboard')}
-                                >
-                                    Dashboard
-                                </NavLink>
+                                {usePage().props.auth.role[0] === 'Admin' && (
+                                    <>
+                                        <HeaderAdmin user={user}  />
+                                    </>
+                                )}
                             </div>
                         </div>
 
                         <div className="hidden sm:ms-6 sm:flex sm:items-center">
-                            <div className="relative ms-3">
+                            <div className="flex items-center relative ms-3">
+                                <Link
+                                    href={route('dashboard')}
+                                    active={route().current('dashboard')}
+                                >
+                                    <FontAwesomeIcon icon={faUser} className="mr-3" />
+                                </Link>
+                                <Link
+                                    href={route('dashboard')}
+                                    active={route().current('dashboard')}
+                                >
+                                    <FontAwesomeIcon icon={faBell} className="mr-3" />
+                                </Link>
+                                <Link
+                                    href={route('dashboard')}
+                                    active={route().current('dashboard')}
+                                >
+                                    <FontAwesomeIcon icon={faHeart} className="mr-3" />
+                                </Link>
                                 <Dropdown>
                                     <Dropdown.Trigger>
                                         <span className="inline-flex rounded-md">
@@ -120,7 +145,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         </div>
                     </div>
                 </div>
-
+                {/*Mobile menu*/}
                 <div
                     className={
                         (showingNavigationDropdown ? 'block' : 'hidden') +
@@ -162,13 +187,13 @@ export default function AuthenticatedLayout({ header, children }) {
                 </div>
             </nav>
 
-            {header && (
-                <header className="bg-white shadow">
-                    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                        {header}
-                    </div>
-                </header>
-            )}
+            {/*{header && (*/}
+            {/*    <header className="bg-white shadow">*/}
+            {/*        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">*/}
+            {/*            {header}*/}
+            {/*        </div>*/}
+            {/*    </header>*/}
+            {/*)}*/}
 
             <main>{children}</main>
         </div>

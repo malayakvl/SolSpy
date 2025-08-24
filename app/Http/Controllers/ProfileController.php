@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 
 class ProfileController extends Controller
 {
@@ -18,6 +20,30 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $user = $request->user();
+//        $role = Role::where('name', 'Admin')->first();
+//        $permission = Permission::where('name', 'customer-all')->first();
+//        $permission->assignRole($role);
+//        $permission = Permission::where('name', 'customer-create')->first();
+//        $permission->assignRole($role);
+//        $permission = Permission::where('name', 'customer-edit')->first();
+//        $permission->assignRole($role);
+//        $permission = Permission::where('name', 'customer-delete')->first();
+//        $permission->assignRole($role);
+//        dd($user->getAllPermissions());
+//        exit;
+
+//        dd($user->getAllPermissions());
+//        dd($user->hasRole('Admin'));
+//        $user->assignRole('Admin');
+//        dd($user->hasRole('Admin'));
+//        dd($request->getUser());exit;
+//        $permission = Permission::create(['name' => 'customer-all']);
+//        $permission = Permission::create(['name' => 'customer-create']);
+//        $permission = Permission::create(['name' => 'customer-edit']);
+//        $permission = Permission::create(['name' => 'customer-delete']);
+//        exit;
+
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
