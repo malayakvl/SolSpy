@@ -1,0 +1,310 @@
+//Змінений у кольорі
+.change-color {
+    fill: #fdde88;
+}
+.change-color.diagnoze {
+    fill: #6a4f04;
+    opacity: 1;
+}
+.change-color.diagnoze-opacity {
+    fill: #6a4f04;
+    // opacity: 0.7
+}
+.fissure {
+    fill: #5E5E5E;
+    stroke-width: 5;
+}
+.fissure.diagnoze {
+    fill: #5E5E5E;
+    stroke-width: 5;
+    stroke: rgba(5, 0, 0, 0.7);
+}
+.caries-filling .st7.target {
+    stroke-width: 1;
+}
+
+.caries-center {
+    stroke-width: 0;
+    fill: none;
+}
+.caries-bottom {
+    stroke-width: 0;
+    fill: none;
+}
+.caries-right {
+    stroke-width: 0;
+    fill: none;
+}
+.caries-left {
+    stroke-width: 0;
+    fill: none;
+}
+.caries-top {
+    stroke-width: 0;
+    fill: none;
+}
+.caries-stroke {
+    stroke-width: 1 !important;
+}
+.caries-fill {
+    fill: #606c80  !important;
+    opacity: 1;
+}
+.cervical-caries {
+    fill: #606c80 !important;
+    opacity: 1 !important;
+}
+.cervical-caries-hueta {
+    fill: #c21a79;
+    opacity: 1;
+}
+.cervical-caries-stroke {
+    stroke: #606c80 !important;
+    stroke-width: 6px !important;
+    opacity: 1;
+}
+.tartar-part {
+    stroke: #606c80;
+    stroke-width: 6px;
+    opacity: 1;
+}
+.pulpit {
+    fill: #e80808 !important;
+}
+.channel-not-sealed {
+    fill: #837272 !important;
+}
+.channel-top-sealed {
+    fill: #dd7d7d !important;
+}
+.channel-part-sealed {
+    fill: #dd7d7d !important;
+}
+.channel-part-sealed.top-sealed-part {
+    fill: #181818;
+}
+.periodontit, .periodontit {
+    fill: #837272 !important;
+}
+.shaped-defect-stroke {
+    stroke: rgb(156, 156, 156) !important;
+    stroke-width: 2px !important;
+    opacity: 1 !important;
+}
+.seal-fill.blue {
+    fill:rgb(152, 240, 183, 0.7) !important;
+    opacity: 1;
+}
+.seal-fill.yellow {
+    fill:rgba(250, 204, 21, 0.7) !important;
+    opacity: 1;
+}
+.seal-fill.pink {
+    fill: rgba(245, 165, 165, 0.7) !important;
+    opacity: 1;
+}
+.wedge-shaped.yellow {
+    fill:rgba(241, 236, 110, 0.7) !important;
+}
+.wedge-shaped.blue {
+    fill:rgba(180, 241, 178, 0.95) !important;
+}
+.wedge-shaped.pink {
+    fill: rgba(245, 165, 165, 0.7) !important;
+}
+.seal-cervical-stroke {
+    stroke: rgb(24, 22, 22)!important;
+    stroke-width: 1px!important;
+    opacity: 1 !important;
+}
+.vinir-fill.blue{
+    fill:rgba(180, 241, 178, 0.95) !important;
+}
+.vinir-fill.yellow{
+    fill:rgba(241, 236, 110, 0.7) !important;
+    stroke-width: 3 !important;
+    stroke: rgb(81, 79, 72) !important;
+}
+.vinir-fill.pink{
+    fill:rgba(245, 165, 165, 0.7) ;
+    stroke-width: 5 !important;
+    stroke: rgb(81, 79, 72) !important;
+}
+.temporary-crown, .crown-fill {
+    fill: #c8cdcb !important;
+}
+.temporary-crown.blue {
+    fill: rgba(152, 240, 183, 0.95) !important;
+}
+.temporary-crown.yellow {
+    fill: rgba(241, 236, 110, 0.7)!important;
+    stroke-width: 5 !important;
+    stroke: rgb(81, 79, 72) !important;
+}
+.crown-fill.yellow {
+    fill: rgba(241, 236, 110, 0.7) !important;
+    stroke-width: 5 !important;
+    stroke: rgb(81, 79, 72) !important;
+}
+.crown-fill.pink {
+    fill: rgba(245, 165, 165, 0.75) !important;
+    stroke-width: 8 !important;
+    stroke: rgb(81, 79, 72) !important;
+}
+.st60.blue {
+    fill:rgba(152, 240, 183, 0.95)!important;
+    stroke-width: 1!important;
+}
+.st60.yellow {
+    fill:rgba(241, 236, 110, 0.7)!important;
+    stroke-width: 1;
+}
+.st60.pink {
+    fill:rgba(245, 165, 165, 0.75)!important;
+    stroke-width: 1!important;
+}
+.num-active {
+    font-weight: bold;
+    font-size:  42px;
+    fill: #de0da7;
+    opacity: 1 !important;
+}
+#full-t-15 {
+    fill: rgba(241, 236, 110);
+}
+.d-badge {
+    @apply inline-flex items-center rounded-md text-xs font-medium
+        text-black ring-1 ring-inset mr-4 relative;
+    padding: 3px 20px 4px 10px;
+    font-size: 11px;
+    height: 25px;
+    margin-bottom: 10px;
+    background-color: rgb(252, 234, 252);
+    border-color: rgb(106, 19, 44);
+    box-shadow: none !important;
+    background-color: rgba(228, 211, 250, 0.3);
+    line-height:10px;
+    cursor:pointer;
+}
+.d-badge-view {
+    @apply inline-flex items-center rounded-md text-xs font-medium
+    text-black ring-1 ring-inset mr-4 relative;
+    padding: 3px 20px 4px 10px;
+    font-size: 11px;
+    height: 25px;
+    margin-bottom: 10px;
+    border-color: rgb(106, 19, 44);
+    box-shadow: none !important;
+    background-color: rgba(234, 187, 147, 0.3);
+    line-height:10px;
+    cursor:pointer;
+}
+.d-badge-close {
+    @apply absolute top-[3px] right-[5px] cursor-pointer;
+    font-style: normal;
+    color: #f76ab0;
+    &:before {
+        content: "×";
+    }
+}
+.descr-d {
+    @apply inline-block text-[12px] float-left;
+    color: #f76ab0;
+    font-weight: bold;
+}
+.chart-block {
+    background-color: yellow;
+    // position: absolute;
+    // top: -31px;
+    // left: -24px;
+}
+.chart-perio-top {
+    position: absolute;
+    top: 185px;
+    left: 134px;
+}
+.chart-perio-top-1 {
+    position: absolute;
+    top: 254px;
+    left: 143px;
+    // top: 276px;
+    // left: 142px;
+    // top: 220px;
+    // left: 139px;
+}
+.chart-yasen-top-1 {
+    position: absolute;
+    top: 304px;
+    left: 143px;
+    // top: 220px;
+    // left: 139px;
+}
+.chart-intersect-up {
+    position: absolute;
+    // top: 259px;
+    // left: 130px;
+    top: 50px;
+    left: -20px;
+}
+.chart-intersect-down {
+    position: absolute;
+    // top: 259px;
+    // left: 130px;
+    bottom: -5px;
+    left: -20px;
+}
+.hide-dia {
+    display: none;
+}
+.hide-up-teeth {
+    transform: matrix(1, 0, 0, 1, 0, -700);
+    transition: transform 1s;
+    display: inline-block;
+}
+.show-up-teeth {
+    transform: matrix(1, 0, 0, 1, 0, 0);
+    transition: transform 1s;
+    display: inline-block;
+}
+.opclusion {
+    transform: matrix(1, 0, 0, 1, 0, -550);
+    transition: transform 1s;
+}
+.hide-teeth {
+    display:none;
+}
+.hide-axis {
+    display:none;
+}
+.move-down-bone {
+    transform: matrix(1, 0, 0, 1, 0, -550);
+    transition: transform 1s;
+}
+.hide-bone {
+    transform: matrix(1, 0, 0, 1, 0, -700);
+    transition: transform 1s;
+    display: inline-block;
+}
+.f-date {
+    font-size: 12px;
+    color: #807d7d;
+    font-weight: bold;
+    text-decoration: underline;
+}
+.description-perio {
+    margin-top: 30px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+.color-dia-1 {
+    fill: #cbbae3 !important;
+}
+.color-dia-2 {
+    fill: #b78ef1 !important;
+}
+.color-dia-3 {
+    fill: #f1e08e !important;
+}
+.color-dia-4 {
+    fill: #1873e8 !important;
+}

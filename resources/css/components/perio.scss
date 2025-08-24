@@ -1,0 +1,87 @@
+.perio-select, .perio-status {
+    font-size: 11px !important;
+    padding:0 !important;
+    max-width: 60px;
+    width: 60px;
+    border: none;
+    background: #f8f9fa;
+    cursor: pointer;
+
+    *:focus {
+        outline: none;
+    }
+}
+.perio-select:focus {
+    outline: 0;
+    border-color: inherit;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+.perio-table {
+    width: 1335px !important;
+}
+.perio-table-view {
+    width: 1200px !important;
+}
+.perio-table-view .chart-intersect-up {
+    position: absolute;
+    top: 40px;
+    left: -5px;
+}
+.perio-table-view .chart-intersect-down {
+    position: absolute;
+    top: -122px;
+    left: -5px;
+}
+.scale-perio {
+    scale: 0.8;
+}
+.f-prerio {
+    // background:yellow;
+  max-height: 322px;
+}
+.perio-table .tooth-img {
+    width: 1242px !important;
+}
+.perio-table td{
+    text-align: center;
+    // padding: 2px 5px;
+    border-left:solid 1px;
+    // border-bottom:solid 1px;
+    border-color: #e3e3e3;
+    // width: 74px !important;
+    // border-bottom: solid 1px;
+
+}
+.perio-table td.title{
+    text-align: left;
+    font-size: 12px;
+    width: 130px;
+    padding: 0;
+    white-space: nowrap;
+    border-left: none !important;
+}
+
+.psr-input {
+    border: none;
+    border-bottom: 1px rgba(200, 200, 200, 0.9) solid;
+    width: 15px;
+    text-align: center;
+    outline: none;
+    font-size: 9px;
+    padding: 1px;
+    margin: 0 2px;
+    min-width: 15px !important;
+}
+.psr-input-view {
+    border: none;
+    width: 15px;
+    font-weight: bold;
+    text-align: center;
+    background: #f4f2fa;
+    outline: none;
+    font-size: 9px;
+    padding: 1px;
+    margin: 0 2px;
+    min-width: 15px !important;
+}

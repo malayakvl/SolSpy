@@ -1,0 +1,152 @@
+.tabls-list {
+    li {
+        display: inline-block;
+        margin-left: 10px;
+        cursor: pointer;
+    }
+    li.active {
+        border-bottom: solid 2px purple;
+    }
+}
+
+.stage-tabs {
+    list-style: none;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-start;
+    padding-top: 0 !important;
+    margin-top: -20px;
+}
+.stage-tabs:after {
+    content: '';
+    display: table;
+    clear: both;
+}
+.stage-tabs input[type=radio] {
+    display:none;
+}
+.stage-tabs label {
+    display: inline-block;
+    min-width: 25%;
+    flex: 1 1 25%;
+    color: #1c1717;
+    text-align: center;
+    cursor: pointer;
+    -webkit-transition: all 0.5s; /* Safari 3.1 to 6.0 */
+    transition: all 0.5s;
+}
+.stage-tabs .patient-stage {
+    padding-top: 0;
+}
+
+.stage-tabs label span {
+    display: none;
+    font-size: 1rem;
+}
+
+.stage-tabs label:hover {
+    color: #4d08a1;
+
+    .icon {
+        border-color: #4d08a1;
+        background-color: #ededfd;
+        //background-position: 50px 0;
+        //background-size: 100px 50px;
+
+    }
+    .formula-tab {
+        background: white url('../../images/patients/formula.svg');
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+}
+.stage-tabs .active {
+    .icon {
+        border-color: #4d08a1;
+        background-color: #ededfd;
+    }
+    span {
+        color:#4d08a1;
+    }
+}
+
+.tab__content {
+    display: none;
+    text-align: center;
+    width: 80%;
+    margin: 0 auto;
+    box-sizing: border-box;
+    background-color:#ffffff;
+    margin-top: 2rem;
+}
+
+.tab__content * {
+    -webkit-animation: scale 0.2s ease-in-out;
+    -moz-animation: scale 0.2s ease-in-out;
+    animation: scale 0.2s ease-in-out;
+}
+@keyframes scale {
+    0% {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.01);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.stage-tabs [id^="tab"]:checked + label {
+    background: #FFF;
+    color: #4d08a1;
+}
+
+.stage-tabs [id^="tab"]:checked + label i {
+    border-color: #4d08a1;
+    background-position: 50px 0;
+    background-size: 100px 50px;
+}
+
+// #tab1:checked ~ #tab__content--1,
+// #tab2:checked ~ #tab__content--2,
+// #tab3:checked ~ #tab__content--3,
+// #tab4:checked ~ #tab__content--4{
+//     display: block;
+// }
+
+@media (min-width: 768px) {
+    .stage-tabs label span {
+        display: block;
+    }
+}
+
+.icon {
+    margin-top: 1rem;
+    display: inline-block;
+    width: 44px;
+    height: 44px;
+    border-radius: 100%;
+    border: 2px solid #949aab;
+    background-size: 100px 50px;
+    box-sizing: border-box;
+}
+
+.formula-tab {
+    background: white url('../../images/patients/formula.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+.perio-tab {
+    background: white url('../../images/patients/perio.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+.psr-tab {
+    background: white url('../../images/patients/psr.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+}

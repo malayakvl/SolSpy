@@ -1,0 +1,43 @@
+@media screen and (max-width: 640px) {
+    .navbar-toggler {
+        display: block !important;
+        position: absolute;
+        top: 0;
+        right: 16px;
+    }
+    .left-side-close {
+        width: 100vw;
+        transition: all 1s ease-out;
+        transform: translateX(200%);
+        @apply fixed left-0 top-0 z-[1035] h-screen overflow-hidden md:h-[90px];
+    }
+    .left-side-open {
+        transition: all .4s ease-in;
+        transform: translateX(0);
+        width: 100%;
+    }
+    .collapsed-content {
+        position: absolute;
+        top:0;
+        width: 100%;
+        background: #e5ade5;
+    }
+}
+.icon-lang, .icon-user {
+    position: absolute;
+    top: 15px !important;
+    left: 20px;
+    z-index: 999;
+}
+.icon-user {
+    //top: 12px !important;
+    //left: -120px;
+    top: 8px !important;
+    left: -20px;
+}
+.profile-block {
+    position: fixed;
+    right: 30px;
+    top: 4px;
+    //border: solid 1px red;
+}
