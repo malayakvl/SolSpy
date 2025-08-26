@@ -4,451 +4,253 @@ import Lang from 'lang.js';
 import lngDashboard from '../Lang/Dashboard/translation';
 import { useSelector } from 'react-redux';
 import { appLangSelector } from '../Redux/Layout/selectors';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+import { AgGridReact } from 'ag-grid-react';
+import MovingGridTable from "../Components/GridResult";
+import Example from "../Components/GridResult/Ts";
+import { useMemo } from 'react';
+import { MaterialReactTable, useMaterialReactTable } from 'material-react-table';
+
+const colValidatorsFull = [
+    { accessorKey: 'asn', header: 'ASN', enableHiding: true },
+    { accessorKey: 'city', header: 'City', enableHiding: true },
+    { accessorKey: 'comission', header: 'Commission', enableHiding: true },
+    { accessorKey: 'country', header: 'Country', enableHiding: true },
+    { accessorKey: 'voteCredits', header: 'Vote Credits', enableHiding: true },
+    { accessorKey: 'epochStart', header: 'Epoch start', enableHiding: true },
+    { accessorKey: 'ip', header: 'IP', enableHiding: true },
+    { accessorKey: 'runningJito', header: 'Running Jito', enableHiding: true },
+    { accessorKey: 'lastVotedSlot', header: 'Last Voted Slot', enableHiding: true },
+    { accessorKey: 'leaderSlot', header: 'Leader Slots', enableHiding: true },
+    { accessorKey: 'currentLiquidStake', header: 'Current Liquid Stake', enableHiding: true },
+    { accessorKey: 'changeLiquidStake', header: 'Changing Liquid Stake', enableHiding: true },
+    { accessorKey: 'targetLiquidStake', header: 'Target Liquid Stake', enableHiding: true },
+    { accessorKey: 'locationCoordinated', header: 'Location Coordinates', enableHiding: true },
+    { accessorKey: 'mevComission', header: 'MEV Commission', enableHiding: true },
+    { accessorKey: 'name', header: 'Name', enableHiding: true },
+]
+
+// ModuleRegistry.registerModules([AllCommunityModule]);
+// const columns = [
+//     { accessorKey: 'name', header: 'Name', enableHiding: true },
+//     { accessorKey: 'rank', header: 'Rank', enableHiding: true },
+//     { accessorKey: 'voteCredits', header: 'Vote Credits', enableHiding: true },
+//     { accessorKey: 'stake', header: 'Stake', enableHiding: true },
+//     { accessorKey: 'stakeChanges', header: 'Stake Changes', enableHiding: true },
+//     { accessorKey: 'comission', header: 'Commission', enableHiding: true },
+//     { accessorKey: 'stakeAccounts', header: 'Stake Accounts', enableHiding: true },
+//     { accessorKey: 'leaderSlot', header: 'Leader Slots', enableHiding: true },
+//
+//     { accessorKey: 'asn', header: 'ASN', enableHiding: true },
+//     { accessorKey: 'city', header: 'City', enableHiding: true },
+//     { accessorKey: 'country', header: 'Country', enableHiding: true },
+//     { accessorKey: 'epochStart', header: 'Epoch start', enableHiding: true },
+//     { accessorKey: 'ip', header: 'IP', enableHiding: true },
+//     { accessorKey: 'epochStart', header: 'Epoch start', enableHiding: true },
+//     { accessorKey: 'runningJito', header: 'Running Jito', enableHiding: true },
+//     { accessorKey: 'lastVotedSlot', header: 'Last Voted Slot', enableHiding: true },
+//     { accessorKey: 'currentLiquidStake', header: 'Current Liquid Stake', enableHiding: true },
+//     { accessorKey: 'changeLiquidStake', header: 'Changing Liquid Stake', enableHiding: true },
+//     { accessorKey: 'targetLiquidStake', header: 'Target Liquid Stake', enableHiding: true },
+//     { accessorKey: 'locationCoordinated', header: 'Location Coordinates', enableHiding: true },
+//     { accessorKey: 'mevComission', header: 'MEV Commission', enableHiding: true },
+//     { accessorKey: 'asnOrg', header: 'ASN Organization', enableHiding: true },
+//     { accessorKey: 'rootSlot', header: 'Root Slot', enableHiding: true },
+//     { accessorKey: 'score', header: 'Score', enableHiding: true },
+//     { accessorKey: 'skipRate', header: 'Skip Rate', enableHiding: true },
+//     { accessorKey: 'leaderSlotsDone', header: 'Leader Slots Done', enableHiding: true },
+//     { accessorKey: 'leaderSlotsSkipped', header: 'Leader Slots Skipped', enableHiding: true },
+//     { accessorKey: 'status', header: 'Status', enableHiding: true },
+//     { accessorKey: 'superminority', header: 'Superminority', enableHiding: true },
+//     { accessorKey: 'uptime', header: 'Uptime (30d)', enableHiding: true },
+//     { accessorKey: 'vesion', header: 'Version', enableHiding: true },
+//     { accessorKey: 'voteSuccess', header: 'Vote Success', enableHiding: true },
+// ];
+
+const columns = [
+    { accessorKey: 'rank', header: 'Rank', enableHiding: false },
+    { accessorKey: 'name', header: 'Name', enableHiding: true },
+    { accessorKey: 'ip_asn', header: 'ASN', enableHiding: true },
+    { accessorKey: 'ip_city', header: 'City', enableHiding: true },
+    { accessorKey: 'ip_country', header: 'Country', enableHiding: true },
+    { accessorKey: 'comission', header: 'Commission', enableHiding: true },
+    { accessorKey: 'version', header: 'Version', enableHiding: true },
+];
+
+const data = [
+    { name: 'John', rank: 1, ip_asn: "AS29405", ip_city: "Bratislava", ip_country: "Slovak Republic", comission: 0, version: '0.703.20300'},
+    { name: 'Jane', rank: 2, ip_asn: "AS12703", ip_city: "Edinburgh", ip_country: "United Kingdom", comission: 0, version: '2.3.6'},
+];
+
 
 export default function Dashboard(clinicName) {
-  const appLang = useSelector(appLangSelector);
-  const msg = new Lang({
-    messages: lngDashboard,
-    locale: appLang,
-  });
+    const appLang = useSelector(appLangSelector);
+    const msg = new Lang({
+        messages: lngDashboard,
+        locale: appLang,
+    });
+    const [validatorData, setValidatorData] = useState([]);
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [nameLoading, setNameLoading] = useState(false);
+    const [storageStatus, setStorageStatus] = useState('');
+    const [validatorInfo, setValidatorInfo] = useState({});
+    const [voteRates, setVoteRates] = useState({});
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 15;
+    const [checkResult, setCheckResult] = useState('');
 
-  return (
-    <AuthenticatedLayout header={<Head />}>
-      <Head title={msg.get('dashboard.title')} />
-      <div className="py-0">
-        <div className="p-4 sm:p-8 mb-8 content-data bg-content">
-          <h2>{msg.get('dashboard.title')}&nbsp;</h2>
-          <div className="grid grid-cols-4 gap-4">
-            <div className="relative flex flex-col min-w-0 break-words bg-white shadow-soft-xl rounded-2xl bg-clip-border">
-              <div className="flex-auto p-4">
-                <div className="flex flex-row -mx-3">
-                  <div className="flex-none w-2/3 max-w-full px-3">
-                    <div>
-                      <p className="mb-0 font-sans font-semibold leading-normal text-sm">
-                        Today's Money
-                      </p>
-                      <h5 className="mb-0 font-bold">
-                        $53,000
-                        <span className="leading-normal text-sm font-weight-bolder text-lime-500">
-                          +55%
-                        </span>
-                      </h5>
+    const table = useMaterialReactTable({
+        columns,
+        data,
+        enableColumnOrdering: true,
+        initialState: {
+            columnVisibility: {
+                asn: false,
+                city: false,
+                country: false,
+                epochStart: false,
+                runningJito: false,
+                lastVotedSlot: false,
+                currentLiquidStake: false,
+                changeLiquidStake: false,
+                targetLiquidStake: false,
+                leaderSlotsSkipped: false,
+                locationCoordinated: false,
+                mevComission: false,
+                asnOrg: false,
+                rootSlot: false,
+                score: false,
+                skipRate: false,
+                leaderSlotsDone: false,
+                status: false,
+                superminority: false,
+                uptime: false,
+                vesion: false,
+                voteSuccess: false,
+                ip: false,
+            }, // Скрыть колонку 'Age' по умолчанию
+        },
+    });
+
+    // Функция для переключения видимости колонки 'age'
+    const toggleAgeColumn = () => {
+        table.getColumn('uptime').toggleVisibility(); // Переключает видимость (true/false)
+    };
+
+    // Функция для явного задания видимости
+    const showAgeColumn = () => {
+        table.setColumnVisibility((prev) => ({
+            ...prev,
+            uptime: true, // Установить видимость колонки 'age' в true
+        }));
+    };
+
+    const fetchVoteAccounts = async () => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await fetch('http://103.167.235.81:8899', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    jsonrpc: '2.0',
+                    id: 1,
+                    method: 'getVoteAccounts',
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log(result.result.current.length);
+//             const _checkValidator =  result.result.current.find(
+//                 _x => _x.votePubkey === 'HxRrsnbc6K8CdEo3LCTrSUkFaDDxv9BdJsTDzBKnUVWH'
+//             );
+//             if (_checkValidator) {
+//                 console.log('========================');
+//                 console.log('========================');
+//                 console.log('Check rate method', _checkValidator)
+// //getVoteRateCheck(votePubkey, identityPubkey, voteAccounts)
+//                 await getVoteRateCheck(_checkValidator.votePubkey, _checkValidator.nodePubkey, result.result.current)
+//                 console.log('========================');
+//                 console.log('========================');
+//             }
+
+
+            const sorted = [...result.result.current].sort((a, b) => Number(b.activatedStake) - Number(a.activatedStake));
+console.log(sorted);
+            setValidatorData(sorted);
+
+            // Load validator data from localStorage
+            const storedData = localStorage.getItem('validator_data');
+            const validatorCache = storedData ? JSON.parse(storedData) : {};
+            setValidatorInfo(validatorCache);
+
+            // Fetch vote rates for the current page
+            // const missingVoteRates = sorted
+            //     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+            //     .filter(account => !voteRateCache.has(`${account.votePubkey}-${account.nodePubkey}`));
+            //
+            // if (missingVoteRates.length > 0) {
+            //     const newVoteRates = { ...voteRates };
+            //     for (const account of missingVoteRates) {
+            //         const cacheKey = `${account.votePubkey}-${account.nodePubkey}`;
+            //         const rate = await getVoteRate(account.votePubkey, account.nodePubkey, sorted);
+            //         voteRateCache.set(cacheKey, rate);
+            //         newVoteRates[account.votePubkey] = rate;
+            //         await delay(150); // Rate limiting
+            //     }
+            //     setVoteRates(newVoteRates);
+            // }
+
+            // Fetch validator info for missing pubkeys
+            // const missingPubkeys = sorted
+            //     .slice(0, itemsPerPage)
+            //     .map(account => account.votePubkey)
+            //     .filter(pubkey => !validatorCache[pubkey]);
+            // if (missingPubkeys.length > 0) {
+            //     setNameLoading(true);
+            //     await fetchMissingValidatorInfo(missingPubkeys);
+            // } else {
+            //     setStorageStatus('Все данные валидаторов для первой страницы загружены из localStorage');
+            // }
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+            setNameLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchVoteAccounts();
+        // const intervalId = setInterval(fetchVoteAccounts, 2000);
+        // return () => clearInterval(intervalId);
+    }, []);
+// console.log('Validator Data', data);
+
+    return (
+        <AuthenticatedLayout header={<Head />}>
+            <Head title={msg.get('dashboard.title')} />
+            <div className="py-0">
+                <div className="p-4 sm:p-8 mb-8 content-data bg-content">
+                    <h2>{msg.get('dashboard.title')}&nbsp;</h2>
+                    <button className="btn-submit pl-3" onClick={toggleAgeColumn}>Переключить видимость Age</button>
+                    <button className="btn-submit ml-3" onClick={showAgeColumn}>Показать Age</button>
+                    <div className="mt-6">
+                        <MaterialReactTable table={table} />
                     </div>
-                  </div>
-                  <div className="px-3 text-right basis-1/3">
-                    <div className="inline-block w-12 h-12 text-center rounded-lg bg-gradient-to-tl btn-dash">
-                      <i className="icon-money" />
-                    </div>
-                  </div>
+
                 </div>
-              </div>
             </div>
-            <div className="relative flex flex-col min-w-0 break-words bg-white shadow-soft-xl rounded-2xl bg-clip-border">
-              <div className="flex-auto p-4">
-                <div className="flex flex-row -mx-3">
-                  <div className="flex-none w-2/3 max-w-full px-3">
-                    <div>
-                      <p className="mb-0 font-sans font-semibold leading-normal text-sm">
-                        Today's Users
-                      </p>
-                      <h5 className="mb-0 font-bold">
-                        220
-                        <span className="leading-normal text-sm font-weight-bolder text-lime-500">
-                          +55%
-                        </span>
-                      </h5>
-                    </div>
-                  </div>
-                  <div className="px-3 text-right basis-1/3">
-                    <div className="inline-block w-12 h-12 text-center rounded-lg bg-gradient-to-tl btn-dash">
-                      <i className="icon-users"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="relative flex flex-col min-w-0 break-words bg-white shadow-soft-xl rounded-2xl bg-clip-border">
-              <div className="flex-auto p-4">
-                <div className="flex flex-row -mx-3">
-                  <div className="flex-none w-2/3 max-w-full px-3">
-                    <div>
-                      <p className="mb-0 font-sans font-semibold leading-normal text-sm">
-                        Todays Patient
-                      </p>
-                      <h5 className="mb-0 font-bold">
-                        10
-                        <span className="leading-normal text-sm font-weight-bolder text-lime-500">
-                          &nbsp;view schedule
-                        </span>
-                      </h5>
-                    </div>
-                  </div>
-                  <div className="px-3 text-right basis-1/3">
-                    <div className="inline-block w-12 h-12 text-center rounded-lg bg-gradient-to-tl btn-dash">
-                      <i className="icon-patients"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="relative flex flex-col min-w-0 break-words bg-white shadow-soft-xl rounded-2xl bg-clip-border">
-              <div className="flex-auto p-4">
-                <div className="flex flex-row -mx-3">
-                  <div className="flex-none w-2/3 max-w-full px-3">
-                    <div>
-                      <p className="mb-0 font-sans font-semibold leading-normal text-sm">
-                        Tomorrow Patients
-                      </p>
-                      <h5 className="mb-0 font-bold">
-                        12
-                        <span className="leading-normal text-sm font-weight-bolder text-lime-500">
-                          &nbsp;view schedule
-                        </span>
-                      </h5>
-                    </div>
-                  </div>
-                  <div className="px-3 text-right basis-1/3">
-                    <div className="inline-block w-12 h-12 text-center rounded-lg bg-gradient-to-tl btn-dash">
-                      <i className="icon-patients"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4 mt-[40px]">
-            <div className="w-full max-w-full px-0 mt-0 mb-6 md:mb-0 md:w-1/2 md:flex-none lg:w-full lg:flex-none">
-              <div className="border-black/12.5 shadow-soft-xl relative flex min-w-0 flex-col break-words rounded-2xl border-0 border-solid bg-white bg-clip-border p-3">
-                <table className="items-center w-full mb-0 align-top border-gray-200 text-slate-500">
-                  <thead className="align-bottom">
-                    <tr>
-                      <th className="px-6 py-3 font-bold text-left uppercase align-middle bg-transparent border-b border-gray-200 shadow-none text-xxs border-b-solid tracking-none whitespace-nowrap text-slate-400 opacity-70">
-                        Author
-                      </th>
-                      <th className="px-6 py-3 pl-2 font-bold text-left uppercase align-middle bg-transparent border-b border-gray-200 shadow-none text-xxs border-b-solid tracking-none whitespace-nowrap text-slate-400 opacity-70">
-                        Function
-                      </th>
-                      <th className="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b border-gray-200 shadow-none text-xxs border-b-solid tracking-none whitespace-nowrap text-slate-400 opacity-70">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b border-gray-200 shadow-none text-xxs border-b-solid tracking-none whitespace-nowrap text-slate-400 opacity-70">
-                        Employed
-                      </th>
-                      <th className="px-6 py-3 font-semibold capitalize align-middle bg-transparent border-b border-gray-200 border-solid shadow-none tracking-none whitespace-nowrap text-slate-400 opacity-70"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <div className="flex px-2 py-1">
-                          <div>
-                            <img
-                              src="../../images/dashboard/usr-1.png"
-                              className="inline-flex items-center justify-center mr-4 text-sm text-white transition-all duration-200 ease-soft-in-out h-9 w-9 rounded-xl"
-                              alt="user1"
-                            />
-                          </div>
-                          <div className="flex flex-col justify-center">
-                            <h6 className="mb-0 text-sm leading-normal">
-                              John Michael
-                            </h6>
-                            <p className="mb-0 text-xs leading-tight text-slate-400">
-                              john@creative-tim.com
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <p className="mb-0 text-xs font-semibold leading-tight">
-                          Manager
-                        </p>
-                        <p className="mb-0 text-xs leading-tight text-slate-400">
-                          Organization
-                        </p>
-                      </td>
-                      <td className="p-2 text-sm leading-normal text-center align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <span className="bg-gradient-to-tl from-green-600 to-lime-400 px-2.5 text-xs rounded-1.8 py-1.4 inline-block whitespace-nowrap text-center align-baseline font-bold uppercase leading-none text-white">
-                          Online
-                        </span>
-                      </td>
-                      <td className="p-2 text-center align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <span className="text-xs font-semibold leading-tight text-slate-400">
-                          23/04/18
-                        </span>
-                      </td>
-                      <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <a
-                          className="text-xs font-semibold leading-tight text-slate-400"
-                        >
-                          {' '}
-                          Edit{' '}
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <div className="flex px-2 py-1">
-                          <div>
-                            <img
-                              src="../../images/dashboard/usr-2.png"
-                              className="inline-flex items-center justify-center mr-4 text-sm text-white transition-all duration-200 ease-soft-in-out h-9 w-9 rounded-xl"
-                              alt="user2"
-                            />
-                          </div>
-                          <div className="flex flex-col justify-center">
-                            <h6 className="mb-0 text-sm leading-normal">
-                              Alexa Liras
-                            </h6>
-                            <p className="mb-0 text-xs leading-tight text-slate-400">
-                              alexa@creative-tim.com
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <p className="mb-0 text-xs font-semibold leading-tight">
-                          Programator
-                        </p>
-                        <p className="mb-0 text-xs leading-tight text-slate-400">
-                          Developer
-                        </p>
-                      </td>
-                      <td className="p-2 text-sm leading-normal text-center align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <span className="bg-gradient-to-tl from-slate-600 to-slate-300 px-2.5 text-xs rounded-1.8 py-1.4 inline-block whitespace-nowrap text-center align-baseline font-bold uppercase leading-none text-white">
-                          Offline
-                        </span>
-                      </td>
-                      <td className="p-2 text-center align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <span className="text-xs font-semibold leading-tight text-slate-400">
-                          11/01/19
-                        </span>
-                      </td>
-                      <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <a
-                          href="javascript:;"
-                          className="text-xs font-semibold leading-tight text-slate-400"
-                        >
-                          {' '}
-                          Edit{' '}
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <div className="flex px-2 py-1">
-                          <div>
-                            <div>
-                              <img
-                                src="../../images/dashboard/usr-1.png"
-                                className="inline-flex items-center justify-center mr-4 text-sm text-white transition-all duration-200 ease-soft-in-out h-9 w-9 rounded-xl"
-                                alt="user2"
-                              />
-                            </div>
-                          </div>
-                          <div className="flex flex-col justify-center">
-                            <h6 className="mb-0 text-sm leading-normal">
-                              Laurent Perrier
-                            </h6>
-                            <p className="mb-0 text-xs leading-tight text-slate-400">
-                              laurent@creative-tim.com
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <p className="mb-0 text-xs font-semibold leading-tight">
-                          Executive
-                        </p>
-                        <p className="mb-0 text-xs leading-tight text-slate-400">
-                          Projects
-                        </p>
-                      </td>
-                      <td className="p-2 text-sm leading-normal text-center align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <span className="bg-gradient-to-tl from-green-600 to-lime-400 px-2.5 text-xs rounded-1.8 py-1.4 inline-block whitespace-nowrap text-center align-baseline font-bold uppercase leading-none text-white">
-                          Online
-                        </span>
-                      </td>
-                      <td className="p-2 text-center align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <span className="text-xs font-semibold leading-tight text-slate-400">
-                          19/09/17
-                        </span>
-                      </td>
-                      <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <a
-                          href="javascript:;"
-                          className="text-xs font-semibold leading-tight text-slate-400"
-                        >
-                          {' '}
-                          Edit{' '}
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <div className="flex px-2 py-1">
-                          <div>
-                            <div>
-                              <img
-                                src="../../images/dashboard/usr-2.png"
-                                className="inline-flex items-center justify-center mr-4 text-sm text-white transition-all duration-200 ease-soft-in-out h-9 w-9 rounded-xl"
-                                alt="user2"
-                              />
-                            </div>
-                          </div>
-                          <div className="flex flex-col justify-center">
-                            <h6 className="mb-0 text-sm leading-normal">
-                              Michael Levi
-                            </h6>
-                            <p className="mb-0 text-xs leading-tight text-slate-400">
-                              michael@creative-tim.com
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <p className="mb-0 text-xs font-semibold leading-tight">
-                          Programator
-                        </p>
-                        <p className="mb-0 text-xs leading-tight text-slate-400">
-                          Developer
-                        </p>
-                      </td>
-                      <td className="p-2 text-sm leading-normal text-center align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <span className="bg-gradient-to-tl from-green-600 to-lime-400 px-2.5 text-xs rounded-1.8 py-1.4 inline-block whitespace-nowrap text-center align-baseline font-bold uppercase leading-none text-white">
-                          Online
-                        </span>
-                      </td>
-                      <td className="p-2 text-center align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <span className="text-xs font-semibold leading-tight text-slate-400">
-                          24/12/08
-                        </span>
-                      </td>
-                      <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <a
-                          href="javascript:;"
-                          className="text-xs font-semibold leading-tight text-slate-400"
-                        >
-                          {' '}
-                          Edit{' '}
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <div className="flex px-2 py-1">
-                          <div>
-                            <img
-                              src="../../images/dashboard/usr-4.jpg"
-                              className="inline-flex items-center justify-center mr-4 text-sm text-white transition-all duration-200 ease-soft-in-out h-9 w-9 rounded-xl"
-                              alt="user2"
-                            />
-                          </div>
-                          <div className="flex flex-col justify-center">
-                            <h6 className="mb-0 text-sm leading-normal">
-                              Richard Gran
-                            </h6>
-                            <p className="mb-0 text-xs leading-tight text-slate-400">
-                              richard@creative-tim.com
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <p className="mb-0 text-xs font-semibold leading-tight">
-                          Manager
-                        </p>
-                        <p className="mb-0 text-xs leading-tight text-slate-400">
-                          Executive
-                        </p>
-                      </td>
-                      <td className="p-2 text-sm leading-normal text-center align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <span className="bg-gradient-to-tl from-slate-600 to-slate-300 px-2.5 text-xs rounded-1.8 py-1.4 inline-block whitespace-nowrap text-center align-baseline font-bold uppercase leading-none text-white">
-                          Offline
-                        </span>
-                      </td>
-                      <td className="p-2 text-center align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <span className="text-xs font-semibold leading-tight text-slate-400">
-                          04/10/21
-                        </span>
-                      </td>
-                      <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                        <a
-                          href="javascript:;"
-                          className="text-xs font-semibold leading-tight text-slate-400"
-                        >
-                          {' '}
-                          Edit{' '}
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="p-2 align-middle bg-transparent border-b-0 whitespace-nowrap shadow-transparent">
-                        <div className="flex px-2 py-1">
-                          <div>
-                            <img
-                              src="../../images/dashboard/usr-3.jpg"
-                              className="inline-flex items-center justify-center mr-4 text-sm text-white transition-all duration-200 ease-soft-in-out h-9 w-9 rounded-xl"
-                              alt="user2"
-                            />
-                          </div>
-                          <div className="flex flex-col justify-center">
-                            <h6 className="mb-0 text-sm leading-normal">
-                              Miriam Eric
-                            </h6>
-                            <p className="mb-0 text-xs leading-tight text-slate-400">
-                              miriam@creative-tim.com
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-2 align-middle bg-transparent border-b-0 whitespace-nowrap shadow-transparent">
-                        <p className="mb-0 text-xs font-semibold leading-tight">
-                          Programtor
-                        </p>
-                        <p className="mb-0 text-xs leading-tight text-slate-400">
-                          Developer
-                        </p>
-                      </td>
-                      <td className="p-2 text-sm leading-normal text-center align-middle bg-transparent border-b-0 whitespace-nowrap shadow-transparent">
-                        <span className="bg-gradient-to-tl from-slate-600 to-slate-300 px-2.5 text-xs rounded-1.8 py-1.4 inline-block whitespace-nowrap text-center align-baseline font-bold uppercase leading-none text-white">
-                          Offline
-                        </span>
-                      </td>
-                      <td className="p-2 text-center align-middle bg-transparent border-b-0 whitespace-nowrap shadow-transparent">
-                        <span className="text-xs font-semibold leading-tight text-slate-400">
-                          14/09/20
-                        </span>
-                      </td>
-                      <td className="p-2 align-middle bg-transparent border-b-0 whitespace-nowrap shadow-transparent">
-                        <a
-                          href="javascript:;"
-                          className="text-xs font-semibold leading-tight text-slate-400"
-                        >
-                          {' '}
-                          Edit{' '}
-                        </a>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div
-              className="w-full max-w-full mt-0 mb-6 md:mb-0 md:w-1/2 md:flex-none lg:w-full
-                         lg:flex-none"
-            >
-              <div className="border-black/12.5 shadow-soft-xl relative flex min-w-0 flex-col break-words rounded-2xl border-0 border-solid bg-white bg-clip-border p-3">
-                <img
-                  src="../../images/dashboard/diagrams.png"
-                  className=""
-                  alt="user2"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </AuthenticatedLayout>
-  );
+
+        </AuthenticatedLayout>
+    );
 }

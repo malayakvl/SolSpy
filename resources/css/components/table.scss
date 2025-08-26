@@ -111,3 +111,22 @@
 .invoice-table .w-qty {
     max-width: 160px;
 }
+.validator-table {
+    margin: 10px 0;
+    @apply w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400;
+}
+.validator-table thead {
+    @apply text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400;
+}
+.validator-table th {
+    font-size: 13px;
+    white-space: nowrap;
+    //padding: 10px 8px;
+    @apply px-4 py-2;
+}
+.validator-table td {
+    font-size: 13px;
+}
+.v-truncate {
+    height: 20px !important;
+}

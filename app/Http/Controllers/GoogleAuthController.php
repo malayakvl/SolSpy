@@ -27,7 +27,6 @@ class GoogleAuthController extends Controller
         } catch (Throwable $e) {
             return redirect('/')->with('error', 'Google authentication failed.');
         }
-dd($user);exit;
         // Check if the user already exists in the database
         $existingUser = User::where('email', $user->email)->first();
         if ($existingUser) {
