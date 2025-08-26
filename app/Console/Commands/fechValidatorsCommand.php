@@ -54,20 +54,20 @@ class fechValidatorsCommand extends Command
         if (curl_errno($ch)) {
             echo 'cURL Error: ' . curl_error($ch);
         } else {
-           // Обработка ответа
-           $results = json_decode($response, true);
-           foreach ($results["result"]["current"] as $result) {
-               DB::statement(
-                   'INSERT INTO validators (vote_pubkey, node_pubkey, created_at, updated_at)
+            // Обработка ответа
+            $results = json_decode($response, true);
+            foreach ($results["result"]["current"] as $result) {
+                DB::statement(
+                    'INSERT INTO validators (vote_pubkey, node_pubkey, created_at, updated_at)
                  VALUES (?, ?, NOW(), NOW())
                  ON CONFLICT (vote_pubkey, node_pubkey)
                  DO UPDATE SET
                      node_pubkey = EXCLUDED.node_pubkey,
                      vote_pubkey = EXCLUDED.vote_pubkey,
                      updated_at = NOW()',
-                   [$result['votePubkey'], $result['nodePubkey']]
-               );
-           }
+                    [$result['votePubkey'], $result['nodePubkey']]
+                );
+            }
         }
 
         // Закрытие cURL
