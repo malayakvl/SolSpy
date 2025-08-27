@@ -5,14 +5,31 @@ import lngHeader from '../../Lang/Header/translation';
 import { usePage } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
 import ApplicationLogo from "./ApplicationLogo";
+import ActionsMenu from "./ActionsMenu";
+import axios from 'axios';
+import { useState } from "react";
 
 export default function Header(auth) {
   const user = usePage().props.auth.user;
   const appLang = useSelector(appLangSelector);
+  const [solRate, setSolRate] = useState({})
+  const [settingsData, setSettingsData] = useState('')
   const lng = new Lang({
     messages: lngHeader,
     locale: appLang,
   });
+
+  const fetchData = async () => {
+    try {
+      const response = await axios.get('/api/fetch-settings');
+      setSolRate(response.data.data.sol_rate)
+      setSettingsData(response.data.data)
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  fetchData();
 
   return (
     <header className="bg-white">
@@ -22,8 +39,13 @@ export default function Header(auth) {
             <ApplicationLogo />
           </div>
           <nav className="flex flex-1 justify-end">
-            <nav className="flex flex-1 justify-end">
-              {auth.user ? (
+            <nav className="flex flex-2 inline align-middle">
+              <div className="md:space-x-4 md:flex md:pr-[30px] inline align-middle pt-[8px] text-[14px]">Epoch  {settingsData?.epoch}</div>
+              <div className="md:space-x-4 md:flex md:pr-[30px] inline align-middle pt-[8px] text-[14px]">1 SOL = {settingsData?.sol_rate}$</div>
+              <ActionsMenu />
+            </nav>
+            <nav className="flex flex-3 justify-end inline align-middle text-[14px]">
+              {auth?.user ? (
                   <Link
                       href={route('dashboard')}
                       className="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"

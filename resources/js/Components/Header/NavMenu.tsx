@@ -15,10 +15,11 @@ export default function NavMenu(props) {
   });
   const user = usePage().props.auth.user;
   const permissions = usePage().props.auth.can;
+
   return (
     <>
       <div className="md:space-x-4 md:flex md:pr-[30px]">
-        {usePage().props.auth.role.length > 0 && (
+        {usePage().props?.auth.role && (
           <div className="md:mt-[3px]">
             <Menu as="div" className="relative top-menu-nav">
               <MenuButton className="inline-flex items-center text-sm">

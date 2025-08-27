@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout';
 import { Head, usePage } from '@inertiajs/react';
 import Lang from 'lang.js';
-import lngDashboard from '../../Lang/Dashboard/translation';
+import lngVaidators from '../../Lang/Validators/translation';
 import { useSelector } from 'react-redux';
 import { appLangSelector } from '../../Redux/Layout/selectors';
 import React, { useEffect, useState } from 'react';
@@ -13,7 +13,6 @@ import { useMemo } from 'react';
 import { MaterialReactTable, useMaterialReactTable } from 'material-react-table';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faTrash,
     faArrowUpRightFromSquare
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -36,43 +35,6 @@ const colValidatorsFull = [
     { accessorKey: 'name', header: 'Name', enableHiding: true },
 ]
 
-// ModuleRegistry.registerModules([AllCommunityModule]);
-// const columns = [
-//     { accessorKey: 'name', header: 'Name', enableHiding: true },
-//     { accessorKey: 'rank', header: 'Rank', enableHiding: true },
-//     { accessorKey: 'voteCredits', header: 'Vote Credits', enableHiding: true },
-//     { accessorKey: 'stake', header: 'Stake', enableHiding: true },
-//     { accessorKey: 'stakeChanges', header: 'Stake Changes', enableHiding: true },
-//     { accessorKey: 'comission', header: 'Commission', enableHiding: true },
-//     { accessorKey: 'stakeAccounts', header: 'Stake Accounts', enableHiding: true },
-//     { accessorKey: 'leaderSlot', header: 'Leader Slots', enableHiding: true },
-//
-//     { accessorKey: 'asn', header: 'ASN', enableHiding: true },
-//     { accessorKey: 'city', header: 'City', enableHiding: true },
-//     { accessorKey: 'country', header: 'Country', enableHiding: true },
-//     { accessorKey: 'epochStart', header: 'Epoch start', enableHiding: true },
-//     { accessorKey: 'ip', header: 'IP', enableHiding: true },
-//     { accessorKey: 'epochStart', header: 'Epoch start', enableHiding: true },
-//     { accessorKey: 'runningJito', header: 'Running Jito', enableHiding: true },
-//     { accessorKey: 'lastVotedSlot', header: 'Last Voted Slot', enableHiding: true },
-//     { accessorKey: 'currentLiquidStake', header: 'Current Liquid Stake', enableHiding: true },
-//     { accessorKey: 'changeLiquidStake', header: 'Changing Liquid Stake', enableHiding: true },
-//     { accessorKey: 'targetLiquidStake', header: 'Target Liquid Stake', enableHiding: true },
-//     { accessorKey: 'locationCoordinated', header: 'Location Coordinates', enableHiding: true },
-//     { accessorKey: 'mevComission', header: 'MEV Commission', enableHiding: true },
-//     { accessorKey: 'asnOrg', header: 'ASN Organization', enableHiding: true },
-//     { accessorKey: 'rootSlot', header: 'Root Slot', enableHiding: true },
-//     { accessorKey: 'score', header: 'Score', enableHiding: true },
-//     { accessorKey: 'skipRate', header: 'Skip Rate', enableHiding: true },
-//     { accessorKey: 'leaderSlotsDone', header: 'Leader Slots Done', enableHiding: true },
-//     { accessorKey: 'leaderSlotsSkipped', header: 'Leader Slots Skipped', enableHiding: true },
-//     { accessorKey: 'status', header: 'Status', enableHiding: true },
-//     { accessorKey: 'superminority', header: 'Superminority', enableHiding: true },
-//     { accessorKey: 'uptime', header: 'Uptime (30d)', enableHiding: true },
-//     { accessorKey: 'vesion', header: 'Version', enableHiding: true },
-//     { accessorKey: 'voteSuccess', header: 'Vote Success', enableHiding: true },
-// ];
-
 const columns = [
     { accessorKey: 'rank', header: 'Rank', enableHiding: false },
     { accessorKey: 'name', header: 'Name', enableHiding: true },
@@ -86,12 +48,11 @@ const columns = [
 
 
 export default function Index(validatorsData) {
-    console.log('Validators data', validatorsData.validatorsData)
     const data = validatorsData.validatorsData;
 
     const appLang = useSelector(appLangSelector);
     const msg = new Lang({
-        messages: lngDashboard,
+        messages: lngVaidators,
         locale: appLang,
     });
     const [validatorData, setValidatorData] = useState([]);

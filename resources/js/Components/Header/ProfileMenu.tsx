@@ -5,8 +5,6 @@ import lngHeader from '../../Lang/Header/translation';
 import Dropdown from '../../Components/Form/Dropdown';
 import { usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { Link } from '@inertiajs/react';
-import {changeLangAction} from "../../Redux/Layout";
 
 export default function ProfileMenu() {
   const [showingNavigationDropdown, setShowingNavigationDropdown] =
