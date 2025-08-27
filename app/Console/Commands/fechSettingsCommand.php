@@ -44,7 +44,7 @@ class fechSettingsCommand extends Command
             $query = ('UPDATE settings SET sol_rate=' .$data['solana']['usd']);
             DB::statement($query);
 
-            $url = 'https://api.devnet.solana.com';
+            $url = 'http://103.167.235.81:8899';
 
             // JSON payload
             $payload = [
@@ -69,7 +69,7 @@ class fechSettingsCommand extends Command
 
             // Execute cURL request
             $response = curl_exec($ch);
-
+//dd($response);exit;
             // Check for errors
             if (curl_errno($ch)) {
                 echo 'Error: ' . curl_error($ch);

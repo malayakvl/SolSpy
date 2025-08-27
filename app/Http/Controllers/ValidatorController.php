@@ -14,7 +14,7 @@ class ValidatorController extends Controller
     public function index(Request $request): Response
     {
         $validatorsData = DB::table('validators')
-            ->where('id', '>=', '574')->orderBy('id')->limit(10)->get();
+            ->where('id', '>=', '574')->orderBy('id')->limit(5)->get();
 
         return Inertia::render('Validators/Index', [
             'validatorsData' => $validatorsData,

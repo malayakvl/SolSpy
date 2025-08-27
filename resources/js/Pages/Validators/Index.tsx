@@ -4,7 +4,7 @@ import Lang from 'lang.js';
 import lngVaidators from '../../Lang/Validators/translation';
 import { useSelector } from 'react-redux';
 import { appLangSelector } from '../../Redux/Layout/selectors';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
 import MovingGridTable from "../../Components/GridResult";
@@ -15,6 +15,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faArrowUpRightFromSquare
 } from '@fortawesome/free-solid-svg-icons';
+import ValidatorCredits from "./ValidatorCredits";
 
 const colValidatorsFull = [
     { accessorKey: 'asn', header: 'ASN', enableHiding: true },
@@ -49,6 +50,7 @@ const columns = [
 
 export default function Index(validatorsData) {
     const data = validatorsData.validatorsData;
+    const rpcUrl = 'http://103.167.235.81:8899';
 
     const appLang = useSelector(appLangSelector);
     const msg = new Lang({
@@ -66,58 +68,12 @@ export default function Index(validatorsData) {
     const itemsPerPage = 15;
     const [checkResult, setCheckResult] = useState('');
 
-    // const table = useMaterialReactTable({
-    //     columns,
-    //     data,
-    //     enableColumnOrdering: true,
-    //     initialState: {
-    //         columnVisibility: {
-    //             asn: false,
-    //             city: false,
-    //             country: false,
-    //             epochStart: false,
-    //             runningJito: false,
-    //             lastVotedSlot: false,
-    //             currentLiquidStake: false,
-    //             changeLiquidStake: false,
-    //             targetLiquidStake: false,
-    //             leaderSlotsSkipped: false,
-    //             locationCoordinated: false,
-    //             mevComission: false,
-    //             asnOrg: false,
-    //             rootSlot: false,
-    //             score: false,
-    //             skipRate: false,
-    //             leaderSlotsDone: false,
-    //             status: false,
-    //             superminority: false,
-    //             uptime: false,
-    //             vesion: false,
-    //             voteSuccess: false,
-    //             ip: false,
-    //         }, // Скрыть колонку 'Age' по умолчанию
-    //     },
-    // });
-
-    // Функция для переключения видимости колонки 'age'
-    // const toggleAgeColumn = () => {
-    //     table.getColumn('uptime').toggleVisibility(); // Переключает видимость (true/false)
-    // };
-
-    // Функция для явного задания видимости
-    // const showAgeColumn = () => {
-    //     table.setColumnVisibility((prev) => ({
-    //         ...prev,
-    //         uptime: true, // Установить видимость колонки 'age' в true
-    //     }));
-    // };
-
     const fetchVoteAccounts = async () => {
         setLoading(true);
         setError(null);
 
         try {
-            const response = await fetch('http://103.167.235.81:8899', {
+            const response = await fetch(rpcUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -134,58 +90,8 @@ export default function Index(validatorsData) {
             }
 
             const result = await response.json();
-            console.log(result.result.current.length);
-//             const _checkValidator =  result.result.current.find(
-//                 _x => _x.votePubkey === 'HxRrsnbc6K8CdEo3LCTrSUkFaDDxv9BdJsTDzBKnUVWH'
-//             );
-//             if (_checkValidator) {
-//                 console.log('========================');
-//                 console.log('========================');
-//                 console.log('Check rate method', _checkValidator)
-// //getVoteRateCheck(votePubkey, identityPubkey, voteAccounts)
-//                 await getVoteRateCheck(_checkValidator.votePubkey, _checkValidator.nodePubkey, result.result.current)
-//                 console.log('========================');
-//                 console.log('========================');
-//             }
+            setValidatorData(result.result.current);
 
-
-            const sorted = [...result.result.current].sort((a, b) => Number(b.activatedStake) - Number(a.activatedStake));
-            console.log(sorted);
-            setValidatorData(sorted);
-
-            // Load validator data from localStorage
-            const storedData = localStorage.getItem('validator_data');
-            const validatorCache = storedData ? JSON.parse(storedData) : {};
-            setValidatorInfo(validatorCache);
-
-            // Fetch vote rates for the current page
-            // const missingVoteRates = sorted
-            //     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-            //     .filter(account => !voteRateCache.has(`${account.votePubkey}-${account.nodePubkey}`));
-            //
-            // if (missingVoteRates.length > 0) {
-            //     const newVoteRates = { ...voteRates };
-            //     for (const account of missingVoteRates) {
-            //         const cacheKey = `${account.votePubkey}-${account.nodePubkey}`;
-            //         const rate = await getVoteRate(account.votePubkey, account.nodePubkey, sorted);
-            //         voteRateCache.set(cacheKey, rate);
-            //         newVoteRates[account.votePubkey] = rate;
-            //         await delay(150); // Rate limiting
-            //     }
-            //     setVoteRates(newVoteRates);
-            // }
-
-            // Fetch validator info for missing pubkeys
-            // const missingPubkeys = sorted
-            //     .slice(0, itemsPerPage)
-            //     .map(account => account.votePubkey)
-            //     .filter(pubkey => !validatorCache[pubkey]);
-            // if (missingPubkeys.length > 0) {
-            //     setNameLoading(true);
-            //     await fetchMissingValidatorInfo(missingPubkeys);
-            // } else {
-            //     setStorageStatus('Все данные валидаторов для первой страницы загружены из localStorage');
-            // }
         } catch (err) {
             setError(err.message);
         } finally {
@@ -194,11 +100,33 @@ export default function Index(validatorsData) {
         }
     };
 
+    const getLastVotedSlot = (key) => {
+        const _fData =  validatorData.find(
+            _x => _x.votePubkey === key
+        );
+
+        if (_fData) {
+            return formattedNumData(_fData.lastVote);
+        } else {
+            return '';
+        }
+    }
+
+
+    const formattedNumData = (val) => {
+        return Number(val).toLocaleString('en-US', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        })
+    }
+
+
     useEffect(() => {
-        // fetchVoteAccounts();
-        // const intervalId = setInterval(fetchVoteAccounts, 2000);
+        fetchVoteAccounts();
+        // const intervalId = setInterval(fetchVoteAccounts, 5000);
         // return () => clearInterval(intervalId);
     }, []);
+
 
     return (
         <AuthenticatedLayout header={<Head />}>
@@ -213,37 +141,61 @@ export default function Index(validatorsData) {
                             <table className="min-w-full divide-y divide-gray-200 validator-table">
                                 <thead>
                                     <tr>
-                                        <th>Rank</th>
+                                        <th>&nbsp;</th>
+                                        <th>Spy Rank</th>
+                                        <th>Avatar</th>
                                         <th>Name</th>
-                                        <th>Vote Credits</th>
-                                        <th>Stake</th>
-                                        <th>Stake Changes</th>
-                                        <th className="text-center">Comission</th>
-                                        <th>Stake Account</th>
-                                        <th>Leader Slots</th>
-                                        <th>Leader Slots Done</th>
-                                        <th>Leader Slots Skipped</th>
-                                        <th>ASN</th>
-                                        <th>Location Coordinates</th>
-                                        <th>City</th>
-                                        <th>Country</th>
-                                        <th>Epoch start</th>
-                                        <th>IP</th>
-                                        <th>Running Jito</th>
-                                        <th>Last Voted Slot</th>
-                                        <th>Current Liquid Stake</th>
-                                        <th>Changing Liquid Stake</th>
-                                        <th>Target Liquid Stake</th>
-                                        <th>MEV Commission</th>
-                                        <th>ASN Organization</th>
-                                        <th>Root Slot</th>
-                                        <th>Score</th>
-                                        <th>Skip Rate</th>
                                         <th>Status</th>
-                                        <th>Superminority</th>
-                                        <th>Uptime (30d)</th>
-                                        <th>Version</th>
-                                        <th>Vote Success</th>
+                                        <th>TVC Score</th>
+                                        <th>Vote Credits</th>
+                                        <th>Active Stake</th>
+                                        <th>Inflation Commission</th>
+                                        <th>MEV Commission</th>
+                                        <th>Uptime</th>
+                                        <th>Client</th>
+                                        <th>Status SFDP</th>
+                                        <th>Location</th>
+                                        <th>Awards</th>
+                                        <th>Vote Rate</th>
+                                        <th>Website</th>
+                                        <th>City</th>
+                                        <th>ASN</th>
+                                        <th>IP</th>
+                                        <th>Jiito Score</th>
+                                        <th>&nbsp;</th>
+
+
+                                        {/*<th>Rank</th>*/}
+                                        {/*<th>Name</th>*/}
+                                        {/*<th>Last Voted Slot</th>*/}
+                                        {/*<th>Vote Credits</th>*/}
+                                        {/*<th>Stake</th>*/}
+                                        {/*<th>Stake Changes</th>*/}
+                                        {/*<th className="text-center">Comission</th>*/}
+                                        {/*<th>Stake Account</th>*/}
+                                        {/*<th>Leader Slots</th>*/}
+                                        {/*<th>Leader Slots Done</th>*/}
+                                        {/*<th>Leader Slots Skipped</th>*/}
+                                        {/*<th>ASN</th>*/}
+                                        {/*<th>Location Coordinates</th>*/}
+                                        {/*<th>City</th>*/}
+                                        {/*<th>Country</th>*/}
+                                        {/*<th>Epoch start</th>*/}
+                                        {/*<th>IP</th>*/}
+                                        {/*<th>Running Jito</th>*/}
+                                        {/*<th>Current Liquid Stake</th>*/}
+                                        {/*<th>Changing Liquid Stake</th>*/}
+                                        {/*<th>Target Liquid Stake</th>*/}
+                                        {/*<th>MEV Commission</th>*/}
+                                        {/*<th>ASN Organization</th>*/}
+                                        {/*<th>Root Slot</th>*/}
+                                        {/*<th>Score</th>*/}
+                                        {/*<th>Skip Rate</th>*/}
+                                        {/*<th>Status</th>*/}
+                                        {/*<th>Superminority</th>*/}
+                                        {/*<th>Uptime (30d)</th>*/}
+                                        {/*<th>Version</th>*/}
+                                        {/*<th>Vote Success</th>*/}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -290,19 +242,25 @@ export default function Index(validatorsData) {
                                                 </div>
                                             </div>
                                         </th>
-                                        <td className="px-6 py-4">{validator.credits}</td>
+                                        <td className="px-6 py-4">{getLastVotedSlot(validator.vote_pubkey)}</td>
+                                        <td className="px-6 py-4">
+                                            <ValidatorCredits voteData={validatorData} validator={validator} />
+                                            {/*<Suspense fallback="Loading...">*/}
+                                            {/*    <VoteRate votePubkey={validator.vote_pubkey} identityPubkey={validator.node_pubkey} />*/}
+                                            {/*</Suspense>*/}
+                                        </td>
                                         <td className="px-6 py-4">
                                             {Number(validator.activated_stake).toLocaleString('en-US', {
                                                 minimumFractionDigits: 0,
                                                 maximumFractionDigits: 0
                                             })}
                                         </td>
-                                        <td className="px-6 py-4">&nbsp;</td>
-                                        <td className="px-6 py-4 max-w-[70px] text-center">{validator.commission}%</td>
                                         <td className="px-6 py-4">Stake Account</td>
+                                        <td className="px-6 py-4 max-w-[70px] text-center">{validator.commission}%</td>
                                         <td className="px-6 py-4">Leader Slots</td>
                                         <td className="px-6 py-4">Leader Slots Done</td>
                                         <td className="px-6 py-4">Leader Slots Skipped</td>
+                                        <td className="px-6 py-4">&nbsp;</td>
                                         <td className="px-6 py-4">{validator.ip_asn}</td>
                                         <td className="px-6 py-4">{validator.latitude},<br/> {validator.longitude}</td>
                                         <td className="px-6 py-4">{validator.ip_city}<br/>{validator.v_city}</td>
@@ -315,15 +273,15 @@ export default function Index(validatorsData) {
                                         <td className="px-6 py-4">Changing Liquid Stake</td>
                                         <td className="px-6 py-4">Target Liquid Stake</td>
                                         <td className="px-6 py-4">MEV Commission</td>
-                                        <td className="px-6 py-4">ASN Organization</td>
                                         <td className="px-6 py-4">Root Slot</td>
-                                        <td className="px-6 py-4">Score</td>
+                                        <td className="px-6 py-4">Root Slot</td>
+                                        {/*<td className="px-6 py-4">Score</td>*/}
                                         <td className="px-6 py-4">Skip Rate</td>
                                         <td className="px-6 py-4">Status</td>
                                         <td className="px-6 py-4">{validator.superminority === 1 ? 'Yes' : 'No'}</td>
                                         <td className="px-6 py-4">{validator.uptime}</td>
                                         <td className="px-6 py-4">{validator.version}</td>
-                                        <td className="px-6 py-4">Vote Success</td>
+                                        <td className="px-6 py-4">&nbsp;</td>
                                     </tr>
                                 ))}
                                 </tbody>
