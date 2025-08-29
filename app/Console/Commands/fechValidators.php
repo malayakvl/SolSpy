@@ -5,14 +5,14 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
-class fechValidatorsCommand extends Command
+class fechValidators extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:fech-validators-command';
+    protected $signature = 'app:fech-validators';
 
     /**
      * The console command description.
@@ -38,6 +38,7 @@ class fechValidatorsCommand extends Command
             'method' => 'getVoteAccounts'
         ];
 
+
         // Инициализация cURL
         $ch = curl_init('http://103.167.235.81:8899');
 
@@ -54,22 +55,10 @@ class fechValidatorsCommand extends Command
         if (curl_errno($ch)) {
             echo 'cURL Error: ' . curl_error($ch);
         } else {
-            // Обработка ответа
-            $results = json_decode($response, true);
-            foreach ($results["result"]["current"] as $result) {
-                DB::statement(
-                    'INSERT INTO validators (vote_pubkey, node_pubkey, created_at, updated_at)
-                 VALUES (?, ?, NOW(), NOW())
-                 ON CONFLICT (vote_pubkey, node_pubkey)
-                 DO UPDATE SET
-                     node_pubkey = EXCLUDED.node_pubkey,
-                     vote_pubkey = EXCLUDED.vote_pubkey,
-                     updated_at = NOW()',
-                    [$result['votePubkey'], $result['nodePubkey']]
-                );
-            }
+            $query = "SELECT data.update_validators_common('$response'::jsonb);";
+            DB::statement($query);
         }
-
+        echo "All validators was updated";
         // Закрытие cURL
         curl_close($ch);
 

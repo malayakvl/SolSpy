@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\NOTUSED;
 
+use App\Console\Commands\Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -42,8 +43,8 @@ class fechValidatorsNameCommand extends Command
                 echo "API request failed" . $response->status() . "\n";
 //                break;
             }
-
             $data = $response->json();
+            dd($data);
             foreach ($data as $result) {
                 $escapedName = DB::getPdo()->quote($result['name']);
                 $escapedDetails = DB::getPdo()->quote($result['details']);

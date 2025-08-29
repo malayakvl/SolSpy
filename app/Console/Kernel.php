@@ -9,12 +9,12 @@ class Kernel extends ConsoleKernel
 {
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('task:run')->everyFiveMinutes();
+        $schedule->command('app:fetch-settings')->everyFiveMinutes();
     }
 
     protected function commands()
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__);
         require base_path('routes/console.php');
     }
 }

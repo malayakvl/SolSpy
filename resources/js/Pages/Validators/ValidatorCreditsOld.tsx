@@ -1,51 +1,32 @@
 import React, { useEffect, useState } from 'react';
 
-export default function ValidatorCredits({validator}) {
+export default function ValidatorCredits({voteData, validator}) {
     const rpcUrl = 'http://103.167.235.81:8899';
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
     const [voteCredit, setVoteCredit] = useState(null);
 
-
     useEffect(() => {
-        console.log(validator?.epoch_credits);
-        const epochData = JSON.parse(validator?.epoch_credits ? validator?.epoch_credits : '[]');
-        console.log(epochData);
-        if (epochData.length > 0) {
-            const result = epochData.find(subArray => subArray[0] === 840);
-            const resultIndex = epochData.findIndex(subArray => subArray[0] === 839);
+        // fetchVoteRate();
+        if (voteData.length > 0) {
+            const _vData = voteData.find(_d => _d.votePubkey === validator.vote_pubkey);
+            const result = _vData.epochCredits.find(subArray => subArray[0] === 839);
+            const resultIndex = _vData.epochCredits.findIndex(subArray => subArray[0] === 839);
+
             if (resultIndex) {
-                const previous = epochData[resultIndex - 1];
+                const previous = _vData.epochCredits[resultIndex - 1];
                 const tmpData = result[1] - previous[1];
+                console.log(tmpData);
+
                 setVoteCredit(Number(tmpData).toLocaleString('en-US', {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 0
                 }));
             } else {
-                setVoteCredit(' - ')
+                setVoteCredit(0);
             }
-            console.log('Result', result);
         }
-        // fetchVoteRate();
-        // if (voteData.length > 0) {
-        //     const _vData = voteData.find(_d => _d.votePubkey === validator.vote_pubkey);
-        //     const result = _vData.epochCredits.find(subArray => subArray[0] === 839);
-        //     const resultIndex = _vData.epochCredits.findIndex(subArray => subArray[0] === 839);
-        //
-        //     if (resultIndex) {
-        //         const previous = _vData.epochCredits[resultIndex - 1];
-        //         const tmpData = result[1] - previous[1];
-        //         console.log(tmpData);
-        //
-        //         setVoteCredit(Number(tmpData).toLocaleString('en-US', {
-        //             minimumFractionDigits: 0,
-        //             maximumFractionDigits: 0
-        //         }));
-        //     } else {
-        //         setVoteCredit(0);
-        //     }
-        // }
-    }, [validator])
+    }, [voteData])
 
     const fetchVoteRate = async () => {
         setLoading(true);

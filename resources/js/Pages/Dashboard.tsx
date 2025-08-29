@@ -230,7 +230,7 @@ console.log(sorted);
     };
 
     useEffect(() => {
-        fetchVoteAccounts();
+        // fetchVoteAccounts();
         // const intervalId = setInterval(fetchVoteAccounts, 2000);
         // return () => clearInterval(intervalId);
     }, []);

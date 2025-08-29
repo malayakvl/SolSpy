@@ -6,14 +6,14 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
-class fechSettingsCommand extends Command
+class FetchSettings extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:fech-settings';
+    protected $signature = 'app:fetch-settings';
 
     /**
      * The console command description.
@@ -27,8 +27,7 @@ class fechSettingsCommand extends Command
      */
     public function handle()
     {
-        //
-        \Log::info('Task executed at: ' . now());
+        \Log::info('Command app:fetch-settings executed at ' . now());
         $this->info('Start fetching settings info!');
 
         try {
@@ -45,7 +44,6 @@ class fechSettingsCommand extends Command
             DB::statement($query);
 
             $url = 'http://103.167.235.81:8899';
-
             // JSON payload
             $payload = [
                 'jsonrpc' => '2.0',
@@ -85,40 +83,8 @@ class fechSettingsCommand extends Command
                     transaction_count=' .$_result->result->transactionCount.'
                 ');
                 DB::statement($query);
-                dd($_result->result->absoluteSlot);exit;
+                $this->info('Update time to '.$_result->result->absoluteSlot);
             }
-
-//            $data = $response->json();
-//            foreach ($data as $result) {
-//                $asn = DB::getPdo()->quote($result['ip_asn']);
-//                $city = DB::getPdo()->quote($result['ip_city']);
-//                $country = DB::getPdo()->quote($result['ip_country']);
-//                $org = DB::getPdo()->quote($result['ip_org']);
-//                $varsion = DB::getPdo()->quote($result['version']);
-//                $query = ('UPDATE validators SET
-//                        ip_asn = '.$asn. ',
-//                        ip_city = '.$city. ',
-//                        ip_country = '.$country. ',
-//                        ip_org = '.$org. ',
-//                        rank = '.$result['rank']. ',
-//                        epoch = '.$result['epoch']. ',
-//                        last_vote = '.$result['last_vote']. ',
-//                        version = '.$varsion. ',
-//                        is_jito = '.($result['is_jito'] ? $result['is_jito'] : 0). ',
-//                        jito_commission_bps = '.$result['jito_commission_bps']. ',
-//                        credits = '.$result['credits']. ',
-//                        epoch_credits = '.$result['epoch_credits']. ',
-//                        commission = '.$result['commission']. ',
-//                        root_slot = '.$result['root_slot']. ',
-//                        activated_stake = '.$result['activated_stake']. '
-//                      WHERE vote_pubkey = \'' .$result['vote_identity'].'\' OR node_pubkey = \'' .$result['vote_identity'].'\'
-//                ');
-////                echo $query."\n";
-//
-//                DB::statement($query);
-//            }
-            echo "All records processed successfully!\n";
-
         } catch (Exception $e) {
             echo "Error: " . $e->getMessage() . "\n";
         }
