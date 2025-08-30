@@ -135,67 +135,7 @@ class fechValidatorsMarinade extends Command
                 \Log::error("Failed to update validators: " . $e->getMessage());
                 throw $e; // Or handle as needed
             }
-
-//            $query = ('UPDATE data.validators SET
-//                        name = '.$name. ',
-//                        start_epoch = '.$startEpoch. ',
-//                        url = '.$url. ',
-//                        ip = '.$ip. ',
-//                        latitude = '.($lat ? $lat : 0). ',
-//                        longitude = '.($lng ? $lng : 0). ',
-//                        country = '.$country. ',
-//                        city = '.$city. ',
-//                        version = '.$version. ',
-//                        superminority = '.($superminority === 1 ? 'true' : 'false'). ',
-//                        epoch_stats = '.$stats. ',
-//                        epochs_count = '.$epochCount. ',
-//                        has_last_epoch_stats = '.($hLastEpochStat === 1 ? 'true' : 'false'). ',
-//                        avg_uptime = '.$avgUptine. ',
-//                        avg_apy = '.$avgApy. '
-//                      WHERE vote_pubkey = \'' .$result['vote_account'].'\' AND node_pubkey = \'' .$result['identity'].'\'
-//                ');
-//            DB::statement($query);
         }
         echo "All fetched";
-
-//        try {
-//            $response = Http::get('https://validators-api.marinade.finance/validators?limit=1&offset=0');
-//            if ($response->failed()) {
-//                echo "API request failed" . $response->status() . "\n";
-////                break;
-//            }
-//
-//            $data = $response->json();
-//            foreach ($data['validators'] as $result) {
-////                dd($result);exit;
-////                $asn = DB::getPdo()->quote($result['ip_asn']);
-//                $city = DB::getPdo()->quote($result['dc_city']);
-//                $country = DB::getPdo()->quote($result['dc_country']);
-//                $stats = DB::getPdo()->quote(json_encode($result['epoch_stats']));
-//                $version = DB::getPdo()->quote($result['version']);
-//                $query = ('UPDATE validators SET
-//                        v_city = '.$city. ',
-//                        v_country = '.$country. ',
-//                        v_version = '.$version. ',
-//                        v_credits = '.$result['credits']. ',
-//                        v_activated_stake = '.$result['activated_stake']. ',
-//                        superminority = '.($result['superminority'] ? 1 : 0). ',
-//                        start_epoch = '.$result['start_epoch']. ',
-//                        epochs_count = '.$result['epochs_count']. ',
-//                        epoch_stats = '.$stats. '
-//                      WHERE vote_pubkey = \'' .$result['vote_account'].'\' OR node_pubkey = \'' .$result['vote_account'].'\'
-//                ');
-////                echo $query."\n";
-//
-//                DB::statement($query);
-//            }
-//            echo "API request failed for update validators done\n";
-//
-//
-//            echo "All records processed successfully!\n";
-//
-//        } catch (Exception $e) {
-//            echo "Error: " . $e->getMessage() . "\n";
-//        }
     }
 }

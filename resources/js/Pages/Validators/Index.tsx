@@ -248,21 +248,21 @@ export default function Index(validatorsData) {
                                         {/*Статус SFDP*/}
                                         <td className="px-6 py-4"> - </td>
                                         {/*Location*/}
-                                        <td className="px-6 py-4">{validator.v_country}</td>
+                                        <td className="px-6 py-4">{validator.country}</td>
                                         {/*Awards*/}
                                         <td className="px-6 py-4"> - </td>
                                         {/*Vote Rate*/}
                                         <td className="px-6 py-4"> - </td>
                                         {/*Website*/}
                                         <td className="px-6 py-4">
-                                            <a href={validator.www_url} target="_blank">
-                                                {validator.www_url.slice(0, 15)}...{validator.www_url.slice(-9)}
+                                            <a href={validator.url} target="_blank">
+                                                {validator.url.slice(0, 15)}...{validator.url.slice(-9)}
                                             </a>
                                         </td>
                                         {/*City*/}
-                                        <td className="px-6 py-4">{validator.v_city}</td>
+                                        <td className="px-6 py-4">{validator.city}</td>
                                         {/*ASN*/}
-                                        <td className="px-6 py-4">{validator.ip_asn}</td>
+                                        <td className="px-6 py-4">{validator.asn}</td>
                                         <td className="px-6 py-4">{validator.ip}</td>
                                         <td className="px-6 py-4">JS</td>
                                         <td className="px-6 py-4 whitespace-nowrap">

@@ -8,12 +8,12 @@ export default function ValidatorCredits({validator}) {
 
 
     useEffect(() => {
-        console.log(validator?.epoch_credits);
+        // console.log(validator?.epoch_credits);
         const epochData = JSON.parse(validator?.epoch_credits ? validator?.epoch_credits : '[]');
-        console.log(epochData);
+        // console.log(epochData);
         if (epochData.length > 0) {
-            const result = epochData.find(subArray => subArray[0] === 840);
-            const resultIndex = epochData.findIndex(subArray => subArray[0] === 839);
+            const result = epochData.find(subArray => subArray[0] === 841);
+            const resultIndex = epochData.findIndex(subArray => subArray[0] === 841);
             if (resultIndex) {
                 const previous = epochData[resultIndex - 1];
                 const tmpData = result[1] - previous[1];
