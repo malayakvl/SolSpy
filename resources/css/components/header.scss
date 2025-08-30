@@ -151,3 +151,18 @@
     background: #26576b;
     color: #fff !important;
 }
+.progress-bar {
+    //border: solid 1px;
+    min-width: 130px;
+    position: relative;
+    //display: flex;
+}
+.progress-bar-caption {
+    margin-top: 0;
+    text-align: center;
+    margin-left: 5px;
+    font-size: 14px;
+    width: 80px;
+    position: absolute;
+    top: 0;
+}

@@ -1,19 +1,19 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\NOTUSED;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
-class fechValidatorsStaticInfoMMarinade extends Command
+class fechValidatorsStaticInfoMarinade extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:fech-validators-static-marinade-missing-info';
+    protected $signature = 'app:fech-validators-static-marinade-info';
 
     /**
      * The console command description.
@@ -85,13 +85,22 @@ class fechValidatorsStaticInfoMMarinade extends Command
             // Здесь ваша логика обработки каждого валидатора
             $result = $validator;
             echo "Update Validator: " . $validator['vote_account'] . "\n"; // Пример, предполагая, что есть поле 'address'
-            $nodeIp = DB::getPdo()->quote($result['node_ip']);
-//            $city = DB::getPdo()->quote($result['dc_city']);
-//            $country = DB::getPdo()->quote($result['dc_country']);
-//            $stats = DB::getPdo()->quote(json_encode($result['epoch_stats']));
-//            $version = DB::getPdo()->quote($result['version']);
+            $city = DB::getPdo()->quote($result['dc_city']);
+            $country = DB::getPdo()->quote($result['dc_country']);
+            $stats = DB::getPdo()->quote(json_encode($result['epoch_stats']));
+            $version = DB::getPdo()->quote($result['version']);
+
+
             $query = ('UPDATE validators SET
-                        ip = '.$nodeIp. '
+                        v_city = '.$city. ',
+                        v_country = '.$country. ',
+                        v_version = '.$version. ',
+                        v_credits = '.$result['credits']. ',
+                        v_activated_stake = '.$result['activated_stake']. ',
+                        superminority = '.($result['superminority']  ? 1 : 0). ',
+                        start_epoch = '.$result['start_epoch']. ',
+                        epochs_count = '.$result['epochs_count']. ',
+                        epoch_stats = '.$stats. '
                       WHERE vote_pubkey = \'' .$result['vote_account'].'\' OR node_pubkey = \'' .$result['vote_account'].'\'
                 ');
 //                echo $query."\n";
