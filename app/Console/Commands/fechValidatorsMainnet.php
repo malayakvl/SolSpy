@@ -51,6 +51,7 @@ class fechValidatorsMainnet extends Command
                         'jito' => $result['jito'],
                         'jito_commission' => $result['jito_commission'],
                         'stake_pools_list' => $stats,
+                        'software_client' => $result['software_client'],
                         'avatar_file_url' => @$result['avatar_file_url'] ? $result['avatar_file_url'] : ''
                     ]);
             }

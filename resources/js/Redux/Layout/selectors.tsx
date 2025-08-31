@@ -21,9 +21,9 @@ export const appLangSelector = createSelector(
   rootSelector,
   (layout: State.Layouts): string => layout.appLang
 );
-export const appFilialSelector = createSelector(
+export const appEpochSelector = createSelector(
   rootSelector,
-  (layout: State.Layouts): string => layout.filialName
+  (layout: State.Layouts): string => layout.epoch
 );
 export const switchHeaderSelector = createSelector(
   rootSelector,

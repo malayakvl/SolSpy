@@ -16,7 +16,6 @@ export default function AuthenticatedLayout({ header, children, auth }) {
     messages: lngHeader,
     locale: appLang,
   });
-  const filialName = useSelector(appFilialSelector);
   const showOverlay = useSelector(isShowOverlaySelector);
   const [isNavCollapsed, setIsNavCollapsed] = useState(true);
   const user = usePage().props.auth.user;
@@ -76,7 +75,7 @@ export default function AuthenticatedLayout({ header, children, auth }) {
       {/*  </header>*/}
       {/*)}*/}
 
-      <main className="pt-[60px]">
+      <main className="pt-[0px]">
         <div className="mx-auto w-full">
           <div>{children}</div>
         </div>
