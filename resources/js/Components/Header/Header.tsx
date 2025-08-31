@@ -1,4 +1,4 @@
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { appLangSelector } from '../../Redux/Layout/selectors';
 import Lang from 'lang.js';
 import lngHeader from '../../Lang/Header/translation';
@@ -9,20 +9,18 @@ import ActionsMenu from "./ActionsMenu";
 import axios from 'axios';
 import {useEffect, useState} from "react";
 import ProgressBar from "./ProgressBar";
+import {setEpochAction} from "../../Redux/Layout";
 
 export default function Header(auth) {
+  const dispatch = useDispatch();
   const user = usePage().props.auth.user;
   const appLang = useSelector(appLangSelector);
   const [solRate, setSolRate] = useState({})
   const [epochPersent, setEpochPersent] = useState<any>(0)
   const [settingsData, setSettingsData] = useState('');
   const [settingsFetched, setSettingsFetched] = useState(false)
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [barProgress, setBarProgress] = useState(null);
   const [barProgressCaption, setBarProgressCaption] = useState('');
-  const [epochData, setEpochData] = useState({});
-  const rpcUrl = 'http://103.167.235.81:8899';
 
   const lng = new Lang({
     messages: lngHeader,
@@ -32,8 +30,10 @@ export default function Header(auth) {
   const fetchData = async () => {
     try {
       const response = await axios.get('/api/fetch-settings');
+
       setSolRate(response.data.data.sol_rate)
       setSettingsData(response.data.data);
+      dispatch(setEpochAction(response.data.data.epoch));
 
       const progressPercent = (response.data.data.slot_index / response.data.data.slot_in_epoch) * 100;
       setEpochPersent(progressPercent.toFixed(2));

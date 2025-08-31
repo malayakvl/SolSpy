@@ -11,6 +11,7 @@ import MovingGridTable from "../Components/GridResult";
 import Example from "../Components/GridResult/Ts";
 import { useMemo } from 'react';
 import { MaterialReactTable, useMaterialReactTable } from 'material-react-table';
+import DataTable from 'react-data-table-component';
 
 const colValidatorsFull = [
     { accessorKey: 'asn', header: 'ASN', enableHiding: true },
@@ -100,6 +101,32 @@ export default function Dashboard(clinicName) {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 15;
     const [checkResult, setCheckResult] = useState('');
+
+
+    const columnsN = [
+        {
+            name: 'Title',
+            selector: row => row.title,
+            sortable: true,
+        },
+        {
+            name: 'Year',
+            selector: row => row.year,
+        },
+    ];
+
+    const dataN = [
+        {
+            id: 1,
+            title: 'Beetlejuice',
+            year: '1988',
+        },
+        {
+            id: 2,
+            title: 'Ghostbusters',
+            year: '1984',
+        },
+    ]
 
     const table = useMaterialReactTable({
         columns,
@@ -245,7 +272,11 @@ console.log(sorted);
                     <button className="btn-submit pl-3" onClick={toggleAgeColumn}>Переключить видимость Age</button>
                     <button className="btn-submit ml-3" onClick={showAgeColumn}>Показать Age</button>
                     <div className="mt-6">
-                        <MaterialReactTable table={table} />
+                        <DataTable
+                            columns={columnsN}
+                            data={dataN}
+                        />
+                        {/*<MaterialReactTable table={table} />*/}
                     </div>
 
                 </div>

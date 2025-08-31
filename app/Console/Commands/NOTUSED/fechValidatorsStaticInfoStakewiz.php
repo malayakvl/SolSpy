@@ -58,7 +58,6 @@ class fechValidatorsStaticInfoStakewiz extends Command
                         jito_commission_bps = '.$result['jito_commission_bps']. ',
                         credits = '.$result['credits']. ',
                         epoch_credits = '.$result['epoch_credits']. ',
-                        commission = '.$result['commission']. ',
                         root_slot = '.$result['root_slot']. '
                       WHERE vote_pubkey = \'' .$result['vote_account'].'\' OR node_pubkey = \'' .$result['vote_identity'].'\'
                 ');

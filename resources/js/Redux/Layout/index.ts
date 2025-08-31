@@ -6,6 +6,7 @@ import {
     setSwitchToggleAction,
     setPopupAction,
     showOverlayAction,
+    setEpochAction
 } from './actions';
 import { PaginationType } from '../../Constants';
 const initPagination = { limit: 25, offset: 0, sort: 'DESC', column: 'created_at', query: '' };
@@ -55,7 +56,7 @@ const initialState: State.Layouts = {
     showEmailNotification: false,
     nativeBrowser: false,
     openRealBrowser: false,
-    filialName: ''
+    epoch: ''
 };
 
 // ------------------------------------
@@ -80,7 +81,12 @@ const ACTION_HANDLERS: any = {
             showOverlay: action.payload
         })
     },
-
+    [setEpochAction]: {
+        next: (state: State.Layouts, action: Action<string>): State.Layouts => ({
+            ...state,
+            epoch: action.payload
+        })
+    },
 }
 
 export {
@@ -88,7 +94,8 @@ export {
     setPaginationAction,
     setSwitchToggleAction,
     setPopupAction,
-    showOverlayAction
+    showOverlayAction,
+    setEpochAction
 }
 
 export default handleActions(ACTION_HANDLERS, initialState);
