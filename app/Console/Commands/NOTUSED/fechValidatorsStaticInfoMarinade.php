@@ -84,7 +84,7 @@ class fechValidatorsStaticInfoMarinade extends Command
         foreach ($allValidators as $validator) {
             // Здесь ваша логика обработки каждого валидатора
             $result = $validator;
-            echo "Update Validator: " . $validator['vote_account'] . "\n"; // Пример, предполагая, что есть поле 'address'
+            echo "Update Validators: " . $validator['vote_account'] . "\n"; // Пример, предполагая, что есть поле 'address'
             $city = DB::getPdo()->quote($result['dc_city']);
             $country = DB::getPdo()->quote($result['dc_country']);
             $stats = DB::getPdo()->quote(json_encode($result['epoch_stats']));

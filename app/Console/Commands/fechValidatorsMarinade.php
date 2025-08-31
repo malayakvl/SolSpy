@@ -61,8 +61,7 @@ class fechValidatorsMarinade extends Command
                 $allValidators = array_merge($allValidators, $data['validators']);
 
                 // Выводим информацию о текущей порции (для отладки)
-                echo "Fetched " . count($data['validators']) . " validators at offset $offset\n";
-//                break;
+                $this->info("Fetched " . count($data['validators']) . " validators at offset $offset");
                 // Если получено меньше записей, чем limit, это последняя страница
                 if (count($data['validators']) < $limit) {
                     break;
@@ -78,64 +77,27 @@ class fechValidatorsMarinade extends Command
             }
         } while (true);
 
-        echo "Total validators fetched: " . count($allValidators) . "\n";
+        $this->info("Total validators fetched: " . count($allValidators));
 
         // Пример обработки всех валидаторов
         foreach ($allValidators as $validator) {
             // Здесь ваша логика обработки каждого валидатора
             $result = $validator;
-            echo "Update Validator: " . $validator['info_name'] . ", identity: " .$result['identity']. "\n"; // Пример, предполагая, что есть поле 'address'
-
             try {
-                $sql = 'UPDATE data.validators SET
-                    name = :name,
-                    start_epoch = :start_epoch,
-                    url = :url,
-                    ip = :ip,
-                    latitude = :latitude,
-                    longitude = :longitude,
-                    country = :country,
-                    city = :city,
-                    version = :version,
-                    superminority = :superminority,
-                    epoch_stats = :epoch_stats,
-                    epochs_count = :epochs_count,
-                    has_last_epoch_stats = :has_last_epoch_stats,
-                    avg_uptime = :avg_uptime,
-                    avg_apy = :avg_apy
-                WHERE vote_pubkey = :vote_pubkey AND node_pubkey = :node_pubkey';
-
-                $superminority = $result['superminority'] === 1 ? true : false;
-                $stats = json_encode($result['epoch_stats']);
-                $hLastEpochStat = $result['has_last_epoch_stats'] == 1 ? true : false;
-
-
-                $bindings = [
-                    'name' => !empty($result['info_name']) && is_string($result['info_name']) ? trim($result['info_name'], "'\"") : null,
-                    'start_epoch' => !empty($result['start_epoch']) && is_numeric($result['start_epoch']) ? (int)$result['start_epoch'] : null,
-                    'url' => $result['info_url'],
-                    'ip' => $result['node_ip'],
-                    'latitude' => !empty($result['dc_coordinates_lat']) && is_numeric($result['dc_coordinates_lat']) ? (float)$result['dc_coordinates_lat'] : null,
-                    'longitude' => !empty($result['dc_coordinates_lon']) && is_numeric($result['dc_coordinates_lon']) ? (float)$result['dc_coordinates_lon'] : null,
-                    'country' => $result['dc_country'],
-                    'city' => $result['dc_city'],
-                    'version' => $result['version'],
-                    'superminority' => $superminority === 1 ? true : false,
-                    'epoch_stats' => $stats, // Assuming JSON or string
-                    'epochs_count' => !empty($result['epochs_count']) && is_numeric($result['epochs_count']) ? (int)$result['epochs_count'] : null,
-                    'has_last_epoch_stats' => $hLastEpochStat === 1 ? true : false,
-                    'avg_uptime' => !empty($result['avg_uptime_pct']) && is_numeric($result['avg_uptime_pct']) ? (float)$result['avg_uptime_pct'] : null,
-                    'avg_apy' => !empty($result['avg_apy']) && is_numeric($result['avg_apy']) ? (float)$result['avg_apy'] : null,
-                    'vote_pubkey' => $result['vote_account'],
-                    'node_pubkey' => $result['identity']
+                $updResult = [
+                    "result" => ["current" => $validator],
                 ];
-
-                DB::statement($sql, $bindings);
+                $response = json_encode($updResult);
+                $responseStripped = preg_replace("/(?<!\\\\)'/", '`', $response);
+                $query = "SELECT data.update_validators_marinade('$responseStripped'::jsonb);";
+                DB::statement($query);
+                $this->info("Updated: " . $validator['info_name'] . ", identity: " .$result['identity']);
             } catch (\Exception $e) {
                 \Log::error("Failed to update validators: " . $e->getMessage());
                 throw $e; // Or handle as needed
             }
         }
-        echo "All fetched";
+        $this->info('All validators was updated');
+
     }
 }

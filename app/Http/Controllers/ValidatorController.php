@@ -14,14 +14,12 @@ class ValidatorController extends Controller
     //
     public function index(Request $request): Response
     {
-        // 18578
         $validatorsData = DB::table('data.validators')
             ->where('id', '>=', '19566')
             ->orWhere('id', '=', '18995')
-            ->orderBy('id')->limit(20)->get();
+            ->orderBy('id')->limit(10)->get();
         $validatorsAllData = DB::table('data.validators')
             ->orderBy('activated_stake')->get();
-
 
         $sortedValidators = $validatorsAllData->toArray();
         usort($sortedValidators, function ($a, $b) {
@@ -40,7 +38,8 @@ class ValidatorController extends Controller
 
         return Inertia::render('Validators/Index', [
             'validatorsData' => $results,
-            'settingsData' => Settings::first()
+            'settingsData' => Settings::first(),
+            'totalCount' => $validatorsAllData->count()
         ]);
     }
 
@@ -73,6 +72,13 @@ class ValidatorController extends Controller
 
         return response()->json([
             'validatorsData' => $results
+        ]);
+    }
+
+
+    public function view($voteKey, Request $request): Response {
+
+        return Inertia::render('Validators/View', [
         ]);
     }
 

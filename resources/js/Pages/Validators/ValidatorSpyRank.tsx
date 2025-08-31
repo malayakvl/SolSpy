@@ -37,7 +37,7 @@ export default function ValidatorSpyRank({ validator }) {
 
     return (
         <span className={`transition-colors duration-300 ${colorClass}`}>
-      {validator.spyRank}
-    </span>
+            -
+        </span>
     );
 }

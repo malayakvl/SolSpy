@@ -36,7 +36,7 @@ class makeSiteScreenshot extends Command
 
         // starts headless Chrome
 
-//        $validators = Validator::whereNotNull('www_url')
+//        $validators = Validators::whereNotNull('www_url')
 //            ->where('www_url', '!=', '')->orderBy('id')
 //            ->get();
         $validators = Validator::where('id', '=', 47)->orderBy('id')

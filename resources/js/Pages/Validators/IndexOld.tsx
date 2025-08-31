@@ -190,7 +190,7 @@ export default function Index(validatorsData) {
                                             scope="row"
                                             className="min-w-[150px] px-6 py-4 font-medium text-gray-900 dark:text-white flex items-center space-x-3"
                                         >
-                                            {/* Validator avatar */}
+                                            {/* Validators avatar */}
                                             {validator.avatar_file_url ? (
                                                 <img
                                                     src={validator.avatar_file_url}

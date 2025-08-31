@@ -19,9 +19,9 @@ export default function ValidatorActions({validator}) {
 
     return (
         <>
-            <span>
+            <Link href={`/validator/${validator.vote_pubkey}`}>
                 <FontAwesomeIcon icon={faPencil} className="mr-2" />
-            </span>
+            </Link>
             <span>
                 <FontAwesomeIcon icon={faScaleBalanced} className="mr-2" />
             </span>

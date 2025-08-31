@@ -38,7 +38,6 @@ class fechValidatorsMainnet extends Command
                 echo "API request failed" . $response->status() . "\n";
             }
             $data = $response->json();
-//dd($data);exit;
             foreach ($data as $result) {
                 $stats = json_encode($result['stake_pools_list']);
                 DB::table('data.validators')

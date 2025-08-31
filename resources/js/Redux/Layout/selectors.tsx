@@ -25,10 +25,6 @@ export const appEpochSelector = createSelector(
   rootSelector,
   (layout: State.Layouts): string => layout.epoch
 );
-export const switchHeaderSelector = createSelector(
-  rootSelector,
-  (layout: State.Layouts): boolean => layout.switchHeader
-);
 export const checkedIdsSelector = createSelector(
   rootSelector,
   (layout: State.Layouts): Layouts.checkedIds[] => layout.checkedIds

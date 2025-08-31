@@ -261,7 +261,7 @@ console.log(sorted);
         // const intervalId = setInterval(fetchVoteAccounts, 2000);
         // return () => clearInterval(intervalId);
     }, []);
-// console.log('Validator Data', data);
+// console.log('Validators Data', data);
 
     return (
         <AuthenticatedLayout header={<Head />}>

@@ -5,21 +5,21 @@ use Illuminate\Support\Facades\Artisan;
 
 use Illuminate\Console\Command;
 
-class fechInterval extends Command
+class runCronJobs extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:fech-interval';
+    protected $signature = 'app:run-cron-jobs';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Fetch Interval';
+    protected $description = 'Run cron jobs';
 
     /**
      * Execute the console command.

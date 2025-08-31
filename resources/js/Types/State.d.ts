@@ -1,9 +1,10 @@
 declare namespace State {
     interface Root {
         layouts: Layouts;
-        staff: Staffs;
+        validators: Validators;
     }
 
     type Layouts = Layouts.Root;
+    type Validators = Validators.Root;
     type Staffs = Staffs.Root
 }

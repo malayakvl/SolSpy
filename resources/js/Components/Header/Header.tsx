@@ -62,7 +62,7 @@ export default function Header(auth) {
       fetchData();
       setSettingsFetched(true);
     }
-    const intervalId = setInterval(fetchData, 5000);
+    const intervalId = setInterval(fetchData, 50000);
     return () => clearInterval(intervalId);
   }, [settingsFetched])
 
