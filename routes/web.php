@@ -21,8 +21,9 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/validator/{id}', [ValidatorController::class, 'view'])->name('validator.view');
-Route::get('/validators', [ValidatorController::class, 'index'])->name('validators.view');
+Route::get('/validators/{page?}', [ValidatorController::class, 'index'])->name('validators.view');
+//Route::get('/validator/{id}', [ValidatorController::class, 'view'])->name('validator.view');
+Route::get('/validators/{page}', [ValidatorController::class, 'index'])->name('validators.view');
 
 // Route to redirect to Google's OAuth page
 Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');

@@ -12,15 +12,16 @@ use Inertia\Response;
 class ValidatorController extends Controller
 {
     //
-    public function index(Request $request): Response
+    public function index(Request $request, $page = 1): Response
     {
+        $limit = 10; // Количество записей на страницу
+        $offset = ($page - 1) * $limit; // Расчет offset
+
         $validatorsData = DB::table('data.validators')
-            ->where('id', '>=', '19566')
-            ->orWhere('id', '=', '18995')
-            ->orderBy('id')->limit(10)->get();
+            ->limit(10)->offset($offset)->get();
+
         $validatorsAllData = DB::table('data.validators')
             ->orderBy('activated_stake')->get();
-
         $sortedValidators = $validatorsAllData->toArray();
         usort($sortedValidators, function ($a, $b) {
             return (float)$b->activated_stake - (float)$a->activated_stake;
@@ -39,19 +40,26 @@ class ValidatorController extends Controller
         return Inertia::render('Validators/Index', [
             'validatorsData' => $results,
             'settingsData' => Settings::first(),
-            'totalCount' => $validatorsAllData->count()
+            'totalCount' => $validatorsAllData->count(),
+            'currentPage' => $page
         ]);
     }
 
     public function timeoutData(Request $request)
     {
-        // 18578
+        $page = $request->get('page'); // Получаем номер страницы с фронтенда, по умолчанию 1
+        $limit = 10; // Количество записей на страницу
+        $offset = ($page - 1) * $limit; // Расчет offset
+
         $validatorsData = DB::table('data.validators')
-            ->where('id', '>=', '19566')
-            ->orWhere('id', '=', '18995')
-            ->orderBy('id')->limit(10)->get();
+            ->limit(10)->offset($offset)->get();
+
         $validatorsAllData = DB::table('data.validators')
             ->orderBy('activated_stake')->get();
+        $sortedValidators = $validatorsAllData->toArray();
+        usort($sortedValidators, function ($a, $b) {
+            return (float)$b->activated_stake - (float)$a->activated_stake;
+        });
 
 
         $sortedValidators = $validatorsAllData->toArray();

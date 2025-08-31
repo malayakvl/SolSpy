@@ -10,15 +10,15 @@ import {
     faBan,
     faCheck,
 } from '@fortawesome/free-solid-svg-icons';
-import ValidatorCredits from "./ValidatorCredits";
-import ValidatorRate from "./ValidatorRate";
-import ValidatorActions from "./ValidatorActions";
-import ValidatorName from "./ValidatorName";
-import ValidatorActivatedStake from "./ValidatorActivatedStake";
-import ValidatorUptime from "./ValidatorUptime";
-import ValidatorScore from "./ValidatorScore";
+import ValidatorCredits from "./Partials/ValidatorCredits";
+import ValidatorRate from "./Partials/ValidatorRate";
+import ValidatorActions from "./Partials/ValidatorActions";
+import ValidatorName from "./Partials/ValidatorName";
+import ValidatorActivatedStake from "./Partials/ValidatorActivatedStake";
+import ValidatorUptime from "./Partials/ValidatorUptime";
+import ValidatorScore from "./Partials/ValidatorScore";
 import axios from 'axios';
-import ValidatorSpyRank from "./ValidatorSpyRank";
+import ValidatorSpyRank from "./Partials/ValidatorSpyRank";
 
 export default function Index(validatorsData) {
     const [data, setData] = useState<any>(validatorsData.validatorsData);

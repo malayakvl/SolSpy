@@ -10,16 +10,17 @@ import {
     faBan,
     faCheck,
 } from '@fortawesome/free-solid-svg-icons';
-import ValidatorCredits from "./ValidatorCredits";
-import ValidatorRate from "./ValidatorRate";
-import ValidatorActions from "./ValidatorActions";
-import ValidatorName from "./ValidatorName";
-import ValidatorActivatedStake from "./ValidatorActivatedStake";
-import ValidatorUptime from "./ValidatorUptime";
-import ValidatorScore from "./ValidatorScore";
+import ValidatorCredits from "./Partials/ValidatorCredits";
+import ValidatorRate from "./Partials/ValidatorRate";
+import ValidatorActions from "./Partials/ValidatorActions";
+import ValidatorName from "./Partials/ValidatorName";
+import ValidatorActivatedStake from "./Partials/ValidatorActivatedStake";
+import ValidatorUptime from "./Partials/ValidatorUptime";
+import ValidatorScore from "./Partials/ValidatorScore";
 import axios from 'axios';
-import ValidatorSpyRank from "./ValidatorSpyRank";
+import ValidatorSpyRank from "./Partials/ValidatorSpyRank";
 import { perPageSelector } from '../../Redux/Validators/selectors';
+import { Link } from "@inertiajs/react";
 
 
 export default function Index(validatorsData) {
@@ -33,7 +34,7 @@ export default function Index(validatorsData) {
     });
     const epoch = useSelector(appEpochSelector);
     const [dataFetched, setDataFetched] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
+    const [currentPage, setCurrentPage] = useState(validatorsData.currentPage);
     const [itemsPerPage] = useState(perPage); // Number of items per page
 
     const [selectAll, setSelectAll] = useState(false);
@@ -98,7 +99,7 @@ export default function Index(validatorsData) {
 
     const fetchData = async () => {
         try {
-            const response = await axios.get('/api/fetch-validators');
+            const response = await axios.get(`/api/fetch-validators?page=${currentPage}`);
             setData(response.data.validatorsData);
             // console.log(`Залишилось: ${days} дн, ${hours} год, ${minutes} хв, ${seconds} сек`);
         } catch (error) {
@@ -118,7 +119,6 @@ export default function Index(validatorsData) {
         // const intervalId = setInterval(fetchVoteAccounts, 5000);
         // return () => clearInterval(intervalId);
     }, []);
-
 
     return (
         <AuthenticatedLayout header={<Head />}>
@@ -241,16 +241,26 @@ export default function Index(validatorsData) {
                                     {page === '...' ? (
                                         <span className="px-4 py-2 text-gray-700">...</span>
                                     ) : (
-                                        <button
-                                            onClick={() => paginate(page)}
+                                        // <button
+                                        //     onClick={() => paginate(page)}
+                                        //     className={`px-4 py-2 rounded ${
+                                        //         currentPage === page
+                                        //             ? 'bg-blue-500 text-white'
+                                        //             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                        //     }`}
+                                        // >
+                                        //     {page}
+                                        // </button>
+                                        <Link
+                                            href={`/validators/${page}`}
                                             className={`px-4 py-2 rounded ${
-                                                currentPage === page
+                                                Number(currentPage) === page
                                                     ? 'bg-blue-500 text-white'
                                                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                            }`}
-                                        >
+                                                }`}
+                                            >
                                             {page}
-                                        </button>
+                                        </Link>
                                     )}
                                 </span>
                             ))}
