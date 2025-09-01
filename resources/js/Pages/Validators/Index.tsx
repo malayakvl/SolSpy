@@ -25,7 +25,6 @@ import { Link } from "@inertiajs/react";
 
 export default function Index(validatorsData) {
     const [data, setData] = useState<any>(validatorsData.validatorsData);
-    const sortData = validatorsData.validatorsAllData;
     const perPage = useSelector(perPageSelector);
     const appLang = useSelector(appLangSelector);
     const msg = new Lang({

@@ -13,19 +13,28 @@ import {
     faPencil,
     faScaleBalanced
 } from '@fortawesome/free-solid-svg-icons';
-import { Link } from "@inertiajs/react";
+import {Link, usePage} from "@inertiajs/react";
 
 export default function ValidatorActions({validator}) {
+    const user = usePage().props.auth.user;
+    console.log(user);
+    const addToCompare = (validatorId) => {
+
+    }
+
+    const addToFavorite = (validatorId) => {
+
+    }
 
     return (
         <>
             <Link href={`/validator/${validator.vote_pubkey}`}>
                 <FontAwesomeIcon icon={faPencil} className="mr-2" />
             </Link>
-            <span>
+            <span className="cursor-pointer" onClick={() => addToCompare(validator.id)}>
                 <FontAwesomeIcon icon={faScaleBalanced} className="mr-2" />
             </span>
-            <span>
+            <span className="cursor-pointer" onClick={() => addToFavorite(validator.id)}>
                 <FontAwesomeIcon icon={faHeart} className="mr-2" />
             </span>
             <span>

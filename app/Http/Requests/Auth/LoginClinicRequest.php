@@ -12,7 +12,7 @@ use Illuminate\Validation\ValidationException;
 class LoginClinicRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Determine if the Users is authorized to make this request.
      */
     public function authorize(): bool
     {

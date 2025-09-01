@@ -39,10 +39,10 @@ class CustomerInviteNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('User Invitation')
+            ->subject('Users Invitation')
             ->greeting(__('Hello :name,', ['name' => $this->user->name]))
             ->markdown('mail.customer.invitation', [
-                'user' => $this->user,
+                'Users' => $this->user,
                 'link' => $this->link,
                 'clinicName' => $this->clinicName,
                 'password' => $this->password

@@ -16,7 +16,7 @@ use Spatie\Permission\Models\Permission;
 class ProfileController extends Controller
 {
     /**
-     * Display the user's profile form.
+     * Display the Users's profile form.
      */
     public function edit(Request $request): Response
     {
@@ -31,13 +31,13 @@ class ProfileController extends Controller
 //        $permission->assignRole($role);
 //        $permission = Permission::where('name', 'customer-delete')->first();
 //        $permission->assignRole($role);
-//        dd($user->getAllPermissions());
+//        dd($Users->getAllPermissions());
 //        exit;
 
-//        dd($user->getAllPermissions());
-//        dd($user->hasRole('Admin'));
-//        $user->assignRole('Admin');
-//        dd($user->hasRole('Admin'));
+//        dd($Users->getAllPermissions());
+//        dd($Users->hasRole('Admin'));
+//        $Users->assignRole('Admin');
+//        dd($Users->hasRole('Admin'));
 //        dd($request->getUser());exit;
 //        $permission = Permission::create(['name' => 'customer-all']);
 //        $permission = Permission::create(['name' => 'customer-create']);
@@ -52,7 +52,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update the user's profile information.
+     * Update the Users's profile information.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
@@ -68,7 +68,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Delete the user's account.
+     * Delete the Users's account.
      */
     public function destroy(Request $request): RedirectResponse
     {

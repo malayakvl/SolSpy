@@ -16,7 +16,6 @@ class ValidatorController extends Controller
     {
         $limit = 10; // Количество записей на страницу
         $offset = ($page - 1) * $limit; // Расчет offset
-
         $validatorsData = DB::table('data.validators')
             ->where('id', '>=', '19566')
             ->orderBy('id')
