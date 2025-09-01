@@ -9,6 +9,8 @@ import NavMenu from '../Components/Header/NavMenu';
 import ProfileMenu from '../Components/Header/ProfileMenu';
 import LangMenu from '../Components/Header/LangMenu';
 import Header from "../Components/Header/Header";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function AuthenticatedLayout({ header, children, auth }) {
   const appLang = useSelector(appLangSelector);
@@ -32,6 +34,18 @@ export default function AuthenticatedLayout({ header, children, auth }) {
         </div>
       </main>
       <div className={`overlay-bg-popup ${showOverlay ? 'show' : 'hidden'}`} />
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   );
 }

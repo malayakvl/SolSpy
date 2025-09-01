@@ -35,26 +35,26 @@ export default function Index(validatorsData) {
     const [dataFetched, setDataFetched] = useState(false);
     const [currentPage, setCurrentPage] = useState(validatorsData.currentPage);
     const [itemsPerPage] = useState(perPage); // Number of items per page
-
     const [selectAll, setSelectAll] = useState(false);
 
     const handleCheckboxChange = (id) => {
-        // setData((prevData) =>
-        //     prevData.map((row) =>
-        //         row.id === id ? { ...row, isChecked: !row.isChecked } : row
-        //     )
-        // );
-        // Update selectAll state based on whether all rows are checked
         const updatedData = data.map((row) =>
             row.id === id ? { ...row, isChecked: !row.isChecked } : row
         );
+        setData(updatedData);
+        // Update selectAll state based on whether all rows are checked
         setSelectAll(updatedData.every((row) => row.isChecked));
     };
-
 
     const handleSelectAllChange = () => {
         const newSelectAll = !selectAll;
         setSelectAll(newSelectAll);
+        // Update all checkboxes to match the select all state
+        const updatedData = data.map((row) => ({
+            ...row,
+            isChecked: newSelectAll
+        }));
+        setData(updatedData);
     };
 
     // Pagination logic
@@ -133,7 +133,11 @@ export default function Index(validatorsData) {
                                 <thead>
                                     <tr>
                                         <th>
-                                            <input type="checkbox" />
+                                            <input 
+                                                type="checkbox" 
+                                                checked={selectAll}
+                                                onChange={handleSelectAllChange} 
+                                            />
                                         </th>
                                         <th>Spy Rank</th>
                                         <th>Avatar</th>
@@ -162,7 +166,14 @@ export default function Index(validatorsData) {
                                 <tbody>
                                 {data.map((validator, index) => (
                                     <tr>
-                                        <td className="text-center"><input type="checkbox" /></td>
+                                        <td className="text-center">
+                                            <input 
+                                                type="checkbox" 
+                                                id={validator.id} 
+                                                checked={validator.isChecked || false}
+                                                onChange={() => handleCheckboxChange(validator.id)} 
+                                            />
+                                        </td>
                                         <td className="text-center">
                                             <ValidatorSpyRank validator={validator} />
                                         </td>
