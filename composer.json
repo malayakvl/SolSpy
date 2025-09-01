@@ -10,7 +10,7 @@
         "chrome-php/chrome": "^1.14",
         "inertiajs/inertia-laravel": "^1.0",
         "laravel/framework": "^11.31",
-        "laravel/sanctum": "^4.0",
+        "laravel/sanctum": "^4.2",
         "laravel/socialite": "^5.23",
         "laravel/tinker": "^2.9",
         "mariuzzo/laravel-js-localization": "^1.11",

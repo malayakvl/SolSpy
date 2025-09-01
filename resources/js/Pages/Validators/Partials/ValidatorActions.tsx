@@ -1,29 +1,38 @@
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faArrowUpRightFromSquare,
     faBan,
-    faBeer,
-    faBomb, faCheck,
-    faEdit, faEnvelope,
-    faEye,
-    faHand,
+    faEnvelope,
     faHeart,
     faMoneyBill,
     faPencil,
-    faScaleBalanced
+    faScaleBalanced,
+    faScaleUnbalanced
 } from '@fortawesome/free-solid-svg-icons';
-import {Link, usePage} from "@inertiajs/react";
+import { Link, router, usePage } from "@inertiajs/react";
+import axios from 'axios';
 
 export default function ValidatorActions({validator}) {
     const user = usePage().props.auth.user;
-    console.log(user);
-    const addToCompare = (validatorId) => {
 
+    const addToCompare = async (validatorId) => {
+        if (user?.id) {
+            try {
+                router.post(`/add-compare`, {validatorId: validatorId});
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        } else {
+
+        }
     }
 
     const addToFavorite = (validatorId) => {
+        if (user?.id) {
 
+        } else {
+
+        }
     }
 
     return (

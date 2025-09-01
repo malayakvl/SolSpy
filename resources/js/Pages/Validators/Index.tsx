@@ -67,7 +67,6 @@ export default function Index(validatorsData) {
     // Pagination logic
 
     const paginate = (pageNumber) => {
-        console.log(pageNumber)
         if (pageNumber >= 1 && pageNumber <= totalPages) {
             setCurrentPage(pageNumber);
             fetchData(pageNumber);

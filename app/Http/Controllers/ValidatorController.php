@@ -16,10 +16,18 @@ class ValidatorController extends Controller
     {
         $limit = 10; // Количество записей на страницу
         $offset = ($page - 1) * $limit; // Расчет offset
+        $userId = $request->user() ? $request->user()->id : null;
+        // dd($userId);exit;
         $validatorsData = DB::table('data.validators')
-            ->where('id', '>=', '19566')
-            ->orderBy('id')
+            ->leftJoin('data.favorites', function($join) use ($userId) {
+                $join->on('data.validators.id', '=', 'data.favorites.validator_id')
+                     ->where('data.favorites.user_id', '=', $userId);
+            })
+            ->select('data.validators.*', 'data.favorites.id as favorite_id')
+            ->where('data.validators.id', '>=', '19566')
+            ->orderBy('data.validators.id')
             ->limit(10)->offset($offset)->get();
+
 
         $validatorsAllData = DB::table('data.validators')
             ->orderBy('activated_stake')->get();
@@ -51,10 +59,16 @@ class ValidatorController extends Controller
         $page = $request->get('page'); // Получаем номер страницы с фронтенда, по умолчанию 1
         $limit = 10; // Количество записей на страницу
         $offset = ($page - 1) * $limit; // Расчет offset
+        $userId = $request->user() ? $request->user()->id : null;
 
         $validatorsData = DB::table('data.validators')
-            ->where('id', '>=', '19566')
-            ->orderBy('id')
+            ->leftJoin('data.favorites', function($join) use ($userId) {
+                $join->on('data.validators.id', '=', 'data.favorites.validator_id')
+                     ->where('data.favorites.user_id', '=', $userId);
+            })
+            ->select('data.validators.*', 'data.favorites.id as favorite_id')
+            ->where('data.validators.id', '>=', '19566')
+            ->orderBy('data.validators.id')
             ->limit(10)->offset($offset)->get();
 
         $validatorsAllData = DB::table('data.validators')
@@ -92,6 +106,12 @@ class ValidatorController extends Controller
 
         return Inertia::render('Validators/View', [
         ]);
+    }
+
+    public function addCompare(Request $request) {
+        $user = $request->user();
+        $validatorId = $request->get('validatorId');
+        $result = DB::statement('SELECT data.toggle_favorite(' .$user->id. ', ' .$validatorId. ')');
     }
 
 }
