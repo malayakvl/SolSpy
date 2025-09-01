@@ -20,6 +20,7 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+//        dd(1);
         $user = $request->user();
 //        $role = Role::where('name', 'Admin')->first();
 //        $permission = Permission::where('name', 'customer-all')->first();

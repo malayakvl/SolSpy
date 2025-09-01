@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GoogleAuthController;
+use App\Http\Controllers\ValidatorController;
 
 use Inertia\Inertia;
 
@@ -20,7 +21,9 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/validators', [\App\Http\Controllers\ValidatorController::class, 'index'])->name('validators.view');
+Route::get('/validators/{page?}', [ValidatorController::class, 'index'])->name('validators.view');
+//Route::get('/validator/{id}', [ValidatorController::class, 'view'])->name('validator.view');
+Route::get('/validators/{page}', [ValidatorController::class, 'index'])->name('validators.view');
 
 // Route to redirect to Google's OAuth page
 Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');

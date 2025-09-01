@@ -1,13 +1,9 @@
-const lngDashboard = {
-  'en.dashboard': {
-    logging: "You're logged in!",
-    title: 'Dashboard',
-    enter: 'Enter',
+const lngValidators = {
+  'en.validators': {
+    title: 'Validators',
   },
-  'uk.dashboard': {
-    logging: 'Ви зареєстровані',
-    title: 'Панель керування',
-    enter: 'Перейти',
+  'uk.validators': {
+    title: 'Валідатори',
   },
 };
-export default lngDashboard;
+export default lngValidators;

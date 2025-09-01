@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\NOTUSED;
 
+use App\Console\Commands\Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -35,7 +36,6 @@ class fechValidatorsStaticInfoStakewiz extends Command
             $response = Http::get('https://api.stakewiz.com/validators');
             if ($response->failed()) {
                 echo "API request failed" . $response->status() . "\n";
-//                break;
             }
 
             $data = $response->json();
@@ -58,10 +58,8 @@ class fechValidatorsStaticInfoStakewiz extends Command
                         jito_commission_bps = '.$result['jito_commission_bps']. ',
                         credits = '.$result['credits']. ',
                         epoch_credits = '.$result['epoch_credits']. ',
-                        commission = '.$result['commission']. ',
-                        root_slot = '.$result['root_slot']. ',
-                        activated_stake = '.$result['activated_stake']. '
-                      WHERE vote_pubkey = \'' .$result['vote_identity'].'\' OR node_pubkey = \'' .$result['vote_identity'].'\'
+                        root_slot = '.$result['root_slot']. '
+                      WHERE vote_pubkey = \'' .$result['vote_account'].'\' OR node_pubkey = \'' .$result['vote_identity'].'\'
                 ');
 //                echo $query."\n";
 

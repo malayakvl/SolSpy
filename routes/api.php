@@ -1,13 +1,18 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\ValidatorController;
+
+Route::get('/fetch-settings', [SettingsController::class, 'getDataWithHeader'])->name('settings.get');
 
 
 Route::middleware('api')->group(function () {
-    Route::get('/validators', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/fetch-validators', [ValidatorController::class, 'timeoutData'])->name('validators.timeoutData');
+    Route::get('/fetch-settings', [SettingsController::class, 'getDataWithHeader'])->name('settings.get');
+//    Route::get('/validators', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });

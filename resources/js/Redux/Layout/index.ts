@@ -6,27 +6,14 @@ import {
     setSwitchToggleAction,
     setPopupAction,
     showOverlayAction,
+    setEpochAction
 } from './actions';
 import { PaginationType } from '../../Constants';
 const initPagination = { limit: 25, offset: 0, sort: 'DESC', column: 'created_at', query: '' };
 
 const initialState: State.Layouts = {
     pagination: {
-        [PaginationType.FILIALS]: { ...initPagination },
-        [PaginationType.ROLES]: { ...initPagination },
-        [PaginationType.CUSTOMERS]: { ...initPagination },
-        [PaginationType.MCATEGORIES]: { ...initPagination },
-        [PaginationType.PRODUCERS]: { ...initPagination },
-        [PaginationType.CABINETS]: { ...initPagination },
-        [PaginationType.MATERIALS]: { ...initPagination },
-        [PaginationType.INCOMINGINVOICES]: { ...initPagination },
-        [PaginationType.OUTGOINGINVOICES]: { ...initPagination },
-        [PaginationType.CHANGEINVOICES]: { ...initPagination },
-        [PaginationType.CURRENCY]: { ...initPagination },
-        [PaginationType.SERVCATEGORIES]: { ...initPagination },
-        [PaginationType.UNITS]: { ...initPagination },
-        [PaginationType.STORES]: { ...initPagination },
-        [PaginationType.PATIENTSTATUSES]: { ...initPagination },
+        [PaginationType.VALIDATORS]: { ...initPagination },
     },
     isSidebarOpen: false,
     isMobileDevice: false,
@@ -35,27 +22,12 @@ const initialState: State.Layouts = {
     showOverlay: false,
     toasts: [],
     checkedIds: [],
-    switchHeader: false,
-    switchToggled: false,
-    modalConfirmationMeta: null,
-    modalVariantMeta: null,
-    modalConfirmationDeletePeriodMeta: null,
-    modalConfirmationSetupPeriodMeta: null,
-    deletePeriodHidePopup: false,
-    deletePeriod: null,
-    setupPeriod: null,
-    modalCalendlyMeta: null,
-    activeTab: {
-        inventory: { tab: 'products' }
-    },
     showTextingMenu: false,
     showProfileMenu: false,
     selectedLng: 'uk',
     appLang: 'uk',
     showEmailNotification: false,
-    nativeBrowser: false,
-    openRealBrowser: false,
-    filialName: ''
+    epoch: ''
 };
 
 // ------------------------------------
@@ -80,7 +52,12 @@ const ACTION_HANDLERS: any = {
             showOverlay: action.payload
         })
     },
-
+    [setEpochAction]: {
+        next: (state: State.Layouts, action: Action<string>): State.Layouts => ({
+            ...state,
+            epoch: action.payload
+        })
+    },
 }
 
 export {
@@ -88,7 +65,8 @@ export {
     setPaginationAction,
     setSwitchToggleAction,
     setPopupAction,
-    showOverlayAction
+    showOverlayAction,
+    setEpochAction
 }
 
 export default handleActions(ACTION_HANDLERS, initialState);

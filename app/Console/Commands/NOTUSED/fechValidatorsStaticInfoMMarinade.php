@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\NOTUSED;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -84,14 +84,18 @@ class fechValidatorsStaticInfoMMarinade extends Command
         foreach ($allValidators as $validator) {
             // Здесь ваша логика обработки каждого валидатора
             $result = $validator;
-            echo "Update Validator: " . $validator['vote_account'] . "\n"; // Пример, предполагая, что есть поле 'address'
+            echo "Update Validators: " . $validator['vote_account'] . "\n"; // Пример, предполагая, что есть поле 'address'
             $nodeIp = DB::getPdo()->quote($result['node_ip']);
+            $www = DB::getPdo()->quote($result['info_url']);
+            $actStake = DB::getPdo()->quote($result['activated_stake']);
 //            $city = DB::getPdo()->quote($result['dc_city']);
 //            $country = DB::getPdo()->quote($result['dc_country']);
 //            $stats = DB::getPdo()->quote(json_encode($result['epoch_stats']));
 //            $version = DB::getPdo()->quote($result['version']);
             $query = ('UPDATE validators SET
-                        ip = '.$nodeIp. '
+                        ip = '.$nodeIp. ',
+                        www_url = '.$www. ',
+                        activated_stake = '.$actStake. '
                       WHERE vote_pubkey = \'' .$result['vote_account'].'\' OR node_pubkey = \'' .$result['vote_account'].'\'
                 ');
 //                echo $query."\n";

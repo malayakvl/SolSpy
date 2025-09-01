@@ -1,23 +1,8 @@
 declare namespace Layouts {
     interface Root {
         pagination: {
-            customers: Pagination;
-            filials: Pagination;
-            producers: Pagination;
-            incominginvoices: Pagination;
-            outgoinginvoices: Pagination;
-            changeinvoices: Pagination;
-            currencies: Pagination;
-            units: Pagination;
-            roles: Pagination;
-            stores: Pagination;
-            mcategories: Pagination;
-            cabinets: Pagination;
-            materials: Pagination;
-            patientstatuses: Pagination;
-            servcategories: Pagination;
+            validators: Pagination;
         };
-        filialName: string;
         isSidebarOpen: boolean;
         isMobileDevice: boolean | null;
         isDataLoading: boolean;
@@ -29,19 +14,13 @@ declare namespace Layouts {
         deletePeriod: null;
         setupPeriod: null;
         deletePeriodHidePopup: boolean;
-        modalCalendlyMeta: ModalCalendlyMeta | null;
         modalVariantMeta: ModalVariantMeta | null;
         switchHeader: boolean;
         switchToggled: boolean;
-        activeTab: {
-            inventory: TabTypes;
-        };
         showTextingMenu: boolean;
         showProfileMenu: boolean;
         selectedLng: string;
         showEmailNotification: boolean;
-        nativeBrowser: boolean;
-        openRealBrowser: boolean;
     }
 
     interface TabTypes {

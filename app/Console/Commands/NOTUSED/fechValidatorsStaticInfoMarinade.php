@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\NOTUSED;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -84,18 +84,20 @@ class fechValidatorsStaticInfoMarinade extends Command
         foreach ($allValidators as $validator) {
             // Здесь ваша логика обработки каждого валидатора
             $result = $validator;
-            echo "Update Validator: " . $validator['vote_account'] . "\n"; // Пример, предполагая, что есть поле 'address'
+            echo "Update Validators: " . $validator['vote_account'] . "\n"; // Пример, предполагая, что есть поле 'address'
             $city = DB::getPdo()->quote($result['dc_city']);
             $country = DB::getPdo()->quote($result['dc_country']);
             $stats = DB::getPdo()->quote(json_encode($result['epoch_stats']));
             $version = DB::getPdo()->quote($result['version']);
+
+
             $query = ('UPDATE validators SET
                         v_city = '.$city. ',
                         v_country = '.$country. ',
                         v_version = '.$version. ',
                         v_credits = '.$result['credits']. ',
                         v_activated_stake = '.$result['activated_stake']. ',
-                        superminority = '.($result['superminority'] ? 1 : 0). ',
+                        superminority = '.($result['superminority']  ? 1 : 0). ',
                         start_epoch = '.$result['start_epoch']. ',
                         epochs_count = '.$result['epochs_count']. ',
                         epoch_stats = '.$stats. '
