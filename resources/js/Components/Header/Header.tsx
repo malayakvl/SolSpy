@@ -40,7 +40,7 @@ export default function Header(auth) {
       // console.log(`Прогрес епохи: ${progressPercent.toFixed(2)}%`);
 
       const progress = response.data.data.slot_index / response.data.data.slot_in_epoch;
-      setBarProgress(progress*10); // надо уточнить
+      setBarProgress(progress); // надо уточнить
       const slotsLeft = response.data.data.slot_in_epoch - response.data.data.slot_index;
       const timeLeftSeconds = slotsLeft * 0.4; // час до кінця епохи в секундах
 

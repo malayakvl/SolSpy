@@ -18,6 +18,8 @@ class ValidatorController extends Controller
         $offset = ($page - 1) * $limit; // Расчет offset
 
         $validatorsData = DB::table('data.validators')
+            ->where('id', '>=', '19566')
+            ->orderBy('id')
             ->limit(10)->offset($offset)->get();
 
         $validatorsAllData = DB::table('data.validators')
@@ -52,6 +54,8 @@ class ValidatorController extends Controller
         $offset = ($page - 1) * $limit; // Расчет offset
 
         $validatorsData = DB::table('data.validators')
+            ->where('id', '>=', '19566')
+            ->orderBy('id')
             ->limit(10)->offset($offset)->get();
 
         $validatorsAllData = DB::table('data.validators')
@@ -79,7 +83,8 @@ class ValidatorController extends Controller
         });
 
         return response()->json([
-            'validatorsData' => $results
+            'validatorsData' => $results,
+            'validatorsAllData' => $validatorsAllData
         ]);
     }
 

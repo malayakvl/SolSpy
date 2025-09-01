@@ -68,8 +68,10 @@ export default function Index(validatorsData) {
     // Pagination logic
 
     const paginate = (pageNumber) => {
+        console.log(pageNumber)
         if (pageNumber >= 1 && pageNumber <= totalPages) {
             setCurrentPage(pageNumber);
+            fetchData(pageNumber);
         }
     };
 
@@ -97,9 +99,9 @@ export default function Index(validatorsData) {
         return pages;
     };
 
-    const fetchData = async () => {
+    const fetchData = async ( page ) => {
         try {
-            const response = await axios.get(`/api/fetch-validators?page=${currentPage}`);
+            const response = await axios.get(`/api/fetch-validators?page=${page || currentPage}`);
             setData(response.data.validatorsData);
             // console.log(`Залишилось: ${days} дн, ${hours} год, ${minutes} хв, ${seconds} сек`);
         } catch (error) {
@@ -108,7 +110,8 @@ export default function Index(validatorsData) {
     };
 
     useEffect(() => {
-        const intervalId = setInterval(fetchData, 15000);
+        // const intervalId = setInterval(fetchData(currentPage), 15000);
+        const intervalId = setInterval(() => fetchData(currentPage), 15000);
         return () => clearInterval(intervalId);
     }, [dataFetched])
 
@@ -230,7 +233,9 @@ export default function Index(validatorsData) {
                         {/* Pagination Controls */}
                         <div className="mt-4 flex justify-center items-center space-x-2 text-[12px]">
                             <button
-                                onClick={() => paginate(currentPage - 1)}
+                                onClick={() => {
+                                    paginate(currentPage - 1)
+                                }}
                                 disabled={currentPage === 1}
                                 className={`px-4 py-2 bg-gray-200 text-gray-700 rounded ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-300'}`}
                             >
@@ -241,18 +246,11 @@ export default function Index(validatorsData) {
                                     {page === '...' ? (
                                         <span className="px-4 py-2 text-gray-700">...</span>
                                     ) : (
-                                        // <button
-                                        //     onClick={() => paginate(page)}
-                                        //     className={`px-4 py-2 rounded ${
-                                        //         currentPage === page
-                                        //             ? 'bg-blue-500 text-white'
-                                        //             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                        //     }`}
-                                        // >
-                                        //     {page}
-                                        // </button>
-                                        <Link
-                                            href={`/validators/${page}`}
+                                        <button
+                                            onClick={() => {
+                                                setCurrentPage(page);
+                                                paginate(page);
+                                            }}
                                             className={`px-4 py-2 rounded ${
                                                 Number(currentPage) === page
                                                     ? 'bg-blue-500 text-white'
@@ -260,7 +258,7 @@ export default function Index(validatorsData) {
                                                 }`}
                                             >
                                             {page}
-                                        </Link>
+                                        </button>
                                     )}
                                 </span>
                             ))}

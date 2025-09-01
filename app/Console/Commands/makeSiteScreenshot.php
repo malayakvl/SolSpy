@@ -39,59 +39,86 @@ class makeSiteScreenshot extends Command
 //        $validators = Validators::whereNotNull('www_url')
 //            ->where('www_url', '!=', '')->orderBy('id')
 //            ->get();
-        $validators = Validator::where('id', '=', 47)->orderBy('id')
-            ->get();
-        foreach ($validators as $validator) {
-//            dd($validator->www_url);exit;
-            // creates a new page and navigate to an URL
-//            $page = $browser->createPage();
-//            $page->navigate($validator->www_url)->waitForNavigation();
-            try {
-                $browser = $browserFactory->createBrowser([
-                    'windowSize'   => [1280, 800],
-                    'enableImages' => true,
-                ]);
-                $page = $browser->createPage();
-                $page->navigate($validator->www_url)->waitForNavigation();
+//        $validators = Validator::orderBy('id')
+//            ->limit(10)->get();
+//        $validators = DB::table('data.validators')
+//            ->whereNotNull('url')
+//            ->where('url', '!=', '')
+//            ->where('has_screenshot', false)
+//            ->orderBy('id')
+//            ->limit(15)
+//            ->get();
+        $browser = $browserFactory->createBrowser([
+            'windowSize'   => [1280, 800],
+            'enableImages' => true,
+            'headless'     => true,
+            'ignoreHttpsErrors' => true, // Игнорировать ошибки HTTPS
+            'timeout'      => 30000, // Таймаут 30 секунд
+        ]);
+        try {
+            $validators = DB::table('data.validators')
+                ->select('url', 'id')
+                ->whereNotNull('url')
+                ->where('has_screenshot', false)
+                ->where('url', '!=', '')
+                ->orderBy('id')
+                ->limit(15)
+                ->get();
+//            dd($validators);exit;
 
-                // Дочекатися 5 секунд для завантаження асинхронного контенту
-                sleep(3);
+            foreach ($validators as $validator) {
+                try {
+                    $page = $browser->createPage();
 
-                // Отримати заголовок сторінки
-                $pageTitle = $page->evaluate('document.title')->getReturnValue();
+                    // не чекаємо navigation, просто sleep
+                    $page->navigate($validator->url);
+                    usleep(3 * 1000000); // 3 сек
 
-                // Зробити скріншот
-                $page->screenshot()->saveToFile(storage_path('app/public/site-screenshots/' . $validator->id . '.png'));
+                    $filePath = storage_path("app/public/site-screenshots/{$validator->id}.png");
+                    $page->screenshot()->saveToFile($filePath);
+                    DB::statement("UPDATE data.validators SET has_screenshot = true WHERE id = {$validator->id}");
 
-                // Зберегти PDF
-//                $page->pdf(['printBackground' => false])->saveToFile(storage_path('app/public/site-screenshots/' . $validator->id . '.pdf'));
-
-                echo "Create screenshot for validator " . $validator->id . "\n";
-            } finally {
-                $browser->close();
+                    $this->info("✅ Screenshot created for validator {$validator->id}");
+                } catch (\Throwable $e) {
+                    \Log::error("❌ Screenshot failed for ID {$validator->id}: " . $e->getMessage());
+                }
             }
-
-
+        } finally {
+            $browser->close(); // закриваємо в самому кінці
+        }
+//        foreach ($validators as $validator) {
+////            dd($validator->www_url);exit;
+//            // creates a new page and navigate to an URL
+////            $page = $browser->createPage();
+////            $page->navigate($validator->www_url)->waitForNavigation();
 //            try {
-//                $browser = $browserFactory->createBrowser();
-//                // creates a new page and navigate to an URL
+////                $browser = $browserFactory->createBrowser([
+////                    'windowSize'   => [1280, 800],
+////                    'enableImages' => true,
+////                    'headless'     => true,
+////                    'ignoreHttpsErrors' => true, // Игнорировать ошибки HTTPS
+////                    'timeout'      => 30000, // Таймаут 30 секунд
+////                ]);
 //                $page = $browser->createPage();
-//                $page->navigate($validator->www_url)->waitForNavigation();
+//                $page->navigate($validator->url);
+////                usleep(3 * 1000000); // дати сторінці прогрузитись
 //
-//                // get page title
+//                // Дочекатися 5 секунд для завантаження асинхронного контенту
+////                sleep(3);
+//
+//                // Отримати заголовок сторінки
 //                $pageTitle = $page->evaluate('document.title')->getReturnValue();
 //
-//                // screenshot - Say "Cheese"! 😄
-//                $page->screenshot()->saveToFile('/Users/viktoriakorogod/WEB/SolSpy/storage/app/public/site-screenshots/' .$validator->id. '.png');
+//                // Зробити скріншот
+//                $page->screenshot()->saveToFile(storage_path('app/public/site-screenshots/' . $validator->id . '.png'));
 //
-//                // pdf
-//                $page->pdf(['printBackground' => false])->saveToFile('/Users/viktoriakorogod/WEB/SolSpy/storage/app/public/site-screenshots/' .$validator->id. '.pdf');
-//                echo "Create screenshot for validator ".$validator->id."\n";
-//                exit;
+//                // Зберегти PDF
+////                $page->pdf(['printBackground' => false])->saveToFile(storage_path('app/public/site-screenshots/' . $validator->id . '.pdf'));
+//
+//                echo "Create screenshot for validator " . $validator->id . "\n";
 //            } finally {
-//                // bye
 //                $browser->close();
 //            }
-        }
+//        }
     }
 }
