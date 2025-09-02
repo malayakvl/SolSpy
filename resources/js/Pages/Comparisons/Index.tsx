@@ -159,7 +159,7 @@ export default function Index() {
                                                         <div className="w-10 h-10 rounded-full bg-gray-300"></div>
                                                     )}
                                                     <div className="text-sm">
-                                                        <ValidatorName validator={validator} />
+                                                        <ValidatorName validator={validator} align={'center'} />
                                                     </div>
                                                 </div>
                                             </th>
