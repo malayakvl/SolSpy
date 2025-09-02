@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Exception;
 
 class fechValidatorsMarinade extends Command
 {
@@ -28,7 +30,7 @@ class fechValidatorsMarinade extends Command
     public function handle()
     {
         //
-        \Log::info('Task executed at: ' . now());
+        Log::info('Task executed at: ' . now());
         $this->info('Start fetching validators static info!');
         $limit = 500; // Количество записей за один запрос
         $offset = 0; // Начальное смещение
@@ -70,7 +72,7 @@ class fechValidatorsMarinade extends Command
                 // Увеличиваем offset для следующей порции
                 $offset += $limit;
 
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Обработка исключений (например, проблемы с сетью)
                 echo "Error occurred: " . $e->getMessage() . "\n";
                 break;
@@ -92,8 +94,8 @@ class fechValidatorsMarinade extends Command
                 $query = "SELECT data.update_validators_marinade('$responseStripped'::jsonb);";
                 DB::statement($query);
                 $this->info("Updated: " . $validator['info_name'] . ", identity: " .$result['identity']);
-            } catch (\Exception $e) {
-                \Log::error("Failed to update validators: " . $e->getMessage());
+            } catch (Exception $e) {
+                Log::error("Failed to update validators: " . $e->getMessage());
                 throw $e; // Or handle as needed
             }
         }

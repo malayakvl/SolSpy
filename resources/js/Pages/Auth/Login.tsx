@@ -4,14 +4,16 @@ import GuestLayout from '../../Layouts/GuestLayout';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import React, { useState } from 'react';
 import InputText from '../../Components/Form/InputText';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { appLangSelector } from '../../Redux/Layout/selectors';
 import Lang from 'lang.js';
 import lngAuth from '../../Lang/Auth/translation';
 import axios from 'axios';
+import { setUserAction } from "../../Redux/Users";
 
 export default function Login({ status, canResetPassword }) {
   const { processing } = useForm({});
+  const dispatch  = useDispatch();
   const [values, setValues] = useState({
     name: '',
     password: '',
@@ -40,11 +42,8 @@ export default function Login({ status, canResetPassword }) {
     axios
       .post('/login', values)
       .then(response => {
-        if (response.data.dashboardSelect) {
-          location.href = '/dashboard-select';
-        } else {
-          location.href = '/dashboard';
-        }
+        dispatch(setUserAction(response.config.data))
+        location.href = '/dashboard';
       })
       .catch(error => {
         console.log('ERROR:: ', error.response.data);

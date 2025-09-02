@@ -8,7 +8,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faHeart,
-    faBell, faUser
+    faBell, faUser, faScaleBalanced
 } from '@fortawesome/free-solid-svg-icons';
 import React from "react";
 
@@ -27,7 +27,10 @@ export default function ActionsMenu(props) {
                 <Link className="inline-flex items-center menu-main-btn text-sm">
                     <FontAwesomeIcon icon={faUser} className="w-[16px] h-[16px]" />
                 </Link>
-                <Link className="inline-flex items-center menu-main-btn text-sm">
+                <Link href={'comparisons'} className="inline-flex items-center menu-main-btn text-sm">
+                    <FontAwesomeIcon icon={faScaleBalanced} className="w-[16px] h-[16px]" />
+                </Link>
+                <Link href={'favorites'} className="inline-flex items-center menu-main-btn text-sm">
                     <FontAwesomeIcon icon={faHeart} className="w-[16px] h-[16px]" />
                 </Link>
                 <Link className="inline-flex items-center menu-main-btn text-sm">

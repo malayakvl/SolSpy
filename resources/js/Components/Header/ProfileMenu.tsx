@@ -60,7 +60,7 @@ export default function ProfileMenu() {
       </div>
       {/*<div className="md:space-x-4 md:flex md:pr-[30px] relative">*/}
       {/*  <div className="profile-block">*/}
-      {/*    /!*<div className="icon-user"></div>*!/*/}
+      {/*    /!*<div className="icon-Users"></div>*!/*/}
       {/*    <Dropdown>*/}
       {/*      <Dropdown.Trigger>*/}
       {/*        <div className="relative">*/}
@@ -73,7 +73,7 @@ export default function ProfileMenu() {
       {/*                              ease-in-out hover:text-gray-700 focus:outline-none"*/}
       {/*          >*/}
       {/*            <div className="mt-0 relative text-white">*/}
-      {/*              <div className="icon-user"></div>*/}
+      {/*              <div className="icon-Users"></div>*/}
       {/*              <span className="truncate text-white">{fioResult}</span>*/}
       {/*            </div>*/}
       {/*            <span className="icon-arrow-down" />*/}

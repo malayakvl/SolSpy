@@ -7,10 +7,12 @@ import logger from 'redux-logger';
 
 import layoutReducer from '../Redux/Layout';
 import validatorsReducer from '../Redux/Validators/index';
+import usersReducer from '../Redux/Users/index';
 
 const reducers = combineReducers({
     layout: layoutReducer,
-    validators: validatorsReducer
+    validators: validatorsReducer,
+    users: usersReducer
 });
 
 const initStore = (initialState:any = {}) => {
