@@ -13,10 +13,11 @@ import { Link, router, usePage } from "@inertiajs/react";
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
-export default function ValidatorActions({validator}) {
+export default function ValidatorActions({validator, onBanToggle}) {
     const user = usePage().props.auth.user;
     const [isInComparison, setIsInComparison] = useState(false);
     const [isInFavorites, setIsInFavorites] = useState(false);
+    const [isBanned, setIsBanned] = useState(false);
 
     // Check if validator is already in comparison on component mount
     useEffect(() => {
@@ -26,6 +27,9 @@ export default function ValidatorActions({validator}) {
             
             const favoritesList = JSON.parse(localStorage.getItem('validatorFavorites') || '[]');
             setIsInFavorites(favoritesList.includes(validator.id));
+            
+            const bannedList = JSON.parse(localStorage.getItem('validatorBanned') || '[]');
+            setIsBanned(bannedList.includes(validator.id));
         }
     }, [validator.id, user?.id]);
 
@@ -137,6 +141,61 @@ export default function ValidatorActions({validator}) {
         }
     }
 
+    const addToBanned = async (validatorId) => {
+        if (user?.id) {
+            // Registered user - use API
+            try {
+                router.post(`/ban-validator`, {validatorId: validatorId});
+                setIsBanned(!isBanned);
+                // Notify parent component about ban status change
+                if (onBanToggle) {
+                    onBanToggle(validatorId, !isBanned);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        } else {
+            // Unregistered user - use localStorage
+            const bannedList = JSON.parse(localStorage.getItem('validatorBanned') || '[]');
+            
+            if (bannedList.includes(validatorId)) {
+                // Remove from banned list
+                const updatedList = bannedList.filter(id => id !== validatorId);
+                localStorage.setItem('validatorBanned', JSON.stringify(updatedList));
+                setIsBanned(false);
+                toast.info('Validator unbanned', {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+                // Notify parent component
+                if (onBanToggle) {
+                    onBanToggle(validatorId, false);
+                }
+            } else {
+                // Add to banned list
+                bannedList.push(validatorId);
+                localStorage.setItem('validatorBanned', JSON.stringify(bannedList));
+                setIsBanned(true);
+                toast.warning('Validator banned and hidden from list', {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+                // Notify parent component
+                if (onBanToggle) {
+                    onBanToggle(validatorId, true);
+                }
+            }
+        }
+    }
+
     return (
         <>
             <Link href={`/validator/${validator.vote_pubkey}`}>
@@ -160,8 +219,11 @@ export default function ValidatorActions({validator}) {
             <span>
                 <FontAwesomeIcon icon={faMoneyBill} className="mr-2" />
             </span>
-            <span>
-                <FontAwesomeIcon icon={faBan} className="mr-2" />
+            <span className="cursor-pointer" onClick={() => addToBanned(validator.id)}>
+                <FontAwesomeIcon 
+                    icon={faBan} 
+                    className={`mr-2 ${isBanned ? 'text-red-500' : ''}`}
+                />
             </span>
         </>
     );

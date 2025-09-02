@@ -25,6 +25,7 @@ import { Link } from "@inertiajs/react";
 
 export default function Index(validatorsData) {
     const [data, setData] = useState<any>(validatorsData.validatorsData);
+    const [bannedValidators, setBannedValidators] = useState<number[]>([]);
     const perPage = useSelector(perPageSelector);
     const appLang = useSelector(appLangSelector);
     const msg = new Lang({
@@ -36,33 +37,55 @@ export default function Index(validatorsData) {
     const [currentPage, setCurrentPage] = useState(validatorsData.currentPage);
     const [itemsPerPage] = useState(perPage); // Number of items per page
     const [selectAll, setSelectAll] = useState(false);
+    
+    // Load banned validators from localStorage on component mount
+    useEffect(() => {
+        const bannedList = JSON.parse(localStorage.getItem('validatorBanned') || '[]');
+        setBannedValidators(bannedList);
+    }, []);
+
+    // Handle ban toggle from child component
+    const handleBanToggle = (validatorId: number, isBanned: boolean) => {
+        if (isBanned) {
+            // Add to banned list
+            setBannedValidators(prev => [...prev, validatorId]);
+        } else {
+            // Remove from banned list
+            setBannedValidators(prev => prev.filter(id => id !== validatorId));
+        }
+    };
+
+    // Filter out banned validators from the data
+    // const filteredData = data.filter(validator => !bannedValidators.includes(validator.id));
+    const filteredData = data;
 
     const handleCheckboxChange = (id) => {
         const updatedData = data.map((row) =>
             row.id === id ? { ...row, isChecked: !row.isChecked } : row
         );
         setData(updatedData);
-        // Update selectAll state based on whether all rows are checked
-        setSelectAll(updatedData.every((row) => row.isChecked));
+        // Update selectAll state based on whether all visible (non-banned) rows are checked
+        const visibleRows = updatedData.filter(validator => !bannedValidators.includes(validator.id));
+        setSelectAll(visibleRows.every((row) => row.isChecked));
     };
 
     const handleSelectAllChange = () => {
         const newSelectAll = !selectAll;
         setSelectAll(newSelectAll);
-        // Update all checkboxes to match the select all state
+        // Update only visible (non-banned) checkboxes to match the select all state
         const updatedData = data.map((row) => ({
             ...row,
-            isChecked: newSelectAll
+            isChecked: bannedValidators.includes(row.id) ? row.isChecked : newSelectAll
         }));
         setData(updatedData);
     };
 
     // Pagination logic
-    const totalRecords = validatorsData.totalCount; // Total records as specified
+    const totalRecords = validatorsData.totalCount; // Use filtered data count
     const totalPages = Math.ceil(totalRecords / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+    const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
 
     // Pagination logic
 
@@ -164,7 +187,7 @@ export default function Index(validatorsData) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                {data.map((validator, index) => (
+                                {currentItems.map((validator, index) => (
                                     <tr>
                                         <td className="text-center">
                                             <input 
@@ -232,7 +255,7 @@ export default function Index(validatorsData) {
                                         <td className="text-center">{validator.ip}</td>
                                         <td className="text-center"> JS </td>
                                         <th className="text-center">
-                                            <ValidatorActions validator={validator} />
+                                            <ValidatorActions validator={validator} onBanToggle={handleBanToggle} />
                                         </th>
                                     </tr>
                                 ))}

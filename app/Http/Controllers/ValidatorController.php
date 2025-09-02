@@ -17,7 +17,6 @@ class ValidatorController extends Controller
         $limit = 10; // Количество записей на страницу
         $offset = ($page - 1) * $limit; // Расчет offset
         $userId = $request->user() ? $request->user()->id : null;
-        // dd($userId);exit;
         $validatorsData = DB::table('data.validators')
             ->leftJoin('data.favorites', function($join) use ($userId) {
                 $join->on('data.validators.id', '=', 'data.favorites.validator_id')
@@ -27,7 +26,6 @@ class ValidatorController extends Controller
             ->where('data.validators.id', '>=', '19566')
             ->orderBy('data.validators.id')
             ->limit(10)->offset($offset)->get();
-
 
         $validatorsAllData = DB::table('data.validators')
             ->orderBy('activated_stake')->get();
@@ -67,7 +65,7 @@ class ValidatorController extends Controller
                      ->where('data.favorites.user_id', '=', $userId);
             })
             ->select('data.validators.*', 'data.favorites.id as favorite_id')
-            ->where('data.validators.id', '>=', '19566')
+            // ->where('data.validators.id', '>=', '19566')
             ->orderBy('data.validators.id')
             ->limit(10)->offset($offset)->get();
 
@@ -77,7 +75,6 @@ class ValidatorController extends Controller
         usort($sortedValidators, function ($a, $b) {
             return (float)$b->activated_stake - (float)$a->activated_stake;
         });
-
 
         $sortedValidators = $validatorsAllData->toArray();
         usort($sortedValidators, function ($a, $b) {
@@ -98,6 +95,56 @@ class ValidatorController extends Controller
         return response()->json([
             'validatorsData' => $results,
             'validatorsAllData' => $validatorsAllData
+        ]);
+    }
+
+    
+    public function comparisons(Request $request) {
+        return Inertia::render('Comparisons/Index', [
+        ]);
+    }
+
+    public function favorites(Request $request) {
+        return Inertia::render('Favorites/Index', [
+        ]);
+    }
+
+    public function fetchByIds(Request $request) {
+        $userId = $request->user() ? $request->user()->id : null;
+        
+        // Handle both query parameter and request body
+        $ids = $request->input('ids', []);
+        if (is_string($ids)) {
+            $ids = explode(',', $ids);
+        }
+        $ids = array_filter($ids); // Remove empty values
+        
+        if (empty($ids)) {
+            return response()->json([
+                'validators' => []
+            ]);
+        }
+        
+        $query = DB::table('data.validators');
+        
+        // Only join favorites table if user is authenticated
+        if ($userId) {
+            $query->leftJoin('data.favorites', function($join) use ($userId) {
+                $join->on('data.validators.id', '=', 'data.favorites.validator_id')
+                     ->where('data.favorites.user_id', '=', $userId);
+            })
+            ->select('data.validators.*', 'data.favorites.id as favorite_id');
+        } else {
+            $query->select('data.validators.*');
+        }
+        
+        $validatorsData = $query
+            ->whereIn('data.validators.id', $ids)
+            ->orderBy('data.validators.id')
+            ->get();
+
+        return response()->json([
+            'validators' => $validatorsData
         ]);
     }
 

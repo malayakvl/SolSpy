@@ -21,6 +21,10 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::get('/comparisons/{page?}', [ValidatorController::class, 'comparisons'])->name('validators.comparisons');
+Route::get('/favorites/{page?}', [ValidatorController::class, 'favorites'])->name('validators.favorites');
+Route::get('/fetch-by-id-validators/{page?}', [ValidatorController::class, 'fetchByIds'])->name('validators.fetchByIds');
+
 Route::get('/validators/{page?}', [ValidatorController::class, 'index'])->name('validators.view');
 //Route::get('/validator/{id}', [ValidatorController::class, 'view'])->name('validator.view');
 Route::get('/validators/{page}', [ValidatorController::class, 'index'])->name('validators.view');

@@ -7,6 +7,8 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ValidatorController;
 
 Route::get('/fetch-settings', [SettingsController::class, 'getDataWithHeader'])->name('settings.get');
+Route::get('/fetch-by-id-validators/{page?}', [ValidatorController::class, 'fetchByIds'])->name('validators.fetchByIds');
+
 //Route::middleware('auth:sanctum')->get('/add-compare', [ValidatorController::class, 'addToCompareAuth']);
 
 Route::middleware('api')->group(function () {
