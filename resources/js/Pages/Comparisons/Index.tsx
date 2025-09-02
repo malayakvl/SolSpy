@@ -1,9 +1,3 @@
-import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout';
-import { Head, usePage, router } from '@inertiajs/react';
-import Lang from 'lang.js';
-import lngVaidators from '../../Lang/Validators/translation';
-import { useSelector } from 'react-redux';
-import { appEpochSelector, appLangSelector } from '../../Redux/Layout/selectors';
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -20,6 +14,12 @@ import ValidatorScore from "../Validators/Partials/ValidatorScore";
 import axios from 'axios';
 import ValidatorSpyRank from "../Validators/Partials/ValidatorSpyRank";
 import { toast } from 'react-toastify';
+import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout';
+import { Head, usePage } from '@inertiajs/react';
+import Lang from 'lang.js';
+import lngVaidators from '../../Lang/Validators/translation';
+import { useSelector } from 'react-redux';
+import { appEpochSelector, appLangSelector } from '../../Redux/Layout/selectors';
 
 export default function Index() {
     const user = usePage().props.auth.user;
@@ -59,7 +59,13 @@ export default function Index() {
             }
 
             // Fetch validator details for comparison IDs using the existing API endpoint
-            const response = await axios.get(`/api/fetch-by-id-validators?ids=${comparisonIds.join(',')}`);
+            const response = await axios.get(`/api/fetch-by-id-validators`, {
+                params: { ids: comparisonIds.join(',') },
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
             
             setComparisonValidators(response.data.validators || []);
         } catch (error) {

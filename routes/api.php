@@ -19,3 +19,10 @@ Route::middleware('api')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// Session-based authentication for SPA API calls
+Route::middleware(['web', 'auth'])->group(function () {
+    Route::post('/api/add-compare', [ValidatorController::class, 'addCompare'])->name('api.validators.addCompare');
+    Route::post('/api/add-favorite', [ValidatorController::class, 'addFavorite'])->name('api.validators.addFavorite');
+    Route::post('/api/ban-validator', [ValidatorController::class, 'banValidator'])->name('api.validators.banValidator');
+});
+

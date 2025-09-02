@@ -15,6 +15,7 @@ class ValidatorController extends Controller
     public function index(Request $request, $page = 1): Response
     {
         $limit = 10; // Количество записей на страницу
+        $page = max(1, (int) $page); // Приведение к integer с минимальным значением 1
         $offset = ($page - 1) * $limit; // Расчет offset
         $userId = $request->user() ? $request->user()->id : null;
         $validatorsData = DB::table('data.validators')
@@ -54,7 +55,7 @@ class ValidatorController extends Controller
 
     public function timeoutData(Request $request)
     {
-        $page = $request->get('page'); // Получаем номер страницы с фронтенда, по умолчанию 1
+        $page = max(1, (int) $request->get('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1
         $limit = 10; // Количество записей на страницу
         $offset = ($page - 1) * $limit; // Расчет offset
         $userId = $request->user() ? $request->user()->id : null;
@@ -65,7 +66,7 @@ class ValidatorController extends Controller
                      ->where('data.favorites.user_id', '=', $userId);
             })
             ->select('data.validators.*', 'data.favorites.id as favorite_id')
-            // ->where('data.validators.id', '>=', '19566')
+            ->where('data.validators.id', '>=', '19566')
             ->orderBy('data.validators.id')
             ->limit(10)->offset($offset)->get();
 
@@ -159,6 +160,34 @@ class ValidatorController extends Controller
         $user = $request->user();
         $validatorId = $request->get('validatorId');
         $result = DB::statement('SELECT data.toggle_favorite(' .$user->id. ', ' .$validatorId. ')');
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Comparison list updated'
+        ]);
+    }
+
+    public function addFavorite(Request $request) {
+        $user = $request->user();
+        $validatorId = $request->get('validatorId');
+        $result = DB::statement('SELECT data.toggle_favorite(' .$user->id. ', ' .$validatorId. ')');
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Favorites list updated'
+        ]);
+    }
+
+    public function banValidator(Request $request) {
+        $user = $request->user();
+        $validatorId = $request->get('validatorId');
+        // Assuming there's a ban function in the database
+        $result = DB::statement('SELECT data.toggle_ban(' .$user->id. ', ' .$validatorId. ')');
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Ban status updated'
+        ]);
     }
 
 }

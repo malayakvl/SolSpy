@@ -37,10 +37,33 @@ export default function ValidatorActions({validator, onBanToggle}) {
         if (user?.id) {
             // Registered user - use API
             try {
-                router.post(`/add-compare`, {validatorId: validatorId});
+                await axios.post('/api/add-compare', {
+                    validatorId: validatorId
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
                 setIsInComparison(!isInComparison);
+                toast.success('Comparison list updated', {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
             } catch (error) {
                 console.error('Error:', error);
+                toast.error('Failed to update comparison list', {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
             }
         } else {
             // Unregistered user - use localStorage with max 2 items
@@ -91,10 +114,33 @@ export default function ValidatorActions({validator, onBanToggle}) {
         if (user?.id) {
             // Registered user - use API
             try {
-                router.post(`/add-favorite`, {validatorId: validatorId});
+                await axios.post('/api/add-favorite', {
+                    validatorId: validatorId
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
                 setIsInFavorites(!isInFavorites);
+                toast.success('Favorites list updated', {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
             } catch (error) {
                 console.error('Error:', error);
+                toast.error('Failed to update favorites list', {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
             }
         } else {
             // Unregistered user - use localStorage with max 5 items
@@ -145,14 +191,37 @@ export default function ValidatorActions({validator, onBanToggle}) {
         if (user?.id) {
             // Registered user - use API
             try {
-                router.post(`/ban-validator`, {validatorId: validatorId});
+                await axios.post('/api/ban-validator', {
+                    validatorId: validatorId
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
                 setIsBanned(!isBanned);
                 // Notify parent component about ban status change
                 if (onBanToggle) {
                     onBanToggle(validatorId, !isBanned);
                 }
+                toast.success('Ban status updated', {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
             } catch (error) {
                 console.error('Error:', error);
+                toast.error('Failed to update ban status', {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
             }
         } else {
             // Unregistered user - use localStorage

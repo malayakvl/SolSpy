@@ -45,7 +45,7 @@ export default function ValidatorName({validator}) {
         <>
             <div className="flex flex-col">
                 <span className="truncate v-truncate min-w-[190px]">{validator.name}</span>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 key-link">
                   <span
                       className="text-[14px] truncate v-truncate max-w-[150px] hover:underline"
                       title={validator.vote_pubkey} // Full vote_pubkey on hover
