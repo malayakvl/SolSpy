@@ -139,101 +139,231 @@ export default function Index() {
                             <table className="min-w-full divide-y divide-gray-200 validator-table">
                                 <thead>
                                     <tr>
-                                        <th>Remove</th>
-                                        <th>Spy Rank</th>
-                                        <th>Avatar</th>
-                                        <th>Name</th>
-                                        <th>Status</th>
-                                        <th>TVC Score</th>
-                                        <th>Vote Credits</th>
-                                        <th>Active Stake</th>
-                                        <th>Vote Rate</th>
-                                        <th>Inflation<br/>Commission</th>
-                                        <th>MEV<br/>Commission</th>
-                                        <th>Uptime</th>
-                                        <th>Client/Version</th>
-                                        <th>Status SFDP</th>
-                                        <th>Location</th>
-                                        <th>Awards</th>
-                                        <th>Website</th>
-                                        <th>City</th>
-                                        <th>ASN</th>
-                                        <th>IP</th>
-                                        <th>Jiito Score</th>
+                                        <th className="px-4 py-2 text-left font-semibold">Metric</th>
+                                        {comparisonValidators.map((validator) => (
+                                            <th key={validator.id} className="px-4 py-2 text-center font-semibold">
+                                                <div className="flex flex-col items-center space-y-2">
+                                                    {validator.avatar_file_url ? (
+                                                        <img
+                                                            src={validator.avatar_file_url}
+                                                            alt={validator.name}
+                                                            className="w-10 h-10 rounded-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-10 h-10 rounded-full bg-gray-300"></div>
+                                                    )}
+                                                    <div className="text-sm">
+                                                        <ValidatorName validator={validator} />
+                                                    </div>
+                                                </div>
+                                            </th>
+                                        ))}
                                     </tr>
                                 </thead>
                                 <tbody>
-                                {comparisonValidators.map((validator, index) => (
-                                    <tr key={validator.id}>
-                                        <td className="text-center">
-                                            <button 
-                                                onClick={() => removeFromComparison(validator.id)}
-                                                className="text-red-500 hover:text-red-700 cursor-pointer"
-                                                title="Remove from comparison"
-                                            >
-                                                <FontAwesomeIcon icon={faTimes} />
-                                            </button>
-                                        </td>
-                                        <td className="text-center">
-                                            <ValidatorSpyRank validator={validator} />
-                                        </td>
-                                        <td className="text-center py-2">
-                                            {validator.avatar_file_url ? (
-                                                <img
-                                                    src={validator.avatar_file_url}
-                                                    alt={validator.name}
-                                                    style={{ width: "35px", height: "35px", objectFit: "cover", borderRadius: "50%", margin: "0px auto" }}
-                                                />
-                                            ) : null}
-                                        </td>
-                                        <td>
-                                            <ValidatorName validator={validator} />
-                                        </td>
-                                        <td className="text-center">
-                                            {!validator.delinquent ? (
-                                                <FontAwesomeIcon icon={faCheck} className="mr-1 text-green-500" />
-                                            ) : (
-                                                <FontAwesomeIcon icon={faBan} className="mr-1 text-red-500" />
-                                            )}
-                                        </td>
-                                        <td className="text-center">
-                                            <ValidatorScore validator={validator} />
-                                        </td>
-                                        <td className="text-center">
-                                            <ValidatorCredits epoch={epoch} validator={validator} />
-                                        </td>
-                                        <td className="text-center">
-                                            <ValidatorActivatedStake epoch={epoch} validator={validator} />
-                                        </td>
-                                        <td className="text-center">
-                                            <ValidatorRate epoch={epoch} validator={validator} />
-                                        </td>
-                                        <td className="text-center">
-                                            {validator.commission}%
-                                        </td>
-                                        <td className="text-center">MEV %</td>
-                                        <td className="text-center">
-                                            <ValidatorUptime epoch={epoch} validator={validator} />
-                                        </td>
-                                        <td className="text-center">
-                                            {`${validator.version}  ${validator.software_client || ''}`}
-                                        </td>
-                                        <td className="text-center">SFDP</td>
-                                        <td className="text-center">{validator.country}</td>
-                                        <td className="text-center">Awards</td>
-                                        <td className="text-center">
-                                            {validator.url ?
-                                                <a href={validator.url} target="_blank" rel="noopener noreferrer">
-                                                    {validator.url.slice(0, 4)}...{validator.url.slice(-4)}
-                                                </a>
-                                            : <></>}
-                                        </td>
-                                        <td className="text-center">{validator.city}</td>
-                                        <td className="text-center">{validator.asn}</td>
-                                        <td className="text-center">{validator.ip}</td>
-                                        <td className="text-center">JS</td>
+                                    {/* Remove Row */}
+                                    <tr className="border-b">
+                                        <td className="px-4 py-3 font-medium text-gray-900">Remove</td>
+                                        {comparisonValidators.map((validator) => (
+                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                                <button 
+                                                    onClick={() => removeFromComparison(validator.id)}
+                                                    className="text-red-500 hover:text-red-700 cursor-pointer"
+                                                    title="Remove from comparison"
+                                                >
+                                                    <FontAwesomeIcon icon={faTimes} />
+                                                </button>
+                                            </td>
+                                        ))}
                                     </tr>
-                                ))}
+                                    
+                                    {/* Spy Rank Row */}
+                                    <tr className="border-b bg-gray-50">
+                                        <td className="px-4 py-3 font-medium text-gray-900">Spy Rank</td>
+                                        {comparisonValidators.map((validator) => (
+                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                                <ValidatorSpyRank validator={validator} />
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    
+                                    {/* Status Row */}
+                                    <tr className="border-b">
+                                        <td className="px-4 py-3 font-medium text-gray-900">Status</td>
+                                        {comparisonValidators.map((validator) => (
+                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                                {!validator.delinquent ? (
+                                                    <FontAwesomeIcon icon={faCheck} className="mr-1 text-green-500" />
+                                                ) : (
+                                                    <FontAwesomeIcon icon={faBan} className="mr-1 text-red-500" />
+                                                )}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    
+                                    {/* TVC Score Row */}
+                                    <tr className="border-b bg-gray-50">
+                                        <td className="px-4 py-3 font-medium text-gray-900">TVC Score</td>
+                                        {comparisonValidators.map((validator) => (
+                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                                <ValidatorScore validator={validator} />
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    
+                                    {/* Vote Credits Row */}
+                                    <tr className="border-b">
+                                        <td className="px-4 py-3 font-medium text-gray-900">Vote Credits</td>
+                                        {comparisonValidators.map((validator) => (
+                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                                <ValidatorCredits epoch={epoch} validator={validator} />
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    
+                                    {/* Active Stake Row */}
+                                    <tr className="border-b bg-gray-50">
+                                        <td className="px-4 py-3 font-medium text-gray-900">Active Stake</td>
+                                        {comparisonValidators.map((validator) => (
+                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                                <ValidatorActivatedStake epoch={epoch} validator={validator} />
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    
+                                    {/* Vote Rate Row */}
+                                    <tr className="border-b">
+                                        <td className="px-4 py-3 font-medium text-gray-900">Vote Rate</td>
+                                        {comparisonValidators.map((validator) => (
+                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                                <ValidatorRate epoch={epoch} validator={validator} />
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    
+                                    {/* Inflation Commission Row */}
+                                    <tr className="border-b bg-gray-50">
+                                        <td className="px-4 py-3 font-medium text-gray-900">Inflation Commission</td>
+                                        {comparisonValidators.map((validator) => (
+                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                                {validator.commission}%
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    
+                                    {/* MEV Commission Row */}
+                                    <tr className="border-b">
+                                        <td className="px-4 py-3 font-medium text-gray-900">MEV Commission</td>
+                                        {comparisonValidators.map((validator) => (
+                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                                MEV %
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    
+                                    {/* Uptime Row */}
+                                    <tr className="border-b bg-gray-50">
+                                        <td className="px-4 py-3 font-medium text-gray-900">Uptime</td>
+                                        {comparisonValidators.map((validator) => (
+                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                                <ValidatorUptime epoch={epoch} validator={validator} />
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    
+                                    {/* Client/Version Row */}
+                                    <tr className="border-b">
+                                        <td className="px-4 py-3 font-medium text-gray-900">Client/Version</td>
+                                        {comparisonValidators.map((validator) => (
+                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                                {`${validator.version} ${validator.software_client || ''}`}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    
+                                    {/* Status SFDP Row */}
+                                    <tr className="border-b bg-gray-50">
+                                        <td className="px-4 py-3 font-medium text-gray-900">Status SFDP</td>
+                                        {comparisonValidators.map((validator) => (
+                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                                SFDP
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    
+                                    {/* Location Row */}
+                                    <tr className="border-b">
+                                        <td className="px-4 py-3 font-medium text-gray-900">Location</td>
+                                        {comparisonValidators.map((validator) => (
+                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                                {validator.country}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    
+                                    {/* Awards Row */}
+                                    <tr className="border-b bg-gray-50">
+                                        <td className="px-4 py-3 font-medium text-gray-900">Awards</td>
+                                        {comparisonValidators.map((validator) => (
+                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                                Awards
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    
+                                    {/* Website Row */}
+                                    <tr className="border-b">
+                                        <td className="px-4 py-3 font-medium text-gray-900">Website</td>
+                                        {comparisonValidators.map((validator) => (
+                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                                {validator.url ?
+                                                    <a href={validator.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                                                        {validator.url.slice(0, 4)}...{validator.url.slice(-4)}
+                                                    </a>
+                                                : '-'}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    
+                                    {/* City Row */}
+                                    <tr className="border-b bg-gray-50">
+                                        <td className="px-4 py-3 font-medium text-gray-900">City</td>
+                                        {comparisonValidators.map((validator) => (
+                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                                {validator.city || '-'}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    
+                                    {/* ASN Row */}
+                                    <tr className="border-b">
+                                        <td className="px-4 py-3 font-medium text-gray-900">ASN</td>
+                                        {comparisonValidators.map((validator) => (
+                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                                {validator.asn || '-'}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    
+                                    {/* IP Row */}
+                                    <tr className="border-b bg-gray-50">
+                                        <td className="px-4 py-3 font-medium text-gray-900">IP</td>
+                                        {comparisonValidators.map((validator) => (
+                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                                {validator.ip || '-'}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    
+                                    {/* Jiito Score Row */}
+                                    <tr className="border-b">
+                                        <td className="px-4 py-3 font-medium text-gray-900">Jiito Score</td>
+                                        {comparisonValidators.map((validator) => (
+                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                                JS
+                                            </td>
+                                        ))}
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>

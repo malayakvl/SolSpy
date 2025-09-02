@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Exception;
 
 class FetchSettings extends Command
 {
@@ -27,7 +29,7 @@ class FetchSettings extends Command
      */
     public function handle()
     {
-        \Log::info('Command app:fetch-settings executed at ' . now());
+        Log::info('Command app:fetch-settings executed at ' . now());
         $this->info('Start fetching settings info!');
 
         try {
