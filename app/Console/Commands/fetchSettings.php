@@ -69,7 +69,6 @@ class FetchSettings extends Command
 
             // Execute cURL request
             $response = curl_exec($ch);
-//dd($response);exit;
             // Check for errors
             if (curl_errno($ch)) {
                 echo 'Error: ' . curl_error($ch);
@@ -84,6 +83,7 @@ class FetchSettings extends Command
                     slot_in_epoch=' .$_result->result->slotsInEpoch.', 
                     transaction_count=' .$_result->result->transactionCount.'
                 ');
+// echo($query);exit;                
                 DB::statement($query);
                 $this->info('Update time to '.$_result->result->absoluteSlot);
             }

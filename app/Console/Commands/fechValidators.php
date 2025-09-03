@@ -56,8 +56,21 @@ class fechValidators extends Command
         if (curl_errno($ch)) {
             echo 'cURL Error: ' . curl_error($ch);
         } else {
-            $query = "SELECT data.update_validators_common('$response'::jsonb);";
-            DB::statement($query);
+            // Parse the JSON response
+            $jsonData = json_decode($response, true);
+            
+            // Check if response structure is valid
+            if (isset($jsonData['result'])) {
+                // Log the response structure
+                echo "Processing validators. Current count: " . (isset($jsonData['result']['current']) ? count($jsonData['result']['current']) : 0) . "\n";
+                echo "Delinquent count: " . (isset($jsonData['result']['delinquent']) ? count($jsonData['result']['delinquent']) : 0) . "\n";
+                
+                // Pass the entire response to the database function
+                $query = "SELECT data.update_validators_common('$response'::jsonb);";
+                DB::statement($query);
+            } else {
+                echo "Invalid response structure - no 'result' key found\n";
+            }
         }
 //        echo "All validators was updated Each 5 second";
         $this->info('All validators was updated');

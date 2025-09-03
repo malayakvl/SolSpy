@@ -235,7 +235,7 @@ export default function Index(validatorsData) {
                                         <td className="text-center">
                                             {validator.commission}%
                                         </td>
-                                        <td className="text-center">MEV %</td>
+                                        <td className="text-center">{validator.jito_commission/100}</td>
                                         <td className="text-center">
                                             <ValidatorUptime epoch={epoch} validator={validator} />
                                         </td>
