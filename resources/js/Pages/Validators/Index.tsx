@@ -9,6 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faBan,
     faCheck,
+    faStar
 } from '@fortawesome/free-solid-svg-icons';
 import ValidatorCredits from "./Partials/ValidatorCredits";
 import ValidatorRate from "./Partials/ValidatorRate";
@@ -242,8 +243,10 @@ export default function Index(validatorsData) {
                                             {`${validator.version}  ${validator.software_client || ''}`}
                                         </td>
                                         <td className="text-center">SFDP</td>
-                                        <td className="text-center">{validator.country}</td>
-                                        <td className="text-center">Awards</td>
+                                        <td className="text-left whitespace-nowrap">{validator.country_iso} {validator.country}</td>
+                                        <td className="text-center">
+                                            <FontAwesomeIcon icon={faStar} className="text-xs" />
+                                        </td>
                                         <td className="text-center">
                                             {validator.url ?
                                                 <a href={validator.url} target="_blank">{validator.url.slice(0, 4)}...{validator.url.slice(-4)}</a>

@@ -13,6 +13,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Seed countries first as they might be referenced by other tables
+        $this->call([
+            CountrySeeder::class,
+            RoleAndPermissionSeeder::class,
+        ]);
+
         // Users::factory(10)->create();
 
         User::factory()->create([

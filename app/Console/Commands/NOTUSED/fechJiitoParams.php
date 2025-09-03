@@ -3,6 +3,7 @@
 namespace App\Console\Commands\NOTUSED;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class fechJiitoParams extends Command
 {
@@ -27,7 +28,7 @@ class fechJiitoParams extends Command
     {
         //
         // Ваша логика задачи здесь
-        \Log::info('Task executed at: ' . now());
+        Log::info('Task executed at: ' . now());
         $this->info('Start fetching validators!');
 
         // Налаштування API
