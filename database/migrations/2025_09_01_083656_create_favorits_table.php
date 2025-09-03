@@ -11,12 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('data.favorites', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->nullable()->index();
-            $table->foreignId('validator_id')->nullable()->index();
-            $table->timestamps();
-        });
+        // Only create table if it doesn't exist
+        if (!Schema::hasTable('data.favorites')) {
+            Schema::create('data.favorites', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->nullable()->index();
+                $table->foreignId('validator_id')->nullable()->index();
+                $table->timestamps();
+            });
+        }
     }
 
     /**
@@ -24,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('favorits');
+        Schema::dropIfExists('data.favorites');
     }
 };

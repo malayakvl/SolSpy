@@ -18,12 +18,22 @@ class ValidatorController extends Controller
         $page = max(1, (int) $page); // Приведение к integer с минимальным значением 1
         $offset = ($page - 1) * $limit; // Расчет offset
         $userId = $request->user() ? $request->user()->id : null;
-        $validatorsData = DB::table('data.validators')
-            ->leftJoin('data.favorites', function($join) use ($userId) {
+        
+        $query = DB::table('data.validators')
+            ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
+            
+        // Only join favorites table if user is authenticated
+        if ($userId) {
+            $query->leftJoin('data.favorites', function($join) use ($userId) {
                 $join->on('data.validators.id', '=', 'data.favorites.validator_id')
                      ->where('data.favorites.user_id', '=', $userId);
             })
-            ->select('data.validators.*', 'data.favorites.id as favorite_id')
+            ->select('data.validators.*', 'data.favorites.id as favorite_id', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
+        } else {
+            $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
+        }
+        
+        $validatorsData = $query
             ->where('data.validators.id', '>=', '19566')
             ->orderBy('data.validators.id')
             ->limit(10)->offset($offset)->get();
@@ -60,12 +70,21 @@ class ValidatorController extends Controller
         $offset = ($page - 1) * $limit; // Расчет offset
         $userId = $request->user() ? $request->user()->id : null;
 
-        $validatorsData = DB::table('data.validators')
-            ->leftJoin('data.favorites', function($join) use ($userId) {
+        $query = DB::table('data.validators')
+            ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
+            
+        // Only join favorites table if user is authenticated
+        if ($userId) {
+            $query->leftJoin('data.favorites', function($join) use ($userId) {
                 $join->on('data.validators.id', '=', 'data.favorites.validator_id')
                      ->where('data.favorites.user_id', '=', $userId);
             })
-            ->select('data.validators.*', 'data.favorites.id as favorite_id')
+            ->select('data.validators.*', 'data.favorites.id as favorite_id', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
+        } else {
+            $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
+        }
+        
+        $validatorsData = $query
             ->where('data.validators.id', '>=', '19566')
             ->orderBy('data.validators.id')
             ->limit(10)->offset($offset)->get();
@@ -126,7 +145,8 @@ class ValidatorController extends Controller
             ]);
         }
         
-        $query = DB::table('data.validators');
+        $query = DB::table('data.validators')
+            ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
         
         // Only join favorites table if user is authenticated
         if ($userId) {
@@ -134,9 +154,9 @@ class ValidatorController extends Controller
                 $join->on('data.validators.id', '=', 'data.favorites.validator_id')
                      ->where('data.favorites.user_id', '=', $userId);
             })
-            ->select('data.validators.*', 'data.favorites.id as favorite_id');
+            ->select('data.validators.*', 'data.favorites.id as favorite_id', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
         } else {
-            $query->select('data.validators.*');
+            $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
         }
         
         $validatorsData = $query
