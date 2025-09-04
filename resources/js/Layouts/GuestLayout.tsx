@@ -8,8 +8,8 @@ export default function GuestLayout({ children, auth }) {
     <>
       <Head title="Welcome" />
         <Header auth={auth} />
-        <div className="flex min-h-screen flex-col items-center pt-6 sm:justify-center sm:pt-0">
-            <div className="w-full overflow-hidden bg-white px-6 py-4 shadow-md sm:max-w-md sm:rounded-lg">
+        <div className="flex min-h-screen flex-col items-center sm:justify-center sm:pt-0">
+            <div className="w-full overflow-hidden bg-white px-6 py-4  sm:max-w-md login-form mt-[-200px]">
                 {children}
             </div>
         </div>

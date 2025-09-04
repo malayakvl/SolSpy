@@ -6,10 +6,11 @@ import { usePage } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
 import ApplicationLogo from "./ApplicationLogo";
 import ActionsMenu from "./ActionsMenu";
+import LangMenu from "./LangMenu";
 import axios from 'axios';
 import {useEffect, useState} from "react";
 import ProgressBar from "./ProgressBar";
-import {setEpochAction} from "../../Redux/Layout";
+import { setEpochAction } from "../../Redux/Layout";
 
 export default function Header(auth) {
   const dispatch = useDispatch();
@@ -21,6 +22,7 @@ export default function Header(auth) {
   const [settingsFetched, setSettingsFetched] = useState(false)
   const [barProgress, setBarProgress] = useState(null);
   const [barProgressCaption, setBarProgressCaption] = useState('');
+
 
   const lng = new Lang({
     messages: lngHeader,
@@ -68,53 +70,105 @@ export default function Header(auth) {
 
   return (
     <header className="bg-white">
-      <div className="bg-gray-200 w-full min-h-[80px] flex align-center justify-between">
-        <div className="grid w-full grid-cols-2 items-center gap-1 px-4 lg:grid-cols-2">
-          <div className="logo w-[40px] h-[40px]">
-            <ApplicationLogo />
-          </div>
-          <nav className="flex flex-1 justify-end whitespace-nowrap">
-            <nav className="flex inline align-middle">
-              <div className="md:space-x-4 md:flex md:pr-[30px] inline align-middle pt-[8px] whitespace-nowrap">
-                <ProgressBar progress={barProgress*100} caption={`Left ${barProgressCaption}`} />
+      <nav class="relative bg-blue-900">
+        <div class="mx-auto max-w-8xl px-2 sm:px-6 lg:px-8">
+          <div class="relative flex h-16 items-center justify-between">
+            <div class="absolute inset-y-0 left-0 flex items-center sm:hidden">
+              {/* <!-- Mobile menu button--> */}
+              <button type="button" className="relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-white/5 hover:text-white focus:outline-2 focus:-outline-offset-1 focus:outline-indigo-500">
+                <span class="absolute -inset-0.5"></span>
+                <span class="sr-only">Open main menu</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" data-slot="icon" aria-hidden="true" class="size-6 in-aria-expanded:hidden">
+                  <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" data-slot="icon" aria-hidden="true" class="size-6 not-in-aria-expanded:hidden">
+                  <path d="M6 18 18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+            </div>
+            <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+              <div class="flex shrink-0 items-center">
+                <ApplicationLogo />
               </div>
-              <div className="md:space-x-4 md:flex md:pr-[30px] inline align-middle pt-[8px] text-[14px] whitespace-nowrap w-[150px]">
-                Epoch  {settingsData?.epoch} ({epochPersent}%)
-              </div>
-              <div className="md:space-x-4 md:flex md:pr-[30px] inline align-middle pt-[8px] text-[14px] whitespace-nowrap">
-                1 SOL = {settingsData?.sol_rate}$
-              </div>
-              <ActionsMenu />
-            </nav>
-            <nav className="flex flex-3 justify-end inline align-middle text-[14px]">
-              {user?.id ? (
-                  <Link
-                      href={route('dashboard')}
-                      className="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                  >
-                    Logout
+              <div class="hidden sm:ml-6 sm:flex flex-row">
+                <div class="flex space-x-4">
+                  {/* <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-white/5 hover:text-white" --> */}
+                  <Link href={'/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link">
+                    Validators
                   </Link>
-              ) : (
-                  <>
+                  <Link href={'/customers'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
+                    Customers
+                  </Link>
+                  <Link href={'/customers'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
+                    News
+                  </Link>
+                </div>
+              </div>
+            </div>
+            <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 nav-link">
+              <div className="flex whitespace-nowrap text-[#fff] ml-[0px]">
+                 <ProgressBar progress={barProgress*100} caption={`Left ${barProgressCaption}`} />
+              </div>
+            </div>
+            <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 nav-link">
+              <div className="flex whitespace-nowrap text-[#fff] ml-[0px]">
+                  <div className="md:space-x-4 md:flex md:pr-[30px] inline align-middle text-[14px] whitespace-nowrap w-[150px]">
+                    Epoch  {settingsData?.epoch} ({epochPersent}%)
+                  </div>
+                  <div className="md:space-x-4 md:flex md:pr-[30px] inline align-middle text-[14px] whitespace-nowrap">
+                    1 SOL = {settingsData?.sol_rate}$
+                  </div>
+                </div>
+            </div>
+            <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+              <ActionsMenu />
+              <LangMenu />
 
-                    <Link
+              {/* <!-- Profile dropdown --> */}
+              <div class="relative ml-3">
+                {user?.id ? (
+                  <button class="relative flex rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">
+                    <span class="absolute -inset-1.5"></span>
+                    <span class="sr-only">Open user menu</span>
+                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="size-8 rounded-full bg-gray-800 outline -outline-offset-1 outline-white/10" />
+                  </button>
+                ) : (
+                  <>
+                  <Link
                         href="/login"
-                        className="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
+                        className="rounded-md px-3 py-2 text-white text-sm"
                     >
                       Log in
                     </Link>
                     <Link
                         href="/register"
-                        className="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
+                        className="rounded-md px-3 py-2 text-white text-sm"
                     >
                       Register
                     </Link>
                   </>
-              )}
-            </nav>
-          </nav>
+                )}
+                {/* Profile Dropdown */}
+                {/* <div popover class="w-48 origin-top-right rounded-md bg-white py-1 shadow-lg outline outline-black/5 transition transition-discrete [--anchor-gap:--spacing(2)] data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in">
+                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden">Your profile</a>
+                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden">Settings</a>
+                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden">Sign out</a>
+                </div> */}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+
+        <div id="mobile-menu" hidden class="block sm:hidden">
+          <div class="space-y-1 px-2 pt-2 pb-3">
+            {/* <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-white/5 hover:text-white" --> */}
+            <a href="#" aria-current="page" class="block rounded-md bg-gray-900 px-3 py-2 text-base font-medium text-white">Dashboard</a>
+            <a href="#" class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5 hover:text-white">Team</a>
+            <a href="#" class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5 hover:text-white">Projects</a>
+            <a href="#" class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5 hover:text-white">Calendar</a>
+          </div>
+        </div>
+      </nav>
     </header>
   );
 }

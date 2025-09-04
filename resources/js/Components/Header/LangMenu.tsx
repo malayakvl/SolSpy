@@ -14,8 +14,7 @@ export default function LangMenu() {
   });
 
   return (
-    <div className="space-x-8 sm:-my-px sm:flex md:flex md:mt-[-8px] relative md:mr-[15px] pt-[10px]">
-      <div className="icon-lang" />
+    <div className="space-x-8 sm:-my-px sm:flex md:flex relative md:mr-[15px]">
       <Dropdown>
         <Dropdown.Trigger>
           <span className="inline-flex">

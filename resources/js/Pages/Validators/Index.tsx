@@ -133,7 +133,7 @@ export default function Index(validatorsData) {
 
     useEffect(() => {
         // const intervalId = setInterval(fetchData(currentPage), 15000);
-        const intervalId = setInterval(() => fetchData(currentPage), 15000);
+        const intervalId = setInterval(() => fetchData(currentPage), 2000);
         return () => clearInterval(intervalId);
     }, [dataFetched])
 
@@ -235,7 +235,7 @@ export default function Index(validatorsData) {
                                         <td className="text-center">
                                             {validator.commission}%
                                         </td>
-                                        <td className="text-center">MEV %</td>
+                                        <td className="text-center">{validator.jito_commission ? `${ validator.jito_commission/100}%` : ''}</td>
                                         <td className="text-center">
                                             <ValidatorUptime epoch={epoch} validator={validator} />
                                         </td>
@@ -245,6 +245,8 @@ export default function Index(validatorsData) {
                                         <td className="text-center">SFDP</td>
                                         <td className="text-left whitespace-nowrap">{validator.country_iso} {validator.country}</td>
                                         <td className="text-center">
+                                            <FontAwesomeIcon icon={faStar} className="text-xs" />
+                                            <FontAwesomeIcon icon={faStar} className="text-xs" />
                                             <FontAwesomeIcon icon={faStar} className="text-xs" />
                                         </td>
                                         <td className="text-center">

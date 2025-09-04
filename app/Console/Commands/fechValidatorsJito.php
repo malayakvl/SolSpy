@@ -8,14 +8,14 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
-class fechValidatorsJiito extends Command
+class fechValidatorsJito extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:fech-validators-jiito';
+    protected $signature = 'app:fech-validators-jito';
 
     /**
      * The console command description.
