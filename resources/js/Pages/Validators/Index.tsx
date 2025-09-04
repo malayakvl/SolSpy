@@ -127,7 +127,7 @@ export default function Index(validatorsData) {
     const paginate = (pageNumber) => {
         if (pageNumber >= 1 && pageNumber <= totalPages) {
             setCurrentPage(pageNumber);
-            fetchData(pageNumber);
+            fetchData(pageNumber, filterTypeValue);
         }
     };
 
@@ -155,8 +155,8 @@ export default function Index(validatorsData) {
         return pages;
     };
 
-    const fetchData = ( page ) => {
-        router.get(`/validators?page=${page || currentPage}`, {}, {
+    const fetchData = ( page, filterType = 'all' ) => {
+        router.get(`/validators?page=${page || currentPage}&filterType=${filterType}`, {}, {
             preserveState: true,
             preserveScroll: true,
             only: ['validatorsData'],
@@ -189,6 +189,29 @@ export default function Index(validatorsData) {
         });
     }
 
+    const filterValidatorsData = (filter) => {
+        console.log(filter);
+        router.get(`validators`, {
+            filterType: filter,
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['validatorsData'],
+            onSuccess: (page) => {
+                setData(page.props.validatorsData);
+                toast.success(`Validator ${value} status  updated successfully!`);
+            },
+            onError: (error) => {
+                console.error('Error:', error);
+            }
+        });
+        // if (fileter === 'all') {
+        //     setData(validatorsData);
+        // } else {
+        //     setData(filterValidatorsData(fileter));
+        // }
+    }
+
     // useEffect(() => {
     //     // const intervalId = setInterval(() => fetchData(currentPage), 2000);
     //     const intervalId = setInterval(() => fetchData(currentPage), 55000);
@@ -207,6 +230,7 @@ export default function Index(validatorsData) {
                         <div>
                             <select onChange={e => {
                                 setFilterTypeValue(e.target.value);
+                                fetchData(1, e.target.value); // Send filter to server
                             }}>
                                 <option value="all">{msg.get('validators.all')}</option>
                                 <option value="top">{msg.get('validators.top')}</option>
