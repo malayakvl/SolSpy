@@ -87,7 +87,7 @@ export default function ValidatorActions({validator, onBanToggle}) {
                 if (compareList.length >= 2) {
                     toast.error('Maximum 2 validators can be compared for unregistered users', {
                         position: "top-right",
-                        autoClose: 3000,
+                        autoClose: 2000,
                         hideProgressBar: false,
                         closeOnClick: true,
                         pauseOnHover: true,
@@ -164,7 +164,7 @@ export default function ValidatorActions({validator, onBanToggle}) {
                 if (favoritesList.length >= 5) {
                     toast.error('Maximum 5 validators can be added to favorites for unregistered users', {
                         position: "top-right",
-                        autoClose: 3000,
+                        autoClose: 1000,
                         hideProgressBar: false,
                         closeOnClick: true,
                         pauseOnHover: true,
@@ -288,12 +288,12 @@ export default function ValidatorActions({validator, onBanToggle}) {
             <span>
                 <FontAwesomeIcon icon={faMoneyBill} className="mr-2" />
             </span>
-            <span className="cursor-pointer" onClick={() => addToBanned(validator.id)}>
+            {/* <span className="cursor-pointer" onClick={() => addToBanned(validator.id)}>
                 <FontAwesomeIcon 
                     icon={faBan} 
                     className={`mr-2 ${isBanned ? 'text-red-500' : ''}`}
                 />
-            </span>
+            </span> */}
         </>
     );
 }

@@ -12,9 +12,24 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use App\Models\User;
 
 class ProfileController extends Controller
 {
+    public function index(Request $request): Response {
+        // dd($request->user()->hasRole('Manager'));exit;
+
+        return Inertia::render('Profile/Edit', [
+            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'status' => session('status'),
+        ]);
+        // $request->user()->load('roles');
+        // dd($request->user()->hasRole('Admin'));
+    }
+
+
+
+
     /**
      * Display the Users's profile form.
      */

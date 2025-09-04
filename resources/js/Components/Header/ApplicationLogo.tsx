@@ -5,6 +5,10 @@ export default function ApplicationLogo() {
     <div className="relative">
         <Link href={'/'}>
             <svg
+                color="white"
+                className="w-full h-full w-[50px]"
+                fill="currentColor"
+                preserveAspectRatio="xMidYMid meet"
                 viewBox="0 0 316 316"
                 xmlns="http://www.w3.org/2000/svg"
             >
