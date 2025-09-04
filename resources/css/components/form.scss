@@ -1,16 +1,9 @@
 .input-text {
-    min-height: 33px;
+    min-height: 40px;
     @apply rounded-sm border-gray-300 shadow-sm w-full py-1
         focus:border-indigo-500 focus:ring-indigo-500 text-[13px];
 }
-.input-invoice {
-    height: 33px;
-    min-height: 33px;
-    //border-radius: 0;
-}
-.material-input {
-    border-radius: 0;
-}
+
 .input-text:active,.input-text:focus {
     outline: none !important;
 }
@@ -308,4 +301,10 @@ label.float-label {
 }
 .input-report-store {
     width: 200px;
+}
+.login-form {
+    // border: solid 1px;
+    // border-color: rgb(147, 146, 146);
+-webkit-box-shadow: -10px 0px 13px -7px #10023c, 10px 0px 13px -7px #260daf, 5px 5px 15px 5px rgba(45, 10, 121, 0); 
+box-shadow: -10px 0px 13px -7px #130469, 10px 0px 13px -7px #000000, 5px 5px 15px 5px rgba(17, 3, 108, 0);
 }

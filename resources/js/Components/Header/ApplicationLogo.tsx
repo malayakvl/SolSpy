@@ -6,9 +6,8 @@ export default function ApplicationLogo() {
         <Link href={'/'}>
             <svg
                 color="white"
-                className="w-full h-full w-[50px]"
+                className="w-full h-full logo"
                 fill="currentColor"
-                preserveAspectRatio="xMidYMid meet"
                 viewBox="0 0 316 316"
                 xmlns="http://www.w3.org/2000/svg"
             >
