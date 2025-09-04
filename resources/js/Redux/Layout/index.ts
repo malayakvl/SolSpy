@@ -24,8 +24,8 @@ const initialState: State.Layouts = {
     checkedIds: [],
     showTextingMenu: false,
     showProfileMenu: false,
-    selectedLng: 'uk',
-    appLang: 'uk',
+    selectedLng: 'en',
+    appLang: 'en',
     showEmailNotification: false,
     epoch: ''
 };

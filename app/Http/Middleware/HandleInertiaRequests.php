@@ -38,17 +38,5 @@ class HandleInertiaRequests extends Middleware
                 })->all()
             ]
         ]);
-        // return array_merge(parent::share($request), [
-        //     ...parent::share($request),
-        //     'auth' => [
-        //         'user' => $request->user(),
-        //         'role' => $request->user()?->getRoleNames(),
-        //         'can' => $request->user()?->getPermissionsViaRoles()->flatMap(function ($role) {
-        //             return [$role];
-        //         })->map(function ($permission) {
-        //             return [$permission->name => auth()->user()->can($permission['name'])];
-        //         })->collapse()->all()
-        //     ]
-        // ]);
     }
 }

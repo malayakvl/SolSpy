@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import Lang from 'lang.js';
 import lngVaidators from '../../Lang/Validators/translation';
 import { useSelector } from 'react-redux';
@@ -9,7 +9,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faBan,
     faCheck,
-    faStar
+    faStar,
+    faChevronDown
 } from '@fortawesome/free-solid-svg-icons';
 import ValidatorCredits from "./Partials/ValidatorCredits";
 import ValidatorRate from "./Partials/ValidatorRate";
@@ -19,9 +20,11 @@ import ValidatorActivatedStake from "./Partials/ValidatorActivatedStake";
 import ValidatorUptime from "./Partials/ValidatorUptime";
 import ValidatorScore from "./Partials/ValidatorScore";
 import axios from 'axios';
+import { toast } from 'react-toastify';
 import ValidatorSpyRank from "./Partials/ValidatorSpyRank";
 import { perPageSelector } from '../../Redux/Validators/selectors';
 import { Link } from "@inertiajs/react";
+import { userSelector } from '../../Redux/Users/selectors';
 
 
 export default function Index(validatorsData) {
@@ -33,13 +36,23 @@ export default function Index(validatorsData) {
         messages: lngVaidators,
         locale: appLang,
     });
+
     const epoch = useSelector(appEpochSelector);
+    const user = usePage().props.auth.user;
     const [dataFetched, setDataFetched] = useState(false);
     const [currentPage, setCurrentPage] = useState(validatorsData.currentPage);
     const [itemsPerPage] = useState(perPage); // Number of items per page
     const [selectAll, setSelectAll] = useState(false);
-    
-    // Load banned validators from localStorage on component mount
+    const [showAdminDropdown, setShowAdminDropdown] = useState(false);
+    const [filterTypeValue, setFilterTypeValue] = useState('all');
+    const [checkedIds, setCheckedIds] = useState<string[]>([]);
+
+    // Get role names as array of strings
+    const userRoleNames = user?.roles?.map(role => role.name) || [];
+    // Check if user has Admin/Manager role
+    const isAdmin = userRoleNames.includes('Admin');
+    const isManager = userRoleNames.includes('Manager');
+
     useEffect(() => {
         const bannedList = JSON.parse(localStorage.getItem('validatorBanned') || '[]');
         setBannedValidators(bannedList);
@@ -61,39 +74,60 @@ export default function Index(validatorsData) {
     const filteredData = data;
 
     const handleCheckboxChange = (id) => {
-        const updatedData = data.map((row) =>
-            row.id === id ? { ...row, isChecked: !row.isChecked } : row
-        );
-        setData(updatedData);
+        if (checkedIds.includes(id)) {
+            // Remove from checkedIds
+            setCheckedIds(prev => prev.filter(checkedId => checkedId !== id));
+        } else {
+            // Add to checkedIds
+            setCheckedIds(prev => [...prev, id]);
+        }
+        
         // Update selectAll state based on whether all visible (non-banned) rows are checked
-        const visibleRows = updatedData.filter(validator => !bannedValidators.includes(validator.id));
-        setSelectAll(visibleRows.every((row) => row.isChecked));
+        const visibleValidatorIds = filteredData
+            .filter(validator => !bannedValidators.includes(validator.id))
+            .map(validator => validator.id);
+        
+        const newCheckedIds = checkedIds.includes(id) 
+            ? checkedIds.filter(checkedId => checkedId !== id)
+            : [...checkedIds, id];
+            
+        setSelectAll(visibleValidatorIds.every(validatorId => newCheckedIds.includes(validatorId)));
     };
 
     const handleSelectAllChange = () => {
         const newSelectAll = !selectAll;
         setSelectAll(newSelectAll);
-        // Update only visible (non-banned) checkboxes to match the select all state
-        const updatedData = data.map((row) => ({
-            ...row,
-            isChecked: bannedValidators.includes(row.id) ? row.isChecked : newSelectAll
-        }));
-        setData(updatedData);
+        
+        // Get visible (non-banned) validator IDs
+        const visibleValidatorIds = filteredData
+            .filter(validator => !bannedValidators.includes(validator.id))
+            .map(validator => validator.id);
+        
+        if (newSelectAll) {
+            // Add all visible validator IDs to checkedIds
+            setCheckedIds(prev => {
+                const newCheckedIds = [...prev];
+                visibleValidatorIds.forEach(id => {
+                    if (!newCheckedIds.includes(id)) {
+                        newCheckedIds.push(id);
+                    }
+                });
+                return newCheckedIds;
+            });
+        } else {
+            // Remove all visible validator IDs from checkedIds
+            setCheckedIds(prev => prev.filter(id => !visibleValidatorIds.includes(id)));
+        }
     };
 
-    // Pagination logic
-    const totalRecords = validatorsData.totalCount; // Use filtered data count
+    // Pagination logic - server-side
+    const totalRecords = validatorsData.totalCount;
     const totalPages = Math.ceil(totalRecords / itemsPerPage);
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-
-    // Pagination logic
 
     const paginate = (pageNumber) => {
         if (pageNumber >= 1 && pageNumber <= totalPages) {
             setCurrentPage(pageNumber);
-            fetchData(pageNumber);
+            fetchData(pageNumber, filterTypeValue);
         }
     };
 
@@ -121,29 +155,69 @@ export default function Index(validatorsData) {
         return pages;
     };
 
-    const fetchData = async ( page ) => {
-        try {
-            const response = await axios.get(`/api/fetch-validators?page=${page || currentPage}`);
-            setData(response.data.validatorsData);
-            // console.log(`Залишилось: ${days} дн, ${hours} год, ${minutes} хв, ${seconds} сек`);
-        } catch (error) {
-            console.error('Error:', error);
-        }
+    const fetchData = ( page, filterType = 'all' ) => {
+        router.get(`/validators?page=${page || currentPage}&filterType=${filterType}`, {}, {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['validatorsData'],
+            onSuccess: (page) => {
+                console.log(page.props.validatorsData)
+                setData(page.props.validatorsData);
+            },
+            onError: (error) => {
+                console.error('Error:', error);
+            }
+        });
     };
 
-    useEffect(() => {
-        // const intervalId = setInterval(fetchData(currentPage), 15000);
-        const intervalId = setInterval(() => fetchData(currentPage), 2000);
-        return () => clearInterval(intervalId);
-    }, [dataFetched])
+    const addMarkToValidators = (value) => {
+        console.log(value, checkedIds)
+        router.get(`/mark-validators`, {
+            value: value,
+            checkedIds: checkedIds
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['validatorsData'],
+            onSuccess: (page) => {
+                setData(page.props.validatorsData);
+                toast.success(`Validator ${value} status  updated successfully!`);
+            },
+            onError: (error) => {
+                console.error('Error:', error);
+            }
+        });
+    }
 
+    const filterValidatorsData = (filter) => {
+        console.log(filter);
+        router.get(`validators`, {
+            filterType: filter,
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['validatorsData'],
+            onSuccess: (page) => {
+                setData(page.props.validatorsData);
+                toast.success(`Validator ${value} status  updated successfully!`);
+            },
+            onError: (error) => {
+                console.error('Error:', error);
+            }
+        });
+        // if (fileter === 'all') {
+        //     setData(validatorsData);
+        // } else {
+        //     setData(filterValidatorsData(fileter));
+        // }
+    }
 
+    // useEffect(() => {
+    //     // const intervalId = setInterval(() => fetchData(currentPage), 2000);
+    //     const intervalId = setInterval(() => fetchData(currentPage), 55000);
+    //     return () => clearInterval(intervalId);
+    // }, [dataFetched])
 
-    useEffect(() => {
-        // fetchVoteAccounts();
-        // const intervalId = setInterval(fetchVoteAccounts, 5000);
-        // return () => clearInterval(intervalId);
-    }, []);
 
     return (
         <AuthenticatedLayout header={<Head />}>
@@ -151,17 +225,67 @@ export default function Index(validatorsData) {
             <div className="py-0">
                 <div className="p-4 sm:p-8 mb-8 content-data bg-content">
                     <h2>{msg.get('validators.title')}&nbsp;</h2>
+                    <div className="flex justify-between"> 
+                        <input className="w-full sm:w-1/2 p-2" type="text" placeholder="Search" />
+                        <div>
+                            <select onChange={e => {
+                                setFilterTypeValue(e.target.value);
+                                fetchData(1, e.target.value); // Send filter to server
+                            }}>
+                                <option value="all">{msg.get('validators.all')}</option>
+                                <option value="top">{msg.get('validators.top')}</option>
+                                <option value="highlight">{msg.get('validators.highlight')}</option>
+                            </select>
+                        </div>
+                    </div>
                     <div className="mt-6">
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200 validator-table">
                                 <thead>
                                     <tr>
-                                        <th>
-                                            <input 
-                                                type="checkbox" 
-                                                checked={selectAll}
-                                                onChange={handleSelectAllChange} 
-                                            />
+                                        <th className="relative">
+                                            <div className="flex items-center gap-2">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={selectAll}
+                                                    onChange={handleSelectAllChange} 
+                                                />
+                                                {isAdmin && (
+                                                    <div className="relative">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowAdminDropdown(!showAdminDropdown)}
+                                                            className="px-2 py-1 text-xs"
+                                                        >
+                                                            <FontAwesomeIcon icon={faChevronDown} />
+                                                        </button>
+                                                        {showAdminDropdown && (
+                                                            <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+                                                                <div className="py-1">
+                                                                    <button
+                                                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                                        onClick={() => {
+                                                                            addMarkToValidators('top');
+                                                                            setShowAdminDropdown(false);
+                                                                        }}
+                                                                    >
+                                                                        Set Top
+                                                                    </button>
+                                                                    <button
+                                                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                                        onClick={() => {
+                                                                            addMarkToValidators('highlight');
+                                                                            setShowAdminDropdown(false);
+                                                                        }}
+                                                                    >
+                                                                        Highlight
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </th>
                                         <th>Spy Rank</th>
                                         <th>Avatar</th>
@@ -188,15 +312,17 @@ export default function Index(validatorsData) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                {currentItems.map((validator, index) => (
+                                {data.map((validator, index) => (
                                     <tr>
-                                        <td className="text-center">
-                                            <input 
-                                                type="checkbox" 
-                                                id={validator.id} 
-                                                checked={validator.isChecked || false}
-                                                onChange={() => handleCheckboxChange(validator.id)} 
-                                            />
+                                        <td className="text-left">
+                                            <div className="pl-[10px]">
+                                                <input 
+                                                    type="checkbox" 
+                                                    id={validator.id} 
+                                                    checked={checkedIds.includes(validator.id)}
+                                                    onChange={() => handleCheckboxChange(validator.id)} 
+                                                />
+                                            </div>
                                         </td>
                                         <td className="text-center">
                                             <ValidatorSpyRank validator={validator} />

@@ -12,13 +12,13 @@ use Inertia\Response;
 class ValidatorController extends Controller
 {
     //
-    public function index(Request $request, $page = 1): Response
+    public function index(Request $request): Response
     {
         $limit = 10; // Количество записей на страницу
-        $page = max(1, (int) $page); // Приведение к integer с минимальным значением 1
+        $page = max(1, (int) $request->get('page', 1)); // Получение page из request с default значением 1
         $offset = ($page - 1) * $limit; // Расчет offset
+        $filterType = $request->get('filterType', 'all'); // Get filter type
         $userId = $request->user() ? $request->user()->id : null;
-        
         $query = DB::table('data.validators')
             ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
             
@@ -34,10 +34,19 @@ class ValidatorController extends Controller
         }
         
         $validatorsData = $query
-            ->where('data.validators.id', '>=', '19566')
+            ->where('data.validators.id', '>=', '19566');
+            
+        // Apply filter based on filterType
+        if ($filterType === 'highlight') {
+            $validatorsData = $validatorsData->where('data.validators.is_hightlighted', true);
+        } elseif ($filterType === 'top') {
+            $validatorsData = $validatorsData->where('data.validators.is_top', true);
+        }
+        
+        $validatorsData = $validatorsData
             ->orderBy('data.validators.id')
             ->limit(10)->offset($offset)->get();
-
+// dd($validatorsData);
         $validatorsAllData = DB::table('data.validators')
             ->orderBy('activated_stake')->get();
         $sortedValidators = $validatorsAllData->toArray();
@@ -116,6 +125,24 @@ class ValidatorController extends Controller
             'validatorsData' => $results,
             'validatorsAllData' => $validatorsAllData
         ]);
+    }
+
+    public function markValidators(Request $request) {
+        $checkedIds = $request->get('checkedIds', []);
+        $value = $request->get('value');
+        if (!empty($checkedIds) && in_array($value, ['highlight', 'top'])) {
+            // Determine which field to update based on value
+            if ($value === 'highlight')
+                $field = 'is_hightlighted';
+            elseif ($value === 'top')
+                $field = 'is_top';
+
+            // Toggle field: false -> true, true -> false
+            DB::statement(
+                "UPDATE data.validators SET {$field} = NOT {$field} WHERE id = ANY(?)",
+                ['{' . implode(',', $checkedIds) . '}']
+            );
+        }
     }
 
     

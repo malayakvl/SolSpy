@@ -14,7 +14,7 @@ export default function LangMenu() {
   });
 
   return (
-    <div className="space-x-8 sm:-my-px sm:flex md:flex relative md:mr-[15px]">
+    <div className="space-x-8 sm:-my-px sm:flex md:flex md:mt-[-8px] relative md:mr-[15px]">
       <Dropdown>
         <Dropdown.Trigger>
           <span className="inline-flex">
@@ -35,15 +35,15 @@ export default function LangMenu() {
         <Dropdown.Content>
           <span
             className="dropdown-span"
-            onClick={() => dispatch(changeLangAction('uk'))}
-          >
-            Укр
-          </span>
-          <span
-            className="dropdown-span"
             onClick={() => dispatch(changeLangAction('en'))}
           >
             En
+          </span>
+          <span
+            className="dropdown-span"
+            onClick={() => dispatch(changeLangAction('uk'))}
+          >
+            Укр
           </span>
         </Dropdown.Content>
       </Dropdown>
