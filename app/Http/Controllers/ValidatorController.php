@@ -12,13 +12,12 @@ use Inertia\Response;
 class ValidatorController extends Controller
 {
     //
-    public function index(Request $request, $page = 1): Response
+    public function index(Request $request): Response
     {
         $limit = 10; // Количество записей на страницу
-        $page = max(1, (int) $page); // Приведение к integer с минимальным значением 1
+        $page = max(1, (int) $request->get('page', 1)); // Получение page из request с default значением 1
         $offset = ($page - 1) * $limit; // Расчет offset
         $userId = $request->user() ? $request->user()->id : null;
-        
         $query = DB::table('data.validators')
             ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
             
@@ -116,6 +115,24 @@ class ValidatorController extends Controller
             'validatorsData' => $results,
             'validatorsAllData' => $validatorsAllData
         ]);
+    }
+
+    public function markValidators(Request $request) {
+        $checkedIds = $request->get('checkedIds', []);
+        $value = $request->get('value');
+        if (!empty($checkedIds) && in_array($value, ['highlight', 'top'])) {
+            // Determine which field to update based on value
+            if ($value === 'highlight')
+                $field = 'is_hightlighted';
+            elseif ($value === 'top')
+                $field = 'is_top';
+
+            // Toggle field: false -> true, true -> false
+            DB::statement(
+                "UPDATE data.validators SET {$field} = NOT {$field} WHERE id = ANY(?)",
+                ['{' . implode(',', $checkedIds) . '}']
+            );
+        }
     }
 
     

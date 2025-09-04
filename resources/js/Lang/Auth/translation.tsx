@@ -1,6 +1,6 @@
 const lngAuth = {
   'en.auth': {
-    'auth.email': 'Email',
+    email: 'Email',
     password: 'Password',
     login: 'Log in',
     forgot: 'Forgot your password?',

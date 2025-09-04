@@ -82,7 +82,7 @@ export default function Login({ status, canResetPassword }) {
           </div>
         </div>
 
-        <div className="mt-4 block hidden">
+        {/* <div className="mt-4 block hidden">
           <label className="flex items-center">
             <Checkbox
               name="remember"
@@ -96,7 +96,7 @@ export default function Login({ status, canResetPassword }) {
               {msg.get('auth.remember')}
             </span>
           </label>
-        </div>
+        </div> */}
 
         <div className="mt-4 flex items-center justify-end">
           {canResetPassword && (
@@ -114,7 +114,7 @@ export default function Login({ status, canResetPassword }) {
           </PrimaryButton>
         </div>
         <div className="flex mx-auto">
-          <div class="flex justify-between items-center pt-4 w-full">
+          <div className="flex justify-between items-center pt-4 w-full">
             <div>
               <a href="/auth/google/redirect"
                 className="bg-blue-800 hover:bg-gray-500 text-white text-sm font-bold py-2 px-4 rounded flex flex-start">
