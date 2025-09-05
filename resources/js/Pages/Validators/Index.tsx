@@ -63,6 +63,28 @@ export default function Index(validatorsData) {
     const [totalRecords, setTotalRecords] = useState(validatorsData.totalCount);
     const [showModal, setShowModal] = useState(false);
     const [columnSettings, setColumnSettings] = useState(null);
+    const [columnsConfig, setColumnsConfig] = useState([
+        { name: "Spy Rank", show: true },
+        { name: "Avatar", show: true },
+        { name: "Name", show: true },
+        { name: "Status", show: true },
+        { name: "TVC Score", show: true },
+        { name: "Vote Credits", show: true },
+        { name: "Active Stake", show: true },
+        { name: "Vote Rate", show: true },
+        { name: "Inflation Commission", show: true },
+        { name: "MEV Commission", show: true },
+        { name: "Uptime", show: true },
+        { name: "Client/Version", show: true },
+        { name: "Status SFDP", show: true },
+        { name: "Location", show: true },
+        { name: "Awards", show: true },
+        { name: "Website", show: true },
+        { name: "City", show: true },
+        { name: "ASN", show: true },
+        { name: "IP", show: true },
+        { name: "Jiito Score", show: true }
+    ]);
 
     // Get role names as array of strings
     const userRoleNames = user?.roles?.map(role => role.name) || [];
@@ -193,6 +215,122 @@ export default function Index(validatorsData) {
         return pages;
     };
 
+    // Helper function to check if column should be visible
+    const isColumnVisible = (columnName) => {
+        const column = columnsConfig.find(col => col.name === columnName);
+        return column ? column.show : true;
+    };
+
+    // Helper function to get ordered visible columns
+    const getOrderedVisibleColumns = () => {
+        return columnsConfig.filter(col => col.show);
+    };
+
+    // Helper function to render column header by name
+    const renderColumnHeader = (columnName) => {
+        switch(columnName) {
+            case "Spy Rank": return <th key="spy-rank">Spy Rank</th>;
+            case "Avatar": return <th key="avatar">Avatar</th>;
+            case "Name": return <th key="name">Name</th>;
+            case "Status": return <th key="status">Status</th>;
+            case "TVC Score": return <th key="tvc-score">TVC Score</th>;
+            case "Vote Credits": return <th key="vote-credits">Vote Credits</th>;
+            case "Active Stake": return <th key="active-stake">Active Stake</th>;
+            case "Vote Rate": return <th key="vote-rate">Vote Rate</th>;
+            case "Inflation Commission": return <th key="inflation-commission">Inflation<br/>Commission</th>;
+            case "MEV Commission": return <th key="mev-commission">MEV<br/>Commission</th>;
+            case "Uptime": return <th key="uptime">Uptime</th>;
+            case "Client/Version": return <th key="client-version">Client/Version</th>;
+            case "Status SFDP": return <th key="status-sfdp">Status SFDP</th>;
+            case "Location": return <th key="location">Location</th>;
+            case "Awards": return <th key="awards">Awards</th>;
+            case "Website": return <th key="website">Website</th>;
+            case "City": return <th key="city">City</th>;
+            case "ASN": return <th key="asn">ASN</th>;
+            case "IP": return <th key="ip">IP</th>;
+            case "Jiito Score": return <th key="jiito-score">Jiito Score</th>;
+            default: return null;
+        }
+    };
+
+    // Helper function to render column cell by name
+    const renderColumnCell = (columnName, validator, index) => {
+        switch(columnName) {
+            case "Spy Rank": 
+                return <td key="spy-rank" className="text-center"><ValidatorSpyRank validator={validator} /></td>;
+            case "Avatar": 
+                return (
+                    <td key="avatar" className="text-center py-2">
+                        {validator.avatar_file_url ? (
+                            <img
+                                src={validator.avatar_file_url}
+                                alt={validator.name}
+                                style={{ width: "35px", height: "35px", objectFit: "cover", borderRadius: "50%", margin: "0px auto" }}
+                            />
+                        ) : null}
+                    </td>
+                );
+            case "Name": 
+                return <td key="name"><ValidatorName validator={validator} /></td>;
+            case "Status": 
+                return (
+                    <td key="status" className="text-center">
+                        {!validator.delinquent ? (
+                            <FontAwesomeIcon icon={faCheck} className="mr-1" />
+                        ) : (
+                            <FontAwesomeIcon icon={faBan} className="mr-1" />
+                        )}
+                    </td>
+                );
+            case "TVC Score": 
+                return <td key="tvc-score" className="text-center"><ValidatorScore validator={validator} /></td>;
+            case "Vote Credits": 
+                return <td key="vote-credits" className="text-center"><ValidatorCredits epoch={epoch} validator={validator} /></td>;
+            case "Active Stake": 
+                return <td key="active-stake" className="text-center"><ValidatorActivatedStake epoch={epoch} validator={validator} /></td>;
+            case "Vote Rate": 
+                return <td key="vote-rate" className="text-center"><ValidatorRate epoch={epoch} validator={validator} /></td>;
+            case "Inflation Commission": 
+                return <td key="inflation-commission" className="text-center">{validator.commission}%</td>;
+            case "MEV Commission": 
+                return <td key="mev-commission" className="text-center">{validator.jito_commission ? `${ validator.jito_commission/100}%` : ''}</td>;
+            case "Uptime": 
+                return <td key="uptime" className="text-center"><ValidatorUptime epoch={epoch} validator={validator} /></td>;
+            case "Client/Version": 
+                return <td key="client-version" className="text-center">{`${validator.version}  ${validator.software_client || ''}`}</td>;
+            case "Status SFDP": 
+                return <td key="status-sfdp" className="text-center">SFDP</td>;
+            case "Location": 
+                return <td key="location" className="text-left whitespace-nowrap">{validator.country_iso} {validator.country}</td>;
+            case "Awards": 
+                return (
+                    <td key="awards" className="text-center">
+                        <FontAwesomeIcon icon={faStar} className="text-xs" />
+                        <FontAwesomeIcon icon={faStar} className="text-xs" />
+                        <FontAwesomeIcon icon={faStar} className="text-xs" />
+                    </td>
+                );
+            case "Website": 
+                return (
+                    <td key="website" className="text-center">
+                        {validator.url ?
+                            <a href={validator.url} target="_blank">{validator.url.slice(0, 4)}...{validator.url.slice(-4)}</a>
+                        : <></>
+                        }
+                    </td>
+                );
+            case "City": 
+                return <td key="city" className="text-center">{validator.city}</td>;
+            case "ASN": 
+                return <td key="asn" className="text-center">{validator.asn}</td>;
+            case "IP": 
+                return <td key="ip" className="text-center">{validator.ip}</td>;
+            case "Jiito Score": 
+                return <td key="jiito-score" className="text-center"> JS </td>;
+            default: return null;
+        }
+    };
+
     const toggleModal = () => {
       setShowModal(!showModal); // Toggles the state
     };
@@ -206,41 +344,6 @@ export default function Index(validatorsData) {
         // fetchData(currentPage);
     };
 
-
-    const _fetchData = ( page ) => {
-        // const actualFilter = filterValue || filterTypeDataSelector;
-        // console.log('🔥 fetchData EXECUTING NOW - Selected Filter:', filterTypeDataSelector)
-        // console.log('🔥 fetchData EXECUTING NOW - filterValue param:', filterValue)
-        // console.log('🔥 fetchData EXECUTING NOW - filterTypeDataSelector:', filterTypeDataSelector)
-        // console.log('🔥 fetchData EXECUTING NOW - Column Settings:', columnSettings)
-        // console.log('🔥 fetchData EXECUTING NOW - Page:', page || currentPage)
-
-        const queryParams = {
-            page: page || currentPage,
-            filterType: filterTypeDataSelector
-        };
-        console.log(queryParams)
-
-        // // Add column settings if available
-        // if (columnSettings) {
-        //     queryParams.columns = JSON.stringify(columnSettings);
-        // }
-
-        // console.log('🔥 fetchData EXECUTING NOW - queryParams:', queryParams)
-        // console.log('🔥 fetchData EXECUTING NOW - About to send AJAX request to:', '/api/fetch-validators')
-
-        // axios.get('/api/fetch-validators', {
-        //     params: queryParams
-        // })
-        // .then((response) => {
-        //     console.log('✅ AJAX response received:', response.data);
-        //     setData(response.data.validatorsData);
-        //     setTotalRecords(response.data.totalCount);
-        // })
-        // .catch((error) => {
-        //     console.error('❌ AJAX Error:', error);
-        // });
-    };
 
     const addMarkToValidators = (value) => {
         router.get(`/mark-validators`, {
@@ -267,14 +370,9 @@ export default function Index(validatorsData) {
         const currentFilterType = urlParams.get('filterType') || 'all';
         const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
         
-        console.log('Getting filter from URL:', currentFilterType);
-        console.log('Getting page from URL:', currentPageFromUrl);
-        
         try {
             const response = await axios.get(`/api/fetch-validators?page=${currentPageFromUrl}&filterType=${currentFilterType}`);
-            console.log(response.data.validatorsData)
             setData(response.data.validatorsData);
-            // console.log(`Залишилось: ${days} дн, ${hours} год, ${minutes} хв, ${seconds} сек`);
         } catch (error) {
             console.error('Error:', error);
         }
@@ -287,16 +385,6 @@ export default function Index(validatorsData) {
         return () => clearInterval(intervalId);
     }, [dataFetched])
 
-    // Watch for filter changes and fetch data accordingly
-    // useEffect(() => {
-    //     console.log('useEffect [filterTypeDataSelector] triggered - Current value:', filterTypeDataSelector);
-    //     console.log('useEffect [filterTypeDataSelector] - About to call fetchData with currentPage:', currentPage);
-    //     // Pass the current filter value directly to fetchData
-    //     const timer = setTimeout(() => {
-    //         fetchData(currentPage, filterTypeDataSelector);
-    //     }, 0);
-    //     return () => clearTimeout(timer);
-    // }, [filterTypeDataSelector]);
 
     return (
         <AuthenticatedLayout header={<Head />}>
@@ -406,28 +494,8 @@ export default function Index(validatorsData) {
                                                 )}
                                             </div>
                                         </th>
-                                        <th>Spy Rank</th>
-                                        <th>Avatar</th>
-                                        <th>Name</th>
-                                        <th>Status</th>
-                                        <th>TVC Score</th>
-                                        <th>Vote Credits</th>
-                                        <th>Active Stake</th>
-                                        <th>Vote Rate</th>
-                                        <th>Inflation<br/>Commission</th>
-                                        <th>MEV<br/>Commission</th>
-                                        <th>Uptime</th>
-                                        <th>Client/Version</th>
-                                        <th>Status SFDP</th>
-                                        <th>Location</th>
-                                        <th>Awards</th>
-
-                                        <th>Website</th>
-                                        <th>City</th>
-                                        <th>ASN</th>
-                                        <th>IP</th>
-                                        <th>Jiito Score</th>
                                         <th>Actions</th>
+                                        {getOrderedVisibleColumns().map(column => renderColumnHeader(column.name))}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -443,70 +511,10 @@ export default function Index(validatorsData) {
                                                 />
                                             </div>
                                         </td>
-                                        <td className="text-center">
-                                            <ValidatorSpyRank validator={validator} />
-                                        </td>
-                                        <td className="text-center py-2">
-                                            {validator.avatar_file_url ? (
-                                                <img
-                                                    src={validator.avatar_file_url}
-                                                    alt={validator.name}
-                                                    style={{ width: "35px", height: "35px", objectFit: "cover", borderRadius: "50%", margin: "0px auto" }}
-                                                />
-                                            ) : null}
-                                        </td>
-                                        <td>
-                                            <ValidatorName validator={validator} />
-                                        </td>
-                                        <td className="text-center">
-                                            {!validator.delinquent ? (
-                                                <FontAwesomeIcon icon={faCheck} className="mr-1" />
-                                            ) : (
-                                                <FontAwesomeIcon icon={faBan} className="mr-1" />
-                                            )}
-                                        </td>
-                                        <td className="text-center">
-                                            <ValidatorScore validator={validator} />
-                                        </td>
-                                        <td className="text-center">
-                                            <ValidatorCredits epoch={epoch} validator={validator} />
-                                        </td>
-                                        <td className="text-center">
-                                            <ValidatorActivatedStake epoch={epoch} validator={validator} />
-                                        </td>
-                                        <td className="text-center">
-                                            <ValidatorRate epoch={epoch} validator={validator} />
-                                        </td>
-                                        <td className="text-center">
-                                            {validator.commission}%
-                                        </td>
-                                        <td className="text-center">{validator.jito_commission ? `${ validator.jito_commission/100}%` : ''}</td>
-                                        <td className="text-center">
-                                            <ValidatorUptime epoch={epoch} validator={validator} />
-                                        </td>
-                                        <td className="text-center">
-                                            {`${validator.version}  ${validator.software_client || ''}`}
-                                        </td>
-                                        <td className="text-center">SFDP</td>
-                                        <td className="text-left whitespace-nowrap">{validator.country_iso} {validator.country}</td>
-                                        <td className="text-center">
-                                            <FontAwesomeIcon icon={faStar} className="text-xs" />
-                                            <FontAwesomeIcon icon={faStar} className="text-xs" />
-                                            <FontAwesomeIcon icon={faStar} className="text-xs" />
-                                        </td>
-                                        <td className="text-center">
-                                            {validator.url ?
-                                                <a href={validator.url} target="_blank">{validator.url.slice(0, 4)}...{validator.url.slice(-4)}</a>
-                                            : <></>
-                                            }
-                                        </td>
-                                        <td className="text-center">{validator.city}</td>
-                                        <td className="text-center">{validator.asn}</td>
-                                        <td className="text-center">{validator.ip}</td>
-                                        <td className="text-center"> JS </td>
                                         <th className="text-center">
                                             <ValidatorActions validator={validator} onBanToggle={handleBanToggle} />
                                         </th>
+                                        {getOrderedVisibleColumns().map(column => renderColumnCell(column.name, validator, index))}
                                     </tr>
                                 ))}
                                 </tbody>
@@ -553,7 +561,35 @@ export default function Index(validatorsData) {
                             </button>
                         </div>
                         {(showModal && isAdmin) && (
-                            <Modal onClose={closeModal} onSave={handleColumnSettingsSave}>
+                            <Modal 
+                                onClose={closeModal} 
+                                onSave={handleColumnSettingsSave}
+                                onColumnChange={(columnName, isVisible, index, updatedList) => {
+                                    console.log(`Column "${columnName}" at index ${index} changed to: ${isVisible ? 'visible' : 'hidden'}`);
+                                    
+                                    // Update the columns configuration
+                                    setColumnsConfig(updatedList);
+                                    
+                                    // Output updated array with current positions and visibility
+                                    const columnObjects = updatedList.map((item, idx) => ({
+                                        name: item.name,
+                                        position: idx + 1,
+                                        visible: item.show
+                                    }));
+                                    console.log('Updated columns array:', columnObjects);
+                                }}
+                                onSort={(newList) => {
+                                    // Update the columns configuration
+                                    setColumnsConfig(newList);
+                                    
+                                    const columnObjects = newList.map((item, index) => ({
+                                        name: item.name,
+                                        position: index + 1,
+                                        visible: item.show
+                                    }));
+                                    console.log('Columns reordered:', columnObjects);
+                                }}
+                            >
                                 {/* Modal Content */}
                             </Modal>
                         )}
