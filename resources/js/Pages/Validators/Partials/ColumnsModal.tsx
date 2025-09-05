@@ -92,7 +92,7 @@ const draggableList = [
     },
 ];
 
-const Modal = ({ onClose, onSave, children }) => {
+const Modal = ({ onClose, onSave, onColumnChange, onSort, children }) => {
     const appLang = useSelector(appLangSelector);
     const msg = new Lang({
         messages: lngVaidators,
@@ -117,7 +117,13 @@ const Modal = ({ onClose, onSave, children }) => {
                         filter=".addImageButtonContainer"
                         dragClass="sortableDrag"
                         list={list}
-                        setList={setList}
+                        setList={(newList) => {
+                            setList(newList);
+                            // Call onSort callback when order changes
+                            if (onSort) {
+                                onSort(newList);
+                            }
+                        }}
                         animation="200"
                         easing="ease-out"
                     >
@@ -135,6 +141,11 @@ const Modal = ({ onClose, onSave, children }) => {
                                                 return listItem;
                                             });
                                             setList(updatedList);
+                                            
+                                            // Call the callback to notify parent component
+                                            if (onColumnChange) {
+                                                onColumnChange(item.name, checked, index, updatedList);
+                                            }
                                         }}
                                     />
                                     <span className="ml-2">{item.name}</span>
