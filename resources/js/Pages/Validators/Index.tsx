@@ -10,7 +10,8 @@ import {
     faBan,
     faCheck,
     faStar,
-    faChevronDown
+    faChevronDown,
+    faGear
 } from '@fortawesome/free-solid-svg-icons';
 import ValidatorCredits from "./Partials/ValidatorCredits";
 import ValidatorRate from "./Partials/ValidatorRate";
@@ -46,6 +47,7 @@ export default function Index(validatorsData) {
     const [showAdminDropdown, setShowAdminDropdown] = useState(false);
     const [filterTypeValue, setFilterTypeValue] = useState('all');
     const [checkedIds, setCheckedIds] = useState<string[]>([]);
+    const [totalRecords, setTotalRecords] = useState(validatorsData.totalCount);
 
     // Get role names as array of strings
     const userRoleNames = user?.roles?.map(role => role.name) || [];
@@ -121,7 +123,6 @@ export default function Index(validatorsData) {
     };
 
     // Pagination logic - server-side
-    const totalRecords = validatorsData.totalCount;
     const totalPages = Math.ceil(totalRecords / itemsPerPage);
 
     const paginate = (pageNumber) => {
@@ -159,10 +160,11 @@ export default function Index(validatorsData) {
         router.get(`/validators?page=${page || currentPage}&filterType=${filterType}`, {}, {
             preserveState: true,
             preserveScroll: true,
-            only: ['validatorsData'],
+            only: ['validatorsData', 'totalCount'],
             onSuccess: (page) => {
                 console.log(page.props.validatorsData)
                 setData(page.props.validatorsData);
+                setTotalRecords(page.props.totalCount);
             },
             onError: (error) => {
                 console.error('Error:', error);
@@ -229,14 +231,22 @@ export default function Index(validatorsData) {
                         <input className="w-full sm:w-1/2 p-2" type="text" placeholder="Search" />
                         <div>
                             {isAdmin && (
-                                <select onChange={e => {
-                                    setFilterTypeValue(e.target.value);
-                                    fetchData(1, e.target.value); // Send filter to server
-                                }}>
-                                    <option value="all">{msg.get('validators.all')}</option>
-                                    <option value="top">{msg.get('validators.top')}</option>
-                                    <option value="highlight">{msg.get('validators.highlight')}</option>
-                                </select>
+                                <>
+                                    <button className="bg-blue-800 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded mr-1" onClick={() => {
+                                        setShowAddValidatorModal(true)
+                                    }}>
+                                        <FontAwesomeIcon icon={faGear} />
+                                    </button>
+                                    <select onChange={e => {
+                                        setFilterTypeValue(e.target.value);
+                                        setCurrentPage(1); // Reset to first page when filter changes
+                                        fetchData(1, e.target.value); // Send filter to server
+                                    }}>
+                                        <option value="all">{msg.get('validators.all')}</option>
+                                        <option value="top">{msg.get('validators.top')}</option>
+                                        <option value="highlight">{msg.get('validators.highlight')}</option>
+                                    </select>
+                                </>
                             )}
                         </div>
                     </div>

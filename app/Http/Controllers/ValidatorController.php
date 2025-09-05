@@ -46,6 +46,20 @@ class ValidatorController extends Controller
         $validatorsData = $validatorsData
             ->orderBy('data.validators.id')
             ->limit(10)->offset($offset)->get();
+            
+        // Calculate total count based on filter
+        $totalCountQuery = DB::table('data.validators')
+            ->where('data.validators.id', '>=', '19566');
+            
+        // Apply same filter for count
+        if ($filterType === 'highlight') {
+            $totalCountQuery = $totalCountQuery->where('data.validators.is_hightlighted', true);
+        } elseif ($filterType === 'top') {
+            $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
+        }
+        
+        $filteredTotalCount = $totalCountQuery->count();
+        
         $validatorsAllData = DB::table('data.validators')
             ->orderBy('activated_stake')->get();
         $sortedValidators = $validatorsAllData->toArray();
@@ -66,7 +80,7 @@ class ValidatorController extends Controller
         return Inertia::render('Validators/Index', [
             'validatorsData' => $results,
             'settingsData' => Settings::first(),
-            'totalCount' => $validatorsAllData->count(),
+            'totalCount' => $filteredTotalCount,
             'currentPage' => $page
         ]);
     }
