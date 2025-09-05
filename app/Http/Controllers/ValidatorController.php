@@ -90,6 +90,7 @@ class ValidatorController extends Controller
         $page = max(1, (int) $request->get('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1
         $limit = 10; // Количество записей на страницу
         $offset = ($page - 1) * $limit; // Расчет offset
+        $filterType = $request->get('filterType'); // Get filter type
         $userId = $request->user() ? $request->user()->id : null;
 
         $query = DB::table('data.validators')
@@ -106,10 +107,27 @@ class ValidatorController extends Controller
             $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
         }
         
+        // Apply filter based on filterType
+        $query->where('data.validators.id', '>=', '19566');
+        if ($filterType === 'highlight') {
+            $query->where('data.validators.is_hightlighted', true);
+        } elseif ($filterType === 'top') {
+            $query->where('data.validators.is_top', true);
+        }
+        
         $validatorsData = $query
-            ->where('data.validators.id', '>=', '19566')
             ->orderBy('data.validators.id')
-            ->limit(10)->offset($offset)->get();
+            ->limit($limit)->offset($offset)->get();
+
+        // Calculate total count with same filter
+        $totalCountQuery = DB::table('data.validators')
+            ->where('data.validators.id', '>=', '19566');
+        if ($filterType === 'highlight') {
+            $totalCountQuery->where('data.validators.is_hightlighted', true);
+        } elseif ($filterType === 'top') {
+            $totalCountQuery->where('data.validators.is_top', true);
+        }
+        $totalCount = $totalCountQuery->count();
 
         $validatorsAllData = DB::table('data.validators')
             ->orderBy('activated_stake')->get();
@@ -136,6 +154,7 @@ class ValidatorController extends Controller
 
         return response()->json([
             'validatorsData' => $results,
+            'totalCount' => $totalCount,
             'validatorsAllData' => $validatorsAllData
         ]);
     }
