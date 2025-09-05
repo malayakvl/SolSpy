@@ -46,7 +46,6 @@ class ValidatorController extends Controller
         $validatorsData = $validatorsData
             ->orderBy('data.validators.id')
             ->limit(10)->offset($offset)->get();
-// dd($validatorsData);
         $validatorsAllData = DB::table('data.validators')
             ->orderBy('activated_stake')->get();
         $sortedValidators = $validatorsAllData->toArray();

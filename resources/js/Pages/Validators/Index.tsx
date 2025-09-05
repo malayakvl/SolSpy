@@ -228,14 +228,16 @@ export default function Index(validatorsData) {
                     <div className="flex justify-between"> 
                         <input className="w-full sm:w-1/2 p-2" type="text" placeholder="Search" />
                         <div>
-                            <select onChange={e => {
-                                setFilterTypeValue(e.target.value);
-                                fetchData(1, e.target.value); // Send filter to server
-                            }}>
-                                <option value="all">{msg.get('validators.all')}</option>
-                                <option value="top">{msg.get('validators.top')}</option>
-                                <option value="highlight">{msg.get('validators.highlight')}</option>
-                            </select>
+                            {isAdmin && (
+                                <select onChange={e => {
+                                    setFilterTypeValue(e.target.value);
+                                    fetchData(1, e.target.value); // Send filter to server
+                                }}>
+                                    <option value="all">{msg.get('validators.all')}</option>
+                                    <option value="top">{msg.get('validators.top')}</option>
+                                    <option value="highlight">{msg.get('validators.highlight')}</option>
+                                </select>
+                            )}
                         </div>
                     </div>
                     <div className="mt-6">
