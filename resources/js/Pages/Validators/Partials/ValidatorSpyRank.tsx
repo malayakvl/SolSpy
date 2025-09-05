@@ -1,16 +1,5 @@
 import React, { useEffect, useState } from 'react';
 
-// export default function ValidatorSpyRank({validator, validators}) {
-//
-//     useEffect(() => {
-//         console.log(validator.spyRank)
-//     }, [validator])
-//
-//
-//     return (
-//         <>{validator.spyRank}</>
-//     );
-// }
 export default function ValidatorSpyRank({ validator }) {
     const [prevSpyRank, setPrevSpyRank] = useState(validator.spyRank);
     const [colorClass, setColorClass] = useState('');

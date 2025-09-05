@@ -2,15 +2,17 @@ import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout';
 import { Head, usePage, router } from '@inertiajs/react';
 import Lang from 'lang.js';
 import lngVaidators from '../../Lang/Validators/translation';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { appEpochSelector, appLangSelector } from '../../Redux/Layout/selectors';
-import React, { useEffect, useState, Suspense } from 'react';
+import { setFilterAction } from '../../Redux/Validators/actions';
+import React, { useEffect, useState, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faBan,
     faCheck,
     faStar,
-    faChevronDown
+    faChevronDown,
+    faGear
 } from '@fortawesome/free-solid-svg-icons';
 import ValidatorCredits from "./Partials/ValidatorCredits";
 import ValidatorRate from "./Partials/ValidatorRate";
@@ -22,16 +24,23 @@ import ValidatorScore from "./Partials/ValidatorScore";
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import ValidatorSpyRank from "./Partials/ValidatorSpyRank";
-import { perPageSelector } from '../../Redux/Validators/selectors';
+import { perPageSelector, filterTypeSelector } from '../../Redux/Validators/selectors';
 import { Link } from "@inertiajs/react";
 import { userSelector } from '../../Redux/Users/selectors';
+import { fetchUpdatedValidators } from '../../Redux/Validators/index';
+import Modal from './Partials/ColumnsModal';
 
 
 export default function Index(validatorsData) {
+    const dispath = useDispatch();
     const [data, setData] = useState<any>(validatorsData.validatorsData);
     const [bannedValidators, setBannedValidators] = useState<number[]>([]);
     const perPage = useSelector(perPageSelector);
     const appLang = useSelector(appLangSelector);
+    const filterTypeDataSelector = useSelector(filterTypeSelector); // Filter type from Redux state
+    
+    // Debug logs to track when component re-renders and Redux state
+    
     const msg = new Lang({
         messages: lngVaidators,
         locale: appLang,
@@ -41,11 +50,19 @@ export default function Index(validatorsData) {
     const user = usePage().props.auth.user;
     const [dataFetched, setDataFetched] = useState(false);
     const [currentPage, setCurrentPage] = useState(validatorsData.currentPage);
+    const [lastPages, setLastPages] = useState({
+        all: validatorsData.currentPage,
+        top: 1,
+        highlight: 1
+    }); // Remember last page for each filter type
     const [itemsPerPage] = useState(perPage); // Number of items per page
     const [selectAll, setSelectAll] = useState(false);
     const [showAdminDropdown, setShowAdminDropdown] = useState(false);
-    const [filterTypeValue, setFilterTypeValue] = useState('all');
+    const [filterTypeValue, setFilterTypeValue] = useState(filterTypeDataSelector);
     const [checkedIds, setCheckedIds] = useState<string[]>([]);
+    const [totalRecords, setTotalRecords] = useState(validatorsData.totalCount);
+    const [showModal, setShowModal] = useState(false);
+    const [columnSettings, setColumnSettings] = useState(null);
 
     // Get role names as array of strings
     const userRoleNames = user?.roles?.map(role => role.name) || [];
@@ -121,13 +138,34 @@ export default function Index(validatorsData) {
     };
 
     // Pagination logic - server-side
-    const totalRecords = validatorsData.totalCount;
     const totalPages = Math.ceil(totalRecords / itemsPerPage);
 
     const paginate = (pageNumber) => {
         if (pageNumber >= 1 && pageNumber <= totalPages) {
             setCurrentPage(pageNumber);
-            fetchData(pageNumber, filterTypeValue);
+            // Save the current page for the current filter
+            setLastPages(prev => ({
+                ...prev,
+                [filterTypeDataSelector]: pageNumber
+            }));
+            
+            // Update URL with new page number
+            const params = { page: pageNumber };
+            // Only add filterType if it's not 'all' (default)
+            if (filterTypeDataSelector !== 'all') {
+                params.filterType = filterTypeDataSelector;
+            }
+            
+            router.get('/validators', params, {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+                only: ['validatorsData', 'totalCount'],
+                onSuccess: (page) => {
+                    setData(page.props.validatorsData);
+                    setTotalRecords(page.props.totalCount);
+                }
+            });
         }
     };
 
@@ -155,23 +193,56 @@ export default function Index(validatorsData) {
         return pages;
     };
 
-    const fetchData = ( page, filterType = 'all' ) => {
-        router.get(`/validators?page=${page || currentPage}&filterType=${filterType}`, {}, {
-            preserveState: true,
-            preserveScroll: true,
-            only: ['validatorsData'],
-            onSuccess: (page) => {
-                console.log(page.props.validatorsData)
-                setData(page.props.validatorsData);
-            },
-            onError: (error) => {
-                console.error('Error:', error);
-            }
-        });
+    const toggleModal = () => {
+      setShowModal(!showModal); // Toggles the state
+    };
+
+    const openModal = () => setShowModal(true);
+    const closeModal = () => setShowModal(false);
+    
+    const handleColumnSettingsSave = (columns) => {
+        setColumnSettings(columns);
+        // Optionally refresh data with new column settings
+        // fetchData(currentPage);
+    };
+
+
+    const _fetchData = ( page ) => {
+        // const actualFilter = filterValue || filterTypeDataSelector;
+        // console.log('🔥 fetchData EXECUTING NOW - Selected Filter:', filterTypeDataSelector)
+        // console.log('🔥 fetchData EXECUTING NOW - filterValue param:', filterValue)
+        // console.log('🔥 fetchData EXECUTING NOW - filterTypeDataSelector:', filterTypeDataSelector)
+        // console.log('🔥 fetchData EXECUTING NOW - Column Settings:', columnSettings)
+        // console.log('🔥 fetchData EXECUTING NOW - Page:', page || currentPage)
+
+        const queryParams = {
+            page: page || currentPage,
+            filterType: filterTypeDataSelector
+        };
+        console.log(queryParams)
+
+        // // Add column settings if available
+        // if (columnSettings) {
+        //     queryParams.columns = JSON.stringify(columnSettings);
+        // }
+
+        // console.log('🔥 fetchData EXECUTING NOW - queryParams:', queryParams)
+        // console.log('🔥 fetchData EXECUTING NOW - About to send AJAX request to:', '/api/fetch-validators')
+
+        // axios.get('/api/fetch-validators', {
+        //     params: queryParams
+        // })
+        // .then((response) => {
+        //     console.log('✅ AJAX response received:', response.data);
+        //     setData(response.data.validatorsData);
+        //     setTotalRecords(response.data.totalCount);
+        // })
+        // .catch((error) => {
+        //     console.error('❌ AJAX Error:', error);
+        // });
     };
 
     const addMarkToValidators = (value) => {
-        console.log(value, checkedIds)
         router.get(`/mark-validators`, {
             value: value,
             checkedIds: checkedIds
@@ -189,35 +260,43 @@ export default function Index(validatorsData) {
         });
     }
 
-    const filterValidatorsData = (filter) => {
-        console.log(filter);
-        router.get(`validators`, {
-            filterType: filter,
-        }, {
-            preserveState: true,
-            preserveScroll: true,
-            only: ['validatorsData'],
-            onSuccess: (page) => {
-                setData(page.props.validatorsData);
-                toast.success(`Validator ${value} status  updated successfully!`);
-            },
-            onError: (error) => {
-                console.error('Error:', error);
-            }
-        });
-        // if (fileter === 'all') {
-        //     setData(validatorsData);
-        // } else {
-        //     setData(filterValidatorsData(fileter));
-        // }
-    }
 
+    const fetchData = async ( page, filterValue = 'all' ) => {
+        // Get filter value and page from current URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentFilterType = urlParams.get('filterType') || 'all';
+        const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
+        
+        console.log('Getting filter from URL:', currentFilterType);
+        console.log('Getting page from URL:', currentPageFromUrl);
+        
+        try {
+            const response = await axios.get(`/api/fetch-validators?page=${currentPageFromUrl}&filterType=${currentFilterType}`);
+            console.log(response.data.validatorsData)
+            setData(response.data.validatorsData);
+            // console.log(`Залишилось: ${days} дн, ${hours} год, ${minutes} хв, ${seconds} сек`);
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
+
+
+    useEffect(() => {
+        // const intervalId = setInterval(fetchData(currentPage), 15000);
+        const intervalId = setInterval(() => fetchData(currentPage), 15000);
+        return () => clearInterval(intervalId);
+    }, [dataFetched])
+
+    // Watch for filter changes and fetch data accordingly
     // useEffect(() => {
-    //     // const intervalId = setInterval(() => fetchData(currentPage), 2000);
-    //     const intervalId = setInterval(() => fetchData(currentPage), 55000);
-    //     return () => clearInterval(intervalId);
-    // }, [dataFetched])
-
+    //     console.log('useEffect [filterTypeDataSelector] triggered - Current value:', filterTypeDataSelector);
+    //     console.log('useEffect [filterTypeDataSelector] - About to call fetchData with currentPage:', currentPage);
+    //     // Pass the current filter value directly to fetchData
+    //     const timer = setTimeout(() => {
+    //         fetchData(currentPage, filterTypeDataSelector);
+    //     }, 0);
+    //     return () => clearTimeout(timer);
+    // }, [filterTypeDataSelector]);
 
     return (
         <AuthenticatedLayout header={<Head />}>
@@ -228,14 +307,54 @@ export default function Index(validatorsData) {
                     <div className="flex justify-between"> 
                         <input className="w-full sm:w-1/2 p-2" type="text" placeholder="Search" />
                         <div>
-                            <select onChange={e => {
-                                setFilterTypeValue(e.target.value);
-                                fetchData(1, e.target.value); // Send filter to server
-                            }}>
-                                <option value="all">{msg.get('validators.all')}</option>
-                                <option value="top">{msg.get('validators.top')}</option>
-                                <option value="highlight">{msg.get('validators.highlight')}</option>
-                            </select>
+                            {isAdmin && (
+                                <>
+                                    <button className="bg-blue-800 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded mr-1" onClick={() => {
+                                        toggleModal();
+                                    }}>
+                                        <FontAwesomeIcon icon={faGear} />
+                                    </button>
+                                    <select 
+                                        value={filterTypeDataSelector}
+                                        onChange={e => {
+                                            const newFilterValue = e.target.value;
+                                            
+                                            // Save current page for current filter before switching
+                                            setLastPages(prev => ({
+                                                ...prev,
+                                                [filterTypeDataSelector]: currentPage
+                                            }));
+                                            
+                                            // Get the saved page for the new filter
+                                            const savedPage = lastPages[newFilterValue] || 1;
+                                            
+                                            dispath(setFilterAction(newFilterValue));
+                                            setCurrentPage(savedPage);
+                                            
+                                            // Update URL with new filter
+                                            const params = { page: savedPage };
+                                            // Only add filterType if it's not 'all' (default)
+                                            if (newFilterValue !== 'all') {
+                                                params.filterType = newFilterValue;
+                                            }
+                                            
+                                            router.get('/validators', params, {
+                                                preserveState: true,
+                                                preserveScroll: true,
+                                                replace: true, // Use replace to ensure URL updates
+                                                only: ['validatorsData', 'totalCount'],
+                                                onSuccess: (page) => {
+                                                    setData(page.props.validatorsData);
+                                                    setTotalRecords(page.props.totalCount);
+                                                }
+                                            });
+                                        }}>
+                                        <option value="all">{msg.get('validators.all')}</option>
+                                        <option value="top">{msg.get('validators.top')}</option>
+                                        <option value="highlight">{msg.get('validators.highlight')}</option>
+                                    </select>
+                                </>
+                            )}
                         </div>
                     </div>
                     <div className="mt-6">
@@ -433,6 +552,11 @@ export default function Index(validatorsData) {
                                 Next
                             </button>
                         </div>
+                        {(showModal && isAdmin) && (
+                            <Modal onClose={closeModal} onSave={handleColumnSettingsSave}>
+                                {/* Modal Content */}
+                            </Modal>
+                        )}
                     </div>
                 </div>
             </div>
