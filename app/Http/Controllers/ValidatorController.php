@@ -216,11 +216,6 @@ class ValidatorController extends Controller
         ]);
     }
 
-    public function sortable(Request $request) { 
-        return Inertia::render('Validators/Sortable', [
-        ]);
-    }
-
     public function addCompare(Request $request) {
         $user = $request->user();
         $validatorId = $request->get('validatorId');

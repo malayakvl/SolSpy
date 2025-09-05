@@ -26,6 +26,7 @@ import ValidatorSpyRank from "./Partials/ValidatorSpyRank";
 import { perPageSelector } from '../../Redux/Validators/selectors';
 import { Link } from "@inertiajs/react";
 import { userSelector } from '../../Redux/Users/selectors';
+import Modal from './Partials/ColumnsModal';
 
 
 export default function Index(validatorsData) {
@@ -48,6 +49,7 @@ export default function Index(validatorsData) {
     const [filterTypeValue, setFilterTypeValue] = useState('all');
     const [checkedIds, setCheckedIds] = useState<string[]>([]);
     const [totalRecords, setTotalRecords] = useState(validatorsData.totalCount);
+    const [showModal, setShowModal] = useState(false);
 
     // Get role names as array of strings
     const userRoleNames = user?.roles?.map(role => role.name) || [];
@@ -156,6 +158,14 @@ export default function Index(validatorsData) {
         return pages;
     };
 
+    const toggleModal = () => {
+      setShowModal(!showModal); // Toggles the state
+    };
+
+    const openModal = () => setShowModal(true);
+    const closeModal = () => setShowModal(false);
+
+
     const fetchData = ( page, filterType = 'all' ) => {
         router.get(`/validators?page=${page || currentPage}&filterType=${filterType}`, {}, {
             preserveState: true,
@@ -207,11 +217,6 @@ export default function Index(validatorsData) {
                 console.error('Error:', error);
             }
         });
-        // if (fileter === 'all') {
-        //     setData(validatorsData);
-        // } else {
-        //     setData(filterValidatorsData(fileter));
-        // }
     }
 
     // useEffect(() => {
@@ -233,7 +238,7 @@ export default function Index(validatorsData) {
                             {isAdmin && (
                                 <>
                                     <button className="bg-blue-800 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded mr-1" onClick={() => {
-                                        setShowAddValidatorModal(true)
+                                        toggleModal();
                                     }}>
                                         <FontAwesomeIcon icon={faGear} />
                                     </button>
@@ -445,6 +450,11 @@ export default function Index(validatorsData) {
                                 Next
                             </button>
                         </div>
+                        {(showModal && isAdmin) && (
+                            <Modal onClose={closeModal}>
+                                {/* Modal Content */}
+                            </Modal>
+                        )}
                     </div>
                 </div>
             </div>
