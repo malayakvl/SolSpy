@@ -4,8 +4,10 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use HeadlessChromium\BrowserFactory;
 use App\Models\Validator;
+use Exception;
 
 class makeSiteScreenshot extends Command
 {
@@ -28,26 +30,13 @@ class makeSiteScreenshot extends Command
      */
     public function handle()
     {
-        //
-        // Ваша логика задачи здесь
-        \Log::info('Task executed at: ' . now());
+        // Log task execution
+        Log::info('Screenshot task executed at: ' . now());
         $this->info('Start making screenshot');
+        
         $browserFactory = new BrowserFactory();
 
         // starts headless Chrome
-
-//        $validators = Validators::whereNotNull('www_url')
-//            ->where('www_url', '!=', '')->orderBy('id')
-//            ->get();
-//        $validators = Validator::orderBy('id')
-//            ->limit(10)->get();
-//        $validators = DB::table('data.validators')
-//            ->whereNotNull('url')
-//            ->where('url', '!=', '')
-//            ->where('has_screenshot', false)
-//            ->orderBy('id')
-//            ->limit(15)
-//            ->get();
         $browser = $browserFactory->createBrowser([
             'windowSize'   => [1280, 800],
             'enableImages' => true,
@@ -59,12 +48,22 @@ class makeSiteScreenshot extends Command
             $validators = DB::table('data.validators')
                 ->select('url', 'id')
                 ->whereNotNull('url')
-                ->where('has_screenshot', false)
+                ->where(function($query) {
+                    $query->where('has_screenshot', false)
+                          ->orWhereNull('has_screenshot');
+                })
                 ->where('url', '!=', '')
+                ->where('id', '>=', 19566)
                 ->orderBy('id')
                 ->limit(15)
                 ->get();
-//            dd($validators);exit;
+            
+            $this->info("Found {$validators->count()} validators to process");
+            
+            if ($validators->isEmpty()) {
+                $this->info('No validators found without screenshots');
+                return;
+            }
 
             foreach ($validators as $validator) {
                 try {
@@ -74,51 +73,32 @@ class makeSiteScreenshot extends Command
                     $page->navigate($validator->url);
                     usleep(3 * 1000000); // 3 сек
 
-                    $filePath = storage_path("app/public/site-screenshots/{$validator->id}.png");
+                    // Ensure the directory exists
+                    $screenshotDir = storage_path('app/public/site-screenshots');
+                    if (!file_exists($screenshotDir)) {
+                        mkdir($screenshotDir, 0755, true);
+                    }
+                    
+                    $filePath = $screenshotDir . "/{$validator->id}.png";
+                    $this->info("Saving screenshot to: {$filePath}");
+                    
                     $page->screenshot()->saveToFile($filePath);
                     DB::statement("UPDATE data.validators SET has_screenshot = true WHERE id = {$validator->id}");
 
                     $this->info("✅ Screenshot created for validator {$validator->id}");
-                } catch (\Throwable $e) {
-                    \Log::error("❌ Screenshot failed for ID {$validator->id}: " . $e->getMessage());
+                } catch (Exception $e) {
+                    Log::error("❌ Screenshot failed for ID {$validator->id}: " . $e->getMessage());
+                    $this->error("❌ Screenshot failed for validator {$validator->id}");
                 }
             }
+        } catch (Exception $e) {
+            Log::error('Browser creation or screenshot process failed: ' . $e->getMessage());
+            $this->error('Screenshot process failed: ' . $e->getMessage());
         } finally {
-            $browser->close(); // закриваємо в самому кінці
+            if (isset($browser)) {
+                $browser->close();
+            }
         }
-//        foreach ($validators as $validator) {
-////            dd($validator->www_url);exit;
-//            // creates a new page and navigate to an URL
-////            $page = $browser->createPage();
-////            $page->navigate($validator->www_url)->waitForNavigation();
-//            try {
-////                $browser = $browserFactory->createBrowser([
-////                    'windowSize'   => [1280, 800],
-////                    'enableImages' => true,
-////                    'headless'     => true,
-////                    'ignoreHttpsErrors' => true, // Игнорировать ошибки HTTPS
-////                    'timeout'      => 30000, // Таймаут 30 секунд
-////                ]);
-//                $page = $browser->createPage();
-//                $page->navigate($validator->url);
-////                usleep(3 * 1000000); // дати сторінці прогрузитись
-//
-//                // Дочекатися 5 секунд для завантаження асинхронного контенту
-////                sleep(3);
-//
-//                // Отримати заголовок сторінки
-//                $pageTitle = $page->evaluate('document.title')->getReturnValue();
-//
-//                // Зробити скріншот
-//                $page->screenshot()->saveToFile(storage_path('app/public/site-screenshots/' . $validator->id . '.png'));
-//
-//                // Зберегти PDF
-////                $page->pdf(['printBackground' => false])->saveToFile(storage_path('app/public/site-screenshots/' . $validator->id . '.pdf'));
-//
-//                echo "Create screenshot for validator " . $validator->id . "\n";
-//            } finally {
-//                $browser->close();
-//            }
-//        }
+        $this->info('Screenshot task completed successfully.');
     }
 }

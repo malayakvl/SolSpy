@@ -10,13 +10,13 @@
         "chrome-php/chrome": "^1.14",
         "inertiajs/inertia-laravel": "^1.0",
         "laravel/framework": "^11.31",
-        "laravel/sanctum": "^4.0",
+        "laravel/sanctum": "^4.2",
         "laravel/socialite": "^5.23",
         "laravel/tinker": "^2.9",
         "mariuzzo/laravel-js-localization": "^1.11",
         "phpoffice/phpspreadsheet": "^4.3",
         "rap2hpoutre/fast-excel": "^5.6",
-        "spatie/laravel-permission": "^6.10",
+        "spatie/laravel-permission": "^6.21",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {

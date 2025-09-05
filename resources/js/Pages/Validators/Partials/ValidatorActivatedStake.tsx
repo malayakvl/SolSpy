@@ -11,9 +11,11 @@ export default function ValidatorActivatedStake({validator, epoch}) {
     }
 
     return (
-        <>{Number(_activatedStake).toLocaleString('en-US', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        })}</>
+        <>
+            {Number(validator.activated_stake).toLocaleString('en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            })}
+        </>
     );
 }

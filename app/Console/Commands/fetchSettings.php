@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Exception;
 
 class FetchSettings extends Command
 {
@@ -27,7 +29,7 @@ class FetchSettings extends Command
      */
     public function handle()
     {
-        \Log::info('Command app:fetch-settings executed at ' . now());
+        Log::info('Command app:fetch-settings executed at ' . now());
         $this->info('Start fetching settings info!');
 
         try {
@@ -67,7 +69,6 @@ class FetchSettings extends Command
 
             // Execute cURL request
             $response = curl_exec($ch);
-//dd($response);exit;
             // Check for errors
             if (curl_errno($ch)) {
                 echo 'Error: ' . curl_error($ch);
@@ -82,6 +83,7 @@ class FetchSettings extends Command
                     slot_in_epoch=' .$_result->result->slotsInEpoch.', 
                     transaction_count=' .$_result->result->transactionCount.'
                 ');
+// echo($query);exit;                
                 DB::statement($query);
                 $this->info('Update time to '.$_result->result->absoluteSlot);
             }

@@ -14,3 +14,8 @@ export const perPageSelector = createSelector(
     rootSelector,
     (validators: State.Validators): string => validators.perPage
 );
+export const filterTypeSelector = createSelector(
+    rootSelector,
+    (validators: State.Validators): string => validators.filterType
+);
+
