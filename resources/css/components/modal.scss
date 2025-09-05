@@ -15,10 +15,19 @@
 .draggable-item {
     cursor: move;
     padding: 6px;
-    background: #1e3a8a;
+    background: #cfd3de;
     margin-bottom: 5px ;
-    color: #fff;
+    color: #000;
     font-size: 13px;
     border-radius: 3px;
     min-width: 200px;
+}
+
+.switch-container {
+    height: 20px !important;
+    width: 40px !important;
+}
+.switch-container span {
+    width: 17px !important;
+    height: 17px !important;
 }

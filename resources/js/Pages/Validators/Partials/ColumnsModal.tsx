@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Sortable from './Sortable';
 import { ReactSortable } from "react-sortablejs";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import Switch from 'react-ios-switch';
 
 const draggableList = [
     {
@@ -41,8 +42,8 @@ const draggableList = [
         show: true
     },
     {
-        show: true
         name: "MEV Comission",
+        show: true
     },
     {
         name: "Uptime",
@@ -108,8 +109,25 @@ const Modal = ({ onClose, children }) => {
                         animation="200"
                         easing="ease-out"
                     >
-                        {list.map(item => (
-                            <div className="draggable-item">{item.name}</div>
+                        {list.map((item, index) => (
+                            <div className="draggable-item" key={index}>
+                                <div className="flex">
+                                    <Switch
+                                        className={'switch-container'}
+                                        checked={item.show}
+                                        onChange={(checked) => {
+                                            const updatedList = list.map((listItem, listIndex) => {
+                                                if (listIndex === index) {
+                                                    return { ...listItem, show: checked };
+                                                }
+                                                return listItem;
+                                            });
+                                            setList(updatedList);
+                                        }}
+                                    />
+                                    <span className="ml-2">{item.name}</span>
+                                </div>
+                            </div>
                         ))}
                     </ReactSortable>
             </div>
