@@ -117,12 +117,12 @@ export default function Header(auth) {
               </div>
             </div>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 nav-link">
-              <div className="flex whitespace-nowrap text-[#fff] ml-[0px]">
+              <div className="flex whitespace-nowrap text-[#fff] ml-[0px] mt-[2px]">
                  <ProgressBar progress={barProgress*100} caption={`Left ${barProgressCaption}`} />
               </div>
             </div>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 nav-link">
-              <div className="flex whitespace-nowrap text-[#fff] ml-[0px]">
+              <div className="flex whitespace-nowrap text-[#fff] ml-[0px]  mt-[2px]">
                   <div className="md:space-x-4 md:flex md:pr-[30px] inline align-middle text-[14px] whitespace-nowrap w-[150px]">
                     Epoch  {settingsData?.epoch} ({epochPersent}%)
                   </div>

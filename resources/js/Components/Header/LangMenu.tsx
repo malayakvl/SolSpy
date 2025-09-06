@@ -26,8 +26,8 @@ export default function LangMenu() {
                                 transition duration-150
                                 ease-in-out hover:text-gray-700 focus:outline-none"
             >
-              <b className="uppercase text-white">{appLang}</b>
-              <span className="icon-arrow-down" />
+              <b className="uppercase text-white mt-[13px]">{appLang}</b>
+              <span className="icon-arrow-down mt-[10px]" />
             </button>
           </span>
         </Dropdown.Trigger>

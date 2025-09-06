@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         //
-        Schema::table('settings', function($table) {
+        Schema::table('data.settings', function($table) {
             $table->bigInteger('absolute_slot')->nullable();
             $table->bigInteger('block_height')->nullable();
             $table->bigInteger('epoch')->nullable();
@@ -28,7 +28,7 @@ return new class extends Migration
     public function down(): void
     {
         //
-        Schema::table('settings', function($table) {
+        Schema::table('data.settings', function($table) {
             $table->dropColumn('absolute_slot');
             $table->dropColumn('block_height');
             $table->dropColumn('epoch');

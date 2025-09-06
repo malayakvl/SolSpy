@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         //
-        Schema::table('validators', function($table) {
+        Schema::table('data.validators', function($table) {
             $table->dropColumn('v_key');
             $table->dropColumn('vote_score');
 

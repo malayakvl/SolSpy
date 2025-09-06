@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('settings', function (Blueprint $table) {
+        Schema::table('data.settings', function (Blueprint $table) {
             //
+            $table->longText('table_fields')->nullable();
         });
     }
 
@@ -21,8 +22,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('settings', function (Blueprint $table) {
+        Schema::table('data.settings', function (Blueprint $table) {
             //
+            $table->dropColumn('table_fields');
         });
     }
 };
