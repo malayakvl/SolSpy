@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faBan,
     faEnvelope,
     faHeart,
     faMoneyBill,
-    faPencil,
+    faEye,
     faScaleBalanced,
     faScaleUnbalanced
 } from '@fortawesome/free-solid-svg-icons';
-import { Link, router, usePage } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
@@ -17,7 +16,10 @@ export default function ValidatorActions({validator, onBanToggle}) {
     const user = usePage().props.auth.user;
     const [isInComparison, setIsInComparison] = useState(false);
     const [isInFavorites, setIsInFavorites] = useState(false);
-    const [isBanned, setIsBanned] = useState(false);
+    // Get role names as array of strings
+    const userRoleNames = user?.roles?.map(role => role.name) || [];
+    // Check if user has Admin role
+    const isAdmin = userRoleNames.includes('Admin');
 
     // Check if validator is already in comparison on component mount
     useEffect(() => {
@@ -27,9 +29,6 @@ export default function ValidatorActions({validator, onBanToggle}) {
             
             const favoritesList = JSON.parse(localStorage.getItem('validatorFavorites') || '[]');
             setIsInFavorites(favoritesList.includes(validator.id));
-            
-            const bannedList = JSON.parse(localStorage.getItem('validatorBanned') || '[]');
-            setIsBanned(bannedList.includes(validator.id));
         }
     }, [validator.id, user?.id]);
 
@@ -187,113 +186,33 @@ export default function ValidatorActions({validator, onBanToggle}) {
         }
     }
 
-    const addToBanned = async (validatorId) => {
-        if (user?.id) {
-            // Registered user - use API
-            try {
-                await axios.post('/api/ban-validator', {
-                    validatorId: validatorId
-                }, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                });
-                setIsBanned(!isBanned);
-                // Notify parent component about ban status change
-                if (onBanToggle) {
-                    onBanToggle(validatorId, !isBanned);
-                }
-                toast.success('Ban status updated', {
-                    position: "top-right",
-                    autoClose: 2000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                });
-            } catch (error) {
-                console.error('Error:', error);
-                toast.error('Failed to update ban status', {
-                    position: "top-right",
-                    autoClose: 3000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                });
-            }
-        } else {
-            // Unregistered user - use localStorage
-            const bannedList = JSON.parse(localStorage.getItem('validatorBanned') || '[]');
-            
-            if (bannedList.includes(validatorId)) {
-                // Remove from banned list
-                const updatedList = bannedList.filter(id => id !== validatorId);
-                localStorage.setItem('validatorBanned', JSON.stringify(updatedList));
-                setIsBanned(false);
-                toast.info('Validator unbanned', {
-                    position: "top-right",
-                    autoClose: 2000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                });
-                // Notify parent component
-                if (onBanToggle) {
-                    onBanToggle(validatorId, false);
-                }
-            } else {
-                // Add to banned list
-                bannedList.push(validatorId);
-                localStorage.setItem('validatorBanned', JSON.stringify(bannedList));
-                setIsBanned(true);
-                toast.warning('Validator banned and hidden from list', {
-                    position: "top-right",
-                    autoClose: 3000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                });
-                // Notify parent component
-                if (onBanToggle) {
-                    onBanToggle(validatorId, true);
-                }
-            }
-        }
-    }
-
     return (
         <>
             <Link href={`/validator/${validator.vote_pubkey}`}>
-                <FontAwesomeIcon icon={faPencil} className="mr-2" />
+                <FontAwesomeIcon icon={faEye} className="mr-2" />
             </Link>
-            <span className="cursor-pointer" onClick={() => addToCompare(validator.id)}>
-                <FontAwesomeIcon 
-                    icon={isInComparison ? faScaleUnbalanced : faScaleBalanced} 
-                    className={`mr-2 ${isInComparison ? 'text-red-500' : ''}`}
-                />
-            </span>
-            <span className="cursor-pointer" onClick={() => addToFavorite(validator.id)}>
-                <FontAwesomeIcon 
-                    icon={faHeart} 
-                    className={`mr-2 ${isInFavorites ? 'text-red-500' : ''}`}
-                />
-            </span>
-            <span>
-                <FontAwesomeIcon icon={faEnvelope} className="mr-2" />
-            </span>
-            <span>
-                <FontAwesomeIcon icon={faMoneyBill} className="mr-2" />
-            </span>
-            {/* <span className="cursor-pointer" onClick={() => addToBanned(validator.id)}>
-                <FontAwesomeIcon 
-                    icon={faBan} 
-                    className={`mr-2 ${isBanned ? 'text-red-500' : ''}`}
-                />
-            </span> */}
+            {!isAdmin && (
+                <>
+                    <span className="cursor-pointer" onClick={() => addToCompare(validator.id)}>
+                        <FontAwesomeIcon 
+                            icon={isInComparison ? faScaleUnbalanced : faScaleBalanced} 
+                            className={`mr-2 ${isInComparison ? 'text-red-500' : ''}`}
+                        />
+                    </span>
+                    <span className="cursor-pointer" onClick={() => addToFavorite(validator.id)}>
+                        <FontAwesomeIcon 
+                            icon={faHeart} 
+                            className={`mr-2 ${isInFavorites ? 'text-red-500' : ''}`}
+                        />
+                    </span>
+                    <span>
+                        <FontAwesomeIcon icon={faEnvelope} className="mr-2" />
+                    </span>
+                    <span>
+                        <FontAwesomeIcon icon={faMoneyBill} className="mr-2" />
+                    </span>
+                </>
+            )}
         </>
     );
 }
