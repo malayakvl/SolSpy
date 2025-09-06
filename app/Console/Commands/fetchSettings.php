@@ -42,7 +42,7 @@ class FetchSettings extends Command
             curl_close($ch);
             $data = json_decode($response, true);
 
-            $query = ('UPDATE settings SET sol_rate=' .$data['solana']['usd']);
+            $query = ('UPDATE data.settings SET sol_rate=' .$data['solana']['usd']);
             DB::statement($query);
 
             $url = 'http://103.167.235.81:8899';
@@ -75,7 +75,7 @@ class FetchSettings extends Command
             } else {
                 // Output the response
                 $_result = json_decode($response);
-                $query = ('UPDATE settings SET 
+                $query = ('UPDATE data.settings SET 
                     absolute_slot=' .$_result->result->absoluteSlot.', 
                     block_height=' .$_result->result->blockHeight.', 
                     epoch=' .$_result->result->epoch.', 

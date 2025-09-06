@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('data.settings', function (Blueprint $table) {
-            $table->id();
-            $table->float('sol_rate');
-            $table->float('ephoch');
-            $table->timestamps();
+        Schema::table('settings', function (Blueprint $table) {
+            //
         });
     }
 
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('data.settings');
+        Schema::table('settings', function (Blueprint $table) {
+            //
+        });
     }
 };
