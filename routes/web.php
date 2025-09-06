@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GoogleAuthController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ValidatorController;
 
 use Inertia\Inertia;
@@ -47,6 +48,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/add-compare', [ValidatorController::class, 'addCompare'])->name('validators.addCompare');
+
 });
 
 require __DIR__.'/auth.php';

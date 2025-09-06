@@ -8,4 +8,8 @@ class Settings extends Model
 {
     //
     protected $table = 'data.settings';
+
+    protected $fillable = [
+        'table_fields',
+    ];
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Lang from 'lang.js';
 import lngVaidators from '../../../Lang/Validators/translation';
 import Sortable from './Sortable';
@@ -8,98 +8,15 @@ import { useSelector } from 'react-redux';
 import Switch from 'react-ios-switch';
 import { appEpochSelector, appLangSelector } from '../../../Redux/Layout/selectors';
 
-
-const draggableList = [
-    {
-        name: "Spy Rank",
-        show: true
-    },
-    {
-        name: "Avatar",
-        show: true  
-    },
-    {
-        name: "Name",
-        show: true
-    },
-    {
-        name: "Status",
-        show: true
-    },
-    {
-        name: "TVC Score",
-        show: true
-    },
-    {
-        name: "Vote Credits",
-        show: true
-    },
-    {
-        name: "Active Stake",
-        show: true
-    },
-    {
-        name: "Vote Rate",
-        show: true
-    },
-    {
-        name: "Inflation Comission",
-        show: true
-    },
-    {
-        name: "MEV Comission",
-        show: true
-    },
-    {
-        name: "Uptime",
-        show: true
-    },
-    {
-        name: "Client/Version",
-        show: true
-    },
-    {
-        name: "Status SFDP",
-        show: true
-    },
-    {
-        name: "Location",
-        show: true
-    },
-    {
-        name: "Awards",
-        show: true
-    },
-    {
-        name: "Website",
-        show: true
-    },
-    {
-        name: "City",
-        show: true
-    },
-    {
-        name: "ASN",
-        show: true
-    },
-    {
-        name: "IP",
-        show: true
-    },
-    {
-        name: "Jiito Score",
-        show: true
-    },
-];
-
-const Modal = ({ onClose, onSave, onColumnChange, onSort, children }) => {
+const Modal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, children }) => {
     const appLang = useSelector(appLangSelector);
     const msg = new Lang({
         messages: lngVaidators,
         locale: appLang,
     });
-    const [list, setList] = useState(draggableList);
-
+    const [list, setList] = useState(initialColumns || []);
+    // Store the original initial state to revert to on Cancel
+    const originalColumnsRef = useRef(JSON.parse(JSON.stringify(initialColumns || [])));
     return (
         <div className="modal-overlay-columns relative z-50">
             <h2>{msg.get('validators.title')}&nbsp;</h2>
@@ -160,8 +77,12 @@ const Modal = ({ onClose, onSave, onColumnChange, onSort, children }) => {
                      <button 
                         className="btn-cancel mr-2"
                         onClick={() => {
-                            if (onSave) {
-                                onSave(list);
+                            // Reset to original initial state without saving
+                            const originalColumns = originalColumnsRef.current;
+                            setList(originalColumns);
+                            // Also revert the parent component's state to original
+                            if (onColumnChange) {
+                                onColumnChange(null, null, null, originalColumns);
                             }
                             onClose();
                         }}

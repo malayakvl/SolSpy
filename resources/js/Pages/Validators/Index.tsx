@@ -38,7 +38,7 @@ export default function Index(validatorsData) {
     const perPage = useSelector(perPageSelector);
     const appLang = useSelector(appLangSelector);
     const filterTypeDataSelector = useSelector(filterTypeSelector); // Filter type from Redux state
-    
+
     const msg = new Lang({
         messages: lngVaidators,
         locale: appLang,
@@ -61,28 +61,32 @@ export default function Index(validatorsData) {
     const [totalRecords, setTotalRecords] = useState(validatorsData.totalCount);
     const [showModal, setShowModal] = useState(false);
     const [columnSettings, setColumnSettings] = useState(null);
-    const [columnsConfig, setColumnsConfig] = useState([
-        { name: "Spy Rank", show: true },
-        { name: "Avatar", show: true },
-        { name: "Name", show: true },
-        { name: "Status", show: true },
-        { name: "TVC Score", show: true },
-        { name: "Vote Credits", show: true },
-        { name: "Active Stake", show: true },
-        { name: "Vote Rate", show: true },
-        { name: "Inflation Commission", show: true },
-        { name: "MEV Commission", show: true },
-        { name: "Uptime", show: true },
-        { name: "Client/Version", show: true },
-        { name: "Status SFDP", show: true },
-        { name: "Location", show: true },
-        { name: "Awards", show: true },
-        { name: "Website", show: true },
-        { name: "City", show: true },
-        { name: "ASN", show: true },
-        { name: "IP", show: true },
-        { name: "Jiito Score", show: true }
-    ]);
+    const [columnsConfig, setColumnsConfig] = useState(
+        validatorsData.settingsData?.table_fields ? 
+        JSON.parse(validatorsData.settingsData.table_fields) : 
+        [
+            { name: "Spy Rank", show: true },
+            { name: "Avatar", show: true },
+            { name: "Name", show: true },
+            { name: "Status", show: true },
+            { name: "TVC Score", show: true },
+            { name: "Vote Credits", show: true },
+            { name: "Active Stake", show: true },
+            { name: "Vote Rate", show: true },
+            { name: "Inflation Commission", show: true },
+            { name: "MEV Commission", show: true },
+            { name: "Uptime", show: true },
+            { name: "Client/Version", show: true },
+            { name: "Status SFDP", show: true },
+            { name: "Location", show: true },
+            { name: "Awards", show: true },
+            { name: "Website", show: true },
+            { name: "City", show: true },
+            { name: "ASN", show: true },
+            { name: "IP", show: true },
+            { name: "Jiito Score", show: true }
+        ]
+    );
 
     // Get role names as array of strings
     const userRoleNames = user?.roles?.map(role => role.name) || [];
@@ -323,17 +327,46 @@ export default function Index(validatorsData) {
         }
     };
 
-    const toggleModal = () => {
-      setShowModal(!showModal); // Toggles the state
+    const fetchColumnSettings = async () => {
+        try {
+            const response = await axios.get('/api/settings/columns');
+            if (response.data && response.data.table_fields) {
+                const freshColumns = JSON.parse(response.data.table_fields);
+                setColumnsConfig(freshColumns);
+            }
+        } catch (error) {
+            console.error('Error fetching column settings:', error);
+        }
+    };
+
+    const toggleModal = async () => {
+        if (!showModal) {
+            // Fetch fresh data before opening modal
+            await fetchColumnSettings();
+        }
+        setShowModal(!showModal); // Toggles the state
     };
 
     const openModal = () => setShowModal(true);
     const closeModal = () => setShowModal(false);
     
-    const handleColumnSettingsSave = (columns) => {
+    const handleColumnSettingsSave = async (columns) => {
         setColumnSettings(columns);
-        // Optionally refresh data with new column settings
-        // fetchData(currentPage);
+        try {
+            await axios.post('/api/settings/update', {
+                columns: columns
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+            setShowModal(false);
+            toast.success('Column settings saved successfully!');
+        } catch (error) {
+            console.error('Error:', error);
+            toast.error('Failed to save column settings');
+        }
     };
 
 
@@ -556,6 +589,7 @@ export default function Index(validatorsData) {
                             <Modal 
                                 onClose={closeModal} 
                                 onSave={handleColumnSettingsSave}
+                                initialColumns={columnsConfig}
                                 onColumnChange={(columnName, isVisible, index, updatedList) => {
                                     // Update the columns configuration
                                     setColumnsConfig(updatedList);
