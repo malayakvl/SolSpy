@@ -112,8 +112,9 @@ const Modal = ({ onClose, onSave, onColumnChange, onSort, children }) => {
                     />
                 </svg>
             </div>
-            <div className="modal-content" onClick={e => e.stopPropagation()}> {/* Prevent closing when clicking inside modal */}
-                <ReactSortable
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+                <div className="columns">
+                    <ReactSortable
                         filter=".addImageButtonContainer"
                         dragClass="sortableDrag"
                         list={list}
@@ -153,19 +154,32 @@ const Modal = ({ onClose, onSave, onColumnChange, onSort, children }) => {
                             </div>
                         ))}
                     </ReactSortable>
-                    <div className="flex justify-end mt-4"> 
-                        <button 
-                            className="bg-blue-800 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                            onClick={() => {
-                                if (onSave) {
-                                    onSave(list);
-                                }
-                                onClose();
-                            }}
-                        >
-                            Save
-                        </button>
-                    </div>
+                </div>
+                
+                <div className="flex justify-end mt-4">
+                     <button 
+                        className="btn-cancel mr-2"
+                        onClick={() => {
+                            if (onSave) {
+                                onSave(list);
+                            }
+                            onClose();
+                        }}
+                    >
+                       Cancel
+                    </button>
+                    <button 
+                        className="btn-submit"
+                        onClick={() => {
+                            if (onSave) {
+                                onSave(list);
+                            }
+                            onClose();
+                        }}
+                    >
+                        Apply Changes
+                    </button>
+                </div>
             </div>
         </div>
     );

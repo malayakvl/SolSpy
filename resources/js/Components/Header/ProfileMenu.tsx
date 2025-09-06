@@ -25,8 +25,8 @@ export default function ProfileMenu() {
 
   return (
     <div>
-      <div className="space-x-8 sm:-my-px sm:flex md:flex md:mt-[-8px] relative md:mr-[15px] pt-[10px]">
-        <div className="icon-user" />
+      <div className="space-x-4 sm:-my-px sm:flex md:flex md:mt-[-8px] relative md:mr-[0px] pt-[10px]">
+        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" className="size-8 rounded-full bg-gray-800 outline -outline-offset-1 outline-white/10" />
         <Dropdown>
           <Dropdown.Trigger>
           <span className="inline-flex">

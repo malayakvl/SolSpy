@@ -65,10 +65,10 @@
 .btn-back:hover {
     background-image: linear-gradient(to left top, rgb(155, 141, 151), rgb(137, 108, 122)) !important;
 }
-.btn-invite {
-    background: #663399;
+.btn-cancel {
+    background: #5a545f;
     display: inline-block;
-    color: white;
+    color: rgb(249, 248, 248);
     padding: 10px 20px;
     border-radius: 5px;
     cursor: pointer;
