@@ -39,8 +39,6 @@ export default function Index(validatorsData) {
     const appLang = useSelector(appLangSelector);
     const filterTypeDataSelector = useSelector(filterTypeSelector); // Filter type from Redux state
     
-    // Debug logs to track when component re-renders and Redux state
-    
     const msg = new Lang({
         messages: lngVaidators,
         locale: appLang,
@@ -213,12 +211,6 @@ export default function Index(validatorsData) {
         }
 
         return pages;
-    };
-
-    // Helper function to check if column should be visible
-    const isColumnVisible = (columnName) => {
-        const column = columnsConfig.find(col => col.name === columnName);
-        return column ? column.show : true;
     };
 
     // Helper function to get ordered visible columns
@@ -565,29 +557,12 @@ export default function Index(validatorsData) {
                                 onClose={closeModal} 
                                 onSave={handleColumnSettingsSave}
                                 onColumnChange={(columnName, isVisible, index, updatedList) => {
-                                    console.log(`Column "${columnName}" at index ${index} changed to: ${isVisible ? 'visible' : 'hidden'}`);
-                                    
                                     // Update the columns configuration
                                     setColumnsConfig(updatedList);
-                                    
-                                    // Output updated array with current positions and visibility
-                                    const columnObjects = updatedList.map((item, idx) => ({
-                                        name: item.name,
-                                        position: idx + 1,
-                                        visible: item.show
-                                    }));
-                                    console.log('Updated columns array:', columnObjects);
                                 }}
                                 onSort={(newList) => {
                                     // Update the columns configuration
                                     setColumnsConfig(newList);
-                                    
-                                    const columnObjects = newList.map((item, index) => ({
-                                        name: item.name,
-                                        position: index + 1,
-                                        visible: item.show
-                                    }));
-                                    console.log('Columns reordered:', columnObjects);
                                 }}
                             >
                                 {/* Modal Content */}
