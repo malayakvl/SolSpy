@@ -107,8 +107,8 @@ export default function Header(auth) {
                       <Link href={'/customers'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
                         Customers
                       </Link>
-                      <Link href={'/customers'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
-                        News
+                      <Link href={'/admin/news'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
+                        Manage News
                       </Link>
                     </>
                   )}

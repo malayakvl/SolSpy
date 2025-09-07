@@ -5,6 +5,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\ValidatorController;
+use App\Http\Controllers\NewsController;
 
 use Inertia\Inertia;
 
@@ -48,6 +49,25 @@ Route::middleware('auth')->group(function () {
     // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/add-compare', [ValidatorController::class, 'addCompare'])->name('validators.addCompare');
 });
+
+// News routes - public access
+Route::get('/news', [NewsController::class, 'index'])->name('news.index');
+Route::get('/news/featured', [NewsController::class, 'featured'])->name('news.featured');
+Route::get('/news/{slug}', [NewsController::class, 'show'])->name('news.show');
+
+// Admin news routes - protected
+Route::middleware(['auth', 'check.role:Admin,Manager'])->prefix('admin')->group(function () {
+    Route::get('/news', [NewsController::class, 'adminIndex'])->name('admin.news.index');
+    Route::get('/news/create', [NewsController::class, 'create'])->name('admin.news.create');
+    Route::post('/news', [NewsController::class, 'store'])->name('admin.news.store');
+    Route::get('/news/{news}/edit', [NewsController::class, 'edit'])->name('admin.news.edit');
+    Route::put('/news/{news}', [NewsController::class, 'update'])->name('admin.news.update');
+    Route::delete('/news/{news}', [NewsController::class, 'destroy'])->name('admin.news.destroy');
+    Route::post('/news/bulk-action', [NewsController::class, 'bulkAction'])->name('admin.news.bulk-action');
+});
+
+// API routes for news utilities
+Route::post('/api/news/generate-slug', [NewsController::class, 'generateSlug'])->name('api.news.generateSlug');
 
 require __DIR__.'/auth.php';
 

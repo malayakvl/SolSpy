@@ -14,6 +14,128 @@
 @use "components/dashboard";
 @use "components/footer";
 @use "components/modal";
+@use "components/news";
+
+// Rich text editor styles
+@import 'react-quill/dist/quill.snow.css';
+
+// Custom Quill editor styling
+.ql-snow {
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-family: "PT Sans Caption", sans-serif;
+    
+    .ql-toolbar {
+        border: none;
+        border-bottom: 1px solid #e5e7eb;
+        border-radius: 0.375rem 0.375rem 0 0;
+        background-color: #f9fafb;
+        padding: 0.75rem;
+        
+        .ql-formats {
+            margin-right: 15px;
+        }
+        
+        .ql-picker-label {
+            border: none;
+            background-color: transparent;
+        }
+        
+        button {
+            width: 2rem;
+            height: 2rem;
+            padding: 0;
+            margin: 0 1px;
+            border-radius: 0.25rem;
+            
+            &:hover {
+                background-color: #e5e7eb;
+            }
+        }
+    }
+    
+    .ql-container {
+        border: none;
+        border-radius: 0 0 0.375rem 0.375rem;
+        font-size: 14px;
+        
+        .ql-editor {
+            padding: 1rem;
+            min-height: 500px;
+            line-height: 1.6;
+            color: #374151;
+            
+            &.ql-blank::before {
+                color: #9ca3af;
+                font-style: italic;
+            }
+            
+            h1, h2, h3, h4, h5, h6 {
+                margin: 1em 0 0.5em 0;
+                font-weight: bold;
+            }
+            
+            h1 { font-size: 2em; }
+            h2 { font-size: 1.5em; }
+            h3 { font-size: 1.17em; }
+            h4 { font-size: 1em; }
+            h5 { font-size: 0.83em; }
+            h6 { font-size: 0.67em; }
+            
+            p {
+                margin-bottom: 1em;
+            }
+            
+            blockquote {
+                border-left: 4px solid #e5e7eb;
+                padding-left: 1rem;
+                margin: 1rem 0;
+                color: #6b7280;
+                font-style: italic;
+            }
+            
+            a {
+                color: #3b82f6;
+                text-decoration: underline;
+                
+                &:hover {
+                    color: #2563eb;
+                }
+            }
+            
+            img {
+                max-width: 100%;
+                height: auto;
+                border-radius: 0.375rem;
+                margin: 1rem 0;
+            }
+            
+            pre {
+                background-color: #f3f4f6;
+                padding: 1rem;
+                border-radius: 0.375rem;
+                overflow-x: auto;
+                margin: 1rem 0;
+            }
+            
+            code {
+                background-color: #f3f4f6;
+                padding: 0.125rem 0.25rem;
+                border-radius: 0.25rem;
+                font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+                font-size: 0.875em;
+            }
+        }
+    }
+    
+    .ql-tooltip {
+        background-color: white;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        z-index: 9999;
+    }
+}
 
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300..800;1,300..800&display=swap');
