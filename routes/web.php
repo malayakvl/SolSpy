@@ -4,7 +4,6 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GoogleAuthController;
-use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ValidatorController;
 
 use Inertia\Inertia;
@@ -29,7 +28,7 @@ Route::get('/sortable', [ValidatorController::class, 'sortable'])->name('validat
 
 // Specific validator routes
 Route::get('/validators/{page?}', [ValidatorController::class, 'index'])->name('validators.view');
-Route::get('/validator/{key}', [ValidatorController::class, 'view'])->name('validators.view');
+//Route::get('/validator/{id}', [ValidatorController::class, 'view'])->name('validator.view');
 
 // Route to redirect to Google's OAuth page
 Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
@@ -44,11 +43,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('/customers', [ProfileController::class, 'edit'])->name('customers.view');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // Route::get('/customers', [ProfileController::class, 'edit'])->name('customers.view');
+    // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/add-compare', [ValidatorController::class, 'addCompare'])->name('validators.addCompare');
-
 });
 
 require __DIR__.'/auth.php';

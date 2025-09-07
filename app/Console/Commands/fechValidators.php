@@ -51,11 +51,15 @@ class fechValidators extends Command
 
         // Выполнение запроса
         $response = curl_exec($ch);
+        
 // dd($response);exit;
         // Проверка на ошибки
         if (curl_errno($ch)) {
             echo 'cURL Error: ' . curl_error($ch);
+            curl_close($ch);
+            return;
         } else {
+            curl_close($ch);
             // Parse the JSON response
             $jsonData = json_decode($response, true);
             // dd($response,);exit;
@@ -75,8 +79,5 @@ class fechValidators extends Command
         }
 //        echo "All validators was updated Each 5 second";
         $this->info('All validators was updated');
-        // Закрытие cURL
-        curl_close($ch);
-
     }
 }

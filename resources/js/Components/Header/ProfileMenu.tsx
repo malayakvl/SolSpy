@@ -45,9 +45,13 @@ export default function ProfileMenu() {
           </Dropdown.Trigger>
 
           <Dropdown.Content>
-            <span className="dropdown-span">
-              Profile
-            </span>
+            <Dropdown.Link
+                href={'/profile'}
+                method="get"
+                as="button"
+              >
+              {lng.get('menu.profile')}
+            </Dropdown.Link>
             <Dropdown.Link
                 href={'/logout'}
                 method="post"
