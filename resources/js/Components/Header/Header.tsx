@@ -99,16 +99,22 @@ export default function Header(auth) {
                 <div className="flex space-x-4">
                  
                   {/* <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-white/5 hover:text-white" --> */}
-                  <Link href={'/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link">
-                    Validators
-                  </Link>
-                  {isAdmin && (
+                  {isAdmin ? (
                     <>
-                      <Link href={'/customers'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
+                      <Link href={'/admin/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link">
+                        Validators
+                      </Link>
+                      <Link href={'/admin/customers'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
                         Customers
                       </Link>
                       <Link href={'/admin/news'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
                         Manage News
+                      </Link>
+                    </>
+                  ) : (
+                    <> 
+                      <Link href={'/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link">
+                        Validators
                       </Link>
                     </>
                   )}

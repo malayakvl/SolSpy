@@ -405,7 +405,7 @@ export default function AdminIndex(validatorsData) {
             <div className="py-0">
                 <div className="p-4 sm:p-8 mb-8 content-data bg-content">
                     <div className="flex justify-between items-center mb-6">
-                        <h2>{msg.get('validators.title')}&nbsp;</h2>
+                        <h2 className="text-2xl font-bold">{msg.get('validators.title')}&nbsp;</h2>
                     </div>
                     
                     <div className="flex justify-between items-start mb-6">

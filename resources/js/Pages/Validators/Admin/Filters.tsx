@@ -108,7 +108,7 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
     return (
         <form onSubmit={handleSearch} className="flex items-start gap-4">
             <input 
-                className="flex-1 p-2 border border-gray-300 rounded"
+                className="flex-1 p-2 border border-gray-300 rounded text-sm"
                 type="text" 
                 placeholder="Search by name..." 
                 value={searchTerm}
@@ -116,7 +116,7 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
             />
             <button 
                 type="submit"
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600  text-sm"
             >
                 Search
             </button>
@@ -125,14 +125,14 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
                     <button 
                         type="button"
                         onClick={handleClearFilters}
-                        className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                        className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
                     >
                         Clear
                     </button>
                     <select 
                         value={currentFilter}
                         onChange={(e) => handleFilterChange(e.target.value)}
-                        className="p-2 border border-gray-300 rounded"
+                        className="p-2 border border-gray-300 rounded text-sm"
                     >
                         <option value="all">{msg.get('validators.all')}</option>
                         <option value="top">{msg.get('validators.top')}</option>
@@ -141,7 +141,7 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
                     <button 
                         type="button"
                         onClick={onGearClick}
-                        className="p-2 bg-gray-200 rounded hover:bg-gray-300"
+                        className="p-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
                         title="Configure Columns"
                     >
                         <FontAwesomeIcon icon={faGear} />

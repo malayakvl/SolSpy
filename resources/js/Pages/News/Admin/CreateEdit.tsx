@@ -147,11 +147,11 @@ export default function CreateEdit({ article, isEdit = false, languages = [
             <div className="py-0">
                 <div className="p-4 sm:p-8 mb-8 content-data bg-content">
                     {/* Header */}
-                    <div className="flex justify-between items-center mb-6">
+                    <div className="flex justify-between items-center mb-6 ">
                         <div className="flex items-center gap-4">
                             <Link
                                 href={route('admin.news.index')}
-                                className="inline-flex items-center text-blue-500 hover:text-blue-700"
+                                className="inline-flex items-center text-blue-500 hover:text-blue-700 text-sm"
                             >
                                 <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
                                 Back to News
@@ -423,14 +423,14 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                         <div className="flex justify-end gap-4">
                             <Link
                                 href={route('admin.news.index')}
-                                className="px-6 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
+                                className="px-6 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 text-sm"
                             >
                                 Cancel
                             </Link>
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="inline-flex items-center px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+                                className="inline-flex items-center px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 text-sm"
                             >
                                 <FontAwesomeIcon icon={faSave} className="mr-2" />
                                 {processing ? 'Saving...' : (isEdit ? 'Update Article' : 'Create Article')}

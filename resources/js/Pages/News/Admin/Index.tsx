@@ -163,7 +163,7 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                         <h2 className="text-2xl font-bold">Manage News</h2>
                         <Link
                             href={route('admin.news.create')}
-                            className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                            className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
                         >
                             <FontAwesomeIcon icon={faPlus} className="mr-2" />
                             Create News
@@ -179,7 +179,7 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                                     placeholder="Search news..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full p-2 border border-gray-300 rounded"
+                                    className="w-full p-2 border border-gray-300 rounded text-sm"
                                 />
                             </div>
                             <div>
@@ -210,7 +210,7 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                                             replace: true
                                         });
                                     }}
-                                    className="p-2 border border-gray-300 rounded"
+                                    className="p-2 border border-gray-300 rounded text-sm w-[220px]"
                                 >
                                     <option value="all">All Status</option>
                                     <option value="published">Published</option>
@@ -246,7 +246,7 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                                             replace: true
                                         });
                                     }}
-                                    className="p-2 border border-gray-300 rounded"
+                                    className="p-2 border border-gray-300 rounded text-sm w-[220px]"
                                 >
                                     <option value="all">All Articles</option>
                                     <option value="featured">Featured Only</option>
@@ -254,7 +254,7 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                             </div>
                             <button
                                 type="submit"
-                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
                             >
                                 Search
                             </button>

@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\ValidatorController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\UserController;
 
 use Inertia\Inertia;
 
@@ -67,6 +68,9 @@ Route::middleware(['auth', 'check.role:Admin,Manager'])->prefix('admin')->group(
     
     // Admin validators routes
     Route::get('/validators', [ValidatorController::class, 'adminIndex'])->name('admin.validators.index');
+    
+    // Admin customers routes
+    Route::get('/customers', [UserController::class, 'index'])->name('admin.customers.index');
 });
 
 // API routes for news utilities
