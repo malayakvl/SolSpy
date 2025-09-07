@@ -11,13 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
-        Schema::table('data.validators', function($table) {
-            $table->dropColumn('v_key');
-            $table->dropColumn('vote_score');
-
-            $table->string('node_pubkey')->unique()->index();
-            $table->string('vote_pubkey')->unique()->index();
+        Schema::table('data.settings', function (Blueprint $table) {
+            //
+            $table->longText('table_fields')->nullable();
         });
     }
 
@@ -26,6 +22,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::table('data.settings', function (Blueprint $table) {
+            //
+            $table->dropColumn('table_fields');
+        });
     }
 };

@@ -55,7 +55,7 @@ return new class extends Migration
     public function down(): void
     {
         //
-        Schema::table('validators', function($table) {
+        Schema::table('data.validators', function($table) {
             $table->dropColumn('keybase_id');
             $table->dropColumn('www_url');
             $table->dropColumn('avatar_file_url');
