@@ -64,6 +64,9 @@ Route::middleware(['auth', 'check.role:Admin,Manager'])->prefix('admin')->group(
     Route::put('/news/{news}', [NewsController::class, 'update'])->name('admin.news.update');
     Route::delete('/news/{news}', [NewsController::class, 'destroy'])->name('admin.news.destroy');
     Route::post('/news/bulk-action', [NewsController::class, 'bulkAction'])->name('admin.news.bulk-action');
+    
+    // Admin validators routes
+    Route::get('/validators', [ValidatorController::class, 'adminIndex'])->name('admin.validators.index');
 });
 
 // API routes for news utilities
