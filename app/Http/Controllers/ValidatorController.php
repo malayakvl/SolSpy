@@ -168,7 +168,7 @@ exit;
             $validator->spyRank = 2; // Если не найден, возвращаем 'Not found'
             return $validator;
         });
-
+                
         return response()->json([
             'validatorsData' => $results,
             'totalCount' => $totalCount,
