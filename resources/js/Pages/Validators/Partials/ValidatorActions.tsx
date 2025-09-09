@@ -189,7 +189,7 @@ export default function ValidatorActions({validator, onBanToggle}) {
     return (
         <>
             <Link href={`/validator/${validator.vote_pubkey}`}>
-                <FontAwesomeIcon icon={faEye} className="mr-2" />
+                <FontAwesomeIcon icon={faEye} className="mr-2 text-indigo-600 hover:text-indigo-900" />
             </Link>
             {!isAdmin && (
                 <>

@@ -1,0 +1,43 @@
+/* Validator details styling */
+.validator-details {
+    margin: 1.5rem 0;
+}
+
+.validator-details h2 {
+    color: #111827;
+    margin: 0;
+}
+
+.validator-details .flex.items-center {
+    align-items: center;
+}
+
+.validator-details .stake-button {
+    background-color: #3b82f6;
+    color: white;
+    border-radius: 0.375rem;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+}
+
+.validator-details .stake-button:hover {
+    background-color: #2563eb;
+}
+
+.validator-details .stake-button svg {
+    margin-right: 0.5rem;
+}
+
+/* Star block styling */
+.star-block {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.star-block svg {
+    margin: 0 2px;
+}

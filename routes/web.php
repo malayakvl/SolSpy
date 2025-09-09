@@ -30,7 +30,7 @@ Route::get('/sortable', [ValidatorController::class, 'sortable'])->name('validat
 
 // Specific validator routes
 Route::get('/validators/{page?}', [ValidatorController::class, 'index'])->name('validators.view');
-//Route::get('/validator/{id}', [ValidatorController::class, 'view'])->name('validator.view');
+Route::get('/validator/{voteKey}', [ValidatorController::class, 'view'])->name('validator.view');
 
 // Route to redirect to Google's OAuth page
 Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
