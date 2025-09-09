@@ -60,7 +60,7 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
     const handleFilterChange = (newFilterValue: string) => {
         setCurrentFilter(newFilterValue);
         onFilterChange(newFilterValue);
-        
+console.log('AAAA')        
         // Apply filter with current search term
         const params: any = {};
         

@@ -24,11 +24,10 @@ console.log(validatorData.validator.latitude)
     // а также accessToken для mapbox
     const mapboxMap = new mapboxgl.Map({
       container: node,
-            accessToken: 'pk.eyJ1IjoidG9wb2wiLCJhIjoiY2lndjM4eDNxMDA0M3Zma3JiOGRmcGNyOSJ9.tPBrXFyMAspRCTjyVKmx8A',
-            style: "mapbox://styles/mapbox/streets-v11",
+      accessToken: 'pk.eyJ1IjoidG9wb2wiLCJhIjoiY2lndjM4eDNxMDA0M3Zma3JiOGRmcGNyOSJ9.tPBrXFyMAspRCTjyVKmx8A',
+      style: "mapbox://styles/mapbox/streets-v11",
       center: [validatorData.validator.longitude, validatorData.validator.latitude],
       zoom: 14,
-      style: 'mapbox://styles/mapbox/satellite-v9'
     });
     mapboxMap.addControl(new mapboxgl.NavigationControl());
     var marker = new mapboxgl.Marker()
