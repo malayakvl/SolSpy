@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import Lang from 'lang.js';
 import lngVaidators from '../../../Lang/Validators/translation';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { appLangSelector } from '../../../Redux/Layout/selectors';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGear } from '@fortawesome/free-solid-svg-icons';
+import{ showOverlayAction } from '../../../Redux/Layout/index';
 
 interface FiltersProps {
     filterType: string;
@@ -18,6 +19,7 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
     const appLang = useSelector(appLangSelector);
     const [currentFilter, setCurrentFilter] = useState(filterType || 'all');
     const [searchTerm, setSearchTerm] = useState('');
+    const dispatch = useDispatch();
 
     const msg = new Lang({
         messages: lngVaidators,
@@ -60,7 +62,7 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
     const handleFilterChange = (newFilterValue: string) => {
         setCurrentFilter(newFilterValue);
         onFilterChange(newFilterValue);
-console.log('AAAA')        
+        dispatch(showOverlayAction(true));
         // Apply filter with current search term
         const params: any = {};
         
@@ -82,6 +84,10 @@ console.log('AAAA')
                 // Refresh data after filter change
                 const event = new CustomEvent('filterChanged', { detail: params });
                 window.dispatchEvent(event);
+                dispatch(showOverlayAction(false));
+            },
+            onError: () => {
+                dispatch(showOverlayAction(false));
             }
         });
     };
