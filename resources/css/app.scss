@@ -15,6 +15,7 @@
 @use "components/footer";
 @use "components/modal";
 @use "components/news";
+@use "components/validators";
 
 // Rich text editor styles
 @import 'react-quill/dist/quill.snow.css';

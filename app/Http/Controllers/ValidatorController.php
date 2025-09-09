@@ -245,8 +245,31 @@ class ValidatorController extends Controller
 
 
     public function view($voteKey, Request $request): Response {
+        $userId = $request->user() ? $request->user()->id : null;
+        $query = DB::table('data.validators')
+            ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
+            
+        // Only join favorites table if user is authenticated
+        if ($userId) {
+            $query->leftJoin('data.favorites', function($join) use ($userId) {
+                $join->on('data.validators.id', '=', 'data.favorites.validator_id')
+                     ->where('data.favorites.user_id', '=', $userId);
+            })
+            ->select('data.validators.*', 'data.favorites.id as favorite_id', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
+        } else {
+            $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
+        }
+        
+        $validatorData = $query
+            ->where('data.validators.vote_pubkey', '=', $voteKey);
+            
+        $validatorData = $validatorData
+            ->orderBy('data.validators.id')
+            ->first();
+
 
         return Inertia::render('Validators/View', [
+            'validatorData' => $validatorData,
         ]);
     }
 
