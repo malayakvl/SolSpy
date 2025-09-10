@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\ValidatorController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 
 use Inertia\Inertia;
@@ -65,7 +66,7 @@ Route::middleware(['auth', 'check.role:Admin,Manager'])->prefix('admin')->group(
     Route::put('/news/{news}', [NewsController::class, 'update'])->name('admin.news.update');
     Route::delete('/news/{news}', [NewsController::class, 'destroy'])->name('admin.news.destroy');
     Route::post('/news/bulk-action', [NewsController::class, 'bulkAction'])->name('admin.news.bulk-action');
-    Route::get('/settings', [NewsController::class, 'adminIndex'])->name('admin.news.index');
+    Route::get('/settings', [SettingsController::class, 'adminIndex'])->name('admin.settings.index');
     
     // Admin validators routes
     Route::get('/validators', [ValidatorController::class, 'adminIndex'])->name('admin.validators.index');
