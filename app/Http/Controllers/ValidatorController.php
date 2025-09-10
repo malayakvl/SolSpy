@@ -170,7 +170,7 @@ class ValidatorController extends Controller
         return response()->json([
             'validatorsData' => $results,
             'totalCount' => $totalCount,
-            'validatorsAllData' => $validatorsAllData
+            // 'validatorsAllData' => $validatorsAllData
         ]);
     }
 

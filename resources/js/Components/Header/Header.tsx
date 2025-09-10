@@ -25,10 +25,11 @@ export default function Header(auth) {
   const [barProgressCaption, setBarProgressCaption] = useState('');
 
 
-  const lng = new Lang({
-    messages: lngHeader,
-    locale: appLang,
+  const msg = new Lang({
+      messages: lngHeader,
+      locale: appLang,
   });
+
 
   const fetchData = async () => {
     try {
@@ -102,19 +103,22 @@ export default function Header(auth) {
                   {isAdmin ? (
                     <>
                       <Link href={'/admin/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link">
-                        Validators
+                        {msg.get('menu.validators')}
                       </Link>
                       <Link href={'/admin/customers'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
-                        Customers
+                        {msg.get('menu.customers')}
                       </Link>
                       <Link href={'/admin/news'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
-                        Manage News
+                        {msg.get('menu.news')}
+                      </Link>
+                       <Link href={'/admin/settings'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
+                          {msg.get('menu.settings')}
                       </Link>
                     </>
                   ) : (
                     <> 
                       <Link href={'/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link">
-                        Validators
+                        {msg.get('menu.validators')}
                       </Link>
                     </>
                   )}
@@ -125,13 +129,13 @@ export default function Header(auth) {
             </div>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 nav-link">
               <div className="flex whitespace-nowrap text-[#fff] ml-[0px] mt-[0px]">
-                 <ProgressBar progress={barProgress*100} caption={`Left ${barProgressCaption}`} />
+                 <ProgressBar progress={barProgress*100} caption={`${msg.get('menu.left')} ${barProgressCaption}`} />
               </div>
             </div>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 nav-link">
               <div className="flex whitespace-nowrap text-[#fff] ml-[0px]  mt-[0px]">
                   <div className="md:space-x-4 md:flex md:pr-[30px] inline align-middle text-[14px] whitespace-nowrap w-[150px]">
-                    Epoch  {settingsData?.epoch} ({epochPersent}%)
+                    {msg.get('menu.epoch')}  {settingsData?.epoch} ({epochPersent}%)
                   </div>
                   <div className="md:space-x-4 md:flex md:pr-[30px] inline align-middle text-[14px] whitespace-nowrap">
                     1 SOL = {settingsData?.sol_rate}$
@@ -152,13 +156,13 @@ export default function Header(auth) {
                         href="/login"
                         className="rounded-md px-3 py-2 text-white text-sm"
                     >
-                      Log in
+                      {msg.get('menu.login')}
                     </Link>
                     <Link
                         href="/register"
                         className="rounded-md px-3 py-2 text-white text-sm"
                     >
-                      Register
+                      {msg.get('menu.reigster')}
                     </Link>
                   </>
                 )}
