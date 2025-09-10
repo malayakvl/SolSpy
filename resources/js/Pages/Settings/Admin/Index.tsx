@@ -26,7 +26,7 @@ interface CreateEditProps {
 export default function CreateEdit({ settings, isEdit = true, languages = [
     { code: 'en', name: 'English' },
     { code: 'ru', name: 'Русский' }
-] }: CreateEditProps) {
+]}: CreateEditProps) {
     const appLang = useSelector(appLangSelector);
     const [activeTab, setActiveTab] = useState(languages[0]?.code || 'en');
     const [previewMode, setPreviewMode] = useState(false);
@@ -65,53 +65,18 @@ export default function CreateEdit({ settings, isEdit = true, languages = [
             return;
         }
 
-        if (isEdit) {
-            put(route('admin.news.update', settings.id), {
-                onSuccess: () => {
-                    toast.success('News article updated successfully!');
-                },
-                onError: () => {
-                    toast.error('Failed to update news article');
-                }
-            });
-        } else {
-            post(route('admin.news.store'), {
-                onSuccess: () => {
-                    toast.success('News article created successfully!');
-                },
-                onError: () => {
-                    toast.error('Failed to create news article');
-                }
-            });
-        }
-    };
-
-    const generateSlug = (title: string) => {
-        return title
-            .toLowerCase()
-            .replace(/[^a-z0-9\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-')
-            .trim('-');
-    };
-
-    const handleTitleChange = (language: string, title: string) => {
-        setData('translations', {
-            ...data.translations,
-            [language]: {
-                ...data.translations[language],
-                title
+        put(route('admin.settings.update', settings.id), {
+            onSuccess: () => {
+                toast.success('News article updated successfully!');
+            },
+            onError: () => {
+                toast.error('Failed to update news article');
             }
         });
-
-        // Auto-generate slug from English title if it's empty
-        if (language === 'en' && !data.slug) {
-            setData('slug', generateSlug(title));
-        }
     };
 
     return (
-        <AuthenticatedLayout header={<Head title={msg.get('settings.title')} />}>
+        <AuthenticatedLayout header={<Head title={msg.get('settings.title')}/>}>
             <Head title={isEdit ? 'Edit News' : 'Create News'} />
             
             <div className="py-0">
@@ -158,22 +123,6 @@ export default function CreateEdit({ settings, isEdit = true, languages = [
                                         <option value="archived">7</option>
                                     </select>
                                 </div>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Featured Image URL
-                                    </label>
-                                    <input
-                                        type="url"
-                                        value={data.image_url}
-                                        onChange={(e) => setData('image_url', e.target.value)}
-                                        className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="https://example.com/image.jpg"
-                                    />
-                                    {errors.image_url && <p className="text-red-500 text-xs mt-1">{errors.image_url}</p>}
-                                </div>
-
                             </div>
                         </div>
 
