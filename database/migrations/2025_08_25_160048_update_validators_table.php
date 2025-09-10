@@ -13,7 +13,7 @@ return new class extends Migration
     {
         //
         //
-        Schema::table('validators', function($table) {
+        Schema::table('data.validators', function($table) {
             $table->bigInteger('rank')->nullable();
             $table->bigInteger('last_vote')->nullable();
             $table->bigInteger('root_slot')->nullable();
@@ -56,7 +56,7 @@ return new class extends Migration
     public function down(): void
     {
         //
-        Schema::table('users', function($table) {
+        Schema::table('data.validators', function($table) {
             $table->dropColumn('rank');
             $table->dropColumn('last_vote');
             $table->dropColumn('root_slot');

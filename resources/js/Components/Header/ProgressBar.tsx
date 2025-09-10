@@ -8,7 +8,7 @@ const ProgressBarWithCaption = ({ progress, caption }) => {
         >
             <div
                 style={{
-                    width: `${progress}%`,
+                    width: `${100 - progress}%`,
                     backgroundColor: '#72bbf1',
                     height: '20px',
                     transition: 'width 0.5s ease-in-out',

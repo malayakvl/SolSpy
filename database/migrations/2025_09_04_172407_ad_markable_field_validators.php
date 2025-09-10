@@ -13,7 +13,7 @@ return new class extends Migration
     {
         //
         Schema::table('data.validators', function($table) {
-            $table->boolean('is_hightlighted')->default(false)->index();
+            $table->boolean('is_highlighted')->default(false)->index();
             $table->boolean('is_top')->default(false)->index();
         });
     }
@@ -25,7 +25,7 @@ return new class extends Migration
     {
         //
         Schema::table('data.validators', function($table) {
-            $table->dropColumn('is_hightlighted');
+            $table->dropColumn('is_highlighted');
             $table->dropColumn('is_top');
         });
     }

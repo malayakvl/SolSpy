@@ -33,14 +33,20 @@ export default function NavCustomers(props) {
             <div>
               {permissions['customer-all'] && (
                 <MenuItem>
-                  <Link className="submenu" href={'/customers'}>
+                  <Link 
+                    className="submenu block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
+                    href={route('admin.customers.index')}
+                  >
                     {lng.get('menu.customer.list')}
                   </Link>
                 </MenuItem>
               )}
               {permissions['customer-all'] && (
                 <MenuItem>
-                  <Link href={'/roles'} className="submenu">
+                  <Link 
+                    href={'/roles'} 
+                    className="submenu block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
                     {lng.get('menu.customer.roles')}
                   </Link>
                 </MenuItem>

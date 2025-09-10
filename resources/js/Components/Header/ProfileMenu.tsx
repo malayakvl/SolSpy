@@ -25,8 +25,8 @@ export default function ProfileMenu() {
 
   return (
     <div>
-      <div className="space-x-8 sm:-my-px sm:flex md:flex md:mt-[-8px] relative md:mr-[15px] pt-[10px]">
-        <div className="icon-user" />
+      <div className="space-x-4 sm:-my-px sm:flex md:flex md:mt-[-8px] relative md:mr-[0px] pt-[10px]">
+        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" className="size-8 rounded-full bg-gray-800 outline -outline-offset-1 outline-white/10" />
         <Dropdown>
           <Dropdown.Trigger>
           <span className="inline-flex">
@@ -45,50 +45,29 @@ export default function ProfileMenu() {
           </Dropdown.Trigger>
 
           <Dropdown.Content>
-          <span
-              className="dropdown-span"
-          >
-            Укр
-          </span>
-            <span
-                className="dropdown-span"
-            >
-            En
-          </span>
+            <Dropdown.Link
+                href={'/profile'}
+                method="get"
+                as="button"
+              >
+              {lng.get('menu.profile')}
+            </Dropdown.Link>
+            <Dropdown.Link
+                href={'/logout'}
+                method="post"
+                as="button"
+                onClick={() => {
+                  localStorage.removeItem('filialName');
+                }}
+              >
+                {lng.get('menu.logout')}
+            </Dropdown.Link>
+            {/* <span className="dropdown-span">
+              Logout
+            </span> */}
           </Dropdown.Content>
         </Dropdown>
       </div>
-      {/*<div className="md:space-x-4 md:flex md:pr-[30px] relative">*/}
-      {/*  <div className="profile-block">*/}
-      {/*    /!*<div className="icon-Users"></div>*!/*/}
-      {/*    <Dropdown>*/}
-      {/*      <Dropdown.Trigger>*/}
-      {/*        <div className="relative">*/}
-      {/*          <button*/}
-      {/*            type="button"*/}
-      {/*            className="inline-flex items-center*/}
-      {/*                              px-2 text-sm*/}
-      {/*                              font-medium leading-4 text-gray-500*/}
-      {/*                              transition duration-150*/}
-      {/*                              ease-in-out hover:text-gray-700 focus:outline-none"*/}
-      {/*          >*/}
-      {/*            <div className="mt-0 relative text-white">*/}
-      {/*              <div className="icon-Users"></div>*/}
-      {/*              <span className="truncate text-white">{fioResult}</span>*/}
-      {/*            </div>*/}
-      {/*            <span className="icon-arrow-down" />*/}
-      {/*          </button>*/}
-      {/*        </div>*/}
-      {/*      </Dropdown.Trigger>*/}
-
-            {/*<Dropdown.Content>*/}
-            {/*  <Link className="dropdown-span" href={'/profile'}>*/}
-            {/*    {lng.get('menu.profile')}*/}
-            {/*  </Link>*/}
-            {/*</Dropdown.Content>*/}
-      {/*    </Dropdown>*/}
-      {/*  </div>*/}
-      {/*</div>*/}
     </div>
   );
 }

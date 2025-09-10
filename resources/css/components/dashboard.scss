@@ -96,36 +96,6 @@
     background-clip: border-box;
     border: solid 1px #edf1f1
 }
-.border-gray-small-block {
-}
 .ni-money-coins::before {
     content: "\ea41";
 }
-.icon-money {
-    background: url(../../images/dashboard/money.svg);
-    background-size: contain;
-    background-repeat: no-repeat;
-    display: inline-block;
-    width: 25px;
-    height: 35px;
-    margin-top: 8px;
-}
-.icon-users {
-    background: url(../../images/dashboard/users.svg);
-    background-size: contain;
-    background-repeat: no-repeat;
-    display: inline-block;
-    width: 25px;
-    height: 35px;
-    margin-top: 8px;
-}
-.icon-patients {
-    background: url(../../images/dashboard/patient.svg);
-    background-size: contain;
-    background-repeat: no-repeat;
-    display: inline-block;
-    width: 25px;
-    height: 35px;
-    margin-top: 8px;
-}
-

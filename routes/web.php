@@ -5,6 +5,9 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\ValidatorController;
+use App\Http\Controllers\NewsController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\UserController;
 
 use Inertia\Inertia;
 
@@ -28,7 +31,7 @@ Route::get('/sortable', [ValidatorController::class, 'sortable'])->name('validat
 
 // Specific validator routes
 Route::get('/validators/{page?}', [ValidatorController::class, 'index'])->name('validators.view');
-//Route::get('/validator/{id}', [ValidatorController::class, 'view'])->name('validator.view');
+Route::get('/validator/{voteKey}', [ValidatorController::class, 'view'])->name('validator.view');
 
 // Route to redirect to Google's OAuth page
 Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
@@ -43,11 +46,37 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('/customers', [ProfileController::class, 'edit'])->name('customers.view');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // Route::get('/customers', [ProfileController::class, 'edit'])->name('customers.view');
+    // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/add-compare', [ValidatorController::class, 'addCompare'])->name('validators.addCompare');
 });
+
+// News routes - public access
+Route::get('/news', [NewsController::class, 'index'])->name('news.index');
+Route::get('/news/featured', [NewsController::class, 'featured'])->name('news.featured');
+Route::get('/news/{slug}', [NewsController::class, 'show'])->name('news.show');
+
+// Admin news routes - protected
+Route::middleware(['auth', 'check.role:Admin,Manager'])->prefix('admin')->group(function () {
+    Route::get('/news', [NewsController::class, 'adminIndex'])->name('admin.news.index');
+    Route::get('/news/create', [NewsController::class, 'create'])->name('admin.news.create');
+    Route::post('/news', [NewsController::class, 'store'])->name('admin.news.store');
+    Route::get('/news/{news}/edit', [NewsController::class, 'edit'])->name('admin.news.edit');
+    Route::put('/news/{news}', [NewsController::class, 'update'])->name('admin.news.update');
+    Route::delete('/news/{news}', [NewsController::class, 'destroy'])->name('admin.news.destroy');
+    Route::post('/news/bulk-action', [NewsController::class, 'bulkAction'])->name('admin.news.bulk-action');
+    Route::get('/settings', [SettingsController::class, 'adminIndex'])->name('admin.settings.index');
+    
+    // Admin validators routes
+    Route::get('/validators', [ValidatorController::class, 'adminIndex'])->name('admin.validators.index');
+    
+    // Admin customers routes
+    Route::get('/customers', [UserController::class, 'index'])->name('admin.customers.index');
+});
+
+// API routes for news utilities
+Route::post('/api/news/generate-slug', [NewsController::class, 'generateSlug'])->name('api.news.generateSlug');
 
 require __DIR__.'/auth.php';
 

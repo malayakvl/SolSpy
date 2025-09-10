@@ -51,14 +51,18 @@ class fechValidators extends Command
 
         // Выполнение запроса
         $response = curl_exec($ch);
-
+        
+// dd($response);exit;
         // Проверка на ошибки
         if (curl_errno($ch)) {
             echo 'cURL Error: ' . curl_error($ch);
+            curl_close($ch);
+            return;
         } else {
+            curl_close($ch);
             // Parse the JSON response
             $jsonData = json_decode($response, true);
-            
+            // dd($response,);exit;
             // Check if response structure is valid
             if (isset($jsonData['result'])) {
                 // Log the response structure
@@ -66,7 +70,8 @@ class fechValidators extends Command
                 echo "Delinquent count: " . (isset($jsonData['result']['delinquent']) ? count($jsonData['result']['delinquent']) : 0) . "\n";
                 
                 // Pass the entire response to the database function
-                $query = "SELECT data.update_validators_common('$response'::jsonb);";
+                $query = "SELECT data.update_validators_common_history('$response'::jsonb);";
+// echo $query;exit;   ssh root@103.167.235.81 -p 22              
                 DB::statement($query);
             } else {
                 echo "Invalid response structure - no 'result' key found\n";
@@ -74,8 +79,5 @@ class fechValidators extends Command
         }
 //        echo "All validators was updated Each 5 second";
         $this->info('All validators was updated');
-        // Закрытие cURL
-        curl_close($ch);
-
     }
 }
