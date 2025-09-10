@@ -46,7 +46,8 @@ class ValidatorController extends Controller
         $validatorsData = $validatorsData
             ->orderBy('data.validators.id')
             ->limit(10)->offset($offset)->get();
-            
+dd($validatorsData);            
+exit;            
         // Calculate total count based on filter
         $totalCountQuery = DB::table('data.validators')
             ->where('data.validators.id', '>=', '19566');
@@ -127,6 +128,7 @@ class ValidatorController extends Controller
             ->orderBy('data.validators.id')
             ->limit($limit)->offset($offset)->get();
 
+
         // Calculate total count with same filter
         $totalCountQuery = DB::table('data.validators')
             ->where('data.validators.id', '>=', '19566');
@@ -166,7 +168,7 @@ class ValidatorController extends Controller
             $validator->spyRank = 2; // Если не найден, возвращаем 'Not found'
             return $validator;
         });
-
+                
         return response()->json([
             'validatorsData' => $results,
             'totalCount' => $totalCount,
@@ -316,7 +318,6 @@ class ValidatorController extends Controller
         $validatorsData = $validatorsData
             ->orderBy('data.validators.id')
             ->limit(10)->offset($offset)->get();
-            
         // Calculate total count based on filter
         $totalCountQuery = DB::table('data.validators')
             ->where('data.validators.id', '>=', '19566');
