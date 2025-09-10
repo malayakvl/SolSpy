@@ -1,26 +1,18 @@
 import React, { useState } from 'react';
-import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout';
+import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useSelector } from 'react-redux';
-import { appLangSelector } from '../../Redux/Layout/selectors';
+import { appLangSelector } from '../../../Redux/Layout/selectors';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faCalendar, faUser, faPlus, faCog } from '@fortawesome/free-solid-svg-icons';
 
 interface NewsItem {
-    id: number;
-    slug: string;
-    image_url?: string;
-    status: string;
-    is_featured: boolean;
+    title: string;
+    source?: string;
+    url?: string;
+    description?: string;
     views_count: number;
-    created_at: string;
-    updated_at: string;
-    translation?: {
-        title: string;
-        excerpt?: string;
-        content: string;
-        meta_tags?: any;
-    };
+    published_at: any;
 }
 
 interface NewsIndexProps {
@@ -39,12 +31,13 @@ interface NewsIndexProps {
     };
 }
 
-export default function Index({ news, featured, filters = {} }: NewsIndexProps) {
+export default function AdminIndex({ news, featured, filters = {} }: NewsIndexProps) {
     const appLang = useSelector(appLangSelector);
     const { auth } = usePage().props as any;
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
     const [featuredFilter, setFeaturedFilter] = useState(filters.is_featured ? 'featured' : 'all');
+
     // Check if user has admin access
     const userRoles = auth?.user?.roles?.map(role => role.name) || [];
     const isAdmin = userRoles.includes('Admin') || userRoles.includes('Manager');
@@ -57,7 +50,7 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
             featured: featuredFilter !== 'all' ? featuredFilter : undefined,
         };
         
-        router.get(route('news.index'), params, {
+        router.get(route('admin.discord.news'), params, {
             preserveState: true,
             preserveScroll: true
         });
@@ -77,148 +70,164 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
     };
 
     return (
-        <AuthenticatedLayout header={<Head title="Discord News" />}>
-            <Head title="NeDiscord News" />
+        <AuthenticatedLayout header={<Head title="News" />}>
+            <Head title="News" />
             
             <div className="py-0">
                 <div className="p-4 sm:p-8 mb-8 content-data bg-content">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold">News</h2>
-
+                        <h2 className="text-2xl font-bold">Discord News</h2>
+                    </div>
 
                     {/* Featured News Section */}
-                    {featured && featured.length > 0 && (
-                        <div className="mb-8">
-                            <h3 className="text-xl font-semibold mb-4">Featured News</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {featured.map((article) => (
-                                    <div key={article.id} className="bg-white rounded-lg shadow-md overflow-hidden border-2 border-yellow-400">
-                                        {article.image_url && (
-                                            <img
-                                                src={article.image_url}
-                                                alt={article.translation?.title}
-                                                className="w-full h-48 object-cover"
-                                            />
-                                        )}
-                                        <div className="p-4">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">
-                                                    Featured
-                                                </span>
-                                                <span className="text-xs text-gray-500">
-                                                    <FontAwesomeIcon icon={faCalendar} className="mr-1" />
-                                                    {formatDate(article.created_at)}
-                                                </span>
-                                            </div>
-                                            <h4 className="font-semibold text-lg mb-2 line-clamp-2">
-                                                <Link
-                                                    href={route('news.show', article.slug)}
-                                                    className="text-gray-900 hover:text-blue-600"
-                                                >
-                                                    {article.translation?.title}
-                                                </Link>
-                                            </h4>
-                                            {article.translation?.excerpt && (
-                                                <p className="text-gray-600 text-sm mb-3 line-clamp-3">
-                                                    {truncateText(article.translation.excerpt)}
-                                                </p>
-                                            )}
-                                            <div className="flex items-center justify-between text-xs text-gray-500">
-                                                <span>
-                                                    <FontAwesomeIcon icon={faEye} className="mr-1" />
-                                                    {article.views_count} views
-                                                </span>
-                                                <Link
-                                                    href={route('news.show', article.slug)}
-                                                    className="text-blue-500 hover:text-blue-700"
-                                                >
-                                                    Read more →
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
                     {/* Regular News Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {news.data.map((article) => (
-                            <div key={article.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                                {article.image_url && (
-                                    <img
-                                        src={article.image_url}
-                                        alt={article.translation?.title}
-                                        className="w-full h-48 object-cover"
-                                    />
-                                )}
-                                <div className="p-4">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <span className={`text-xs px-2 py-1 rounded ${
-                                            article.status === 'published' 
-                                                ? 'bg-green-100 text-green-800' 
-                                                : 'bg-gray-100 text-gray-800'
-                                        }`}>
-                                            {article.status}
-                                        </span>
-                                        {article.is_featured && (
-                                            <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">
-                                                Featured
-                                            </span>
-                                        )}
-                                        <span className="text-xs text-gray-500">
+                    {/* Replace the grid with a table */}
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full bg-white rounded-lg overflow-hidden">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title & Description</th>
+                                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Published Date</th>
+                                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+                                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Featured</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                                {news.data.map((article) => (
+                                    <tr key={article.title} className="hover:bg-gray-50">
+                                        <td className="py-3 px-4">
+                                            <a
+                                                href={article.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-gray-900 hover:text-blue-600 font-medium"
+                                            >
+                                                {article.title}
+                                            </a>
+                                            <div className="text-sm text-gray-500 mt-1">
+                                                {article.description}
+                                            </div>
+                                        </td>
+                                        <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-500">
                                             <FontAwesomeIcon icon={faCalendar} className="mr-1" />
-                                            {formatDate(article.created_at)}
-                                        </span>
-                                    </div>
-                                    <h4 className="font-semibold text-lg mb-2 line-clamp-2">
-                                        <Link
-                                            href={route('news.show', article.slug)}
-                                            className="text-gray-900 hover:text-blue-600"
-                                        >
-                                            {article.translation?.title}
-                                        </Link>
-                                    </h4>
-                                    {article.translation?.excerpt && (
-                                        <p className="text-gray-600 text-sm mb-3 line-clamp-3">
-                                            {truncateText(article.translation.excerpt)}
-                                        </p>
-                                    )}
-                                    <div className="flex items-center justify-between text-xs text-gray-500">
-                                        <span>
-                                            <FontAwesomeIcon icon={faEye} className="mr-1" />
-                                            {article.views_count} views
-                                        </span>
-                                        <Link
-                                            href={route('news.show', article.slug)}
-                                            className="text-blue-500 hover:text-blue-700"
-                                        >
-                                            Read more →
-                                        </Link>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                                            {formatDate(article.published_at)}
+                                        </td>
+                                        <td className="py-3 px-4">
+                                            {article.source}<br/>
+                                            {article.url && (
+                                                <a 
+                                                    href={article.url} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="text-blue-600 hover:text-blue-800 underline text-sm flex items-center"
+                                                >
+                                                    {article.url.length > 30 ? `${article.url.substring(0, 30)}...` : article.url}
+                                                    <FontAwesomeIcon icon={faEye} className="ml-1 text-xs" />
+                                                </a>
+                                            )}
+                                        </td>
+                                        <td className="py-3 px-4 whitespace-nowrap">
+                                            <span className="text-gray-500 text-sm">No</span>
+                                        </td>
+                                        
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
 
                     {/* Pagination */}
                     {news.last_page > 1 && (
                         <div className="mt-8 flex justify-center">
                             <div className="flex space-x-1">
-                                {Array.from({ length: news.last_page }, (_, i) => i + 1).map((page) => (
+                                {/* Previous button */}
+                                {parseInt(news.current_page) > 1 && (
                                     <Link
-                                        key={page}
-                                        href={route('news.index', { ...filters, page })}
-                                        className={`px-3 py-2 text-sm rounded ${
-                                            page === news.current_page
-                                                ? 'bg-blue-500 text-white'
-                                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                        }`}
+                                        href={route('admin.discord.news', { ...filters, page: parseInt(news.current_page) - 1 })}
+                                        className="px-3 py-2 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
                                     >
-                                        {page}
+                                        Previous
                                     </Link>
-                                ))}
+                                )}
+
+                                {/* First page */}
+                                {parseInt(news.current_page) > 3 && (
+                                    <>
+                                        <Link
+                                            href={route('admin.discord.news', { ...filters, page: 1 })}
+                                            className={`px-3 py-2 text-sm rounded ${
+                                                parseInt(news.current_page) === 1
+                                                    ? 'bg-blue-500 text-white'
+                                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                            }`}
+                                        >
+                                            1
+                                        </Link>
+                                        {parseInt(news.current_page) > 4 && (
+                                            <span className="px-3 py-2 text-sm text-gray-500">...</span>
+                                        )}
+                                    </>
+                                )}
+
+                                {/* Pages around current page */}
+                                {Array.from({ length: Math.min(5, news.last_page) }, (_, i) => {
+                                    let page;
+                                    if (news.last_page <= 5) {
+                                        page = i + 1;
+                                    } else {
+                                        const start = Math.max(1, news.current_page - 2);
+                                        const end = Math.min(news.last_page, start + 4);
+                                        page = start + i;
+                                        if (page > end) return null;
+                                    }
+
+                                    // Ensure we're comparing numbers
+                                    const currentPage = parseInt(news.current_page);
+                                    const pageNumber = parseInt(page);
+
+                                    return (
+                                        <Link
+                                            key={page}
+                                            href={route('admin.discord.news', { ...filters, page })}
+                                            className={`px-3 py-2 text-sm rounded ${
+                                                pageNumber === currentPage
+                                                    ? 'bg-blue-500 text-white'
+                                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                            }`}
+                                        >
+                                            {page}
+                                        </Link>
+                                    );
+                                })}
+
+                                {/* Last page */}
+                                {parseInt(news.current_page) < parseInt(news.last_page) - 2 && (
+                                    <>
+                                        {parseInt(news.current_page) < parseInt(news.last_page) - 3 && (
+                                            <span className="px-3 py-2 text-sm text-gray-500">...</span>
+                                        )}
+                                        <Link
+                                            href={route('admin.discord.news', { ...filters, page: news.last_page })}
+                                            className={`px-3 py-2 text-sm rounded ${
+                                                parseInt(news.current_page) === parseInt(news.last_page)
+                                                    ? 'bg-blue-500 text-white'
+                                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                            }`}
+                                        >
+                                            {news.last_page}
+                                        </Link>
+                                    </>
+                                )}
+
+                                {/* Next button */}
+                                {parseInt(news.current_page) < parseInt(news.last_page) && (
+                                    <Link
+                                        href={route('admin.discord.news', { ...filters, page: parseInt(news.current_page) + 1 })}
+                                        className="px-3 py-2 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                    >
+                                        Next
+                                    </Link>
+                                )}
                             </div>
                         </div>
                     )}
