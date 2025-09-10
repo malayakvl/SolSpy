@@ -28,7 +28,6 @@ const lngHeader = {
     settings: 'Налаштування',
     epoch: 'епоха',
     login: 'Увійти', 
-    register: 'Зареєструватись',
     left: 'Лишилось'
   },
 };
