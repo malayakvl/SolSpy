@@ -27,8 +27,6 @@ const lngHeader = {
     news: 'Керування новинами',
     settings: 'Налаштування',
     epoch: 'епоха',
-    login: 'Увійти', 
-    register: 'Зареєструватись',
     left: 'Лишилось'
   },
 };
