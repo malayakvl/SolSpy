@@ -108,6 +108,9 @@ export default function Header(auth) {
                       <Link href={'/admin/customers'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
                         {msg.get('menu.customers')}
                       </Link>
+                      <Link href={'/admin/discord-news'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
+                        {msg.get('menu.discord-news')}
+                      </Link>
                       <Link href={'/admin/news'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
                         {msg.get('menu.news')}
                       </Link>

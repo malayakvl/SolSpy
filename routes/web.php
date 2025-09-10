@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\ValidatorController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\DiscordController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 
@@ -59,6 +60,7 @@ Route::get('/news/{slug}', [NewsController::class, 'show'])->name('news.show');
 
 // Admin news routes - protected
 Route::middleware(['auth', 'check.role:Admin,Manager'])->prefix('admin')->group(function () {
+    Route::get('/discord-news', [DiscordController::class, 'adminIndex'])->name('admin.discord.news');
     Route::get('/news', [NewsController::class, 'adminIndex'])->name('admin.news.index');
     Route::get('/news/create', [NewsController::class, 'create'])->name('admin.news.create');
     Route::post('/news', [NewsController::class, 'store'])->name('admin.news.store');

@@ -12,7 +12,8 @@ const lngHeader = {
     epoch: 'epoch',
     login: 'Login', 
     register: 'Register',
-    left: 'Left'
+    left: 'Left',
+    'discord-news': 'Manage Discord News'
   },
   'uk.menu': {
     dashboard: 'Панель керування',
@@ -27,7 +28,8 @@ const lngHeader = {
     news: 'Керування новинами',
     settings: 'Налаштування',
     epoch: 'епоха',
-    left: 'Лишилось'
+    left: 'Лишилось',
+    'discord-news': 'Керування Discord новинами'
   },
 };
 export default lngHeader;
