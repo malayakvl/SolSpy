@@ -1,6 +1,6 @@
 const lngHeader = {
-  'en.menu': {
-    dashboard: 'Dashboard',
+  'en.settings': {
+    title: 'Edit Settings',
     profile: 'Profile',
     logout: 'Logout',
     create: 'Create',
@@ -12,9 +12,10 @@ const lngHeader = {
     epoch: 'epoch',
     login: 'Login', 
     register: 'Register',
-    left: 'Left'
+    left: 'Left',
+    update_interval: 'Update interval (sec)',
   },
-  'uk.menu': {
+  'uk.settings': {
     dashboard: 'Панель керування',
     profile: 'Профіль',
     logout: 'Вийти',
@@ -27,9 +28,8 @@ const lngHeader = {
     news: 'Керування новинами',
     settings: 'Налаштування',
     epoch: 'епоха',
-    login: 'Увійти', 
-    register: 'Зареєструватись',
-    left: 'Лишилось'
+    left: 'Лишилось',
+    update_interval: 'Швидкість оновлення (сек)',
   },
 };
 export default lngHeader;

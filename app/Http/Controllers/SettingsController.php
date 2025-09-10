@@ -32,4 +32,13 @@ class SettingsController extends Controller
             'message' => 'Success',
         ]);
     }
+
+    public function adminIndex(Request $request)
+    {
+        $setting = Settings::first();
+
+        return Inertia::render('Settings/Admin/Index', [
+            'settingsData' => Settings::first(),
+        ]);
+    }
 }
