@@ -29,7 +29,7 @@ class runCronJobs extends Command
         //
         while (true) {
             // Здесь ваша логика для команды app:fetch-validators
-            $this->info('Cron every 2 sec...');
+            $this->info('Cron every 1 sec...');
             // Например, вызов метода или сервиса
             // Вызов команды app:fetch-validators
             Artisan::call('app:fech-validators');
@@ -41,7 +41,7 @@ class runCronJobs extends Command
             }
 
             // Задержка 5 секунд
-            sleep(2);
+            sleep(1);
         }
 
     }

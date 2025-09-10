@@ -349,7 +349,7 @@ export default function AdminIndex(validatorsData) {
 
     useEffect(() => {
         // const intervalId = setInterval(fetchData(currentPage), 15000);
-        const intervalId = setInterval(() => fetchData(currentPage), 15000);
+        const intervalId = setInterval(() => fetchData(currentPage), 1000);
         
         // Listen for filter changes
         const handleFilterChange = () => {
