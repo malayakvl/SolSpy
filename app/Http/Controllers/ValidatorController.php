@@ -46,8 +46,6 @@ class ValidatorController extends Controller
         $validatorsData = $validatorsData
             ->orderBy('data.validators.id')
             ->limit(10)->offset($offset)->get();
-dd($validatorsData);            
-exit;            
         // Calculate total count based on filter
         $totalCountQuery = DB::table('data.validators')
             ->where('data.validators.id', '>=', '19566');

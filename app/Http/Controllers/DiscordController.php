@@ -82,4 +82,120 @@ class DiscordController extends Controller
         ]);
         
     }
+
+
+    public function fetchDiscordMessages($limit = 50, $page = 1)
+    {
+        try {
+            // Налаштування
+            $botToken = env('DISCORD_BOT_TOKEN');
+            if (!$botToken) {
+                Log::error('DISCORD_BOT_TOKEN not set in .env');
+                return Inertia::render('News/Error', ['message' => 'Discord Bot Token is not configured']);
+            }
+
+            // Список каналів
+            $channelIds = [
+                '895740485140906054',
+                '586252910506016798',
+                '594138785558691840',
+                '669406841830244375',
+            ];
+
+            $perPage = min($limit, 100); // Discord обмежує до 100 повідомлень за запит
+            $allMessages = [];
+
+            // Витягування повідомлень із кожного каналу
+            foreach ($channelIds as $channelId) {
+                $baseUrl = "https://discord.com/api/v10/channels/{$channelId}/messages";
+                $before = null;
+
+                // Пагінація: обчислення параметра `before`
+                if ($page > 1) {
+                    $offset = ($page - 1) * $perPage;
+                    $previousResponse = Http::withHeaders([
+                        'Authorization' => "Bot {$botToken}",
+                        'User-Agent' => 'DiscordNewsBot/1.0',
+                    ])->get($baseUrl, ['limit' => $perPage]);
+
+                    if ($previousResponse->successful() && !empty($previousResponse->json())) {
+                        $messages = $previousResponse->json();
+                        for ($i = 1; $i < $page; $i++) {
+                            $lastMessage = end($messages);
+                            $before = $lastMessage['id'] ?? null;
+                            if ($before) {
+                                $previousResponse = Http::withHeaders([
+                                    'Authorization' => "Bot {$botToken}",
+                                    'User-Agent' => 'DiscordNewsBot/1.0',
+                                ])->get($baseUrl, ['limit' => $perPage, 'before' => $before]);
+                                $messages = $previousResponse->successful() ? $previousResponse->json() : [];
+                            }
+                        }
+                    }
+                }
+
+                // Запит до API
+                $response = Http::withHeaders([
+                    'Authorization' => "Bot {$botToken}",
+                    'User-Agent' => 'DiscordNewsBot/1.0',
+                ])->get($baseUrl, [
+                    'limit' => $perPage,
+                    'before' => $before,
+                ]);
+
+                if ($response->failed()) {
+                    Log::error('Discord API request failed for channel', [
+                        'channel_id' => $channelId,
+                        'status' => $response->status(),
+                        'response' => $response->body(),
+                    ]);
+                    continue; // Пропустити канал, якщо запит не вдався
+                }
+
+                $messages = $response->json();
+                if (!empty($messages)) {
+                    $allMessages = array_merge($allMessages, $messages);
+                }
+            }
+
+            if (empty($allMessages)) {
+                return Inertia::render('News/Error', ['message' => 'No messages found in any of the channels']);
+            }
+
+            // Сортування повідомлень за датою (timestamp)
+            usort($allMessages, function ($a, $b) {
+                return strtotime($b['timestamp']) - strtotime($a['timestamp']);
+            });
+
+            // Форматування повідомлень
+            $formattedMessages = array_map(function ($message) {
+                return [
+                    'title' => $message['content'] ? substr($message['content'], 0, 100) . (strlen($message['content']) > 100 ? '...' : '') : 'No content',
+                    'url' => !empty($message['attachments']) ? ($message['attachments'][0]['url'] ?? '') : '',
+                    'description' => $message['content'] ?? 'No description',
+                    'source' => $message['author']['username'] ?? 'Unknown author',
+                    'published_at' => $message['timestamp'] ?? now()->toIso8601String(),
+                ];
+            }, $allMessages);
+
+            // Пагінація
+            $totalResults = count($allMessages); // Приблизно, можна уточнити
+            $paginatedData = [
+                'data' => array_slice($formattedMessages, ($page - 1) * $perPage, $perPage),
+                'current_page' => $page,
+                'last_page' => ceil($totalResults / $perPage),
+                'per_page' => $perPage,
+                'total' => $totalResults,
+            ];
+
+            // Повернення через Inertia
+            return Inertia::render('News/Index', $paginatedData);
+
+        } catch (\Exception $e) {
+            Log::error('Error in fetchDiscordMessages', ['message' => $e->getMessage()]);
+            return Inertia::render('News/Error', [
+                'message' => 'An error occurred: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 }
