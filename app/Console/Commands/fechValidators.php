@@ -70,8 +70,7 @@ class fechValidators extends Command
                 echo "Delinquent count: " . (isset($jsonData['result']['delinquent']) ? count($jsonData['result']['delinquent']) : 0) . "\n";
                 
                 // Pass the entire response to the database function
-                $query = "SELECT data.update_validators_common_history('$response'::jsonb);";
-// echo $query;exit;   ssh root@103.167.235.81 -p 22              
+                $query = "SELECT data.update_validators_common('$response'::jsonb);";
                 DB::statement($query);
             } else {
                 echo "Invalid response structure - no 'result' key found\n";
