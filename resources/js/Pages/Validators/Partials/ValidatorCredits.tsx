@@ -21,7 +21,7 @@ export default function ValidatorCredits({ validator, epoch }) {
 
             const timeout = setTimeout(() => {
                 setColorClass(''); // Подсветка исчезает через 2 секунды
-            }, 2000);
+            }, 1000);
 
             setPrevVoteCredit(_voteCredit);
 
@@ -29,7 +29,7 @@ export default function ValidatorCredits({ validator, epoch }) {
         } else {
             const timeout = setTimeout(() => {
                 setColorClass(''); // Подсветка исчезает через 2 секунды
-            }, 1000);
+            }, 500);
         }
     }, [_voteCredit, prevVoteCredit]);
 

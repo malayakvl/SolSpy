@@ -60,11 +60,8 @@ class ValidatorController extends Controller
         $filteredTotalCount = $totalCountQuery->count();
         
         $validatorsAllData = DB::table('data.validators')
-            ->orderBy('activated_stake')->get();
+            ->orderBy('activated_stake', 'DESC')->get();
         $sortedValidators = $validatorsAllData->toArray();
-        usort($sortedValidators, function ($a, $b) {
-            return (float)$b->activated_stake - (float)$a->activated_stake;
-        });
 
         // Рассчитываем tvcRank для каждого валидатора из $validatorsData
         $results = $validatorsData->map(function ($validator) use ($sortedValidators) {
@@ -92,8 +89,48 @@ class ValidatorController extends Controller
         $offset = ($page - 1) * $limit; // Расчет offset
         $filterType = $request->get('filterType', 'all'); // Get filter type
         $searchTerm = $request->get('search', ''); // Get search term
+        $sortColumn = $request->get('sortColumn', 'id'); // Get sort column
+        $sortDirection = $request->get('sortDirection', 'ASC'); // Get sort direction
         $userId = $request->user() ? $request->user()->id : null;
 
+        // Validate sort direction
+        if (!in_array(strtoupper($sortDirection), ['ASC', 'DESC'])) {
+            $sortDirection = 'ASC';
+        }
+
+        // Map frontend column names to database column names
+        $columnMap = [
+            'name' => 'data.validators.name',
+            'status' => 'data.validators.delinquent',
+            'spy_rank' => 'data.validators.activated_stake', // Using activated_stake as proxy for spy_rank
+            'tvc_score' => 'data.validators.total_score',
+            'tvc_rank' => 'data.validators.activated_stake', // TVC Rank is based on activated_stake
+            'vote_credits' => 'data.validators.epoch_credits',
+            'active_stake' => 'data.validators.activated_stake',
+            'vote_rate' => 'data.validators.vote_distance_score',
+            'inflation_commission' => 'data.validators.jito_commission',
+            'mev_commission' => 'data.validators.commission',
+            'uptime' => 'data.validators.skipped_slot_percent',
+            'client_version' => 'data.validators.version',
+            'status_sfdp' => 'data.validators.delinquent', // Using delinquent as proxy
+            'location' => 'data.validators.country',
+            'website' => 'data.validators.url',
+            'city' => 'data.validators.city',
+            'asn' => 'data.validators.autonomous_system_number',
+            'ip' => 'data.validators.ip',
+            'jiito_score' => 'data.validators.jito_commission'
+        ];
+
+        // Get the actual database column name
+        $dbSortColumn = $columnMap[$sortColumn] ?? 'data.validators.id';
+        
+        // For TVC Rank, we need to sort by activated_stake in descending order
+        // because higher activated_stake means better (lower) rank
+        $actualSortDirection = $sortDirection;
+        if ($sortColumn === 'tvc_rank') {
+            // Reverse the sort direction for TVC Rank
+            $actualSortDirection = strtoupper($sortDirection) === 'ASC' ? 'DESC' : 'ASC';
+        }
         $query = DB::table('data.validators')
             ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
             
@@ -121,11 +158,18 @@ class ValidatorController extends Controller
         } elseif ($filterType === 'top') {
             $query = $query->where('data.validators.is_top', true);
         }
-        
+        // Apply sorting
+        if ($sortColumn === 'uptime') {
+            // dd($sortDirection);exit;
+            $query->orderBy('data.validators.avg_uptime', $sortDirection);
+        } elseif ($sortColumn === 'tvc_score') {
+            $query->orderBy('data.validators.id', $sortDirection);
+        }else {
+            $query->orderBy($dbSortColumn, $actualSortDirection ?? $sortDirection);
+        }          
         $validatorsData = $query
-            ->orderBy('data.validators.id')
+            // ->orderBy($dbSortColumn, $actualSortDirection ?? $sortDirection)
             ->limit($limit)->offset($offset)->get();
-
 
         // Calculate total count with same filter
         $totalCountQuery = DB::table('data.validators')
@@ -145,16 +189,8 @@ class ValidatorController extends Controller
         $totalCount = $totalCountQuery->count();
 
         $validatorsAllData = DB::table('data.validators')
-            ->orderBy('activated_stake')->get();
+            ->orderBy('activated_stake', 'DESC')->get();
         $sortedValidators = $validatorsAllData->toArray();
-        usort($sortedValidators, function ($a, $b) {
-            return (float)$b->activated_stake - (float)$a->activated_stake;
-        });
-
-        $sortedValidators = $validatorsAllData->toArray();
-        usort($sortedValidators, function ($a, $b) {
-            return (float)$b->activated_stake - (float)$a->activated_stake;
-        });
 
         // Рассчитываем tvcRank для каждого валидатора из $validatorsData
         $results = $validatorsData->map(function ($validator) use ($sortedValidators) {
@@ -163,14 +199,12 @@ class ValidatorController extends Controller
 
             // Добавляем tvcRank к объекту валидатора
             $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
-            $validator->spyRank = 2; // Если не найден, возвращаем 'Not found'
             return $validator;
         });
                 
         return response()->json([
             'validatorsData' => $results,
             'totalCount' => $totalCount,
-            // 'validatorsAllData' => $validatorsAllData
         ]);
     }
 
@@ -284,6 +318,9 @@ class ValidatorController extends Controller
         $filterType = $request->get('filterType', 'all'); // Get filter type
         $searchTerm = $request->get('search', ''); // Get search term
         $userId = $request->user() ? $request->user()->id : null;
+        $sortColumn = $request->get('sortColumn', 'id');
+        $sortDirection = $request->get('sortDirection', 'ASC');
+        
         $query = DB::table('data.validators')
             ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
             
@@ -312,10 +349,17 @@ class ValidatorController extends Controller
         } elseif ($filterType === 'top') {
             $validatorsData = $validatorsData->where('data.validators.is_top', true);
         }
-        
+// dd($sortColumn);exit;       
+       
+        if ($sortColumn === 'uptime') {
+            // dd($sortDirection);exit;
+            $validatorsData->orderBy('data.validators.avg_uptime', $sortDirection);
+        } else {
+            $validatorsData->orderBy('data.validators.id');
+        }   
         $validatorsData = $validatorsData
-            ->orderBy('data.validators.id')
             ->limit(10)->offset($offset)->get();
+// dd($validatorsData);exit;            
         // Calculate total count based on filter
         $totalCountQuery = DB::table('data.validators')
             ->where('data.validators.id', '>=', '19566');
@@ -335,11 +379,8 @@ class ValidatorController extends Controller
         $filteredTotalCount = $totalCountQuery->count();
         
         $validatorsAllData = DB::table('data.validators')
-            ->orderBy('activated_stake')->get();
+            ->orderBy('activated_stake', 'DESC')->get();
         $sortedValidators = $validatorsAllData->toArray();
-        usort($sortedValidators, function ($a, $b) {
-            return (float)$b->activated_stake - (float)$a->activated_stake;
-        });
 
         // Рассчитываем tvcRank для каждого валидатора из $validatorsData
         $results = $validatorsData->map(function ($validator) use ($sortedValidators) {

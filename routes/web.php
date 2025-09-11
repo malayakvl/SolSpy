@@ -69,6 +69,7 @@ Route::middleware(['auth', 'check.role:Admin,Manager'])->prefix('admin')->group(
     Route::delete('/news/{news}', [NewsController::class, 'destroy'])->name('admin.news.destroy');
     Route::post('/news/bulk-action', [NewsController::class, 'bulkAction'])->name('admin.news.bulk-action');
     Route::get('/settings', [SettingsController::class, 'adminIndex'])->name('admin.settings.index');
+    Route::put('/settings', [SettingsController::class, 'updateDataSettings'])->name('admin.settings.update');
     
     // Admin validators routes
     Route::get('/validators', [ValidatorController::class, 'adminIndex'])->name('admin.validators.index');
