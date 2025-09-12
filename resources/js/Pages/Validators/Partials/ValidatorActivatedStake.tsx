@@ -10,12 +10,26 @@ export default function ValidatorActivatedStake({validator, epoch}) {
         }
     }
 
+    const formatSOL = (lamports) => {
+        // Конвертация лампорта в SOL
+        const sol = lamports / 1e9; // 1e9 = 1,000,000,000
+        // Конвертация SOL в K SOL (тысячи SOL)
+        const kSol = sol / 1e3; // 1e3 = 1000
+        // Округление до двух десятичных знаков и форматирование
+        return `${kSol.toFixed(2)}K SOL`;
+    }
+
+    
+
     return (
         <>
-            {Number(validator.activated_stake).toLocaleString('en-US', {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            })}
+            {formatSOL(validator.activated_stake)}
+            <span className="text-xs text-gray-500 hidden">
+                {Number(validator.activated_stake).toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                })}
+            </span>
         </>
     );
 }

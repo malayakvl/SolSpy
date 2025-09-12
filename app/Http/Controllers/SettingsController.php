@@ -36,9 +36,20 @@ class SettingsController extends Controller
     public function adminIndex(Request $request)
     {
         $setting = Settings::first();
-
         return Inertia::render('Settings/Admin/Index', [
             'settingsData' => Settings::first(),
         ]);
     }
+
+    public function updateDataSettings(Request $request)
+    { 
+        DB::select('UPDATE data.settings SET 
+            update_interval = \'' . ($request->get('update_interval')). '\'');
+        
+        // Return Inertia response instead of plain JSON
+        return Inertia::render('Settings/Admin/Index', [
+            'settingsData' => Settings::first(),
+        ]);
+    }
+ 
 }

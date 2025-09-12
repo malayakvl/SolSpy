@@ -165,7 +165,7 @@ export default function Header(auth) {
                         href="/register"
                         className="rounded-md px-3 py-2 text-white text-sm"
                     >
-                      {msg.get('menu.reigster')}
+                      {msg.get('menu.register')}
                     </Link>
                   </>
                 )}

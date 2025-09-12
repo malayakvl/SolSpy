@@ -262,7 +262,7 @@ export default function Index() {
                                         <td className="px-4 py-3 font-medium text-gray-900">MEV Commission</td>
                                         {comparisonValidators.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
-                                                MEV %
+                                                {validator.commission !== null && validator.commission !== undefined ? `${validator.commission}%` : 'N/A'}
                                             </td>
                                         ))}
                                     </tr>
@@ -366,7 +366,7 @@ export default function Index() {
                                         <td className="px-4 py-3 font-medium text-gray-900">Jiito Score</td>
                                         {comparisonValidators.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
-                                                JS
+                                                {validator.jito_commission !== null && validator.jito_commission !== undefined ? `${validator.jito_commission/100}%` : 'N/A'}
                                             </td>
                                         ))}
                                     </tr>

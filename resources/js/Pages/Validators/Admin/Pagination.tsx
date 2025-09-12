@@ -1,5 +1,6 @@
 import React from 'react';
-import { router } from '@inertiajs/react';
+// Remove router import since we're not using it
+// import { router } from '@inertiajs/react';
 
 interface PaginationProps {
     currentPage: number;
@@ -14,55 +15,47 @@ export default function ValidatorPagination({
     filterType, 
     onPageChange 
 }: PaginationProps) {
-    // Generate page numbers to display (first 5, ..., last 5)
+    // Generate page numbers to display
     const getPageNumbers = () => {
         const pages = [];
-        const firstPages = 5; // First 5 pages
-        const lastPages = 5; // Last 5 pages
-
-        // Add first 5 pages
-        for (let i = 1; i <= Math.min(firstPages, totalPages); i++) {
-            pages.push(i);
-        }
-
-        // Add ellipsis if there are more pages between first 5 and last 5
-        if (totalPages > firstPages + lastPages) {
+        const delta = 2; // Number of pages to show around current page
+        
+        // Add first page
+        pages.push(1);
+        
+        // Add ellipsis if needed
+        if (currentPage - delta > 2) {
             pages.push('...');
         }
-
-        // Add last 5 pages
-        for (let i = Math.max(firstPages + 1, totalPages - lastPages + 1); i <= totalPages; i++) {
+        
+        // Add pages around current page
+        for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
             pages.push(i);
         }
-
+        
+        // Add ellipsis if needed
+        if (currentPage + delta < totalPages - 1) {
+            pages.push('...');
+        }
+        
+        // Add last page if it's not the same as first
+        if (totalPages > 1) {
+            pages.push(totalPages);
+        }
+        
         return pages;
     };
 
     const paginate = (pageNumber: number) => {
-        if (pageNumber >= 1 && pageNumber <= totalPages) {
+        if (pageNumber >= 1 && pageNumber <= totalPages && pageNumber !== currentPage) {
             onPageChange(pageNumber);
-            
-            // Update URL with new page number
-            const params: any = { page: pageNumber };
-            // Only add filterType if it's not 'all' (default)
-            if (filterType !== 'all') {
-                params.filterType = filterType;
-            }
-            
-            // Add search parameter if it exists in current URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const searchParam = urlParams.get('search');
-            if (searchParam) {
-                params.search = searchParam;
-            }
-            
-            router.get('/admin/validators', params, {
-                preserveState: true,
-                preserveScroll: true,
-                replace: true
-            });
         }
     };
+
+    // Don't show pagination if there's only one page
+    if (totalPages <= 1) {
+        return null;
+    }
 
     return (
         <div className="mt-4 flex justify-center items-center space-x-2 text-[12px]">
