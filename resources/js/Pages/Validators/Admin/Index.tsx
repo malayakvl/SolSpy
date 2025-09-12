@@ -56,7 +56,6 @@ export default function AdminIndex(validatorsData) {
         highlight: 1
     }); // Remember last page for each filter type
     const [sortClickState, setSortClickState] = useState<{column: string, direction: string} | null>(null); // Track sort click state
-console.log(JSON.parse(validatorsData.settingsData.table_fields));
 
 
     const [itemsPerPage] = useState(perPage); // Number of items per page
@@ -97,7 +96,7 @@ console.log(JSON.parse(validatorsData.settingsData.table_fields));
             ];
         }
     });
-console.log(columnsConfig);
+
     // Get role names as array of strings
     const userRoleNames = user?.roles?.map(role => role.name) || [];
     // Check if user has Admin/Manager role
@@ -254,6 +253,7 @@ console.log(columnsConfig);
         console.log('Filtered columns:', filtered);
         return filtered;
     };
+
     // Helper function to render column header by name
     const renderColumnHeader = (columnName) => {
         // Map column names to sort keys
@@ -312,7 +312,6 @@ console.log(columnsConfig);
             // This will trigger the useEffect to fetch data
             setCurrentPage(1);
         };
-    console.log('Column', columnName)    
 
         switch(columnName) {
             case "Spy Rank": 
@@ -889,12 +888,24 @@ console.log(columnsConfig);
                 return (
                     <td key="avatar" className="text-center py-2">
                         {validator.avatar_file_url ? (
-                            <img
-                                src={validator.avatar_file_url}
-                                alt={validator.name}
-                                style={{ width: "35px", height: "35px", objectFit: "cover", borderRadius: "50%", margin: "0px auto" }}
-                            />
-                        ) : null}
+                            <div className="relative inline-block">
+                                <img
+                                    src={validator.avatar_file_url}
+                                    alt={validator.name}
+                                    style={{ width: "35px", height: "35px", objectFit: "cover", borderRadius: "50%", margin: "0px auto" }}
+                                    onError={({ currentTarget }) => {
+                                        currentTarget.onerror = null; // Prevents infinite loop
+                                        currentTarget.style.display = 'none'; // Hide the image if it fails to load
+                                        // Show the fallback circle
+                                        const fallback = document.createElement('div');
+                                        fallback.className = 'w-[35px] h-[35px] rounded-full bg-gray-200 border-2 border-dashed border-gray-400 mx-auto';
+                                        currentTarget.parentNode?.appendChild(fallback);
+                                    }}
+                                />
+                            </div>
+                        ) : (
+                            <div className="w-[35px] h-[35px] rounded-full bg-gray-200 border-2 border-dashed border-gray-400 mx-auto"></div>
+                        )}
                     </td>
                 );
             case "Name": 

@@ -304,6 +304,7 @@ class ValidatorController extends Controller
 
         return Inertia::render('Validators/View', [
             'validatorData' => $validatorData,
+            'settingsData' => Settings::first()
         ]);
     }
 
@@ -349,7 +350,6 @@ class ValidatorController extends Controller
         } elseif ($filterType === 'top') {
             $validatorsData = $validatorsData->where('data.validators.is_top', true);
         }
-// dd($sortColumn);exit;       
        
         if ($sortColumn === 'uptime') {
             // dd($sortDirection);exit;
@@ -359,7 +359,7 @@ class ValidatorController extends Controller
         }   
         $validatorsData = $validatorsData
             ->limit(10)->offset($offset)->get();
-// dd($validatorsData);exit;            
+
         // Calculate total count based on filter
         $totalCountQuery = DB::table('data.validators')
             ->where('data.validators.id', '>=', '19566');

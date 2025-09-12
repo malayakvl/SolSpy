@@ -73,70 +73,91 @@ const Utils = {
   }
 };
 
-const DATA_COUNT = 7;
-const NUMBER_CFG = {count: DATA_COUNT, min: -100, max: 100};
 
-const labels = Utils.months({count: 7});
-const dataRnd = {
-  labels: labels,
-  datasets: [
-    {
-      label: 'Dataset 1',
-      data: labels.map(() => {
-        return [Utils.rand(-100, 100), Utils.rand(-100, 100)];
-      }),
-      backgroundColor: Utils.CHART_COLORS.red,
-    },
-    {
-      label: 'Dataset 2',
-      data: labels.map(() => {
-        return [Utils.rand(-100, 100), Utils.rand(-100, 100)];
-      }),
-      backgroundColor: Utils.CHART_COLORS.blue,
-    },
-  ]
-};
-
-export const data = {
-  labels,
-  datasets: [
-    {
-      label: 'Dataset 1',
-      data: labels.map(() => faker.number.int({ min: 0, max: 1000 })),
-      backgroundColor: 'rgba(255, 99, 132, 0.5)',
-    },
-    {
-      label: 'Dataset 2',
-      data: labels.map(() => faker.number.int({ min: 0, max: 1000 })),
-      backgroundColor: 'rgba(53, 162, 235, 0.5)',
-    },
-  ],
-};
-
-export default function Index({ validatorData }) {
+export default function Index({ validatorData, settingsData }) {
     const appLang = useSelector(appLangSelector);
     const msg = new Lang({
         messages: lngVaidators,
         locale: appLang,
     });
     const epoch = useSelector(appEpochSelector);
-    const dataChart = [
-        { year: 2010, count: 10 },
-        { year: 2011, count: 20 },
-        { year: 2012, count: 15 },
-        { year: 2013, count: 25 },
-        { year: 2014, count: 22 },
-        { year: 2015, count: 30 },
-        { year: 2016, count: 28 },
-    ];
+    const dbData = JSON.parse(validatorData.epoch_credits_history);
+    const labelEpoch = dbData.map(function (item) {
+        return item[0]
+    });
+    const [data, setData] = useState<any>(validatorData);
 
+    const formatSOL = (lamports) => {
+        // Конвертация лампорта в SOL
+        const sol = lamports / 1e9; // 1e9 = 1,000,000,000
+        // Конвертация SOL в K SOL (тысячи SOL)
+        const kSol = sol / 1e3; // 1e3 = 1000
+        // Округление до двух десятичных знаков и форматирование
+        return kSol.toFixed(2);
+    }
 
-    // const Map = ReactMapboxGl({
-    //     accessToken:
-    //         'pk.eyJ1IjoiZmFicmljOCIsImEiOiJjaWc5aTV1ZzUwMDJwdzJrb2w0dXRmc2d0In0.p6GGlfyV-WksaDV_KdN27A'
-    // });
+    const echochValues = dbData.map(function (item) {
+        return (item[1]/1000000)
+    });
 
-console.log(validatorData.name)
+    const labels = Utils.months({count: 7});
+    const dataEpoch = {
+            labels: labelEpoch,
+            datasets: [{
+                label: 'Epoch',
+                data: echochValues,
+                backgroundColor: [
+                    'rgba(153, 102, 255, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(153, 102, 255, 1)'
+                ],
+                borderWidth: 1
+            }]
+        };
+
+    const fetchData = async () => {
+        // Get filter value and other parameters from current URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentFilterType = urlParams.get('filterType') || 'all';
+        const searchParam = urlParams.get('search') || '';
+        const sortColumn = urlParams.get('sortColumn') || 'id';
+        const sortDirection = urlParams.get('sortDirection') || 'ASC';
+        const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
+        
+        try {
+            // Build URL with all parameters
+            let url = `/api/fetch-validators`;
+            if (searchParam) {
+                url += `&search=${encodeURIComponent(searchParam)}`;
+            }
+            
+            const response = await axios.get(url);
+            // console.log(response.data.validatorsData)
+            setData(response.data.validatorsData);
+            
+        } catch (error) {
+            console.error('Error:', error);
+            // Reset sort click state even if there's an error
+        }
+    };
+
+    useEffect(() => {
+        // const intervalId = setInterval(fetchData(currentPage), 15000);
+        
+        const intervalId = setInterval(() => {
+            // Get current page from URL to ensure we're using the latest page
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
+            fetchData();
+        }, parseInt(settingsData.update_interval)*1000);
+        
+        
+        return () => {
+            clearInterval(intervalId);
+            window.removeEventListener('filterChanged', handleFilterChange);
+        };
+    }, []);
 
     return (
         <AuthenticatedLayout header={<Head />}>
@@ -212,19 +233,27 @@ console.log(validatorData.name)
                                         </li>
                                          <li className="flex items-start">
                                             <span className="font-medium mr-2">Uptime:</span>
-                                            <span className="break-all">{validatorData.uptime}</span>
+                                            <span className="break-all">
+                                                <ValidatorUptime epoch={epoch} validator={validatorData} />
+                                            </span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">Client:</span>
-                                            <span className="break-all">{validatorData.uptime}</span>
+                                            <span className="break-all">
+                                                {`${validatorData.version}  ${validatorData.software_client || ''}`}
+                                            </span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">SFDP Status:</span>
                                             <span className="break-all">{validatorData.uptime}</span>
                                         </li>
                                         <li className="flex items-start">
+                                            <span className="font-medium mr-2">Vote Credits:</span>
+                                            <span className="break-all"><ValidatorRate epoch={epoch} validator={validatorData} /></span>
+                                        </li>
+                                        <li className="flex items-start">
                                             <span className="font-medium mr-2">Vote Rate:</span>
-                                            <span className="break-all">{validatorData.uptime}</span>
+                                            <span className="break-all"></span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">Jito Score:</span>
@@ -239,16 +268,24 @@ console.log(validatorData.name)
                                 <div className="flex items-start">
                                     <ul className="space-y-2 w-1/2 pr-2">
                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">Website:</span>
-                                            <span className="break-all">{validatorData.url}</span>
+                                            <span className="font-medium mr-2">MEV Commission:</span>
+                                            <span className="break-all">{validatorData.commission !== null && validatorData.commission !== undefined ? `${validatorData.commission}%` : 'N/A'}</span>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">Details:</span>
-                                            <span className="break-all">{validatorData.details}</span>
+                                            <span className="font-medium mr-2">Inflation Commission:</span>
+                                            <span className="break-all">{validatorData.jito_commission !== null && validatorData.jito_commission !== undefined ? `${validatorData.jito_commission/10}%` : 'N/A'}</span>
+                                        </li>
+                                        <li>
+                                            <span className="font-medium mr-2">Inflation Commission:</span>
+                                            <span className="break-all">
+                                                <FontAwesomeIcon icon={faStar} className="text-xs" />
+                                                <FontAwesomeIcon icon={faStar} className="text-xs" />
+                                                <FontAwesomeIcon icon={faStar} className="text-xs" />
+                                            </span>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">Location:</span>
-                                            <span className="break-all">{validatorData.country}</span>
+                                            <span className="font-medium mr-2">Country:</span>
+                                            <span className="break-all">{validatorData.country_iso} {validatorData.country}</span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">City:</span>
@@ -257,6 +294,14 @@ console.log(validatorData.name)
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">ASN:</span>
                                             <span className="break-all">{validatorData.asn}</span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="font-medium mr-2">Website:</span>
+                                            <span className="break-all">{validatorData.url}</span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="font-medium mr-2">Details:</span>
+                                            <span className="break-all">{validatorData.details}</span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">IP:</span>
@@ -278,7 +323,7 @@ console.log(validatorData.name)
                                 <MapLayer validator={validatorData} />
                             </div>
                             <div className="w-1/2">
-                                <Bar options={options} data={dataRnd} />
+                                <Bar options={options} data={dataEpoch} />
                             </div>
                         </div>  
                     </div>
