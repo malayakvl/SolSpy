@@ -1,23 +1,38 @@
 import React, { useEffect, useState } from 'react';
 
 
-export default function ValidatorRate({ validator, epoch }) {
-    const [prevVoteRate, setPrevVoteRate] = useState(0);
+export default function ValidatorRate({ validator, epoch, settingsData, totalStakeData }) {
     const [colorClass, setColorClass] = useState('');
+    const [prevVoteRate, setPrevVoteRate] = useState(0);
 
-    // Вычисление текущего значения voteRate
+    const validatorCredits = JSON.parse(validator.epoch_credits) || [];
+    const scheduleSlots = validator.slots ? JSON.parse(validator.slots) : [];
     let _voteRate = 0;
-    const epochData = JSON.parse(validator?.epoch_credits ? validator.epoch_credits : '[]');
 
-    if (epochData.length > 0) {
-        const result = epochData.find(subArray => subArray[0] === epoch);
-        const resultIndex = epochData.findIndex(subArray => subArray[0] === epoch);
-        if (resultIndex >= 1) {
-            const previous = epochData[resultIndex - 1];
-            const tmpData = result[1] - previous[1];
-            _voteRate = Number(tmpData);
-        }
-    }
+
+    // Фактично відправлені голоси
+    const epochCredits = validatorCredits.find(([_epoch]) => _epoch === epoch);
+    const actualVotes = epochCredits ? epochCredits[1] : 0;
+
+    // Отримуємо дані для розрахунку очікуваних голосів
+    const activatedStake = validator.activated_stake;
+    const expectedVotes = scheduleSlots.length || 0;
+    const slotsInEpoch = settingsData.slot_in_epoch;
+
+    const totalNetworkStakeSOL = totalStakeData.total_network_stake_sol;
+    const validatorCount = totalStakeData.validator_count;
+
+    const stakeFraction = activatedStake / totalNetworkStakeSOL;
+    const approxExpectedVotes = Math.round(stakeFraction * slotsInEpoch * 0.4);
+    _voteRate = actualVotes/approxExpectedVotes;
+
+    // Виведення
+    // console.log(`Валідатор: ${validator.vote_pubkey}`);
+    // console.log(`Епоха: 848`);
+    // console.log(`Фактично відправлені голоси: ${actualVotes}`);
+    // console.log(`Очікувані голоси (з leader schedule): ${expectedVotes}`);
+    // console.log(`Очікувані голоси (приблизно): ${approxExpectedVotes}`);
+    // console.log(`VoteRate Calc: ${_voteRate}`);
 
     useEffect(() => {
         if (prevVoteRate !== _voteRate) {
@@ -38,12 +53,11 @@ export default function ValidatorRate({ validator, epoch }) {
         }
     }, [_voteRate, prevVoteRate]);
 
+
+
     return (
         <span className={`transition-colors duration-300 ${colorClass}`}>
-      {_voteRate.toLocaleString('en-US', {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0
-      })}
+        {_voteRate}
     </span>
     );
 }
