@@ -18,6 +18,7 @@ import { Link } from "@inertiajs/react";
 import { toast } from 'react-toastify';
 
 export default function ValidatorName({validator, align = 'left'}) {
+console.log(validator);    
     const copyToClipboard = async (text: string) => {
         try {
             await navigator.clipboard.writeText(text);

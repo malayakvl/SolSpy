@@ -33,9 +33,8 @@ class ValidatorController extends Controller
             $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
         }
         
-        $validatorsData = $query
-            ->where('data.validators.id', '>=', '19566');
-            
+        $validatorsData = $query;
+        
         // Apply filter based on filterType
         if ($filterType === 'highlight') {
             $validatorsData = $validatorsData->where('data.validators.is_highlighted', true);
@@ -43,12 +42,14 @@ class ValidatorController extends Controller
             $validatorsData = $validatorsData->where('data.validators.is_top', true);
         }
         
+        // Add the hack to filter validators starting from ID 19566
+        $validatorsData = $validatorsData->where('data.validators.id', '>=', '19566');
+        
         $validatorsData = $validatorsData
             ->orderBy('data.validators.id')
             ->limit(10)->offset($offset)->get();
         // Calculate total count based on filter
-        $totalCountQuery = DB::table('data.validators')
-            ->where('data.validators.id', '>=', '19566');
+        $totalCountQuery = DB::table('data.validators');
             
         // Apply same filter for count
         if ($filterType === 'highlight') {
@@ -56,6 +57,9 @@ class ValidatorController extends Controller
         } elseif ($filterType === 'top') {
             $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
         }
+        
+        // Add the hack to filter validators starting from ID 19566 for count as well
+        $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
         
         $filteredTotalCount = $totalCountQuery->count();
         
@@ -72,14 +76,46 @@ class ValidatorController extends Controller
             $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
             return $validator;
         });
+        $totalStakeQuery = "
+            SELECT COALESCE(SUM(activated_stake) / 1000000000.0, 0) as total_network_stake_sol,
+                COUNT(*) as validator_count,
+                COUNT(activated_stake) as stake_count
+            FROM data.validators
+            WHERE activated_stake IS NOT NULL
+                AND epoch_credits IS NOT NULL
+        ";    
+        $totalStake = DB::select($totalStakeQuery)[0];
 
-        return Inertia::render('Validators/Admin/Index', [
-            'validatorsData' => $results,
-            'settingsData' => Settings::first(),
-            'totalCount' => $filteredTotalCount,
-            'currentPage' => $page,
-            'filterType' => $filterType
-        ]);
+        //getting top validators
+        $topValidators = DB::table('data.validators')
+            ->where('data.validators.is_top', true)
+            ->orderBy('data.validators.activated_stake', 'DESC')
+            ->limit(10)
+            ->get();
+
+        if (!$request->user()) {
+            return Inertia::render('Validators/Index', [
+                'validatorsData' => $results,
+                'settingsData' => Settings::first(),
+                'totalCount' => $filteredTotalCount,
+                'currentPage' => $page,
+                'filterType' => $filterType,
+                'totalStakeData' => $totalStake,
+                'topValidatorsData' => $topValidators
+            ]);
+
+
+        } else {
+            return Inertia::render('Validators/Admin/Index', [
+                'validatorsData' => $results,
+                'settingsData' => Settings::first(),
+                'totalCount' => $filteredTotalCount,
+                'currentPage' => $page,
+                'filterType' => $filterType,
+                'totalStakeData' => $totalStake,
+                'topValidatorsData' => $topValidators
+            ]);
+        }
     }
 
     public function timeoutData(Request $request)
@@ -118,7 +154,7 @@ class ValidatorController extends Controller
             'city' => 'data.validators.city',
             'asn' => 'data.validators.autonomous_system_number',
             'ip' => 'data.validators.ip',
-            'jiito_score' => 'data.validators.jito_commission'
+            'jito_score' => 'data.validators.jito_commission'
         ];
 
         // Get the actual database column name
@@ -145,8 +181,6 @@ class ValidatorController extends Controller
             $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
         }
         
-        $query->where('data.validators.id', '>=', '19566');
-        
         // Apply search filter if provided
         if (!empty($searchTerm)) {
             $query = $query->where('data.validators.name', 'ILIKE', '%' . $searchTerm . '%');
@@ -166,15 +200,15 @@ class ValidatorController extends Controller
             $query->orderBy('data.validators.id', $sortDirection);
         }else {
             $query->orderBy($dbSortColumn, $actualSortDirection ?? $sortDirection);
-        }          
+        }  
+        $query->where('data.validators.id', '>=', '19566');       
         $validatorsData = $query
             // ->orderBy($dbSortColumn, $actualSortDirection ?? $sortDirection)
             ->limit($limit)->offset($offset)->get();
 
         // Calculate total count with same filter
-        $totalCountQuery = DB::table('data.validators')
-            ->where('data.validators.id', '>=', '19566');
-            
+        $totalCountQuery = DB::table('data.validators');
+        
         // Apply search filter if provided
         if (!empty($searchTerm)) {
             $totalCountQuery = $totalCountQuery->where('data.validators.name', 'ILIKE', '%' . $searchTerm . '%');
@@ -186,6 +220,10 @@ class ValidatorController extends Controller
         } elseif ($filterType === 'top') {
             $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
         }
+        
+        // Add the hack to filter validators starting from ID 19566 for count as well
+        $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
+        
         $totalCount = $totalCountQuery->count();
 
         $validatorsAllData = DB::table('data.validators')
@@ -278,10 +316,20 @@ class ValidatorController extends Controller
     }
 
 
-    public function view($voteKey, Request $request): Response {
+    public function view($voteKey, Request $request): Response
+    {
         $userId = $request->user() ? $request->user()->id : null;
+        $settingsData = Settings::first();
+        $epoch = $settingsData->epoch ?? null;
+        
         $query = DB::table('data.validators')
-            ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
+            ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name')
+            ->leftJoin('data.leader_schedule', function($join) use ($epoch) {
+                $join->on('data.leader_schedule.node_pubkey', '=', 'data.validators.node_pubkey')
+                     ->when($epoch, function($query, $epoch) {
+                         return $query->where('data.leader_schedule.epoch', '=', $epoch);
+                     });
+            });
             
         // Only join favorites table if user is authenticated
         if ($userId) {
@@ -289,9 +337,9 @@ class ValidatorController extends Controller
                 $join->on('data.validators.id', '=', 'data.favorites.validator_id')
                      ->where('data.favorites.user_id', '=', $userId);
             })
-            ->select('data.validators.*', 'data.favorites.id as favorite_id', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
+            ->select('data.validators.*', 'data.leader_schedule.slots as slots', 'data.favorites.id as favorite_id', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
         } else {
-            $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
+            $query->select('data.validators.*', 'data.leader_schedule.slots as slots', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
         }
         
         $validatorData = $query
@@ -301,10 +349,20 @@ class ValidatorController extends Controller
             ->orderBy('data.validators.id')
             ->first();
 
+        $totalStakeQuery = "
+            SELECT COALESCE(SUM(activated_stake) / 1000000000.0, 0) as total_network_stake_sol,
+                COUNT(*) as validator_count,
+                COUNT(activated_stake) as stake_count
+            FROM data.validators
+            WHERE activated_stake IS NOT NULL
+                AND epoch_credits IS NOT NULL
+        ";    
+        $totalStake = DB::select($totalStakeQuery)[0];
 
         return Inertia::render('Validators/View', [
             'validatorData' => $validatorData,
-            'settingsData' => Settings::first()
+            'settingsData' => $settingsData,
+            'totalStakeData' => $totalStake,
         ]);
     }
 
@@ -321,6 +379,15 @@ class ValidatorController extends Controller
         $userId = $request->user() ? $request->user()->id : null;
         $sortColumn = $request->get('sortColumn', 'id');
         $sortDirection = $request->get('sortDirection', 'ASC');
+        $totalStakeQuery = "
+            SELECT COALESCE(SUM(activated_stake) / 1000000000.0, 0) as total_network_stake_sol,
+                COUNT(*) as validator_count,
+                COUNT(activated_stake) as stake_count
+            FROM data.validators
+            WHERE activated_stake IS NOT NULL
+                AND epoch_credits IS NOT NULL
+        ";    
+        $totalStake = DB::select($totalStakeQuery)[0];
         
         $query = DB::table('data.validators')
             ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
@@ -336,8 +403,7 @@ class ValidatorController extends Controller
             $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
         }
         
-        $validatorsData = $query
-            ->where('data.validators.id', '>=', '19566');
+        $validatorsData = $query;
             
         // Apply search filter if provided
         if (!empty($searchTerm)) {
@@ -350,6 +416,9 @@ class ValidatorController extends Controller
         } elseif ($filterType === 'top') {
             $validatorsData = $validatorsData->where('data.validators.is_top', true);
         }
+        
+        // Add the hack to filter validators starting from ID 19566
+        $validatorsData = $validatorsData->where('data.validators.id', '>=', '19566');
        
         if ($sortColumn === 'uptime') {
             // dd($sortDirection);exit;
@@ -361,9 +430,8 @@ class ValidatorController extends Controller
             ->limit(10)->offset($offset)->get();
 
         // Calculate total count based on filter
-        $totalCountQuery = DB::table('data.validators')
-            ->where('data.validators.id', '>=', '19566');
-            
+        $totalCountQuery = DB::table('data.validators');
+        
         // Apply search filter if provided
         if (!empty($searchTerm)) {
             $totalCountQuery = $totalCountQuery->where('data.validators.name', 'ILIKE', '%' . $searchTerm . '%');
@@ -375,6 +443,9 @@ class ValidatorController extends Controller
         } elseif ($filterType === 'top') {
             $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
         }
+        
+        // Add the hack to filter validators starting from ID 19566 for count as well
+        $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
         
         $filteredTotalCount = $totalCountQuery->count();
         
@@ -397,7 +468,8 @@ class ValidatorController extends Controller
             'settingsData' => Settings::first(),
             'totalCount' => $filteredTotalCount,
             'currentPage' => $page,
-            'filterType' => $filterType
+            'filterType' => $filterType,
+            'totalStakeData' => $totalStake,
         ]);
     }
 

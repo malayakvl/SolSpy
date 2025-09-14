@@ -52,7 +52,6 @@ class fechValidators extends Command
         // Выполнение запроса
         $response = curl_exec($ch);
         
-// dd($response);exit;
         // Проверка на ошибки
         if (curl_errno($ch)) {
             echo 'cURL Error: ' . curl_error($ch);
@@ -68,7 +67,8 @@ class fechValidators extends Command
                 // Log the response structure
                 echo "Processing validators. Current count: " . (isset($jsonData['result']['current']) ? count($jsonData['result']['current']) : 0) . "\n";
                 echo "Delinquent count: " . (isset($jsonData['result']['delinquent']) ? count($jsonData['result']['delinquent']) : 0) . "\n";
-                
+                // Remove the exit statement that was preventing cyclic execution
+                // exit;                
                 // Pass the entire response to the database function
                 $query = "SELECT data.update_validators_common('$response'::jsonb);";
                 DB::statement($query);

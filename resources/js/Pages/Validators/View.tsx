@@ -74,13 +74,15 @@ const Utils = {
 };
 
 
-export default function Index({ validatorData, settingsData }) {
+export default function Index({ validatorData, settingsData, totalStakeData }) {
     const appLang = useSelector(appLangSelector);
     const msg = new Lang({
         messages: lngVaidators,
         locale: appLang,
     });
     const epoch = useSelector(appEpochSelector);
+    const validatorCredits = JSON.parse(validatorData.epoch_credits);
+    const scheduleSlots = JSON.parse(validatorData.slots);
     const dbData = JSON.parse(validatorData.epoch_credits_history);
     const labelEpoch = dbData.map(function (item) {
         return item[0]
@@ -133,7 +135,7 @@ export default function Index({ validatorData, settingsData }) {
             }
             
             const response = await axios.get(url);
-            // console.log(response.data.validatorsData)
+            console.log(response.data.validatorsData)
             setData(response.data.validatorsData);
             
         } catch (error) {
@@ -141,23 +143,97 @@ export default function Index({ validatorData, settingsData }) {
             // Reset sort click state even if there's an error
         }
     };
+    
 
-    useEffect(() => {
-        // const intervalId = setInterval(fetchData(currentPage), 15000);
+    // Фактично відправлені голоси
+    // const epochCredits = validatorCredits.find(([epoch]) => epoch === 848);
+    // const actualVotes = epochCredits ? epochCredits[1] : 0;
+
+    // // Отримуємо дані для розрахунку очікуваних голосів
+    // const activatedStake = validatorData.activated_stake;
+    // const expectedVotes = scheduleSlots.length || 0;
+    // const slotsInEpoch = settingsData.slot_in_epoch;
+
+    // const totalNetworkStakeSOL = totalStakeData.total_network_stake_sol;
+    // const validatorCount = totalStakeData.validator_count;
+
+    // const stakeFraction = activatedStake / totalNetworkStakeSOL;
+    // const approxExpectedVotes = Math.round(stakeFraction * slotsInEpoch * 0.4);
+
+    // Виведення
+    // console.log(`Валідатор: ${validatorData.vote_pubkey}`);
+    // console.log(`Епоха: 848`);
+    // console.log(`Фактично відправлені голоси: ${actualVotes}`);
+    // console.log(`Очікувані голоси (з leader schedule): ${expectedVotes}`);
+    // console.log(`Очікувані голоси (приблизно): ${approxExpectedVotes}`);
+    // console.log(`VoteRate: ${actualVotes/approxExpectedVotes}`);
+    // console.log(`Skip rate: ${expectedVotes ? ((1 - actualVotes / expectedVotes) * 100).toFixed(2) : 'N/A'}%`);
+
+    // Альтернатива: приблизний розрахунок
+    // const epochInfo = await connection.getEpochInfo();
+    // const totalStake = 50_000_000_000; // Приблизна оцінка, замініть на точне значення
+    // const slotsInEpoch = settingsData.slotsInEpoch; // 432 000
+    // const stakeFraction = activatedStake / totalStake;
+    // const approxExpectedVotes = Math.round(stakeFraction * slotsInEpoch * 0.4);
+
+// const voteAccounts = await connection.getVoteAccounts({ votePubkey, epoch: 848 });
+//   const account = voteAccounts.current[0] || voteAccounts.delinquent[0];
+//   if (!account) throw new Error('Валідатор не знайдено');
+
+//   // Фактично відправлені голоси
+//   const epochCredits = account.epochCredits.find(([epoch]) => epoch === 848);
+//   const actualVotes = epochCredits ? epochCredits[1] : 0;
+
+//   // Отримуємо загальний стейк мережі
+//   const epochInfo = await connection.getEpochInfo();
+//   const totalStake = epochInfo.totalStake || 50_000_000_000; // Приблизна оцінка, якщо totalStake недоступний
+//   const activatedStake = account.activatedStake;
+//   const slotsInEpoch = epochInfo.slotsInEpoch; // 432 000 з вашої відповіді
+
+//   // Очікувані голоси (приблизна оцінка)
+//   const stakeFraction = activatedStake / totalStake;
+//   const expectedVotes = Math.round(stakeFraction * slotsInEpoch * 0.4);
+
+//   // Виведення
+//   console.log(`Епоха: ${epochInfo.epoch}`);
+//   console.log(`Фактично відправлені голоси: ${actualVotes}`);
+//   console.log(`Очікувані голоси: ${expectedVotes}`);
+//   console.log(`Skip rate: ${(1 - actualVotes / expectedVotes).toFixed(4) * 100}%`);
+
+
+    // const totalStake = epochInfo.totalStake;
+
+//     async function getVotes() {
+//   const voteAccounts = await connection.getVoteAccounts({ votePubkey });
+//   const account = voteAccounts.current[0]; // Або delinquent, якщо відстає
+//   const epochCredits = account.epochCredits[account.epochCredits.length - 1]; // Останній: [epoch, credits, prev]
+//   const actualVotes = epochCredits[1]; // Фактично відправлені
+
+//   const epochInfo = await connection.getEpochInfo();
+//   const totalStake = epochInfo.totalStake;
+//   const activatedStake = account.activatedStake;
+//   const slotsInEpoch = epochInfo.slotsInEpoch;
+//   const expectedVotes = Math.round((activatedStake / totalStake) * slotsInEpoch * 0.4); // Приблизна ймовірність
+
+//   console.log(`Actual votes: ${actualVotes}, Expected: ${expectedVotes}`);
+// }
+
+    // useEffect(() => {
+    //     // const intervalId = setInterval(fetchData(currentPage), 15000);
         
-        const intervalId = setInterval(() => {
-            // Get current page from URL to ensure we're using the latest page
-            const urlParams = new URLSearchParams(window.location.search);
-            const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
-            fetchData();
-        }, parseInt(settingsData.update_interval)*1000);
+    //     const intervalId = setInterval(() => {
+    //         // Get current page from URL to ensure we're using the latest page
+    //         const urlParams = new URLSearchParams(window.location.search);
+    //         const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
+    //         fetchData();
+    //     }, parseInt(settingsData.update_interval)*1000);
         
         
-        return () => {
-            clearInterval(intervalId);
-            window.removeEventListener('filterChanged', handleFilterChange);
-        };
-    }, []);
+    //     return () => {
+    //         clearInterval(intervalId);
+    //         window.removeEventListener('filterChanged', handleFilterChange);
+    //     };
+    // }, []);
 
     return (
         <AuthenticatedLayout header={<Head />}>
@@ -223,14 +299,14 @@ export default function Index({ validatorData, settingsData }) {
                                             <span className="font-medium mr-2">Activated stake:</span>
                                             <ValidatorActivatedStake validator={validatorData} epoch={epoch} />
                                         </li>
-                                        <li className="flex items-start">
+                                        {/* <li className="flex items-start">
                                             <span className="font-medium mr-2">Identity:</span>
                                             <span className="break-all">{validatorData.node_pubkey}</span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">Vote Key:</span>
                                             <span className="break-all">{validatorData.vote_pubkey}</span>
-                                        </li>
+                                        </li> */}
                                          <li className="flex items-start">
                                             <span className="font-medium mr-2">Uptime:</span>
                                             <span className="break-all">
@@ -249,11 +325,14 @@ export default function Index({ validatorData, settingsData }) {
                                         </li>
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">Vote Credits:</span>
-                                            <span className="break-all"><ValidatorRate epoch={epoch} validator={validatorData} /></span>
+                                            <span className="break-all"><ValidatorCredits epoch={epoch} validator={validatorData} /></span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">Vote Rate:</span>
-                                            <span className="break-all"></span>
+                                            <span className="break-all">
+                                                <ValidatorRate epoch={epoch} validator={validatorData} settingsData={settingsData} totalStakeData={totalStakeData}  />
+                                                {/* {actualVotes/approxExpectedVotes} */}
+                                            </span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">Jito Score:</span>
