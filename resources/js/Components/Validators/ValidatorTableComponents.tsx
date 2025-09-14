@@ -648,7 +648,6 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
 
 // Shared function to render column cells
 export const renderColumnCell = (columnName, validator, epoch, settingsData, totalStakeData, validators = []) => {
-    console.log(`Rendering cell for ${columnName}:`, validator); // Add this line to debug
     switch(columnName) {
         case "Spy Rank": 
             return (

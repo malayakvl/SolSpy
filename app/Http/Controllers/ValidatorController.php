@@ -239,7 +239,6 @@ class ValidatorController extends Controller
             $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
             return $validator;
         });
-                
         return response()->json([
             'validatorsData' => $results,
             'totalCount' => $totalCount,

@@ -31,9 +31,9 @@ import { userSelector } from '../../Redux/Users/selectors';
 import Modal from './Partials/ColumnsModal';
 import { CarouselProvider, Slider, Slide, ButtonBack, ButtonNext, DotGroup } from 'pure-react-carousel';
 import 'pure-react-carousel/dist/react-carousel.es.css';
-// import ValidatorFilters from './Filters';
 import ValidatorPagination from './Pagination';
 import { renderColumnHeader, renderColumnCell } from '../../Components/Validators/ValidatorTableComponents';
+import ValidatorCard from '../../Components/Validators/ValidatorCard'; 
 
 export default function Index(validatorsData) {
     const dispatch = useDispatch();
@@ -281,7 +281,6 @@ export default function Index(validatorsData) {
 
     // Helper function to render column cell by name
     const renderColumnCellLocal = (columnName, validator, index) => {
-        console.log(`Rendering column ${columnName} for validator:`, validator); // Add this line to debug
         return renderColumnCell(columnName, validator, epoch, validatorsData.settingsData, validatorsData.totalStakeData, data);
     };
 
@@ -373,41 +372,23 @@ export default function Index(validatorsData) {
                         <div className="flex items-start mb-6 w-1/2 bg-blue-300 mr-3" style={{ height: '200px' }}>
                             <CarouselProvider
                                 naturalSlideWidth={100}
-                                naturalSlideHeight={125}
+                                naturalSlideHeight={75}
                                 totalSlides={3}
                                 className="w-full h-full"
                             >
                                 <Slider className="h-full">
-                                    <Slide index={0} className="h-full flex items-center justify-center bg-gray-100">
-                                        <div className="text-center">
-                                            <h3 className="text-xl font-bold">Slide 1</h3>
-                                            <p>Content for the first slide</p>
-                                        </div>
-                                    </Slide>
-                                    <Slide index={1} className="h-full flex items-center justify-center bg-gray-200">
-                                        <div className="text-center">
-                                            <h3 className="text-xl font-bold">Slide 2</h3>
-                                            <p>Content for the second slide</p>
-                                        </div>
-                                    </Slide>
-                                    <Slide index={2} className="h-full flex items-center justify-center bg-gray-300">
-                                        <div className="text-center">
-                                            <h3 className="text-xl font-bold">Slide 3</h3>
-                                            <p>Content for the third slide</p>
-                                        </div>
-                                    </Slide>
-                                    <Slide index={3} className="h-full flex items-center justify-center bg-gray-300">
-                                        <div className="text-center">
-                                            <h3 className="text-xl font-bold">Slide 3</h3>
-                                            <p>Content for the third slide</p>
-                                        </div>
-                                    </Slide>
-                                    <Slide index={4} className="h-full flex items-center justify-center bg-gray-300">
-                                        <div className="text-center">
-                                            <h3 className="text-xl font-bold">Slide 3</h3>
-                                            <p>Content for the third slide</p>
-                                        </div>
-                                    </Slide>
+                                    {validatorsData.topValidatorsData.map(validator => (
+                                        <Slide index={validator.index}>
+                                            <ValidatorCard
+                                                validator={validator}
+                                                epoch={epoch}
+                                                settingsData={validatorsData.settingsData}
+                                                totalStakeData={validatorsData.totalStakeData}
+                                                validators={validatorsData.validators}
+                                            />
+                                        </Slide>
+                                    ))}
+                                    
                                 </Slider>
                                 <div className="flex justify-between items-center mt-2">
                                     <ButtonBack className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
@@ -431,16 +412,6 @@ export default function Index(validatorsData) {
                         </div>
                         
                     </div>
-                    <div className="flex justify-between items-start mb-6">
-                        <div className="flex-1">
-                            {/* <ValidatorFilters 
-                                filterType={filterTypeDataSelector}
-                                onFilterChange={handleFilterChange}
-                                isAdmin={isAdmin}
-                                onGearClick={toggleModal}
-                            /> */}
-                        </div>
-                    </div>
                     
                     <div className="mt-6">
                         <div className="overflow-x-auto">
@@ -461,9 +432,8 @@ export default function Index(validatorsData) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                {console.log('Rendering data:', data) /* Add this line to debug */}
                                 {data.map((validator, index) => (
-                                    <tr key={validator.id}>
+                                    <tr key={validator.id} className={validator.is_highlighted ? 'bg-blue-100' : ''}>
                                         <td className="text-left">
                                             <div className="pl-[10px]">
                                                 <input 
