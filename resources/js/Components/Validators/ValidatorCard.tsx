@@ -62,8 +62,8 @@ export default function ValidatorCard({validator, epoch, settingsData, totalStak
                         <FontAwesomeIcon icon={faHouse} className="mr-[2px]" />
                         <FontAwesomeIcon icon={faCircleRadiation} className="mr-[2px]" />
                     </div>
-                    <div>{validator.jito_commission !== undefined ? `${(validator.jito_commission / 10)}%` : 'N/A'}</div>
-                    <div>{validator.commission !== undefined ? `${(validator.commission * 100).toFixed(2)}%` : 'N/A'}</div>
+                    <div>{validator.jito_commission !== undefined ? `${validator.jito_commission}%` : 'N/A'}</div>
+                    <div>{validator.commission !== undefined ? `${validator.commission}%` : 'N/A'}</div>
                     <div><ValidatorUptime validator={validator} /></div>
                     <div>{validator.version || validator.software_version || 'N/A'}</div>
                     <div>SPDF</div>

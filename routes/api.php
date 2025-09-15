@@ -14,6 +14,8 @@ Route::get('/fetch-by-id-validators/{page?}', [ValidatorController::class, 'fetc
 Route::middleware('api')->group(function () {
     Route::get('/fetch-validators', [ValidatorController::class, 'timeoutData'])->name('validators.timeoutData');
     Route::get('/fetch-settings', [SettingsController::class, 'getDataWithHeader'])->name('settings.get');
+    Route::get('/validator-metrics', [ValidatorController::class, 'getValidatorMetrics'])->name('validators.metrics');
+    Route::get('/historical-metrics', [ValidatorController::class, 'getHistoricalMetrics'])->name('validators.historicalMetrics');
     Route::post('/settings/update', [SettingsController::class, 'update'])->name('settings.update');
 
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -26,4 +28,3 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::post('/api/add-favorite', [ValidatorController::class, 'addFavorite'])->name('api.validators.addFavorite');
     Route::post('/api/ban-validator', [ValidatorController::class, 'banValidator'])->name('api.validators.banValidator');
 });
-

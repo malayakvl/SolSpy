@@ -322,7 +322,7 @@ export default function Index(validatorsData) {
             }
             
             const response = await axios.get(url);
-            console.log('Fetched data:', response.data); // Add this line to debug
+            // console.log('Fetched data:', response.data); // Add this line to debug
             setData(response.data.validatorsData);
             setTotalRecords(response.data.totalCount);
             

@@ -1,78 +1,101 @@
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout';
-import { Head, usePage } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import Lang from 'lang.js';
 import lngVaidators from '../../Lang/Validators/translation';
 import { useSelector } from 'react-redux';
 import { appEpochSelector, appLangSelector } from '../../Redux/Layout/selectors';
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faBan,
     faCheck,
     faStar
 } from '@fortawesome/free-solid-svg-icons';
 import ValidatorCredits from "./Partials/ValidatorCredits";
 import ValidatorRate from "./Partials/ValidatorRate";
-import ValidatorActions from "./Partials/ValidatorActions";
-import ValidatorName from "./Partials/ValidatorName";
 import ValidatorActivatedStake from "./Partials/ValidatorActivatedStake";
 import ValidatorUptime from "./Partials/ValidatorUptime";
-import ValidatorScore from "./Partials/ValidatorScore";
+import ValidatorSFDP from "./Partials/ValidatorSFDP";
 import axios from 'axios';
-import ValidatorSpyRank from "./Partials/ValidatorSpyRank";
-// import Utils from "Utils.ts";
-// import Map, { GeolocateControl } from 'react-map-gl';
-// import 'mapbox-gl/dist/mapbox-gl.css';
 import MapLayer from './Map';
-import { faker } from '@faker-js/faker';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
   Title,
   Tooltip,
   Legend,
+  PointElement,
+  LineElement,
 } from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2';
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  PointElement,
+  LineElement
 );
 
-export const options = {
-  responsive: true,
-  plugins: {
-    legend: {
-      position: 'top' as const,
-    },
-    title: {
-      display: true,
-      text: 'Chart.js Bar Chart',
-    },
-  },
-};
-
-// Simple implementation of Utils functions
-const Utils = {
-  months: ({ count }: { count: number }) => {
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    return months.slice(0, count);
-  },
-  rand: (min: number, max: number) => {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  },
-  CHART_COLORS: {
-    red: 'rgba(255, 99, 132, 0.5)',
-    blue: 'rgba(53, 162, 235, 0.5)',
+// Error boundary component for charts
+class ChartErrorBoundary extends React.Component<{children: any}, {hasError: boolean}> {
+  constructor(props: {children: any}) {
+    super(props);
+    this.state = { hasError: false };
   }
-};
 
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error('Chart rendering error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <div className="text-red-500">Error loading chart component</div>;
+    }
+
+    return this.props.children;
+  }
+}
+
+// Updated function to fetch validator metrics from the database via API
+async function fetchValidatorMetrics(votePubkey, validatorIdentityPubkey) {
+  try {
+    const response = await axios.get('/api/validator-metrics', {
+      params: {
+        votePubkey: votePubkey,
+        validatorIdentityPubkey: validatorIdentityPubkey
+      }
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching validator metrics:", error);
+    return null;
+  }
+}
+
+// New function to fetch historical metrics
+async function fetchHistoricalMetrics(votePubkey, validatorIdentityPubkey) {
+  try {
+    const response = await axios.get('/api/historical-metrics', {
+      params: {
+        votePubkey: votePubkey,
+        validatorIdentityPubkey: validatorIdentityPubkey
+      }
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching historical metrics:", error);
+    return null;
+  }
+}
 
 export default function Index({ validatorData, settingsData, totalStakeData }) {
     const appLang = useSelector(appLangSelector);
@@ -88,6 +111,10 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
         return item[0]
     });
     const [data, setData] = useState<any>(validatorData);
+    const [historicalData, setHistoricalData] = useState<any>(null);
+    const votePubkey = validatorData.vote_pubkey;
+    const validatorIdentityPubkey = validatorData.node_pubkey;
+    const [chartTab, setChartTab] = useState<string>('epoch_credits');
 
     const formatSOL = (lamports) => {
         // Конвертация лампорта в SOL
@@ -102,40 +129,146 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
         return (item[1]/1000000)
     });
 
-    const labels = Utils.months({count: 7});
     const dataEpoch = {
             labels: labelEpoch,
             datasets: [{
                 label: 'Epoch',
                 data: echochValues,
-                backgroundColor: [
-                    'rgba(153, 102, 255, 0.2)'
-                ],
-                borderColor: [
-                    'rgba(153, 102, 255, 1)'
-                ],
-                borderWidth: 1
+                backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1,
+                pointBackgroundColor: 'rgba(153, 102, 255, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(153, 102, 255, 1)',
             }]
         };
+    const optionsLine = {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top' as const,
+        },
+        title: {
+          display: true,
+          text: 'Epoch Credits History',
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+        },
+      },
+      elements: {
+        point: {
+          radius: 3,
+          hoverRadius: 6,
+        },
+        line: {
+          tension: 0.4,
+        }
+      }
+    };
+
+    // Options for the self-stake history chart
+    const optionsSelfStake = {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top' as const,
+        },
+        title: {
+          display: true,
+          text: 'Self-Stake History (Epochs 750-849)',
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: false,
+          title: {
+            display: true,
+            text: 'Self-Stake (SOL)',
+          },
+        },
+        x: {
+          title: {
+            display: true,
+            text: 'Epoch',
+          },
+          // For better readability with many data points
+          ticks: {
+            autoSkip: true,
+            maxTicksLimit: 20, // Show at most 20 tick labels
+          },
+        },
+      },
+      elements: {
+        point: {
+          radius: 2, // Smaller points for better visualization with many data points
+          hoverRadius: 6,
+        },
+        line: {
+          tension: 0.4,
+        }
+      }
+    };
+
+    useEffect(() => {
+        // Only run this in the browser, not during server-side rendering
+        if (typeof window !== "undefined") {
+            fetchValidatorMetrics(votePubkey, validatorIdentityPubkey)
+                .then(metrics => {
+                    // The SFDP status is now displayed directly in the UI using the ValidatorSFDP component
+                })
+                .catch(error => {
+                    console.error("Error fetching validator metrics:", error);
+                });
+                
+            // Fetch historical metrics for the chart
+            fetchHistoricalMetrics(votePubkey, validatorIdentityPubkey)
+                .then(data => {
+                    setHistoricalData(data);
+                })
+                .catch(error => {
+                    console.error("Error fetching historical metrics:", error);
+                });
+        }
+    }, [votePubkey, validatorIdentityPubkey]); // Re-run when these values change
+
+    // Prepare data for the self-stake history chart
+    const selfStakeChartData = () => {
+        if (!historicalData || !historicalData.selfStake || !historicalData.selfStake.history) {
+            return null;
+        }
+        
+        // Sort epochs numerically (not alphabetically)
+        const epochs = Object.keys(historicalData.selfStake.history)
+            .map(Number) // Convert to numbers
+            .sort((a, b) => a - b); // Sort numerically
+        
+        // Map stake values in the correct order
+        const stakeValues = epochs.map(epoch => historicalData.selfStake.history[epoch]);
+        
+        return {
+            labels: epochs,
+            datasets: [
+                {
+                    label: 'Self-Stake (SOL)',
+                    data: stakeValues,
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }
+            ]
+        };
+    };
 
     const fetchData = async () => {
-        // Get filter value and other parameters from current URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const currentFilterType = urlParams.get('filterType') || 'all';
-        const searchParam = urlParams.get('search') || '';
-        const sortColumn = urlParams.get('sortColumn') || 'id';
-        const sortDirection = urlParams.get('sortDirection') || 'ASC';
-        const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
-        
         try {
             // Build URL with all parameters
             let url = `/api/fetch-validators`;
-            if (searchParam) {
-                url += `&search=${encodeURIComponent(searchParam)}`;
-            }
             
             const response = await axios.get(url);
-            console.log(response.data.validatorsData)
             setData(response.data.validatorsData);
             
         } catch (error) {
@@ -143,97 +276,6 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
             // Reset sort click state even if there's an error
         }
     };
-    
-
-    // Фактично відправлені голоси
-    // const epochCredits = validatorCredits.find(([epoch]) => epoch === 848);
-    // const actualVotes = epochCredits ? epochCredits[1] : 0;
-
-    // // Отримуємо дані для розрахунку очікуваних голосів
-    // const activatedStake = validatorData.activated_stake;
-    // const expectedVotes = scheduleSlots.length || 0;
-    // const slotsInEpoch = settingsData.slot_in_epoch;
-
-    // const totalNetworkStakeSOL = totalStakeData.total_network_stake_sol;
-    // const validatorCount = totalStakeData.validator_count;
-
-    // const stakeFraction = activatedStake / totalNetworkStakeSOL;
-    // const approxExpectedVotes = Math.round(stakeFraction * slotsInEpoch * 0.4);
-
-    // Виведення
-    // console.log(`Валідатор: ${validatorData.vote_pubkey}`);
-    // console.log(`Епоха: 848`);
-    // console.log(`Фактично відправлені голоси: ${actualVotes}`);
-    // console.log(`Очікувані голоси (з leader schedule): ${expectedVotes}`);
-    // console.log(`Очікувані голоси (приблизно): ${approxExpectedVotes}`);
-    // console.log(`VoteRate: ${actualVotes/approxExpectedVotes}`);
-    // console.log(`Skip rate: ${expectedVotes ? ((1 - actualVotes / expectedVotes) * 100).toFixed(2) : 'N/A'}%`);
-
-    // Альтернатива: приблизний розрахунок
-    // const epochInfo = await connection.getEpochInfo();
-    // const totalStake = 50_000_000_000; // Приблизна оцінка, замініть на точне значення
-    // const slotsInEpoch = settingsData.slotsInEpoch; // 432 000
-    // const stakeFraction = activatedStake / totalStake;
-    // const approxExpectedVotes = Math.round(stakeFraction * slotsInEpoch * 0.4);
-
-// const voteAccounts = await connection.getVoteAccounts({ votePubkey, epoch: 848 });
-//   const account = voteAccounts.current[0] || voteAccounts.delinquent[0];
-//   if (!account) throw new Error('Валідатор не знайдено');
-
-//   // Фактично відправлені голоси
-//   const epochCredits = account.epochCredits.find(([epoch]) => epoch === 848);
-//   const actualVotes = epochCredits ? epochCredits[1] : 0;
-
-//   // Отримуємо загальний стейк мережі
-//   const epochInfo = await connection.getEpochInfo();
-//   const totalStake = epochInfo.totalStake || 50_000_000_000; // Приблизна оцінка, якщо totalStake недоступний
-//   const activatedStake = account.activatedStake;
-//   const slotsInEpoch = epochInfo.slotsInEpoch; // 432 000 з вашої відповіді
-
-//   // Очікувані голоси (приблизна оцінка)
-//   const stakeFraction = activatedStake / totalStake;
-//   const expectedVotes = Math.round(stakeFraction * slotsInEpoch * 0.4);
-
-//   // Виведення
-//   console.log(`Епоха: ${epochInfo.epoch}`);
-//   console.log(`Фактично відправлені голоси: ${actualVotes}`);
-//   console.log(`Очікувані голоси: ${expectedVotes}`);
-//   console.log(`Skip rate: ${(1 - actualVotes / expectedVotes).toFixed(4) * 100}%`);
-
-
-    // const totalStake = epochInfo.totalStake;
-
-//     async function getVotes() {
-//   const voteAccounts = await connection.getVoteAccounts({ votePubkey });
-//   const account = voteAccounts.current[0]; // Або delinquent, якщо відстає
-//   const epochCredits = account.epochCredits[account.epochCredits.length - 1]; // Останній: [epoch, credits, prev]
-//   const actualVotes = epochCredits[1]; // Фактично відправлені
-
-//   const epochInfo = await connection.getEpochInfo();
-//   const totalStake = epochInfo.totalStake;
-//   const activatedStake = account.activatedStake;
-//   const slotsInEpoch = epochInfo.slotsInEpoch;
-//   const expectedVotes = Math.round((activatedStake / totalStake) * slotsInEpoch * 0.4); // Приблизна ймовірність
-
-//   console.log(`Actual votes: ${actualVotes}, Expected: ${expectedVotes}`);
-// }
-
-    // useEffect(() => {
-    //     // const intervalId = setInterval(fetchData(currentPage), 15000);
-        
-    //     const intervalId = setInterval(() => {
-    //         // Get current page from URL to ensure we're using the latest page
-    //         const urlParams = new URLSearchParams(window.location.search);
-    //         const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
-    //         fetchData();
-    //     }, parseInt(settingsData.update_interval)*1000);
-        
-        
-    //     return () => {
-    //         clearInterval(intervalId);
-    //         window.removeEventListener('filterChanged', handleFilterChange);
-    //     };
-    // }, []);
 
     return (
         <AuthenticatedLayout header={<Head />}>
@@ -299,14 +341,6 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                                             <span className="font-medium mr-2">Activated stake:</span>
                                             <ValidatorActivatedStake validator={validatorData} epoch={epoch} />
                                         </li>
-                                        {/* <li className="flex items-start">
-                                            <span className="font-medium mr-2">Identity:</span>
-                                            <span className="break-all">{validatorData.node_pubkey}</span>
-                                        </li>
-                                        <li className="flex items-start">
-                                            <span className="font-medium mr-2">Vote Key:</span>
-                                            <span className="break-all">{validatorData.vote_pubkey}</span>
-                                        </li> */}
                                          <li className="flex items-start">
                                             <span className="font-medium mr-2">Uptime:</span>
                                             <span className="break-all">
@@ -321,7 +355,9 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                                         </li>
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">SFDP Status:</span>
-                                            <span className="break-all">{validatorData.uptime}</span>
+                                            <span className="break-all">
+                                                <ValidatorSFDP validator={validatorData} epoch={epoch} />
+                                            </span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">Vote Credits:</span>
@@ -352,7 +388,7 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                                         </li>
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">Inflation Commission:</span>
-                                            <span className="break-all">{validatorData.jito_commission !== null && validatorData.jito_commission !== undefined ? `${validatorData.jito_commission/10}%` : 'N/A'}</span>
+                                            <span className="break-all">{validatorData.jito_commission !== null && validatorData.jito_commission !== undefined ? `${validatorData.jito_commission}%` : 'N/A'}</span>
                                         </li>
                                         <li>
                                             <span className="font-medium mr-2">Inflation Commission:</span>
@@ -398,13 +434,37 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                             </div>
                         </div>
                         <div className="flex mt-6">
-                            <div className="w-1/2 w-[650px] h-[500px]">
+                            <div className="w-1/2 w-[650px] h-[500px] mr-2">
                                 <MapLayer validator={validatorData} />
                             </div>
-                            <div className="w-1/2">
-                                <Bar options={options} data={dataEpoch} />
+                            <div className="w-1/2 ml-2">
+                                <ul className="flex flex-row w-full border-b border-gray-300">
+                                    <li onClick={() => setChartTab('stake')} className={`px-4 py-2 font-medium text-md cursor-pointer text-gray-500 hover:text-gray-700`}>Stake</li>
+                                    <li onClick={() => setChartTab('stake_accounts')} className="px-4 py-2 font-medium text-md cursor-pointer text-gray-500 hover:text-gray-700">Stake Accounts</li>
+                                    <li onClick={() => setChartTab('success_rate')} className="px-4 py-2 font-medium text-md cursor-pointer text-gray-500 hover:text-gray-700">Success Rate</li>
+                                    <li onClick={() => setChartTab('block_rewards')} className="px-4 py-2 font-medium text-md cursor-pointer text-gray-500 hover:text-gray-700">Block Rewards</li>
+                                    <li onClick={() => setChartTab('epoch_credits')} className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'epoch_credits' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>Epoch Credits</li>
+                                </ul>
+                                <div className={`w-full ${chartTab === 'epoch_credits' ? 'block' : 'hidden'}`}>
+                                    <ChartErrorBoundary>
+                                        <Line options={optionsLine} data={dataEpoch} />
+                                    </ChartErrorBoundary>
+                                </div>
+                                <div className={`w-full ${chartTab === 'stake_accounts' ? 'block' : 'hidden'}`}>
+                                    <ChartErrorBoundary>
+                                        {selfStakeChartData() ? (
+                                            <Line options={optionsSelfStake} data={selfStakeChartData()} />
+                                        ) : (
+                                            <div className="flex items-center justify-center h-full">
+                                                <div className="text-center">
+                                                    <div>Loading historical self-stake data...</div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </ChartErrorBoundary>
+                                </div>
                             </div>
-                        </div>  
+                        </div>
                     </div>
                     
                 </div>
