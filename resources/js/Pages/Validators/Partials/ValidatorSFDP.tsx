@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 
 
 export default function ValidatorSFDP({ validator, epoch }) {
-    const [prevVoteRate, setPrevVoteRate] = useState(0);
-    const [colorClass, setColorClass] = useState('');
+    // Initialize result
+    let isEligible = true;
+    const reasons = [];
+    const warnings = [];
 
-    // Вычисление текущего значения voteRate
-    let _voteRate = 0;
-    const epochData = JSON.parse(validator?.epoch_credits ? validator.epoch_credits : '[]');
+    // Constants for SFDP eligibility criteria
     const VOTE_CREDITS_THRESHOLD = 0.97; // 97% of cluster average
     const VOTE_CREDITS_BASELINE = 0.85; // 85% fallback
     const COMMISSION_MAX = 5; // Max commission in %
@@ -21,6 +21,9 @@ export default function ValidatorSFDP({ validator, epoch }) {
     const TESTNET_PERFORMANCE_MIN_EPOCHS = 5; // Min 5 of 10 epochs
 
     const isVersionGte = (version, minVersion) => {
+        // Handle case where version is not provided
+        if (!version) return false;
+        
         const vParts = version.split('.').map(Number);
         const minParts = minVersion.split('.').map(Number);
         for (let i = 0; i < Math.max(vParts.length, minParts.length); i++) {
@@ -32,77 +35,99 @@ export default function ValidatorSFDP({ validator, epoch }) {
         return true;
     }
 
-    // Initialize result
-    let isEligible = true;
-    const reasons = [];
-
     // 1. Vote Credits Check
-    const voteCreditsRatio = validator.voteCredits / validator.clusterAvgVoteCredits;
-    if (voteCreditsRatio < VOTE_CREDITS_THRESHOLD && voteCreditsRatio < VOTE_CREDITS_BASELINE) {
-        isEligible = false;
-        reasons.push(`Vote credits (${(voteCreditsRatio * 100).toFixed(2)}%) below threshold (${VOTE_CREDITS_THRESHOLD * 100}% or ${VOTE_CREDITS_BASELINE * 100}% of cluster average)`);
+    if (validator.clusterAvgVoteCredits > 0) {
+        const voteCreditsRatio = validator.voteCredits / validator.clusterAvgVoteCredits;
+        if (voteCreditsRatio < VOTE_CREDITS_THRESHOLD && voteCreditsRatio < VOTE_CREDITS_BASELINE) {
+            isEligible = false;
+            reasons.push(`Vote credits (${(voteCreditsRatio * 100).toFixed(2)}%) below threshold (${VOTE_CREDITS_THRESHOLD * 100}% or ${VOTE_CREDITS_BASELINE * 100}% of cluster average)`);
+        }
     }
 
-    // // 2. Delinquency Check
-    // if (validatorMetrics.isDelinquent) {
-    //     isEligible = false;
-    //     reasons.push("Validator is delinquent (not voting or zero active stake)");
-    // }
+    // 2. Delinquency Check
+    if (validator.delinquent) {
+        isEligible = false;
+        reasons.push("Validator is delinquent (not voting or zero active stake)");
+    }
 
-    // // 3. Commission Check
-    // if (validatorMetrics.commission > COMMISSION_MAX) {
-    //     isEligible = false;
-    //     reasons.push(`Commission (${validatorMetrics.commission}%) exceeds maximum (${COMMISSION_MAX}%)`);
-    // }
-    // if (validatorMetrics.jitoMevCommission > JITO_MEV_MAX) {
-    //     isEligible = false;
-    //     reasons.push(`Jito MEV commission (${validatorMetrics.jitoMevCommission}%) exceeds maximum (${JITO_MEV_MAX}%)`);
-    // }
+    // 3. Commission Check
+    // Regular commission check
+    const commissionValue = validator.commission !== undefined && validator.commission !== null ? 
+        parseFloat(validator.commission) : null;
+        
+    if (commissionValue !== null) {
+        if (commissionValue > COMMISSION_MAX) {
+            isEligible = false;
+            reasons.push(`Commission (${commissionValue}%) exceeds maximum (${COMMISSION_MAX}%)`);
+        }
+    } else {
+        warnings.push("Commission rate not provided; assuming 0% (may affect eligibility)");
+    }
+    
+    // Jito MEV commission check
+    const jitoCommissionValue = validator.jito_commission !== undefined && validator.jito_commission !== null ? 
+        parseFloat(validator.jito_commission) : null;
+        
+    if (jitoCommissionValue !== null) {
+        if (jitoCommissionValue > JITO_MEV_MAX) {
+            isEligible = false;
+            reasons.push(`Jito MEV commission (${jitoCommissionValue}%) exceeds maximum (${JITO_MEV_MAX}%)`);
+        }
+    } else {
+        warnings.push("Jito MEV commission rate not provided; assuming 0% (may affect eligibility)");
+    }
 
-    // // 4. Self-Stake Check
-    // if (validatorMetrics.selfStake < SELF_STAKE_MIN) {
-    //     isEligible = false;
-    //     reasons.push(`Self-stake (${validatorMetrics.selfStake} SOL) below minimum (${SELF_STAKE_MIN} SOL)`);
-    // }
+    // 4. Self-Stake Check
+    if (validator.self_stake !== undefined && validator.self_stake !== null) {
+        if (validator.self_stake < SELF_STAKE_MIN) {
+            isEligible = false;
+            reasons.push(`Self-stake (${validator.self_stake} SOL) below minimum (${SELF_STAKE_MIN} SOL)`);
+        }
+    } else {
+        warnings.push("Self-stake not provided; assuming 0 SOL (may affect eligibility)");
+    }
 
-    // // 5. Total Stake Check
-    // if (validatorMetrics.totalStake > TOTAL_STAKE_MAX) {
-    //     isEligible = false;
-    //     reasons.push(`Total stake (${validatorMetrics.totalStake} SOL) exceeds maximum (${TOTAL_STAKE_MAX} SOL)`);
-    // }
+    // 5. Total Stake Check
+    if (validator.activated_stake !== undefined && validator.activated_stake !== null) {
+        const totalStakeSol = validator.activated_stake / 1000000000; // Convert lamports to SOL
+        if (totalStakeSol > TOTAL_STAKE_MAX) {
+            isEligible = false;
+            reasons.push(`Total stake (${totalStakeSol.toFixed(2)} SOL) exceeds maximum (${TOTAL_STAKE_MAX} SOL)`);
+        }
+    } else {
+        warnings.push("Total stake not provided; assuming 0 SOL (may affect eligibility)");
+    }
 
-    // // 6. Infrastructure Concentration Check
-    // if (validatorMetrics.infraConcentration > INFRA_CONCENTRATION_MAX) {
-    //     isEligible = false;
-    //     reasons.push(`Infrastructure concentration (${validatorMetrics.infraConcentration}%) exceeds maximum (${INFRA_CONCENTRATION_MAX}%)`);
-    // }
+    // 6. Infrastructure Concentration Check
+    // Not available in current data model
 
-    // // 7. Software Version Check
-    // if (!isVersionGte(validatorMetrics.softwareVersion, MIN_SOFTWARE_VERSION)) {
-    //     isEligible = false;
-    //     reasons.push(`Software version (${validatorMetrics.softwareVersion}) below minimum (${MIN_SOFTWARE_VERSION})`);
-    // }
-    // if (!isVersionGte(validatorMetrics.frankendancerVersion, MIN_FRANKENDANCER_VERSION)) {
-    //     isEligible = false;
-    //     reasons.push(`Frankendancer version (${validatorMetrics.frankendancerVersion}) below minimum (${MIN_FRANKENDANCER_VERSION})`);
-    // }
+    // 7. Software Version Check
+    if (validator.version) {
+        if (!isVersionGte(validator.version, MIN_SOFTWARE_VERSION)) {
+            isEligible = false;
+            reasons.push(`Software version (${validator.version}) below minimum (${MIN_SOFTWARE_VERSION})`);
+        }
+    } else {
+        warnings.push("Software version not provided; assuming unknown (may affect eligibility)");
+    }
 
-    // // 8. Metric Reporting Check
-    // const reportingRatio = validatorMetrics.reportedEpochs / 10;
-    // if (reportingRatio < METRIC_REPORTING_THRESHOLD) {
-    //     isEligible = false;
-    //     reasons.push(`Metric reporting (${(reportingRatio * 100).toFixed(2)}%) below threshold (${METRIC_REPORTING_THRESHOLD * 100}% of last 10 epochs)`);
-    // }
+    // 8. Metric Reporting Check
+    // Not available in current data model
 
-    // // 9. Testnet Performance Check
-    // if (validatorMetrics.testnetEligibleEpochs < TESTNET_PERFORMANCE_MIN_EPOCHS) {
-    //     isEligible = false;
-    //     reasons.push(`Testnet performance (${validatorMetrics.testnetEligibleEpochs} epochs) below minimum (${TESTNET_PERFORMANCE_MIN_EPOCHS} of last 10 epochs)`);
-    // }
+    // 9. Testnet Performance Check
+    // Not available in current data model
+
+    // Determine color class based on eligibility
+    let statusColorClass = 'text-gray-500';
+    if (isEligible) {
+        statusColorClass = 'text-green-500';
+    } else {
+        statusColorClass = 'text-red-500';
+    }
 
     return (
-        <span>
-            SFDP
+        <span className={statusColorClass}>
+            {isEligible ? 'Eligible' : 'Not Eligible'}
         </span>
     );
 }

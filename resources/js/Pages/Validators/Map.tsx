@@ -6,7 +6,6 @@ import "mapbox-gl/dist/mapbox-gl.css";
 const MapboxMap = (validatorData) => {
     // здесь будет хранится инстанс карты после инициализации
   const [map, setMap] = React.useState<mapboxgl.Map>();
-console.log(validatorData.validator.latitude)
   // React ref для хранения ссылки на DOM ноду который будет 
   // использоваться как обязательный параметр `container` 
   // при инициализации карты `mapbox-gl`

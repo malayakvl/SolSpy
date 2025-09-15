@@ -46,7 +46,7 @@ export default function Login({ status, canResetPassword }) {
         location.href = '/dashboard';
       })
       .catch(error => {
-        console.log('ERROR:: ', error.response.data);
+        console.error('ERROR:: ', error.response.data);
       });
   };
 

@@ -57,7 +57,7 @@ export default function ValidatorRate({ validator, epoch, settingsData, totalSta
 
     return (
         <span className={`transition-colors duration-300 ${colorClass}`}>
-        {_voteRate}
+        {_voteRate.toFixed(4)}
     </span>
     );
 }

@@ -17,6 +17,7 @@ import ValidatorName from "../Validators/Partials/ValidatorName";
 import ValidatorActivatedStake from "../Validators/Partials/ValidatorActivatedStake";
 import ValidatorUptime from "../Validators/Partials/ValidatorUptime";
 import ValidatorScore from "../Validators/Partials/ValidatorScore";
+import ValidatorSFDP from "../Validators/Partials/ValidatorSFDP";
 import axios from 'axios';
 import ValidatorSpyRank from "../Validators/Partials/ValidatorSpyRank";
 import { toast } from 'react-toastify';
@@ -226,7 +227,9 @@ export default function Index() {
                                         <td className="text-center">
                                             {`${validator.version}  ${validator.software_client || ''}`}
                                         </td>
-                                        <td className="text-center">SFDP</td>
+                                        <td className="text-center">
+                                            <ValidatorSFDP validator={validator} epoch={epoch} />
+                                        </td>
                                         <td className="text-center">{validator.country}</td>
                                         <td className="text-center">Awards</td>
                                         <td className="text-center">

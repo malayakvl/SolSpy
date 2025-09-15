@@ -11,6 +11,7 @@ import ValidatorName from "../Validators/Partials/ValidatorName";
 import ValidatorActivatedStake from "../Validators/Partials/ValidatorActivatedStake";
 import ValidatorUptime from "../Validators/Partials/ValidatorUptime";
 import ValidatorScore from "../Validators/Partials/ValidatorScore";
+import ValidatorSFDP from "../Validators/Partials/ValidatorSFDP";
 import axios from 'axios';
 import ValidatorSpyRank from "../Validators/Partials/ValidatorSpyRank";
 import { toast } from 'react-toastify';
@@ -292,7 +293,7 @@ export default function Index() {
                                         <td className="px-4 py-3 font-medium text-gray-900">Status SFDP</td>
                                         {comparisonValidators.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
-                                                SFDP
+                                                <ValidatorSFDP validator={validator} epoch={epoch} />
                                             </td>
                                         ))}
                                     </tr>
@@ -366,7 +367,7 @@ export default function Index() {
                                         <td className="px-4 py-3 font-medium text-gray-900">Jiito Score</td>
                                         {comparisonValidators.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
-                                                {validator.jito_commission !== null && validator.jito_commission !== undefined ? `${validator.jito_commission/100}%` : 'N/A'}
+                                                {validator.jito_commission !== null && validator.jito_commission !== undefined ? `${validator.jito_commission}%` : 'N/A'}
                                             </td>
                                         ))}
                                     </tr>
