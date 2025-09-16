@@ -1,124 +1,15 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Models\Settings;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Inertia\Inertia;
-use Inertia\Response;
 use App\Services\SpyRankService;
 
 class ValidatorController extends Controller
 {
-    //
-    public function index(Request $request): Response
-    {
-        $limit = 10; // Количество записей на страницу
-        $page = max(1, (int) $request->get('page', 1)); // Получение page из request с default значением 1
-        $offset = ($page - 1) * $limit; // Расчет offset
-        $filterType = $request->get('filterType', 'all'); // Get filter type
-        $userId = $request->user() ? $request->user()->id : null;
-        $query = DB::table('data.validators')
-            ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
-            
-        // Only join favorites table if user is authenticated
-        if ($userId) {
-            $query->leftJoin('data.favorites', function($join) use ($userId) {
-                $join->on('data.validators.id', '=', 'data.favorites.validator_id')
-                     ->where('data.favorites.user_id', '=', $userId);
-            })
-            ->select('data.validators.*', 'data.favorites.id as favorite_id', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
-        } else {
-            $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
-        }
-        
-        $validatorsData = $query;
-        
-        // Apply filter based on filterType
-        if ($filterType === 'highlight') {
-            $validatorsData = $validatorsData->where('data.validators.is_highlighted', true);
-        } elseif ($filterType === 'top') {
-            $validatorsData = $validatorsData->where('data.validators.is_top', true);
-        }
-        
-        // Add the hack to filter validators starting from ID 19566
-        $validatorsData = $validatorsData->where('data.validators.id', '>=', '19566');
-        
-        $validatorsData = $validatorsData
-            ->orderBy('data.validators.id')
-            ->limit(10)->offset($offset)->get();
-        // Calculate total count based on filter
-        $totalCountQuery = DB::table('data.validators');
-            
-        // Apply same filter for count
-        if ($filterType === 'highlight') {
-            $totalCountQuery = $totalCountQuery->where('data.validators.is_highlighted', true);
-        } elseif ($filterType === 'top') {
-            $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
-        }
-        
-        // Add the hack to filter validators starting from ID 19566 for count as well
-        $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
-        
-        $filteredTotalCount = $totalCountQuery->count();
-        
-        $validatorsAllData = DB::table('data.validators')
-            ->orderBy('activated_stake', 'DESC')->get();
-        $sortedValidators = $validatorsAllData->toArray();
-
-        // Рассчитываем tvcRank для каждого валидатора из $validatorsData
-        $results = $validatorsData->map(function ($validator) use ($sortedValidators) {
-            // Находим индекс валидатора в отсортированном массиве по vote_pubkey
-            $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
-
-            // Добавляем tvcRank к объекту валидатора
-            $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
-            return $validator;
-        });
-        $totalStakeQuery = "
-            SELECT COALESCE(SUM(activated_stake) / 1000000000.0, 0) as total_network_stake_sol,
-                COUNT(*) as validator_count,
-                COUNT(activated_stake) as stake_count
-            FROM data.validators
-            WHERE activated_stake IS NOT NULL
-                AND epoch_credits IS NOT NULL
-        ";    
-        $totalStake = DB::select($totalStakeQuery)[0];
-
-        //getting top validators
-        $topValidators = DB::table('data.validators')
-            ->where('data.validators.is_top', true)
-            ->orderBy('data.validators.activated_stake', 'DESC')
-            ->limit(10)
-            ->get();
-
-        if (!$request->user()) {
-            return Inertia::render('Validators/Index', [
-                'validatorsData' => $results,
-                'settingsData' => Settings::first(),
-                'totalCount' => $filteredTotalCount,
-                'currentPage' => $page,
-                'filterType' => $filterType,
-                'totalStakeData' => $totalStake,
-                'topValidatorsData' => $topValidators
-            ]);
-
-
-        } else {
-            return Inertia::render('Validators/Admin/Index', [
-                'validatorsData' => $results,
-                'settingsData' => Settings::first(),
-                'totalCount' => $filteredTotalCount,
-                'currentPage' => $page,
-                'filterType' => $filterType,
-                'totalStakeData' => $totalStake,
-                'topValidatorsData' => $topValidators
-            ]);
-        }
-    }
-
     public function timeoutData(Request $request)
     {
         $page = max(1, (int) $request->get('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1
@@ -301,54 +192,43 @@ class ValidatorController extends Controller
         ]);
     }
 
-    public function view(Request $request, string $voteKey): Response
-    {
-        $settingsData = Settings::first();
-        $epoch = $settingsData->epoch ?? null;
+    public function fetchByIds(Request $request) {
+        $userId = $request->user() ? $request->user()->id : null;
+        
+        // Handle both query parameter and request body
+        $ids = $request->input('ids', []);
+        if (is_string($ids)) {
+            $ids = explode(',', $ids);
+        }
+        $ids = array_filter($ids); // Remove empty values
+        
+        if (empty($ids)) {
+            return response()->json([
+                'validators' => []
+            ]);
+        }
         
         $query = DB::table('data.validators')
-            ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name')
-            ->leftJoin('data.leader_schedule', function($join) use ($epoch) {
-                $join->on('data.leader_schedule.node_pubkey', '=', 'data.validators.node_pubkey')
-                     ->when($epoch, function($query, $epoch) {
-                         return $query->where('data.leader_schedule.epoch', '=', $epoch);
-                     });
-            });
-            
-        $userId = $request->user() ? $request->user()->id : null;
-            
+            ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
+        
         // Only join favorites table if user is authenticated
         if ($userId) {
             $query->leftJoin('data.favorites', function($join) use ($userId) {
                 $join->on('data.validators.id', '=', 'data.favorites.validator_id')
                      ->where('data.favorites.user_id', '=', $userId);
             })
-            ->select('data.validators.*', 'data.leader_schedule.slots as slots', 'data.favorites.id as favorite_id', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
+            ->select('data.validators.*', 'data.favorites.id as favorite_id', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
         } else {
-            $query->select('data.validators.*', 'data.leader_schedule.slots as slots', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
+            $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
         }
         
-        $validatorData = $query
-            ->where('data.validators.vote_pubkey', '=', $voteKey);
-            
-        $validatorData = $validatorData
+        $validatorsData = $query
+            ->whereIn('data.validators.id', $ids)
             ->orderBy('data.validators.id')
-            ->first();
+            ->get();
 
-        $totalStakeQuery = "
-            SELECT COALESCE(SUM(activated_stake) / 1000000000.0, 0) as total_network_stake_sol,
-                COUNT(*) as validator_count,
-                COUNT(activated_stake) as stake_count
-            FROM data.validators
-            WHERE activated_stake IS NOT NULL
-                AND epoch_credits IS NOT NULL
-        ";    
-        $totalStake = DB::select($totalStakeQuery)[0];
-
-        return Inertia::render('Validators/View', [
-            'validatorData' => $validatorData,
-            'settingsData' => $settingsData,
-            'totalStakeData' => $totalStake,
+        return response()->json([
+            'validators' => $validatorsData
         ]);
     }
 
@@ -516,6 +396,7 @@ class ValidatorController extends Controller
             'max' => round($max, 2)
         ];
     }
+    
     /**
      * Fetch aggregated historical metrics for a validator
      */
@@ -646,112 +527,6 @@ class ValidatorController extends Controller
             'max' => round($max, 2)
         ];
     }
-    /**
-     * Display admin listing of validators
-     */
-    public function adminIndex(Request $request): Response
-    {
-        $limit = 10; // Количество записей на страницу
-        $page = max(1, (int) $request->get('page', 1)); // Получение page из request с default значением 1
-        $offset = ($page - 1) * $limit; // Расчет offset
-        $filterType = $request->get('filterType', 'all'); // Get filter type
-        $searchTerm = $request->get('search', ''); // Get search term
-        $userId = $request->user() ? $request->user()->id : null;
-        $sortColumn = $request->get('sortColumn', 'id');
-        $sortDirection = $request->get('sortDirection', 'ASC');
-        $totalStakeQuery = "
-            SELECT COALESCE(SUM(activated_stake) / 1000000000.0, 0) as total_network_stake_sol,
-                COUNT(*) as validator_count,
-                COUNT(activated_stake) as stake_count
-            FROM data.validators
-            WHERE activated_stake IS NOT NULL
-                AND epoch_credits IS NOT NULL
-        ";    
-        $totalStake = DB::select($totalStakeQuery)[0];
-        
-        $query = DB::table('data.validators')
-            ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
-            
-        // Only join favorites table if user is authenticated
-        if ($userId) {
-            $query->leftJoin('data.favorites', function($join) use ($userId) {
-                $join->on('data.validators.id', '=', 'data.favorites.validator_id')
-                     ->where('data.favorites.user_id', '=', $userId);
-            })
-            ->select('data.validators.*', 'data.favorites.id as favorite_id', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
-        } else {
-            $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
-        }
-        
-        $validatorsData = $query;
-            
-        // Apply search filter if provided
-        if (!empty($searchTerm)) {
-            $validatorsData = $validatorsData->where('data.validators.name', 'ILIKE', '%' . $searchTerm . '%');
-        }
-            
-        // Apply filter based on filterType
-        if ($filterType === 'highlight') {
-            $validatorsData = $validatorsData->where('data.validators.is_highlighted', true);
-        } elseif ($filterType === 'top') {
-            $validatorsData = $validatorsData->where('data.validators.is_top', true);
-        }
-        
-        // Add the hack to filter validators starting from ID 19566
-        $validatorsData = $validatorsData->where('data.validators.id', '>=', '19566');
-       
-        if ($sortColumn === 'uptime') {
-            // dd($sortDirection);exit;
-            $validatorsData->orderBy('data.validators.avg_uptime', $sortDirection);
-        } else {
-            $validatorsData->orderBy('data.validators.id');
-        }   
-        $validatorsData = $validatorsData
-            ->limit(10)->offset($offset)->get();
-
-        // Calculate total count based on filter
-        $totalCountQuery = DB::table('data.validators');
-        
-        // Apply search filter if provided
-        if (!empty($searchTerm)) {
-            $totalCountQuery = $totalCountQuery->where('data.validators.name', 'ILIKE', '%' . $searchTerm . '%');
-        }
-            
-        // Apply same filter for count
-        if ($filterType === 'highlight') {
-            $totalCountQuery = $totalCountQuery->where('data.validators.is_highlighted', true);
-        } elseif ($filterType === 'top') {
-            $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
-        }
-        
-        // Add the hack to filter validators starting from ID 19566 for count as well
-        $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
-        
-        $filteredTotalCount = $totalCountQuery->count();
-        
-        $validatorsAllData = DB::table('data.validators')
-            ->orderBy('activated_stake', 'DESC')->get();
-        $sortedValidators = $validatorsAllData->toArray();
-
-        // Рассчитываем tvcRank для каждого валидатора из $validatorsData
-        $results = $validatorsData->map(function ($validator) use ($sortedValidators) {
-            // Находим индекс валидатора в отсортированном массиве по vote_pubkey
-            $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
-
-            // Добавляем tvcRank к объекту валидатора
-            $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
-            return $validator;
-        });
-
-        return Inertia::render('Validators/Admin/Index', [
-            'validatorsData' => $results,
-            'settingsData' => Settings::first(),
-            'totalCount' => $filteredTotalCount,
-            'currentPage' => $page,
-            'filterType' => $filterType,
-            'totalStakeData' => $totalStake,
-        ]);
-    }
 
     public function addCompare(Request $request) {
         $user = $request->user();
@@ -786,5 +561,4 @@ class ValidatorController extends Controller
             'message' => 'Ban status updated'
         ]);
     }
-
 }

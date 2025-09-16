@@ -5,6 +5,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\ValidatorController;
+use App\Http\Controllers\Api\ValidatorController as ApiValidatorController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\DiscordController;
 use App\Http\Controllers\SettingsController;
@@ -81,7 +82,6 @@ Route::middleware(['auth', 'check.role:Admin,Manager'])->prefix('admin')->group(
 // API routes for news utilities
 Route::post('/api/news/generate-slug', [NewsController::class, 'generateSlug'])->name('api.news.generateSlug');
 
-require __DIR__.'/auth.php';
-
 // Home page route - MUST be last to avoid catching other routes
+require __DIR__.'/auth.php';
 Route::get('/{page?}', [ValidatorController::class, 'index'])->name('home');
