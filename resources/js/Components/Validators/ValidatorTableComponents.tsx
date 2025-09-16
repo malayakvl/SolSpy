@@ -652,7 +652,8 @@ export const renderColumnCell = (columnName, validator, epoch, settingsData, tot
         case "Spy Rank": 
             return (
                 <td>
-                    <ValidatorSpyRank validator={validator} />
+                    {validator.spyRank}
+                    {/* <ValidatorSpyRank validator={validator} /> */}
                 </td>
             );
         case "Avatar": return (
