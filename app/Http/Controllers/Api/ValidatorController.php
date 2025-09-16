@@ -7,6 +7,7 @@ use App\Models\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Services\SpyRankService;
+use Inertia\Inertia;
 
 class ValidatorController extends Controller
 {
@@ -528,37 +529,59 @@ class ValidatorController extends Controller
         ];
     }
 
-    public function addCompare(Request $request) {
-        $user = $request->user();
-        $validatorId = $request->get('validatorId');
-        $result = DB::statement('SELECT data.toggle_favorite(' .$user->id. ', ' .$validatorId. ')');
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Comparison list updated'
-        ]);
+    public function markValidators(Request $request) {
+        $checkedIds = $request->get('checkedIds', []);
+        $value = $request->get('value');
+        if (!empty($checkedIds) && in_array($value, ['highlight', 'top'])) {
+            // Determine which field to update based on value
+            if ($value === 'highlight')
+                $field = 'is_highlighted';
+            elseif ($value === 'top')
+                $field = 'is_top';
+
+            // Toggle field: false -> true, true -> false
+            DB::statement(
+                "UPDATE data.validators SET {$field} = NOT {$field} WHERE id = ANY(?)",
+                ['{' . implode(',', $checkedIds) . '}']
+            );
+        }
+
+        if (request()->header('X-Inertia')) {
+            return back();
+        }
     }
 
-    public function addFavorite(Request $request) {
-        $user = $request->user();
-        $validatorId = $request->get('validatorId');
-        $result = DB::statement('SELECT data.toggle_favorite(' .$user->id. ', ' .$validatorId. ')');
+    // public function addCompare(Request $request) {
+    //     $user = $request->user();
+    //     $validatorId = $request->get('validatorId');
+    //     $result = DB::statement('SELECT data.toggle_favorite(' .$user->id. ', ' .$validatorId. ')');
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Favorites list updated'
-        ]);
-    }
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => 'Comparison list updated'
+    //     ]);
+    // }
 
-    public function banValidator(Request $request) {
-        $user = $request->user();
-        $validatorId = $request->get('validatorId');
-        // Assuming there's a ban function in the database
-        $result = DB::statement('SELECT data.toggle_ban(' .$user->id. ', ' .$validatorId. ')');
+    // public function addFavorite(Request $request) {
+    //     $user = $request->user();
+    //     $validatorId = $request->get('validatorId');
+    //     $result = DB::statement('SELECT data.toggle_favorite(' .$user->id. ', ' .$validatorId. ')');
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Ban status updated'
-        ]);
-    }
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => 'Favorites list updated'
+    //     ]);
+    // }
+
+    // public function banValidator(Request $request) {
+    //     $user = $request->user();
+    //     $validatorId = $request->get('validatorId');
+    //     // Assuming there's a ban function in the database
+    //     $result = DB::statement('SELECT data.toggle_ban(' .$user->id. ', ' .$validatorId. ')');
+        
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => 'Ban status updated'
+    //     ]);
+    // }
 }

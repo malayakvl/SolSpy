@@ -8,11 +8,11 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Pool;
 use GuzzleHttp\Psr7\Request;
 
-class UpdateAllValidatorVotes extends Command
+class fetchAllValidatorsLeaderSchedule extends Command
 {
-    protected $signature = 'app:update-all-votes {epoch}';
+    protected $signature = 'app:fetch-all-validators-leader-scedule {epoch}';
     // protected $signature = 'app:update-all-votes {epoch? : The epoch number to fetch (default: current epoch)}';
-    protected $description = 'Оновлює фактичні голоси для всіх валідаторів у заданій епосі';
+    protected $description = 'Update fact votes for all validators in a given epoch';
 
     public function handle()
     {

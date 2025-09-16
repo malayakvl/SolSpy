@@ -28,7 +28,7 @@ Route::get('/dashboard', function () {
 
 Route::get('/comparisons/{page?}', [ValidatorController::class, 'comparisons'])->name('validators.comparisons');
 Route::get('/favorites/{page?}', [ValidatorController::class, 'favorites'])->name('validators.favorites');
-Route::get('/mark-validators', [ValidatorController::class, 'markValidators'])->name('validators.mark');
+// 
 Route::get('/sortable', [ValidatorController::class, 'sortable'])->name('validators.sortable');
 
 // Specific validator routes
