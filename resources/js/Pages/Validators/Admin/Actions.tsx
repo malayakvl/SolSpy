@@ -18,7 +18,7 @@ export default function ValidatorAdminActions({ checkedIds, onActionComplete }: 
             return;
         }
 
-        router.get(`/mark-validators`, {
+        router.post(`/api/mark-validators`, {
             value: value,
             checkedIds: checkedIds
         }, {
