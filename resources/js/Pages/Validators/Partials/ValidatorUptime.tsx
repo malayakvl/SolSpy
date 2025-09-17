@@ -4,6 +4,6 @@ export default function ValidatorUptime({validator, epoch}) {
     const [uptime, setUptime] = useState(null);
 
     return (
-        <>{validator.avg_uptime != null ? validator?.avg_uptime : ' - '}</>
+        <>{validator.avg_uptime != null ? parseFloat(validator.avg_uptime).toFixed(2) : ' - '}</>
     );
 }

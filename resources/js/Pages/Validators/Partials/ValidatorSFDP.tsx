@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 
-export default function ValidatorSFDP({ validator, epoch }) {
+export default function ValidatorSFDP({ validator, epoch, type = 'table' }) {
     // Initialize result
     let isEligible = true;
     const reasons = [];
@@ -27,10 +27,10 @@ export default function ValidatorSFDP({ validator, epoch }) {
         const vParts = version.split('.').map(Number);
         const minParts = minVersion.split('.').map(Number);
         for (let i = 0; i < Math.max(vParts.length, minParts.length); i++) {
-        const v = vParts[i] || 0;
-        const m = minParts[i] || 0;
-        if (v > m) return true;
-        if (v < m) return false;
+            const v = vParts[i] || 0;
+            const m = minParts[i] || 0;
+            if (v > m) return true;
+            if (v < m) return false;
         }
         return true;
     }
@@ -119,15 +119,26 @@ export default function ValidatorSFDP({ validator, epoch }) {
 
     // Determine color class based on eligibility
     let statusColorClass = 'text-gray-500';
+    let bgColorClass = 'bg-gray-100';
     if (isEligible) {
         statusColorClass = 'text-green-500';
+        bgColorClass = 'bg-green-100';
     } else {
         statusColorClass = 'text-red-500';
+        bgColorClass = 'bg-red-100';
     }
 
     return (
-        <span className={statusColorClass}>
-            {isEligible ? 'Eligible' : 'Not Eligible'}
-        </span>
+        <>
+            {type !== 'card' ? (
+                <span className={`${statusColorClass} ${bgColorClass} border rounded-lg px-2 py-1 text-[12px] font-semibold`}>
+                    {isEligible ? 'Eligible' : 'Not Eligible'}
+                </span>
+            ) : (
+                <span className={`${statusColorClass} ${bgColorClass} border rounded-lg px-2 py-1 text-[10px] font-semibold uppercase`}>
+                    {isEligible ? 'Eligible' : 'Not Eligible'}
+                </span>
+            )}
+        </>
     );
 }
