@@ -7,10 +7,26 @@ use App\Models\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Services\SpyRankService;
+use App\Services\TotalStakeService;
+use App\Services\ValidatorDataService;
 use Inertia\Inertia;
 
 class ValidatorController extends Controller
 {
+    protected $validatorDataService;
+    protected $totalStakeService;
+    protected $spyRankService;
+
+    public function __construct(
+        ValidatorDataService $validatorDataService,
+        TotalStakeService $totalStakeService,
+        SpyRankService $spyRankService
+    ) {
+        $this->validatorDataService = $validatorDataService;
+        $this->totalStakeService = $totalStakeService;
+        $this->spyRankService = $spyRankService;
+    }
+
     public function timeoutData(Request $request)
     {
         $page = max(1, (int) $request->get('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1
@@ -22,176 +38,32 @@ class ValidatorController extends Controller
         $sortDirection = $request->get('sortDirection', 'ASC'); // Get sort direction
         $userId = $request->user() ? $request->user()->id : null;
 
-        // Validate sort direction
-        if (!in_array(strtoupper($sortDirection), ['ASC', 'DESC'])) {
-            $sortDirection = 'ASC';
-        }
+        // Get total stake data
+        $stakeData = $this->totalStakeService->getTotalStake();
+        $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
 
-        // Map frontend column names to database column names
-        $columnMap = [
-            'name' => 'data.validators.name',
-            'status' => 'data.validators.delinquent',
-            'spy_rank' => 'data.validators.activated_stake', // Using activated_stake as proxy for spy_rank
-            'tvc_score' => 'data.validators.total_score',
-            'tvc_rank' => 'data.validators.activated_stake', // TVC Rank is based on activated_stake
-            'vote_credits' => 'data.validators.epoch_credits',
-            'active_stake' => 'data.validators.activated_stake',
-            'vote_rate' => 'data.validators.vote_distance_score',
-            'inflation_commission' => 'data.validators.jito_commission',
-            'mev_commission' => 'data.validators.commission',
-            'uptime' => 'data.validators.skipped_slot_percent',
-            'client_version' => 'data.validators.version',
-            'status_sfdp' => 'data.validators.delinquent', // Using delinquent as proxy
-            'location' => 'data.validators.country',
-            'website' => 'data.validators.url',
-            'city' => 'data.validators.city',
-            'asn' => 'data.validators.autonomous_system_number',
-            'ip' => 'data.validators.ip',
-            'jito_score' => 'data.validators.jito_commission'
-        ];
-
-        // Get the actual database column name
-        $dbSortColumn = $columnMap[$sortColumn] ?? 'data.validators.id';
-        
-        // For TVC Rank, we need to sort by activated_stake in descending order
-        // because higher activated_stake means better (lower) rank
-        $actualSortDirection = $sortDirection;
-        if ($sortColumn === 'tvc_rank') {
-            // Reverse the sort direction for TVC Rank
-            $actualSortDirection = strtoupper($sortDirection) === 'ASC' ? 'DESC' : 'ASC';
-        }
-        $query = DB::table('data.validators')
-            ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
-            
-        // Only join favorites table if user is authenticated
-        if ($userId) {
-            $query->leftJoin('data.favorites', function($join) use ($userId) {
-                $join->on('data.validators.id', '=', 'data.favorites.validator_id')
-                     ->where('data.favorites.user_id', '=', $userId);
-            })
-            ->select('data.validators.*', 'data.favorites.id as favorite_id', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
-        } else {
-            $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
-        }
-        
-        // Apply search filter if provided
-        if (!empty($searchTerm)) {
-            $query = $query->where('data.validators.name', 'ILIKE', '%' . $searchTerm . '%');
-        }
-        
-        // Apply filter based on filterType
-        if ($filterType === 'highlight') {
-            $query = $query->where('data.validators.is_highlighted', true);
-        } elseif ($filterType === 'top') {
-            $query = $query->where('data.validators.is_top', true);
-        }
-        // Apply sorting
-        if ($sortColumn === 'uptime') {
-            // dd($sortDirection);exit;
-            $query->orderBy('data.validators.avg_uptime', $sortDirection);
-        } elseif ($sortColumn === 'tvc_score') {
-            $query->orderBy('data.validators.id', $sortDirection);
-        } elseif ($sortColumn === 'tvc_rank') {
-            $query->orderBy('data.validators.activated_stake', $actualSortDirection);
-        } elseif ($sortColumn === 'vote_credits') {
-            $query->orderByRaw("CASE WHEN data.validators.epoch_credits IS NULL THEN 1 ELSE 0 END, data.validators.epoch_credits " . $sortDirection);
-        } elseif ($sortColumn === 'active_stake') {
-            $query->orderBy('data.validators.activated_stake', $sortDirection);
-        } elseif ($sortColumn === 'vote_rate') {
-            $query->orderBy('data.validators.vote_distance_score', $sortDirection);
-        } elseif ($sortColumn === 'inflation_commission') {
-            $query->orderByRaw("CASE WHEN data.validators.jito_commission IS NULL THEN 1 ELSE 0 END, data.validators.jito_commission " . $sortDirection);
-        } elseif ($sortColumn === 'mev_commission') {
-            $query->orderByRaw("CASE WHEN data.validators.commission IS NULL THEN 1 ELSE 0 END, data.validators.commission " . $sortDirection);
-        } elseif ($sortColumn === 'client_version') {
-            $query->orderByRaw("CASE WHEN data.validators.version IS NULL THEN 1 ELSE 0 END, data.validators.version " . $sortDirection);
-        } elseif ($sortColumn === 'status_sfdp') {
-            $query->orderBy('data.validators.delinquent', $sortDirection);
-        } elseif ($sortColumn === 'location') {
-            $query->orderByRaw("CASE WHEN data.validators.country IS NULL THEN 1 ELSE 0 END, data.validators.country " . $sortDirection);
-        } elseif ($sortColumn === 'website') {
-            $query->orderByRaw("CASE WHEN data.validators.url IS NULL THEN 1 ELSE 0 END, data.validators.url " . $sortDirection);
-        } elseif ($sortColumn === 'city') {
-            $query->orderByRaw("CASE WHEN data.validators.city IS NULL THEN 1 ELSE 0 END, data.validators.city " . $sortDirection);
-        } elseif ($sortColumn === 'asn') {
-            $query->orderByRaw("CASE WHEN data.validators.autonomous_system_number IS NULL THEN 1 ELSE 0 END, data.validators.autonomous_system_number " . $sortDirection);
-        } elseif ($sortColumn === 'ip') {
-            $query->orderByRaw("CASE WHEN data.validators.ip IS NULL THEN 1 ELSE 0 END, data.validators.ip " . $sortDirection);
-        } elseif ($sortColumn === 'jito_score') {
-            $query->orderByRaw("CASE WHEN data.validators.jito_commission IS NULL THEN 1 ELSE 0 END, data.validators.jito_commission " . $sortDirection);
-        } else {
-            $query->orderBy($dbSortColumn, $sortDirection);
-        }
-        
-        // Add the hack to filter validators starting from ID 19566
-        $query = $query->where('data.validators.id', '>=', '19566');
-        
-        $validatorsData = $query
-            ->limit($limit)->offset($offset)->get();
-
-        // Calculate total count based on filter
-        $totalCountQuery = DB::table('data.validators');
-        
-        // Apply search filter if provided
-        if (!empty($searchTerm)) {
-            $totalCountQuery = $totalCountQuery->where('data.validators.name', 'ILIKE', '%' . $searchTerm . '%');
-        }
-            
-        // Apply same filter for count
-        if ($filterType === 'highlight') {
-            $totalCountQuery = $totalCountQuery->where('data.validators.is_highlighted', true);
-        } elseif ($filterType === 'top') {
-            $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
-        }
-        
-        // Add the hack to filter validators starting from ID 19566 for count as well
-        $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
-        
-        $filteredTotalCount = $totalCountQuery->count();
-        
-        $validatorsAllData = DB::table('data.validators')
-            ->orderBy('activated_stake', 'DESC')->get();
-        $sortedValidators = $validatorsAllData->toArray();
-
-        $totalStakeQuery = "
-            SELECT COALESCE(SUM(activated_stake) / 1000000000.0, 0) as total_network_stake_sol,
-                COUNT(*) as validator_count,
-                COUNT(activated_stake) as stake_count
-            FROM data.validators
-            WHERE activated_stake IS NOT NULL
-                AND epoch_credits IS NOT NULL
-        ";    
-        $totalStake = DB::select($totalStakeQuery)[0];
-
-        // Calculate total network stake in lamports for spyRank calculation
-        $totalStakeLamports = $totalStake->total_network_stake_sol * 1000000000;
-
-        // Инициализация SpyRankService
-        $spyRankService = new SpyRankService();
-
-        // Рассчитываем tvcRank и spyRank для каждого валидатора из $validatorsData
-        $results = $validatorsData->map(function ($validator) use ($sortedValidators, $spyRankService, $totalStakeLamports) {
-            // Находим индекс валидатора в отсортированном массиве по vote_pubkey
-            $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
-
-            // Добавляем tvcRank к объекту валидатора
-            $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
-            
-            // Calculate spyRank
-            $validator->spyRank = $spyRankService->calculateSpyRank($validator, $totalStakeLamports);
-            
-            return $validator;
-        });
+        // Fetch timeout data using service
+        $data = $this->validatorDataService->timeoutData(
+            $sortColumn, 
+            $sortDirection, 
+            $totalStakeLamports,
+            $userId, 
+            $filterType, 
+            $limit, 
+            $offset, 
+            $searchTerm
+        );
 
         return response()->json([
-            'validatorsData' => $results,
+            'validatorsData' => $data['validatorsData'],
             'settingsData' => Settings::first(),
-            'totalCount' => $filteredTotalCount,
+            'totalCount' => $data['filteredTotalCount'],
             'currentPage' => $page,
             'filterType' => $filterType,
-            'totalStakeData' => $totalStake,
+            'totalStakeData' => $stakeData[0],
         ]);
     }
+
 
     public function fetchByIds(Request $request) {
         $userId = $request->user() ? $request->user()->id : null;
@@ -551,37 +423,37 @@ class ValidatorController extends Controller
         }
     }
 
-    // public function addCompare(Request $request) {
-    //     $user = $request->user();
-    //     $validatorId = $request->get('validatorId');
-    //     $result = DB::statement('SELECT data.toggle_favorite(' .$user->id. ', ' .$validatorId. ')');
+    public function addCompare(Request $request) {
+        $user = $request->user();
+        $validatorId = $request->input('validatorId');
+        DB::statement('SELECT data.toggle_comparisons(' .$user->id. ', ' .$validatorId. ')');
         
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => 'Comparison list updated'
-    //     ]);
-    // }
+        return response()->json([
+            'success' => true,
+            'message' => 'Comparison list updated'
+        ]);
+    }
 
-    // public function addFavorite(Request $request) {
-    //     $user = $request->user();
-    //     $validatorId = $request->get('validatorId');
-    //     $result = DB::statement('SELECT data.toggle_favorite(' .$user->id. ', ' .$validatorId. ')');
+    public function addFavorite(Request $request) {
+        $user = $request->user();
+        $validatorId = $request->input('validatorId');
+        DB::statement('SELECT data.toggle_favorite(' .$user->id. ', ' .$validatorId. ')');
         
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => 'Favorites list updated'
-    //     ]);
-    // }
+        return response()->json([
+            'success' => true,
+            'message' => 'Favorites list updated'
+        ]);
+    }
 
-    // public function banValidator(Request $request) {
-    //     $user = $request->user();
-    //     $validatorId = $request->get('validatorId');
-    //     // Assuming there's a ban function in the database
-    //     $result = DB::statement('SELECT data.toggle_ban(' .$user->id. ', ' .$validatorId. ')');
+    public function banValidator(Request $request) {
+        $user = $request->user();
+        $validatorId = $request->input('validatorId');
+        // Assuming there's a ban function in the database
+        $result = DB::statement('SELECT data.toggle_ban(' .$user->id. ', ' .$validatorId. ')');
         
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => 'Ban status updated'
-    //     ]);
-    // }
+        return response()->json([
+            'success' => true,
+            'message' => 'Ban status updated'
+        ]);
+    }
 }
