@@ -15,6 +15,7 @@ import {
     faFrog,
     faCircleRadiation
 } from '@fortawesome/free-solid-svg-icons';
+import ValidatorSFDP from '../../Pages/Validators/Partials/ValidatorSFDP';
 
 export default function ValidatorCard({validator, epoch, settingsData, totalStakeData, validators}) {
   const user = usePage().props.auth.user;
@@ -30,12 +31,12 @@ export default function ValidatorCard({validator, epoch, settingsData, totalStak
             <img 
                 src={validator.avatar_url || validator.avatar_file_url} 
                 alt={`${validator.name} avatar`} 
-                className="w-auto h-full rounded-full p-2 h-[150px]"
+                className="w-auto rounded-full p-2 h-[140px]"
                 onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     // Create a fallback element
                     const fallback = document.createElement('div');
-                    fallback.className = 'w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500';
+                    fallback.className = 'w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500';
                     fallback.textContent = '';
                     e.currentTarget.parentNode.appendChild(fallback);
                 }}
@@ -44,30 +45,62 @@ export default function ValidatorCard({validator, epoch, settingsData, totalStak
                 <h5 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
                     <ValidatorName validator={validator} noTruncate={true} />
                 </h5>
-                <div className="grid grid-cols-8 gap-1 text-[13px]">
-                    <div>Rank</div>
-                    <div>TVC</div>
-                    <div >Stake Pool</div>
-                    <div>INF %</div>
-                    <div>MEV %</div>
-                    <div>Uptime</div>
-                    <div>Client</div>
-                    <div>SPDF</div>
+                <div class="grid grid-cols-[auto_auto_auto_auto_auto_auto_auto_auto] text-[14px] gap-4 rounded-lg">
+                    <div class="font-bold text-center">Rank</div>
+                    <div class="font-bold text-center">Tvc</div>
+                    <div class="font-bold text-center">Stake Pool</div>
+                    <div class="font-bold text-center">Inf%</div>
+                    <div class="font-bold text-center">Mev %</div>
+                    <div class="font-bold text-center">Uptime</div>
+                    <div class="font-bold text-center">Client</div>
+                    <div class="font-bold text-center">SFDP</div>
+  
+                    <div class="text-center">{validator.spyRank || 'N/A'}</div>
+                    <div class="text-center">{validator.tvcRank || 'N/A'}</div>
+                    <div class="text-center">
+                        <FontAwesomeIcon icon={faFrog} className="mr-[2px]" />
+                            <FontAwesomeIcon icon={faFire} className="mr-[2px]" />
+                            <FontAwesomeIcon icon={faHouse} className="mr-[2px]" />
+                            <FontAwesomeIcon icon={faCircleRadiation} className="mr-[2px]" />
+                    </div>
+                    <div class="text-center">
+                        {validator.jito_commission !== undefined ? `${(parseFloat(validator.jito_commission) / 100).toFixed(2)}%` : 'N/A'}
+                    </div>
+                    <div class="text-center">
+                        {validator.commission !== undefined ? `${(parseFloat(validator.commission) / 100).toFixed(2)}%` : 'N/A'}
+                    </div>
+                    <div class="text-center"><ValidatorUptime validator={validator} /></div>
+                    <div class="text-center ">
+                        <span className="bg-blue-500 text-white px-1 px-2 rounded-lg inline-block text-[12px]">
+                            {validator.version || validator.software_version || 'N/A'}
+                        </span>
+                    </div>
+                    <div class="text-center"><ValidatorSFDP validator={validator} epoch={epoch} type={'card'} /></div>
+                </div>
+                {/* <div className="grid grid-cols-8 gap-1 text-[13px]">
+                    <div className="w-[60px] text-center border border-1 border-black">Rank</div>
+                    <div className="w-[60px] text-center border border-1 border-black">TVC</div>
+                    <div className="whitespace-nowrap min-w-[120px] text-center  border border-1 border-black">Stake Pool</div>
+                    <div className="w-[60px] text-center  border border-1 border-black">INF %</div>
+                    <div className="w-[60px] text-center  border border-1 border-black">MEV %</div>
+                    <div className="w-[80px] text-center  border border-1 border-black">Uptime</div>
+                    <div className="w-[80px] text-center  border border-1 border-black">Client</div>
+                    <div className="whitespace-nowrap min-w-[90px] text-center">SPDF</div>
 
-                    <div> - </div>
-                    <div>{validator.tvcRank || 'N/A'}</div>
-                    <div className="whitespace-nowrap px-1">
+                    <div className="w-[60px] text-center">{validator.spyRank}</div>
+                    <div className="w-[60px] text-center">{validator.tvcRank || 'N/A'}</div>
+                    <div className="whitespace-nowrap px-1 min-w-[120px] text-center">
                         <FontAwesomeIcon icon={faFrog} className="mr-[2px]" />
                         <FontAwesomeIcon icon={faFire} className="mr-[2px]" />
                         <FontAwesomeIcon icon={faHouse} className="mr-[2px]" />
                         <FontAwesomeIcon icon={faCircleRadiation} className="mr-[2px]" />
                     </div>
-                    <div>{validator.jito_commission !== undefined ? `${validator.jito_commission}%` : 'N/A'}</div>
-                    <div>{validator.commission !== undefined ? `${validator.commission}%` : 'N/A'}</div>
-                    <div><ValidatorUptime validator={validator} /></div>
-                    <div>{validator.version || validator.software_version || 'N/A'}</div>
-                    <div>SPDF</div>
-                </div>
+                    <div className="w-[60px] text-center">{validator.jito_commission !== undefined ? `${(parseFloat(validator.jito_commission) / 100).toFixed(2)}%` : 'N/A'}</div>
+                    <div className="w-[60px] text-center">{validator.commission !== undefined ? `${(parseFloat(validator.commission) / 100).toFixed(2)}%` : 'N/A'}</div>
+                    <div className="w-[80px] text-center"><ValidatorUptime validator={validator} /></div>
+                    <div className="w-[80px] text-center">{validator.version || validator.software_version || 'N/A'}</div>
+                    <div className="whitespace-nowrap min-w-[90px] text-center"><ValidatorSFDP validator={validator} epoch={epoch} /></div>
+                </div> */}
             </div>
         </div>
       </div>

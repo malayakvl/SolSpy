@@ -64,19 +64,6 @@ class ValidatorController extends Controller
         
         $filteredTotalCount = $totalCountQuery->count();
         
-        $validatorsAllData = DB::table('data.validators')
-            ->orderBy('activated_stake', 'DESC')->get();
-        $sortedValidators = $validatorsAllData->toArray();
-
-        // Рассчитываем tvcRank для каждого валидатора из $validatorsData
-        $results = $validatorsData->map(function ($validator) use ($sortedValidators) {
-            // Находим индекс валидатора в отсортированном массиве по vote_pubkey
-            $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
-
-            // Добавляем tvcRank к объекту валидатора
-            $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
-            return $validator;
-        });
         $totalStakeQuery = "
             SELECT COALESCE(SUM(activated_stake) / 1000000000.0, 0) as total_network_stake_sol,
                 COUNT(*) as validator_count,
@@ -87,12 +74,48 @@ class ValidatorController extends Controller
         ";    
         $totalStake = DB::select($totalStakeQuery)[0];
 
+        $validatorsAllData = DB::table('data.validators')
+            ->orderBy('activated_stake', 'DESC')->get();
+        $sortedValidators = $validatorsAllData->toArray();
+
+        // Calculate total network stake in lamports for spyRank calculation
+        $totalStakeLamports = $totalStake->total_network_stake_sol * 1000000000;
+
+        // Инициализация SpyRankService
+        $spyRankService = new SpyRankService();
+
+        // Рассчитываем tvcRank и spyRank для каждого валидатора из $validatorsData
+        $results = $validatorsData->map(function ($validator) use ($sortedValidators, $spyRankService, $totalStakeLamports) {
+            // Находим индекс валидатора в отсортированном массиве по vote_pubkey
+            $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
+
+            // Добавляем tvcRank к объекту валидатора
+            $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
+            
+            // Calculate spyRank
+            $validator->spyRank = $spyRankService->calculateSpyRank($validator, $totalStakeLamports);
+            
+            return $validator;
+        });
+
         //getting top validators
         $topValidators = DB::table('data.validators')
             ->where('data.validators.is_top', true)
             ->orderBy('data.validators.activated_stake', 'DESC')
             ->limit(10)
             ->get();
+
+        // Calculate TVC rank and Spy rank for top validators as well
+        $topValidatorsWithRanks = $topValidators->map(function ($validator) use ($sortedValidators, $spyRankService, $totalStakeLamports) {
+            // Calculate TVC rank
+            $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
+            $validator->tvcRank = $tvcRank ?: 'Not found';
+            
+            // Calculate spyRank
+            $validator->spyRank = $spyRankService->calculateSpyRank($validator, $totalStakeLamports);
+            
+            return $validator;
+        });
 
         if (!$request->user()) {
             return Inertia::render('Validators/Index', [
@@ -102,7 +125,7 @@ class ValidatorController extends Controller
                 'currentPage' => $page,
                 'filterType' => $filterType,
                 'totalStakeData' => $totalStake,
-                'topValidatorsData' => $topValidators
+                'topValidatorsData' => $topValidatorsWithRanks
             ]);
 
 
@@ -114,7 +137,7 @@ class ValidatorController extends Controller
                 'currentPage' => $page,
                 'filterType' => $filterType,
                 'totalStakeData' => $totalStake,
-                'topValidatorsData' => $topValidators
+                'topValidatorsData' => $topValidatorsWithRanks
             ]);
         }
     }
@@ -733,13 +756,23 @@ class ValidatorController extends Controller
             ->orderBy('activated_stake', 'DESC')->get();
         $sortedValidators = $validatorsAllData->toArray();
 
-        // Рассчитываем tvcRank для каждого валидатора из $validatorsData
-        $results = $validatorsData->map(function ($validator) use ($sortedValidators) {
+        // Calculate total network stake in lamports for spyRank calculation
+        $totalStakeLamports = $totalStake->total_network_stake_sol * 1000000000;
+
+        // Инициализация SpyRankService
+        $spyRankService = new SpyRankService();
+
+        // Рассчитываем tvcRank и spyRank для каждого валидатора из $validatorsData
+        $results = $validatorsData->map(function ($validator) use ($sortedValidators, $spyRankService, $totalStakeLamports) {
             // Находим индекс валидатора в отсортированном массиве по vote_pubkey
             $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
 
             // Добавляем tvcRank к объекту валидатора
             $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
+            
+            // Calculate spyRank
+            $validator->spyRank = $spyRankService->calculateSpyRank($validator, $totalStakeLamports);
+            
             return $validator;
         });
 
