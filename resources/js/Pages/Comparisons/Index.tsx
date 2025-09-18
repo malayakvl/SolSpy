@@ -300,12 +300,12 @@ export default function Index(validatorsData) {
         const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
         try {
             // Build URL with all parameters
-            let url = `/api/${!user ? 'fetch-favorite-validators-public' : 'fetch-favorite-validators'}?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`;
+            let url = `/api/${!user ? 'fetch-comparison-validators-public' : 'fetch-comparison-validators'}?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`;
             if (searchParam) {
                 url += `&search=${encodeURIComponent(searchParam)}`;
             }
             if (!user) {
-                url += `&ids=${localStorage.getItem('validatorFavorites') || '[]'}`;
+                url += `&ids=${localStorage.getItem('validatorCompare') || '[]'}`;
             }
             
             const response = await axios.get(url);
@@ -364,18 +364,21 @@ console.log('Data fetched', data)
                                             <th className="px-4 py-2 text-left font-semibold">Metrics</th>
                                             {data.map((validator) => (
                                                 <th key={validator.id} className="px-4 py-2 text-center font-semibold">
-                                                    <div className="flex flex-col items-center space-y-2">
-                                                        {validator.avatar_file_url ? (
-                                                            <img
-                                                                src={validator.avatar_file_url}
-                                                                alt={validator.name}
-                                                                className="w-10 h-10 rounded-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-10 h-10 rounded-full bg-gray-300"></div>
-                                                        )}
-                                                        <div className="text-sm">
-                                                        </div>
+                                                    <div className="flex flex-col items-center">
+                                                        <img 
+                                                            src={validator.avatar_url || validator.avatar_file_url} 
+                                                            alt={`${validator.name} avatar`} 
+                                                            className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500"
+                                                            onError={(e) => {
+                                                                e.currentTarget.style.display = 'none';
+                                                                // Create a fallback element
+                                                                const fallback = document.createElement('div');
+                                                                fallback.className = 'w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500';
+                                                                fallback.textContent = '';
+                                                                e.currentTarget.parentNode.appendChild(fallback);
+                                                            }}
+                                                        />
+                                                        <div className="pt-2">{validator.name}</div>
                                                     </div>
                                                 </th>
                                             ))}

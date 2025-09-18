@@ -12,10 +12,12 @@ Route::get('/fetch-by-id-validators/{page?}', [ApiValidatorController::class, 'f
 // Public API routes - accessible to everyone
 Route::get('/fetch-validators', [ApiValidatorController::class, 'timeoutData'])->name('validators.timeoutData');
 Route::get('/fetch-favorite-validators-public', [ApiValidatorController::class, 'publicFavoriteData'])->name('validators.publicFavoriteData');
+Route::get('/fetch-comparison-validators-public', [ApiValidatorController::class, 'publicComparisonData'])->name('validators.publicComparisonData');
 
 // Session-based authentication for SPA API calls (this is what you need for authenticated users)
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/fetch-favorite-validators', [ApiValidatorController::class, 'timeoutFavoriteData'])->name('validators.timeoutFavoriteData');
+    Route::get('/fetch-comparison-validators', [ApiValidatorController::class, 'timeoutComparisonData'])->name('validators.timeoutComparisonData');
     Route::get('/validator-metrics', [ApiValidatorController::class, 'getValidatorMetrics'])->name('validators.metrics');
     Route::get('/historical-metrics', [ApiValidatorController::class, 'getHistoricalMetrics'])->name('validators.historicalMetrics');
     Route::post('/add-compare', [ApiValidatorController::class, 'addCompare'])->name('api.validators.addCompare');
