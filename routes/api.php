@@ -9,9 +9,13 @@ use App\Http\Controllers\Api\ValidatorController as ApiValidatorController;
 Route::get('/fetch-settings', [SettingsController::class, 'getDataWithHeader'])->name('settings.get');
 Route::get('/fetch-by-id-validators/{page?}', [ApiValidatorController::class, 'fetchByIds'])->name('validators.fetchByIds');
 
+// Public API routes - accessible to everyone
+Route::get('/fetch-validators', [ApiValidatorController::class, 'timeoutData'])->name('validators.timeoutData');
+Route::get('/fetch-favorite-validators-public', [ApiValidatorController::class, 'publicFavoriteData'])->name('validators.publicFavoriteData');
+
 // Session-based authentication for SPA API calls (this is what you need for authenticated users)
 Route::middleware(['web', 'auth'])->group(function () {
-    Route::get('/fetch-validators', [ApiValidatorController::class, 'timeoutData'])->name('validators.timeoutData');
+    Route::get('/fetch-favorite-validators', [ApiValidatorController::class, 'timeoutFavoriteData'])->name('validators.timeoutFavoriteData');
     Route::get('/validator-metrics', [ApiValidatorController::class, 'getValidatorMetrics'])->name('validators.metrics');
     Route::get('/historical-metrics', [ApiValidatorController::class, 'getHistoricalMetrics'])->name('validators.historicalMetrics');
     Route::post('/add-compare', [ApiValidatorController::class, 'addCompare'])->name('api.validators.addCompare');
@@ -23,5 +27,3 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-
-// Remove the conflicting routes that don't have proper authentication

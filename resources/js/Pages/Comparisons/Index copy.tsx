@@ -1,30 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout';
-import { Head, usePage, router } from '@inertiajs/react';
-import Lang from 'lang.js';
-import lngVaidators from '../../Lang/Validators/translation';
-import { useSelector, useDispatch } from 'react-redux';
-import { appEpochSelector, appLangSelector } from '../../Redux/Layout/selectors';
-import { setFilterAction } from '../../Redux/Validators';
+import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
+    faBan,
+    faCheck,
     faTimes
 } from '@fortawesome/free-solid-svg-icons';
-import ValidatorCredits from "./../Validators/Partials/ValidatorCredits";
-import ValidatorRate from "./../Validators/Partials/ValidatorRate";
+import ValidatorCredits from "../Validators/Partials/ValidatorCredits";
+import ValidatorRate from "../Validators/Partials/ValidatorRate";
+import ValidatorName from "../Validators/Partials/ValidatorName";
 import ValidatorActivatedStake from "../Validators/Partials/ValidatorActivatedStake";
 import ValidatorUptime from "../Validators/Partials/ValidatorUptime";
 import ValidatorScore from "../Validators/Partials/ValidatorScore";
-import ValidatorSFDP from '../Validators/Partials/ValidatorSFDP';
-
+import ValidatorSFDP from "../Validators/Partials/ValidatorSFDP";
 import axios from 'axios';
+import ValidatorSpyRank from "../Validators/Partials/ValidatorSpyRank";
+import { toast } from 'react-toastify';
+import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout';
+import { Head, usePage } from '@inertiajs/react';
+import Lang from 'lang.js';
+import lngVaidators from '../../Lang/Validators/translation';
+import { useSelector } from 'react-redux';
+import { appEpochSelector, appLangSelector } from '../../Redux/Layout/selectors';
 import { perPageSelector, filterTypeSelector } from '../../Redux/Validators/selectors';
-import 'pure-react-carousel/dist/react-carousel.es.css';
-import { renderColumnHeader, renderColumnCell } from '../../Components/Validators/ValidatorTableComponents';
+
 
 export default function Index(validatorsData) {
-    const dispatch = useDispatch();
     const [data, setData] = useState<any>(validatorsData.validatorsData);
+    const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(validatorsData.currentPage);
     const [bannedValidators, setBannedValidators] = useState<number[]>([]);
     const perPage = useSelector(perPageSelector);
     const appLang = useSelector(appLangSelector);
@@ -37,253 +40,22 @@ export default function Index(validatorsData) {
         messages: lngVaidators,
         locale: appLang,
     });
+    const [sortClickState, setSortClickState] = useState<{column: string, direction: string} | null>(null); // Track sort click state
+    const [totalRecords, setTotalRecords] = useState(validatorsData.totalCount);
 
     const epoch = useSelector(appEpochSelector);
     const user = usePage().props.auth.user;
     const [dataFetched, setDataFetched] = useState(false);
-    const [currentPage, setCurrentPage] = useState(validatorsData.currentPage);
     const [lastPages, setLastPages] = useState({
         all: validatorsData.currentPage,
         top: 1,
         highlight: 1
     }); // Remember last page for each filter type
-    const [sortClickState, setSortClickState] = useState<{column: string, direction: string} | null>(null); // Track sort click state
 
-
-    const [itemsPerPage] = useState(perPage); // Number of items per page
-    const [selectAll, setSelectAll] = useState(false);
-    const [checkedIds, setCheckedIds] = useState<string[]>([]);
-    const [totalRecords, setTotalRecords] = useState(validatorsData.totalCount);
-    const [showModal, setShowModal] = useState(false);
-    const [columnSettings, setColumnSettings] = useState(null);
-    const [columnsConfig, setColumnsConfig] = useState(() => {
-        if (validatorsData.settingsData?.table_fields) {
-            const parsedFields = JSON.parse(validatorsData.settingsData.table_fields);
-            // Fix any instances of "MEV Comission" to "MEV Commission"
-            return parsedFields.map(field => 
-                field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
-            );
-        } else {
-            return [
-                { name: "Spy Rank", show: true },
-                { name: "Avatar", show: true },
-                { name: "Name", show: true },
-                { name: "Status", show: true },
-                { name: "TVC Score", show: true },
-                { name: "Active Stake", show: true },
-                { name: "Vote Credits", show: true },
-                { name: "Vote Rate", show: true },
-                { name: "Inflation Commission", show: true },
-                { name: "MEV Commission", show: true },
-                { name: "Uptime", show: true },
-                { name: "Client/Version", show: true },
-                { name: "Status SFDP", show: true },
-                { name: "Location", show: true },
-                { name: "Awards", show: true },
-                { name: "Website", show: true },
-                { name: "City", show: true },
-                { name: "ASN", show: true },
-                { name: "IP", show: true },
-                { name: "Jiito Score", show: true }
-            ];
-        }
-    });
-
-    // Get role names as array of strings
-    const userRoleNames = user?.roles?.map(role => role.name) || [];
-    // Check if user has Admin/Manager role
-    const isAdmin = userRoleNames.includes('Admin');
-    const isManager = userRoleNames.includes('Manager');
-
-    useEffect(() => {
-        const bannedList = JSON.parse(localStorage.getItem('validatorBanned') || '[]');
-        setBannedValidators(bannedList);
-    }, []);
-
-    // Handle ban toggle from child component
-    const handleBanToggle = (validatorId: number, isBanned: boolean) => {
-        if (isBanned) {
-            // Add to banned list
-            setBannedValidators(prev => [...prev, validatorId]);
-        } else {
-            // Remove from banned list
-            setBannedValidators(prev => prev.filter(id => id !== validatorId));
-        }
-    };
-
-    // Filter out banned validators from the data
-    // const filteredData = data.filter(validator => !bannedValidators.includes(validator.id));
-    const filteredData = data;
-
-    const handleCheckboxChange = (id) => {
-        if (checkedIds.includes(id)) {
-            // Remove from checkedIds
-            setCheckedIds(prev => prev.filter(checkedId => checkedId !== id));
-        } else {
-            // Add to checkedIds
-            setCheckedIds(prev => [...prev, id]);
-        }
-        
-        // Update selectAll state based on whether all visible (non-banned) rows are checked
-        const visibleValidatorIds = filteredData
-            .filter(validator => !bannedValidators.includes(validator.id))
-            .map(validator => validator.id);
-        
-        const newCheckedIds = checkedIds.includes(id) 
-            ? checkedIds.filter(checkedId => checkedId !== id)
-            : [...checkedIds, id];
-            
-        setSelectAll(visibleValidatorIds.every(validatorId => newCheckedIds.includes(validatorId)));
-    };
-
-    const handleSelectAllChange = () => {
-        const newSelectAll = !selectAll;
-        setSelectAll(newSelectAll);
-        
-        // Get visible (non-banned) validator IDs
-        const visibleValidatorIds = filteredData
-            .filter(validator => !bannedValidators.includes(validator.id))
-            .map(validator => validator.id);
-        
-        if (newSelectAll) {
-            // Add all visible validator IDs to checkedIds
-            setCheckedIds(prev => {
-                const newCheckedIds = [...prev];
-                visibleValidatorIds.forEach(id => {
-                    if (!newCheckedIds.includes(id)) {
-                        newCheckedIds.push(id);
-                    }
-                });
-                return newCheckedIds;
-            });
-        } else {
-            // Remove all visible validator IDs from checkedIds
-            setCheckedIds(prev => prev.filter(id => !visibleValidatorIds.includes(id)));
-        }
-    };
-
-    // Pagination logic - server-side
-    const totalPages = Math.ceil(totalRecords / itemsPerPage);
-
-    const handlePageChange = (pageNumber: number) => {
-        if (pageNumber >= 1 && pageNumber <= totalPages && pageNumber !== currentPage) {
-            // Set flag to indicate this is a pagination operation
-            setIsPaginationOrSorting(true);
-            
-            // Update URL with new page number immediately
-            const urlParams = new URLSearchParams(window.location.search);
-            urlParams.set('page', pageNumber.toString());
-            
-            // Only add filterType if it's not 'all' (default)
-            if (filterTypeDataSelector !== 'all') {
-                urlParams.set('filterType', filterTypeDataSelector);
-            }
-            
-            // Update the browser URL
-            const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
-            window.history.replaceState({}, '', newUrl);
-            
-            // Update currentPage state
-            // This will trigger the useEffect to fetch data
-            setCurrentPage(pageNumber);
-            
-            // Save the current page for the current filter
-            setLastPages(prev => ({
-                ...prev,
-                [filterTypeDataSelector]: pageNumber
-            }));
-        }
-    };
-
-    useEffect(() => {
-        // Set up interval for periodic data fetching
-        const intervalId = setInterval(() => {
-            fetchData();
-        }, parseInt(validatorsData.settingsData.update_interval) * 1000);
-        
-        // Listen for filter changes
-        const handleFilterChange = () => {
-            // Reset to first page when filter changes
-            setCurrentPage(1);
-        };
-        
-        window.addEventListener('filterChanged', handleFilterChange);
-        
-        return () => {
-            clearInterval(intervalId);
-            window.removeEventListener('filterChanged', handleFilterChange);
-        };
-    }, []);
-    
-    // Fetch data when currentPage changes
+    // Fetch comparison validators on component mount
     useEffect(() => {
         fetchData();
     }, [currentPage]);
-    
-    // Listen for URL changes to trigger data refresh
-    useEffect(() => {
-        const handleUrlChange = () => {
-            // Get parameters from URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const pageParam = parseInt(urlParams.get('page')) || 1;
-            const filterParam = urlParams.get('filterType') || 'all';
-            
-            // Update state if page has changed
-            if (pageParam !== currentPage) {
-                setCurrentPage(pageParam);
-            }
-            
-            // Update filter if it has changed
-            if (filterParam !== filterTypeDataSelector) {
-                dispatch(setFilterAction(filterParam));
-            }
-        };
-        
-        // Listen for popstate events (back/forward navigation)
-        window.addEventListener('popstate', handleUrlChange);
-        
-        // Check if URL has changed on component mount
-        handleUrlChange();
-        
-        return () => {
-            window.removeEventListener('popstate', handleUrlChange);
-        };
-    }, [currentPage, filterTypeDataSelector]);
-
-
-    // Helper function to get ordered visible columns
-    const getOrderedVisibleColumns = () => {
-        const filtered = columnsConfig.filter(col => col.show);
-        // console.log('Filtering columns:', columnsConfig);
-        // console.log('Filtered columns:', filtered);
-        return filtered;
-    };
-
-    // Helper function to render column header by name
-    const renderColumnHeaderLocal = (columnName) => {
-        return renderColumnHeader(columnName, sortClickState, setSortClickState, setCurrentPage, isLoading, setIsPaginationOrSorting);
-    };
-
-    // Helper function to render column cell by name
-    const renderColumnCellLocal = (columnName, validator, index) => {
-        return renderColumnCell(columnName, validator, epoch, validatorsData.settingsData, validatorsData.totalStakeData, data);
-    };
-
-    const fetchColumnSettings = async () => {
-        try {
-            const response = await axios.get('/api/settings/columns');
-            if (response.data && response.data.table_fields) {
-                const freshColumns = JSON.parse(response.data.table_fields);
-                // Fix any instances of "MEV Comission" to "MEV Commission"
-                const normalizedColumns = freshColumns.map(field => 
-                    field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
-                );
-                setColumnsConfig(normalizedColumns);
-            }
-        } catch (error) {
-            console.error('Error fetching column settings:', error);
-        }
-    };
 
     const fetchData = async () => {
         // Show loading indicator only for pagination and sorting operations
@@ -335,53 +107,100 @@ export default function Index(validatorsData) {
     };
 console.log('Data fetched', data)
 
-    return (
-        <AuthenticatedLayout header={<Head />}>
-            <Head title={msg.get('validators.title')} />
-            <div className="py-0">
-                {/* Loading overlay - only shown during pagination and sorting */}
-                {isLoading && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white p-6 rounded-lg shadow-lg">
-                            <div className="flex flex-col items-center">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-                                <p className="text-gray-700">Завантаження даних...</p>
-                            </div>
+    const removeFromComparison = async (validatorId: number) => {
+        try {
+            if (user?.id) {
+                // Registered user - use API (TODO: implement remove-compare endpoint)
+                // For now, use localStorage as fallback
+                const compareList = JSON.parse(localStorage.getItem('validatorCompare') || '[]');
+                const updatedList = compareList.filter(id => id !== validatorId);
+                localStorage.setItem('validatorCompare', JSON.stringify(updatedList));
+            } else {
+                // Unregistered user - update localStorage
+                const compareList = JSON.parse(localStorage.getItem('validatorCompare') || '[]');
+                const updatedList = compareList.filter(id => id !== validatorId);
+                localStorage.setItem('validatorCompare', JSON.stringify(updatedList));
+            }
+            
+            // Remove from local state
+            setComparisonValidators(prev => prev.filter(validator => validator.id !== validatorId));
+            
+            toast.success('Validator removed from comparison', {
+                position: "top-right",
+                autoClose: 2000,
+            });
+        } catch (error) {
+            console.error('Error removing validator from comparison:', error);
+            toast.error('Failed to remove validator from comparison');
+        }
+    };
+
+    if (loading) {
+        return (
+            <AuthenticatedLayout header={<Head />}>
+                <Head title="Validator Comparison" />
+                <div className="py-0">
+                    <div className="p-4 sm:p-8 mb-8 content-data bg-content">
+                        <h2>Loading comparison...</h2>
+                    </div>
+                </div>
+            </AuthenticatedLayout>
+        );
+    }
+
+    if (data.length === 0) {
+        return (
+            <AuthenticatedLayout header={<Head />}>
+                <Head title="Validator Comparison" />
+                <div className="py-0">
+                    <div className="p-4 sm:p-8 mb-8 content-data bg-content">
+                        <h2>Validator Comparison</h2>
+                        <div className="mt-6">
+                            <p className="text-gray-600">No validators selected for comparison.</p>
+                            <p className="text-sm text-gray-500 mt-2">Go to the validators page and add some validators to compare.</p>
                         </div>
                     </div>
-                )}
-                
+                </div>
+            </AuthenticatedLayout>
+        );
+    }
+
+    return (
+        <AuthenticatedLayout header={<Head />}>
+            <Head title="Validator Comparison" />
+            <div className="py-0">
                 <div className="p-4 sm:p-8 mb-8 content-data bg-content">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold">{msg.get('validators.title')}&nbsp;</h2>
-                    </div>
-                    {data.length > 0 ? (
-                        <div className="mt-6">
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200 validator-table">
-                                    <thead>
-                                        <tr>
-                                            <th className="px-4 py-2 text-left font-semibold">Metrics</th>
-                                            {data.map((validator) => (
-                                                <th key={validator.id} className="px-4 py-2 text-center font-semibold">
-                                                    <div className="flex flex-col items-center space-y-2">
-                                                        {validator.avatar_file_url ? (
-                                                            <img
-                                                                src={validator.avatar_file_url}
-                                                                alt={validator.name}
-                                                                className="w-10 h-10 rounded-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-10 h-10 rounded-full bg-gray-300"></div>
-                                                        )}
-                                                        <div className="text-sm">
-                                                        </div>
+                    <h2>Validator Comparison ({data.length} validators)</h2>
+                    <div className="mt-6">
+                        <div className="overflow-x-auto">
+                            
+
+
+                            <table className="min-w-full divide-y divide-gray-200 validator-table">
+                                <thead>
+                                    <tr>
+                                        <th className="px-4 py-2 text-left font-semibold">Metric</th>
+                                        {data.map((validator) => (
+                                            <th key={validator.id} className="px-4 py-2 text-center font-semibold">
+                                                <div className="flex flex-col items-center space-y-2">
+                                                    {validator.avatar_file_url ? (
+                                                        <img
+                                                            src={validator.avatar_file_url}
+                                                            alt={validator.name}
+                                                            className="w-10 h-10 rounded-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-10 h-10 rounded-full bg-gray-300"></div>
+                                                    )}
+                                                    <div className="text-sm">
+                                                        <ValidatorName validator={validator} align={'center'} />
                                                     </div>
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+                                                </div>
+                                            </th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
                                     {/* Remove Row */}
                                     <tr className="border-b">
                                         <td className="px-4 py-3 font-medium text-gray-900">Remove</td>
@@ -397,6 +216,7 @@ console.log('Data fetched', data)
                                             </td>
                                         ))}
                                     </tr>
+                                    
                                     {/* Spy Rank Row */}
                                     <tr className="border-b bg-gray-50">
                                         <td className="px-4 py-3 font-medium text-gray-900">Spy Rank</td>
@@ -406,15 +226,21 @@ console.log('Data fetched', data)
                                             </td>
                                         ))}
                                     </tr>
+                                    
                                     {/* Status Row */}
                                     <tr className="border-b">
                                         <td className="px-4 py-3 font-medium text-gray-900">Status</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
-                                                {validator.delinquent ? 'Delinquent' : 'Active'}
+                                                {!validator.delinquent ? (
+                                                    <FontAwesomeIcon icon={faCheck} className="mr-1 text-green-500" />
+                                                ) : (
+                                                    <FontAwesomeIcon icon={faBan} className="mr-1 text-red-500" />
+                                                )}
                                             </td>
                                         ))}
                                     </tr>
+                                    
                                     {/* TVC Score Row */}
                                     <tr className="border-b bg-gray-50">
                                         <td className="px-4 py-3 font-medium text-gray-900">TVC Score</td>
@@ -424,6 +250,7 @@ console.log('Data fetched', data)
                                             </td>
                                         ))}
                                     </tr>
+                                    
                                     {/* Vote Credits Row */}
                                     <tr className="border-b">
                                         <td className="px-4 py-3 font-medium text-gray-900">Vote Credits</td>
@@ -433,6 +260,7 @@ console.log('Data fetched', data)
                                             </td>
                                         ))}
                                     </tr>
+                                    
                                     {/* Active Stake Row */}
                                     <tr className="border-b bg-gray-50">
                                         <td className="px-4 py-3 font-medium text-gray-900">Active Stake</td>
@@ -442,6 +270,7 @@ console.log('Data fetched', data)
                                             </td>
                                         ))}
                                     </tr>
+                                    
                                     {/* Vote Rate Row */}
                                     <tr className="border-b">
                                         <td className="px-4 py-3 font-medium text-gray-900">Vote Rate</td>
@@ -453,6 +282,7 @@ console.log('Data fetched', data)
                                             </td>
                                         ))}
                                     </tr>
+                                    
                                     {/* Inflation Commission Row */}
                                     <tr className="border-b bg-gray-50">
                                         <td className="px-4 py-3 font-medium text-gray-900">Inflation Commission</td>
@@ -462,6 +292,7 @@ console.log('Data fetched', data)
                                             </td>
                                         ))}
                                     </tr>
+                                    
                                     {/* MEV Commission Row */}
                                     <tr className="border-b">
                                         <td className="px-4 py-3 font-medium text-gray-900">MEV Commission</td>
@@ -471,6 +302,7 @@ console.log('Data fetched', data)
                                             </td>
                                         ))}
                                     </tr>
+                                    
                                     {/* Uptime Row */}
                                     <tr className="border-b bg-gray-50">
                                         <td className="px-4 py-3 font-medium text-gray-900">Uptime</td>
@@ -480,6 +312,7 @@ console.log('Data fetched', data)
                                             </td>
                                         ))}
                                     </tr>
+                                    
                                     {/* Client/Version Row */}
                                     <tr className="border-b">
                                         <td className="px-4 py-3 font-medium text-gray-900">Client/Version</td>
@@ -489,6 +322,7 @@ console.log('Data fetched', data)
                                             </td>
                                         ))}
                                     </tr>
+                                    
                                     {/* Status SFDP Row */}
                                     <tr className="border-b bg-gray-50">
                                         <td className="px-4 py-3 font-medium text-gray-900">Status SFDP</td>
@@ -542,6 +376,7 @@ console.log('Data fetched', data)
                                             </td>
                                         ))}
                                     </tr>
+                                    
                                     {/* ASN Row */}
                                     <tr className="border-b">
                                         <td className="px-4 py-3 font-medium text-gray-900">ASN</td>
@@ -561,23 +396,29 @@ console.log('Data fetched', data)
                                             </td>
                                         ))}
                                     </tr>
+                                    
                                     {/* Jiito Score Row */}
                                     <tr className="border-b">
                                         <td className="px-4 py-3 font-medium text-gray-900">Jiito Score</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
-                                                {validator.jito_commission !== undefined ? parseFloat(validator.jito_commission).toFixed(4) : 'N/A'}
+                                                {validator.jito_commission !== null && validator.jito_commission !== undefined ? `${validator.jito_commission}%` : 'N/A'}
                                             </td>
                                         ))}
                                     </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                                </tbody>
+                            </table>
                         </div>
-                    ) : (
-                        <p>Empty list</p>
-                    )}
-                    
+                        
+                        {/* Summary section */}
+                        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                            <h3 className="text-lg font-semibold mb-2">Comparison Summary</h3>
+                            <p className="text-sm text-gray-600">
+                                Comparing {data.length} validator{data.length !== 1 ? 's' : ''}. 
+                                {!user?.id && ' (Guest mode: max 2 validators)'}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>
