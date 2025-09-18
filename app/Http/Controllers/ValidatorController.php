@@ -611,11 +611,7 @@ class ValidatorController extends Controller
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
         // Fetch validators data using service
         $validators = $this->validatorDataService->fetchDataFavoriteValidators($userId, $filterType, $offset, $totalStakeLamports, $favoriteIds);
-        $sortedValidators = $validators['validatorsAllData']->toArray();
         $filteredTotalCount = $validators['totalFilteredValidators'];
-
-        // Get top validators
-        $topValidatorsWithRanks = $this->validatorDataService->fetchDataTopValidators($sortedValidators, $totalStakeLamports);
 
         return Inertia::render('Comparisons/Index', [
             'validatorsData' => $validators['results'],
@@ -624,11 +620,7 @@ class ValidatorController extends Controller
             'currentPage' => $page,
             'filterType' => $filterType,
             'totalStakeData' => $stakeData[0],
-            'topValidatorsData' => $topValidatorsWithRanks
         ]);
-
-        // return Inertia::render('Comparisons/Index', [
-        // ]);
     }
 
     public function favorites(Request $request) {

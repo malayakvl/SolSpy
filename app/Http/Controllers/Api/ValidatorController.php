@@ -110,10 +110,102 @@ class ValidatorController extends Controller
         ]);
     }
 
+    public function timeoutComparisonData(Request $request)
+    {
+        $page = max(1, (int) $request->get('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1
+        $limit = 10; // Количество записей на страницу
+        $offset = ($page - 1) * $limit; // Расчет offset
+        $filterType = $request->get('filterType', 'all'); // Get filter type
+        $searchTerm = $request->get('search', ''); // Get search term
+        $sortColumn = $request->get('sortColumn', 'id'); // Get sort column
+        $sortDirection = $request->get('sortDirection', 'ASC'); // Get sort direction
+        $userId = $request->user() ? $request->user()->id : null;
+        
+        // For unauthenticated users, get favorite validator IDs from request parameter
+        $compareIds = null;
+        if (!$userId) {
+            $favoriteIds = $request->get('validatorCompare', []); // Get from localStorage parameter
+            if (is_string($compareIds)) {
+                $compareIds = json_decode($compareIds, true) ?: [];
+            }
+        }
+        
+        // Get total stake data
+        $stakeData = $this->totalStakeService->getTotalStake();
+        $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
+
+        // Fetch timeout data using service
+        $data = $this->validatorDataService->timeoutCompareData(
+            $sortColumn, 
+            $sortDirection, 
+            $totalStakeLamports,
+            $userId, 
+            $filterType, 
+            $limit, 
+            $offset, 
+            $searchTerm,
+            $compareIds
+        );
+
+        return response()->json([
+            'validatorsData' => $data['validatorsData'],
+            'settingsData' => Settings::first(),
+            'totalCount' => $data['filteredTotalCount'],
+            'currentPage' => $page,
+            'filterType' => $filterType,
+            'totalStakeData' => $stakeData[0],
+        ]);
+    }
+
     /**
      * Public method for fetching favorite validators for unauthenticated users
      */
     public function publicFavoriteData(Request $request)
+    {
+        $page = max(1, (int) $request->get('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1
+        $limit = 10; // Количество записей на страницу
+        $offset = ($page - 1) * $limit; // Расчет offset
+        $filterType = $request->get('filterType', 'all'); // Get filter type
+        $searchTerm = $request->get('search', ''); // Get search term
+        $sortColumn = $request->get('sortColumn', 'id'); // Get sort column
+        $sortDirection = $request->get('sortDirection', 'ASC'); // Get sort direction
+        // For unauthenticated users, get favorite validator IDs from request parameter
+        $favoriteIds = $request->get('ids', []); // Get from localStorage parameter
+        if (is_string($favoriteIds)) {
+            $favoriteIds = json_decode($favoriteIds, true) ?: [];
+        }
+        
+        // Get total stake data
+        $stakeData = $this->totalStakeService->getTotalStake();
+        $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
+
+        // Fetch timeout data using service
+        $data = $this->validatorDataService->timeoutFavoriteData(
+            $sortColumn, 
+            $sortDirection, 
+            $totalStakeLamports,
+            null, // userId is null for public access
+            $filterType, 
+            $limit, 
+            $offset, 
+            $searchTerm,
+            $favoriteIds
+        );
+
+        return response()->json([
+            'validatorsData' => $data['validatorsData'],
+            'settingsData' => Settings::first(),
+            'totalCount' => $data['filteredTotalCount'],
+            'currentPage' => $page,
+            'filterType' => $filterType,
+            'totalStakeData' => $stakeData[0],
+        ]);
+    }
+
+    /**
+     * Public method for fetching favorite validators for unauthenticated users
+     */
+    public function publicComparisonData(Request $request)
     {
         $page = max(1, (int) $request->get('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1
         $limit = 10; // Количество записей на страницу
