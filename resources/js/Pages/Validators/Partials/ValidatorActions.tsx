@@ -170,6 +170,7 @@ export default function ValidatorActions({validator, onBanToggle}) {
                         pauseOnHover: true,
                         draggable: true,
                     });
+                    
                     return;
                 }
                 favoritesList.push(validatorId);

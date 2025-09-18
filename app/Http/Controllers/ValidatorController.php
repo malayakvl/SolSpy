@@ -591,12 +591,82 @@ class ValidatorController extends Controller
     }
 
     public function comparisons(Request $request) {
+        $limit = 10;
+        $page = max(1, (int) $request->get('page', 1));
+        $offset = ($page - 1) * $limit;
+        $filterType = $request->get('filterType', 'all');
+        $userId = $request->user() ? $request->user()->id : null;
+        
+        // For unauthenticated users, get favorite validator IDs from request parameter
+        $favoriteIds = null;
+        if (!$userId) {
+            $favoriteIds = $request->get('validatorFavorites', []); // Get from localStorage parameter
+            if (is_string($favoriteIds)) {
+                $favoriteIds = json_decode($favoriteIds, true) ?: [];
+            }
+        }
+
+        // Get total stake data
+        $stakeData = $this->totalStakeService->getTotalStake();
+        $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
+        // Fetch validators data using service
+        $validators = $this->validatorDataService->fetchDataFavoriteValidators($userId, $filterType, $offset, $totalStakeLamports, $favoriteIds);
+        $sortedValidators = $validators['validatorsAllData']->toArray();
+        $filteredTotalCount = $validators['totalFilteredValidators'];
+
+        // Get top validators
+        $topValidatorsWithRanks = $this->validatorDataService->fetchDataTopValidators($sortedValidators, $totalStakeLamports);
+
         return Inertia::render('Comparisons/Index', [
+            'validatorsData' => $validators['results'],
+            'settingsData' => Settings::first(),
+            'totalCount' => $filteredTotalCount,
+            'currentPage' => $page,
+            'filterType' => $filterType,
+            'totalStakeData' => $stakeData[0],
+            'topValidatorsData' => $topValidatorsWithRanks
         ]);
+
+        // return Inertia::render('Comparisons/Index', [
+        // ]);
     }
 
     public function favorites(Request $request) {
+        $limit = 10;
+        $page = max(1, (int) $request->get('page', 1));
+        $offset = ($page - 1) * $limit;
+        $filterType = $request->get('filterType', 'all');
+        $userId = $request->user() ? $request->user()->id : null;
+        
+        // For unauthenticated users, get favorite validator IDs from request parameter
+        $favoriteIds = null;
+        if (!$userId) {
+            $favoriteIds = $request->get('validatorFavorites', []); // Get from localStorage parameter
+            if (is_string($favoriteIds)) {
+                $favoriteIds = json_decode($favoriteIds, true) ?: [];
+            }
+        }
+
+        // Get total stake data
+        $stakeData = $this->totalStakeService->getTotalStake();
+        $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
+        // Fetch validators data using service
+        $validators = $this->validatorDataService->fetchDataFavoriteValidators($userId, $filterType, $offset, $totalStakeLamports, $favoriteIds);
+        // dd($validators['results']);exit;
+        $sortedValidators = $validators['validatorsAllData']->toArray();
+        $filteredTotalCount = $validators['totalFilteredValidators'];
+
+        // Get top validators
+        $topValidatorsWithRanks = $this->validatorDataService->fetchDataTopValidators($sortedValidators, $totalStakeLamports);
+
         return Inertia::render('Favorites/Index', [
+            'validatorsData' => $validators['results'],
+            'settingsData' => Settings::first(),
+            'totalCount' => $filteredTotalCount,
+            'currentPage' => $page,
+            'filterType' => $filterType,
+            'totalStakeData' => $stakeData[0],
+            'topValidatorsData' => $topValidatorsWithRanks
         ]);
     }
 }

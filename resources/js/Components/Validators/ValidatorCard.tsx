@@ -27,7 +27,7 @@ export default function ValidatorCard({validator, epoch, settingsData, totalStak
 
   return (
       <div className="flex flex-col v-card">
-        <div class="flex flex-col h-[200px] items-center bg-white border md:flex-row hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
+        <div className="flex flex-col h-[200px] items-center bg-white border md:flex-row hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
             <img 
                 src={validator.avatar_url || validator.avatar_file_url} 
                 alt={`${validator.name} avatar`} 
@@ -41,41 +41,41 @@ export default function ValidatorCard({validator, epoch, settingsData, totalStak
                     e.currentTarget.parentNode.appendChild(fallback);
                 }}
             />
-            <div class="flex flex-col justify-between p-2 leading-normal">
-                <h5 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+            <div className="flex flex-col justify-between p-2 leading-normal">
+                <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
                     <ValidatorName validator={validator} noTruncate={true} />
                 </h5>
-                <div class="grid grid-cols-[auto_auto_auto_auto_auto_auto_auto_auto] text-[14px] gap-4 rounded-lg">
-                    <div class="font-bold text-center">Rank</div>
-                    <div class="font-bold text-center">Tvc</div>
-                    <div class="font-bold text-center">Stake Pool</div>
-                    <div class="font-bold text-center">Inf%</div>
-                    <div class="font-bold text-center">Mev %</div>
-                    <div class="font-bold text-center">Uptime</div>
-                    <div class="font-bold text-center">Client</div>
-                    <div class="font-bold text-center">SFDP</div>
+                <div className="grid grid-cols-[auto_auto_auto_auto_auto_auto_auto_auto] text-[14px] gap-4 rounded-lg">
+                    <div className="font-bold text-center">Rank</div>
+                    <div className="font-bold text-center">Tvc</div>
+                    <div className="font-bold text-center">Stake Pool</div>
+                    <div className="font-bold text-center">Inf%</div>
+                    <div className="font-bold text-center">Mev %</div>
+                    <div className="font-bold text-center">Uptime</div>
+                    <div className="font-bold text-center">Client</div>
+                    <div className="font-bold text-center">SFDP</div>
   
-                    <div class="text-center">{validator.spyRank || 'N/A'}</div>
-                    <div class="text-center">{validator.tvcRank || 'N/A'}</div>
-                    <div class="text-center">
+                    <div className="text-center">{validator.spyRank || 'N/A'}</div>
+                    <div className="text-center">{validator.tvcRank || 'N/A'}</div>
+                    <div className="text-center">
                         <FontAwesomeIcon icon={faFrog} className="mr-[2px]" />
                             <FontAwesomeIcon icon={faFire} className="mr-[2px]" />
                             <FontAwesomeIcon icon={faHouse} className="mr-[2px]" />
                             <FontAwesomeIcon icon={faCircleRadiation} className="mr-[2px]" />
                     </div>
-                    <div class="text-center">
+                    <div className="text-center">
                         {validator.jito_commission !== undefined ? `${(parseFloat(validator.jito_commission) / 100).toFixed(2)}%` : 'N/A'}
                     </div>
-                    <div class="text-center">
+                    <div className="text-center">
                         {validator.commission !== undefined ? `${(parseFloat(validator.commission) / 100).toFixed(2)}%` : 'N/A'}
                     </div>
-                    <div class="text-center"><ValidatorUptime validator={validator} /></div>
-                    <div class="text-center ">
+                    <div className="text-center"><ValidatorUptime validator={validator} /></div>
+                    <div className="text-center ">
                         <span className="bg-blue-500 text-white px-1 px-2 rounded-lg inline-block text-[12px]">
                             {validator.version || validator.software_version || 'N/A'}
                         </span>
                     </div>
-                    <div class="text-center"><ValidatorSFDP validator={validator} epoch={epoch} type={'card'} /></div>
+                    <div className="text-center"><ValidatorSFDP validator={validator} epoch={epoch} type={'card'} /></div>
                 </div>
                 {/* <div className="grid grid-cols-8 gap-1 text-[13px]">
                     <div className="w-[60px] text-center border border-1 border-black">Rank</div>
