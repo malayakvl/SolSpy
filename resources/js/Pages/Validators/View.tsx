@@ -266,7 +266,7 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
     const fetchData = async () => {
         try {
             // Build URL with all parameters
-            let url = `/api/fetch-validators`;
+            let url = `/api/fetch-validators-auth`;
             
             const response = await axios.get(url);
             setData(response.data.validatorsData);

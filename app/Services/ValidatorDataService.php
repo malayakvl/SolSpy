@@ -22,20 +22,17 @@ class ValidatorDataService
     {
         $query = DB::table('data.validators')
             ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
-            
         // Only join favorites table if user is authenticated
         if ($userId) {
             $query->leftJoin('data.validators_favorite', function($join) use ($userId) {
                 $join->on('data.validators.id', '=', 'data.validators_favorite.validator_id')
                      ->where('data.validators_favorite.user_id', '=', $userId);
             })
-            ->select('data.validators.*', 'data.validators_favorite.id as favorite_id', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
+            ->select('data.validators.*', 'data.validators_favorite.id as is_favorite', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
         } else {
             $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
         }
-
         $validatorsData = $query;
-        
         // Apply filter based on filterType
         if ($filterType === 'highlight') {
             $validatorsData = $validatorsData->where('data.validators.is_highlighted', true);
@@ -79,7 +76,7 @@ class ValidatorDataService
             
             return $validator;
         });
-        
+// dd($results);exit;        
         return [
             'sortedValidators' => $sortedValidators,
             'results' => $results,
@@ -150,14 +147,14 @@ class ValidatorDataService
         }
         $query = DB::table('data.validators')
             ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
-            
+
         // Only join favorites table if user is authenticated
         if ($userId) {
             $query->leftJoin('data.validators_favorite', function($join) use ($userId) {
                 $join->on('data.validators.id', '=', 'data.validators_favorite.validator_id')
                      ->where('data.validators_favorite.user_id', '=', $userId);
             })
-            ->select('data.validators.*', 'data.validators_favorite.id as favorite_id', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
+            ->select('data.validators.*', 'data.validators_favorite.id as is_favorite', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
         } else {
             $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
         }

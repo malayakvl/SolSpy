@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\DB;
 use App\Services\SpyRankService;
 use App\Services\TotalStakeService;
 use App\Services\ValidatorDataService;
-use Inertia\Inertia;
 
 class ValidatorController extends Controller
 {
@@ -29,18 +28,19 @@ class ValidatorController extends Controller
 
     public function timeoutData(Request $request)
     {
-        $page = max(1, (int) $request->get('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1
+        $page = max(1, (int) $request->input('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1
         $limit = 10; // Количество записей на страницу
         $offset = ($page - 1) * $limit; // Расчет offset
-        $filterType = $request->get('filterType', 'all'); // Get filter type
-        $searchTerm = $request->get('search', ''); // Get search term
-        $sortColumn = $request->get('sortColumn', 'id'); // Get sort column
-        $sortDirection = $request->get('sortDirection', 'ASC'); // Get sort direction
+        $filterType = $request->input('filterType', 'all'); // Get filter type
+        $searchTerm = $request->input('search', ''); // Get search term
+        $sortColumn = $request->input('sortColumn', 'id'); // Get sort column
+        $sortDirection = $request->input('sortDirection', 'ASC'); // Get sort direction
         $userId = $request->user() ? $request->user()->id : null;
+        
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
-
+        
         // Fetch timeout data using service
         $data = $this->validatorDataService->timeoutData(
             $sortColumn, 
@@ -65,19 +65,19 @@ class ValidatorController extends Controller
 
     public function timeoutFavoriteData(Request $request)
     {
-        $page = max(1, (int) $request->get('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1
+        $page = max(1, (int) $request->input('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1
         $limit = 10; // Количество записей на страницу
         $offset = ($page - 1) * $limit; // Расчет offset
-        $filterType = $request->get('filterType', 'all'); // Get filter type
-        $searchTerm = $request->get('search', ''); // Get search term
-        $sortColumn = $request->get('sortColumn', 'id'); // Get sort column
-        $sortDirection = $request->get('sortDirection', 'ASC'); // Get sort direction
+        $filterType = $request->input('filterType', 'all'); // Get filter type
+        $searchTerm = $request->input('search', ''); // Get search term
+        $sortColumn = $request->input('sortColumn', 'id'); // Get sort column
+        $sortDirection = $request->input('sortDirection', 'ASC'); // Get sort direction
         $userId = $request->user() ? $request->user()->id : null;
         
         // For unauthenticated users, get favorite validator IDs from request parameter
         $favoriteIds = null;
         if (!$userId) {
-            $favoriteIds = $request->get('validatorFavorites', []); // Get from localStorage parameter
+            $favoriteIds = $request->input('validatorFavorites', []); // Get from localStorage parameter
             if (is_string($favoriteIds)) {
                 $favoriteIds = json_decode($favoriteIds, true) ?: [];
             }
@@ -112,19 +112,19 @@ class ValidatorController extends Controller
 
     public function timeoutComparisonData(Request $request)
     {
-        $page = max(1, (int) $request->get('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1
+        $page = max(1, (int) $request->input('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1
         $limit = 10; // Количество записей на страницу
         $offset = ($page - 1) * $limit; // Расчет offset
-        $filterType = $request->get('filterType', 'all'); // Get filter type
-        $searchTerm = $request->get('search', ''); // Get search term
-        $sortColumn = $request->get('sortColumn', 'id'); // Get sort column
-        $sortDirection = $request->get('sortDirection', 'ASC'); // Get sort direction
+        $filterType = $request->input('filterType', 'all'); // Get filter type
+        $searchTerm = $request->input('search', ''); // Get search term
+        $sortColumn = $request->input('sortColumn', 'id'); // Get sort column
+        $sortDirection = $request->input('sortDirection', 'ASC'); // Get sort direction
         $userId = $request->user() ? $request->user()->id : null;
         
         // For unauthenticated users, get favorite validator IDs from request parameter
         $compareIds = null;
         if (!$userId) {
-            $favoriteIds = $request->get('validatorCompare', []); // Get from localStorage parameter
+            $compareIds = $request->input('validatorCompare', []); // Get from localStorage parameter
             if (is_string($compareIds)) {
                 $compareIds = json_decode($compareIds, true) ?: [];
             }
@@ -162,15 +162,15 @@ class ValidatorController extends Controller
      */
     public function publicFavoriteData(Request $request)
     {
-        $page = max(1, (int) $request->get('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1
+        $page = max(1, (int) $request->input('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1
         $limit = 10; // Количество записей на страницу
         $offset = ($page - 1) * $limit; // Расчет offset
-        $filterType = $request->get('filterType', 'all'); // Get filter type
-        $searchTerm = $request->get('search', ''); // Get search term
-        $sortColumn = $request->get('sortColumn', 'id'); // Get sort column
-        $sortDirection = $request->get('sortDirection', 'ASC'); // Get sort direction
+        $filterType = $request->input('filterType', 'all'); // Get filter type
+        $searchTerm = $request->input('search', ''); // Get search term
+        $sortColumn = $request->input('sortColumn', 'id'); // Get sort column
+        $sortDirection = $request->input('sortDirection', 'ASC'); // Get sort direction
         // For unauthenticated users, get favorite validator IDs from request parameter
-        $favoriteIds = $request->get('ids', []); // Get from localStorage parameter
+        $favoriteIds = $request->input('ids', []); // Get from localStorage parameter
         if (is_string($favoriteIds)) {
             $favoriteIds = json_decode($favoriteIds, true) ?: [];
         }
@@ -207,15 +207,15 @@ class ValidatorController extends Controller
      */
     public function publicComparisonData(Request $request)
     {
-        $page = max(1, (int) $request->get('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1
+        $page = max(1, (int) $request->input('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1
         $limit = 10; // Количество записей на страницу
         $offset = ($page - 1) * $limit; // Расчет offset
-        $filterType = $request->get('filterType', 'all'); // Get filter type
-        $searchTerm = $request->get('search', ''); // Get search term
-        $sortColumn = $request->get('sortColumn', 'id'); // Get sort column
-        $sortDirection = $request->get('sortDirection', 'ASC'); // Get sort direction
+        $filterType = $request->input('filterType', 'all'); // Get filter type
+        $searchTerm = $request->input('search', ''); // Get search term
+        $sortColumn = $request->input('sortColumn', 'id'); // Get sort column
+        $sortDirection = $request->input('sortDirection', 'ASC'); // Get sort direction
         // For unauthenticated users, get favorite validator IDs from request parameter
-        $favoriteIds = $request->get('ids', []); // Get from localStorage parameter
+        $favoriteIds = $request->input('ids', []); // Get from localStorage parameter
         if (is_string($favoriteIds)) {
             $favoriteIds = json_decode($favoriteIds, true) ?: [];
         }
@@ -245,6 +245,18 @@ class ValidatorController extends Controller
             'filterType' => $filterType,
             'totalStakeData' => $stakeData[0],
         ]);
+    }
+
+    public function removeComparisons(Request $request) {
+        $userId = $request->user() ? $request->user()->id : null;
+        $validatorId = $request->input('validatorId');
+
+        $validator = DB::table('data.validators_comparison')
+            ->where('validator_id', $validatorId)
+            ->where('user_id', $userId)
+            ->delete();
+
+        // dd($userId, $validatorId);
     }
 
 
@@ -293,8 +305,8 @@ class ValidatorController extends Controller
      */
     public function getValidatorMetrics(Request $request)
     {
-        $votePubkey = $request->get('votePubkey');
-        $validatorIdentityPubkey = $request->get('validatorIdentityPubkey');
+        $votePubkey = $request->input('votePubkey');
+        $validatorIdentityPubkey = $request->input('validatorIdentityPubkey');
         
         if (!$votePubkey) {
             return response()->json(['error' => 'votePubkey is required'], 400);
@@ -458,8 +470,8 @@ class ValidatorController extends Controller
      */
     public function getHistoricalMetrics(Request $request)
     {
-        $votePubkey = $request->get('votePubkey');
-        $validatorIdentityPubkey = $request->get('validatorIdentityPubkey');
+        $votePubkey = $request->input('votePubkey');
+        $validatorIdentityPubkey = $request->input('validatorIdentityPubkey');
         
         if (!$votePubkey) {
             return response()->json(['error' => 'votePubkey is required'], 400);
@@ -585,8 +597,8 @@ class ValidatorController extends Controller
     }
 
     public function markValidators(Request $request) {
-        $checkedIds = $request->get('checkedIds', []);
-        $value = $request->get('value');
+        $checkedIds = $request->input('checkedIds', []);
+        $value = $request->input('value');
         if (!empty($checkedIds) && in_array($value, ['highlight', 'top'])) {
             // Determine which field to update based on value
             if ($value === 'highlight')

@@ -305,7 +305,6 @@ export default function Index(validatorsData) {
         if (isPaginationOrSorting) {
             setIsLoading(true);
         }
-        
         // Get filter value and other parameters from current URL
         const urlParams = new URLSearchParams(window.location.search);
         const currentFilterType = urlParams.get('filterType') || 'all';
@@ -313,10 +312,13 @@ export default function Index(validatorsData) {
         const sortColumn = urlParams.get('sortColumn') || 'id';
         const sortDirection = urlParams.get('sortDirection') || 'ASC';
         const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
-        
         try {
             // Build URL with all parameters
-            let url = `/api/fetch-validators?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`;
+            // Use authenticated endpoint if user is logged in, otherwise use public endpoint
+            let url = user ? 
+                `/api/fetch-validators-auth?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}` :
+                `/api/fetch-validators?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`;
+                
             if (searchParam) {
                 url += `&search=${encodeURIComponent(searchParam)}`;
             }
@@ -338,7 +340,7 @@ export default function Index(validatorsData) {
             // Reset sort click state even if there's an error
             setSortClickState(null);
         } finally {
-            // Hide loading indicator after pagination or sorting operations
+            // Hide loading indicator after pagination and sorting operations
             if (isPaginationOrSorting) {
                 setIsLoading(false);
                 // Reset the flag
