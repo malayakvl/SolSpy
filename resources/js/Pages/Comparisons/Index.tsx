@@ -22,6 +22,27 @@ import { perPageSelector, filterTypeSelector } from '../../Redux/Validators/sele
 import 'pure-react-carousel/dist/react-carousel.es.css';
 import { renderColumnHeader, renderColumnCell } from '../../Components/Validators/ValidatorTableComponents';
 
+// Create a separate component for the validator avatar
+const ValidatorAvatar = ({ validator }) => {
+    const [imageError, setImageError] = useState(false);
+    
+    return (
+        <>
+            {imageError ? (
+                <div className="w-8 h-8 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center text-xs text-gray-500" />
+            ) : (
+                <img 
+                    src={validator.avatar_url || validator.avatar_file_url} 
+                    alt={`${validator.name} avatar`} 
+                    className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500"
+                    onError={() => setImageError(true)}
+                />
+            )}
+            <div className="pt-2">{validator.name}</div>
+        </>
+    );
+};
+
 export default function Index(validatorsData) {
     const dispatch = useDispatch();
     const [data, setData] = useState<any>(validatorsData.validatorsData);
@@ -56,38 +77,60 @@ export default function Index(validatorsData) {
     const [totalRecords, setTotalRecords] = useState(validatorsData.totalCount);
     const [showModal, setShowModal] = useState(false);
     const [columnSettings, setColumnSettings] = useState(null);
-    const [columnsConfig, setColumnsConfig] = useState(() => {
-        if (validatorsData.settingsData?.table_fields) {
-            const parsedFields = JSON.parse(validatorsData.settingsData.table_fields);
-            // Fix any instances of "MEV Comission" to "MEV Commission"
-            return parsedFields.map(field => 
-                field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
-            );
-        } else {
-            return [
-                { name: "Spy Rank", show: true },
-                { name: "Avatar", show: true },
-                { name: "Name", show: true },
-                { name: "Status", show: true },
-                { name: "TVC Score", show: true },
-                { name: "Active Stake", show: true },
-                { name: "Vote Credits", show: true },
-                { name: "Vote Rate", show: true },
-                { name: "Inflation Commission", show: true },
-                { name: "MEV Commission", show: true },
-                { name: "Uptime", show: true },
-                { name: "Client/Version", show: true },
-                { name: "Status SFDP", show: true },
-                { name: "Location", show: true },
-                { name: "Awards", show: true },
-                { name: "Website", show: true },
-                { name: "City", show: true },
-                { name: "ASN", show: true },
-                { name: "IP", show: true },
-                { name: "Jiito Score", show: true }
-            ];
+    const [columnsConfig, setColumnsConfig] = useState([
+        { name: "Spy Rank", show: true },
+        { name: "Avatar", show: true },
+        { name: "Name", show: true },
+        { name: "Status", show: true },
+        { name: "TVC Score", show: true },
+        { name: "Active Stake", show: true },
+        { name: "Vote Credits", show: true },
+        { name: "Vote Rate", show: true },
+        { name: "Inflation Commission", show: true },
+        { name: "MEV Commission", show: true },
+        { name: "Uptime", show: true },
+        { name: "Client/Version", show: true },
+        { name: "Status SFDP", show: true },
+        { name: "Location", show: true },
+        { name: "Awards", show: true },
+        { name: "Website", show: true },
+        { name: "City", show: true },
+        { name: "ASN", show: true },
+        { name: "IP", show: true },
+        { name: "Jiito Score", show: true }
+    ]);
+    
+    // Function to remove validator from comparison
+    const removeFromComparison = async (validatorId: number) => {
+        try {
+            if (user?.id) {
+                router.get(route('validators.removeComparisons'), {validatorId: validatorId}, {
+                    preserveState: true,
+                    preserveScroll: true
+                });
+                fetchData();
+            } else {
+                localStorage.setItem('validatorCompare', JSON.stringify(updatedList));
+            }
+            // // Get current comparison list from localStorage
+            // const currentCompareList = JSON.parse(localStorage.getItem('validatorCompare') || '[]');
+            
+            // // Remove the validator ID from the list
+            // const updatedList = currentCompareList.filter(id => id !== validatorId);
+            
+            // // Update localStorage
+            // localStorage.setItem('validatorCompare', JSON.stringify(updatedList));
+            
+            // // Update the component state to remove the validator
+            // setData(prevData => prevData.filter(validator => validator.id !== validatorId));
+            
+            // Show success message
+            // alert('Validator removed from comparison');
+        } catch (error) {
+            console.error('Error removing validator from comparison:', error);
+            alert('Error removing validator from comparison');
         }
-    });
+    };
 
     // Get role names as array of strings
     const userRoleNames = user?.roles?.map(role => role.name) || [];
@@ -95,123 +138,15 @@ export default function Index(validatorsData) {
     const isAdmin = userRoleNames.includes('Admin');
     const isManager = userRoleNames.includes('Manager');
 
-    useEffect(() => {
-        const bannedList = JSON.parse(localStorage.getItem('validatorBanned') || '[]');
-        setBannedValidators(bannedList);
-    }, []);
-
-    // Handle ban toggle from child component
-    const handleBanToggle = (validatorId: number, isBanned: boolean) => {
-        if (isBanned) {
-            // Add to banned list
-            setBannedValidators(prev => [...prev, validatorId]);
-        } else {
-            // Remove from banned list
-            setBannedValidators(prev => prev.filter(id => id !== validatorId));
-        }
-    };
-
-    // Filter out banned validators from the data
-    // const filteredData = data.filter(validator => !bannedValidators.includes(validator.id));
     const filteredData = data;
-
-    const handleCheckboxChange = (id) => {
-        if (checkedIds.includes(id)) {
-            // Remove from checkedIds
-            setCheckedIds(prev => prev.filter(checkedId => checkedId !== id));
-        } else {
-            // Add to checkedIds
-            setCheckedIds(prev => [...prev, id]);
-        }
-        
-        // Update selectAll state based on whether all visible (non-banned) rows are checked
-        const visibleValidatorIds = filteredData
-            .filter(validator => !bannedValidators.includes(validator.id))
-            .map(validator => validator.id);
-        
-        const newCheckedIds = checkedIds.includes(id) 
-            ? checkedIds.filter(checkedId => checkedId !== id)
-            : [...checkedIds, id];
-            
-        setSelectAll(visibleValidatorIds.every(validatorId => newCheckedIds.includes(validatorId)));
-    };
-
-    const handleSelectAllChange = () => {
-        const newSelectAll = !selectAll;
-        setSelectAll(newSelectAll);
-        
-        // Get visible (non-banned) validator IDs
-        const visibleValidatorIds = filteredData
-            .filter(validator => !bannedValidators.includes(validator.id))
-            .map(validator => validator.id);
-        
-        if (newSelectAll) {
-            // Add all visible validator IDs to checkedIds
-            setCheckedIds(prev => {
-                const newCheckedIds = [...prev];
-                visibleValidatorIds.forEach(id => {
-                    if (!newCheckedIds.includes(id)) {
-                        newCheckedIds.push(id);
-                    }
-                });
-                return newCheckedIds;
-            });
-        } else {
-            // Remove all visible validator IDs from checkedIds
-            setCheckedIds(prev => prev.filter(id => !visibleValidatorIds.includes(id)));
-        }
-    };
-
-    // Pagination logic - server-side
-    const totalPages = Math.ceil(totalRecords / itemsPerPage);
-
-    const handlePageChange = (pageNumber: number) => {
-        if (pageNumber >= 1 && pageNumber <= totalPages && pageNumber !== currentPage) {
-            // Set flag to indicate this is a pagination operation
-            setIsPaginationOrSorting(true);
-            
-            // Update URL with new page number immediately
-            const urlParams = new URLSearchParams(window.location.search);
-            urlParams.set('page', pageNumber.toString());
-            
-            // Only add filterType if it's not 'all' (default)
-            if (filterTypeDataSelector !== 'all') {
-                urlParams.set('filterType', filterTypeDataSelector);
-            }
-            
-            // Update the browser URL
-            const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
-            window.history.replaceState({}, '', newUrl);
-            
-            // Update currentPage state
-            // This will trigger the useEffect to fetch data
-            setCurrentPage(pageNumber);
-            
-            // Save the current page for the current filter
-            setLastPages(prev => ({
-                ...prev,
-                [filterTypeDataSelector]: pageNumber
-            }));
-        }
-    };
-
     useEffect(() => {
         // Set up interval for periodic data fetching
         const intervalId = setInterval(() => {
             fetchData();
         }, parseInt(validatorsData.settingsData.update_interval) * 1000);
         
-        // Listen for filter changes
-        const handleFilterChange = () => {
-            // Reset to first page when filter changes
-            setCurrentPage(1);
-        };
-        
-        window.addEventListener('filterChanged', handleFilterChange);
-        
         return () => {
             clearInterval(intervalId);
-            window.removeEventListener('filterChanged', handleFilterChange);
         };
     }, []);
     
@@ -220,70 +155,6 @@ export default function Index(validatorsData) {
         fetchData();
     }, [currentPage]);
     
-    // Listen for URL changes to trigger data refresh
-    useEffect(() => {
-        const handleUrlChange = () => {
-            // Get parameters from URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const pageParam = parseInt(urlParams.get('page')) || 1;
-            const filterParam = urlParams.get('filterType') || 'all';
-            
-            // Update state if page has changed
-            if (pageParam !== currentPage) {
-                setCurrentPage(pageParam);
-            }
-            
-            // Update filter if it has changed
-            if (filterParam !== filterTypeDataSelector) {
-                dispatch(setFilterAction(filterParam));
-            }
-        };
-        
-        // Listen for popstate events (back/forward navigation)
-        window.addEventListener('popstate', handleUrlChange);
-        
-        // Check if URL has changed on component mount
-        handleUrlChange();
-        
-        return () => {
-            window.removeEventListener('popstate', handleUrlChange);
-        };
-    }, [currentPage, filterTypeDataSelector]);
-
-
-    // Helper function to get ordered visible columns
-    const getOrderedVisibleColumns = () => {
-        const filtered = columnsConfig.filter(col => col.show);
-        // console.log('Filtering columns:', columnsConfig);
-        // console.log('Filtered columns:', filtered);
-        return filtered;
-    };
-
-    // Helper function to render column header by name
-    const renderColumnHeaderLocal = (columnName) => {
-        return renderColumnHeader(columnName, sortClickState, setSortClickState, setCurrentPage, isLoading, setIsPaginationOrSorting);
-    };
-
-    // Helper function to render column cell by name
-    const renderColumnCellLocal = (columnName, validator, index) => {
-        return renderColumnCell(columnName, validator, epoch, validatorsData.settingsData, validatorsData.totalStakeData, data);
-    };
-
-    const fetchColumnSettings = async () => {
-        try {
-            const response = await axios.get('/api/settings/columns');
-            if (response.data && response.data.table_fields) {
-                const freshColumns = JSON.parse(response.data.table_fields);
-                // Fix any instances of "MEV Comission" to "MEV Commission"
-                const normalizedColumns = freshColumns.map(field => 
-                    field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
-                );
-                setColumnsConfig(normalizedColumns);
-            }
-        } catch (error) {
-            console.error('Error fetching column settings:', error);
-        }
-    };
 
     const fetchData = async () => {
         // Show loading indicator only for pagination and sorting operations
@@ -365,20 +236,7 @@ console.log('Data fetched', data)
                                             {data.map((validator) => (
                                                 <th key={validator.id} className="px-4 py-2 text-center font-semibold">
                                                     <div className="flex flex-col items-center">
-                                                        <img 
-                                                            src={validator.avatar_url || validator.avatar_file_url} 
-                                                            alt={`${validator.name} avatar`} 
-                                                            className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500"
-                                                            onError={(e) => {
-                                                                e.currentTarget.style.display = 'none';
-                                                                // Create a fallback element
-                                                                const fallback = document.createElement('div');
-                                                                fallback.className = 'w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500';
-                                                                fallback.textContent = '';
-                                                                e.currentTarget.parentNode.appendChild(fallback);
-                                                            }}
-                                                        />
-                                                        <div className="pt-2">{validator.name}</div>
+                                                        <ValidatorAvatar validator={validator} />
                                                     </div>
                                                 </th>
                                             ))}

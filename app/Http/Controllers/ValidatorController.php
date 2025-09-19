@@ -82,7 +82,6 @@ class ValidatorController extends Controller
         $sortColumn = $request->get('sortColumn', 'id');
         $sortDirection = $request->get('sortDirection', 'ASC');
         $userId = $request->user() ? $request->user()->id : null;
-
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;

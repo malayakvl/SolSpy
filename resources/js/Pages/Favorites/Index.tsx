@@ -6,7 +6,7 @@ import lngVaidators from '../../Lang/Validators/translation';
 import { useSelector, useDispatch } from 'react-redux';
 import { appEpochSelector, appLangSelector } from '../../Redux/Layout/selectors';
 import { setFilterAction } from '../../Redux/Validators';
-import ValidatorActions from "./../Validators/Partials/ValidatorActions";
+import ValidatorFavoriteActions from "./../Validators/Partials/ValidatorFavoriteActions";
 import axios from 'axios';
 import { perPageSelector, filterTypeSelector } from '../../Redux/Validators/selectors';
 import 'pure-react-carousel/dist/react-carousel.es.css';
@@ -379,7 +379,7 @@ console.log('Data fetched', data)
                                                 </div>
                                             </td>
                                             <th className="text-center">
-                                                <ValidatorActions validator={validator} onBanToggle={handleBanToggle} />
+                                                <ValidatorFavoriteActions validator={validator} />
                                             </th>
                                             {getOrderedVisibleColumns().map(column => renderColumnCellLocal(column.name, validator, index))}
                                         </tr>
