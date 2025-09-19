@@ -338,7 +338,7 @@ export default function AdminIndex(validatorsData) {
         
         try {
             // Build URL with all parameters
-            let url = `/api/fetch-validators?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`;
+            let url = `/api/fetch-validators-auth?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`;
             if (searchParam) {
                 url += `&search=${encodeURIComponent(searchParam)}`;
             }

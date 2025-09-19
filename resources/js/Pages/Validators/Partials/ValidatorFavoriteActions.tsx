@@ -12,7 +12,7 @@ import { Link, usePage } from "@inertiajs/react";
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
-export default function ValidatorActions({validator, onBanToggle}) {
+export default function ValidatorFavoriteActions({validator, onBanToggle}) {
     const user = usePage().props.auth.user;
     const [isInComparison, setIsInComparison] = useState(false);
     const [isInFavorites, setIsInFavorites] = useState(false);
@@ -29,11 +29,8 @@ export default function ValidatorActions({validator, onBanToggle}) {
             
             const favoritesList = JSON.parse(localStorage.getItem('validatorFavorites') || '[]');
             setIsInFavorites(favoritesList.includes(validator.id));
-        } else {
-            // For registered users, use the is_favorite property from the validator object
-            setIsInFavorites(validator.is_favorite || false);
         }
-    }, [validator.id, validator.is_favorite, user?.id]);
+    }, [validator.id, user?.id]);
 
     const addToCompare = async (validatorId) => {
         if (user?.id) {
@@ -207,7 +204,7 @@ export default function ValidatorActions({validator, onBanToggle}) {
                     <span className="cursor-pointer" onClick={() => addToFavorite(validator.id)}>
                         <FontAwesomeIcon 
                             icon={faHeart} 
-                            className={`mr-2 ${isInFavorites ? 'text-red-500' : ''}`}
+                            className={`mr-2 text-red-500`}
                         />
                     </span>
                     <span>
