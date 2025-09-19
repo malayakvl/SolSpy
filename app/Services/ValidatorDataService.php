@@ -18,6 +18,74 @@ class ValidatorDataService
         $this->totalStakeService = $totalStakeService;
     }
 
+    /**
+     * Migrate localStorage comparison data to database when user logs in
+     */
+    public function migrateLocalStorageComparisonData($userId, $comparisonIds)
+    {
+        if (!$userId || empty($comparisonIds)) {
+            return;
+        }
+
+        // Get existing comparison records for this user
+        $existingComparisons = DB::table('data.validators_comparison')
+            ->where('user_id', $userId)
+            ->pluck('validator_id')
+            ->toArray();
+
+        // Filter out comparison IDs that already exist in the database
+        $newComparisonIds = array_diff($comparisonIds, $existingComparisons);
+
+        // Insert new comparison records
+        $insertData = [];
+        foreach ($newComparisonIds as $validatorId) {
+            $insertData[] = [
+                'user_id' => $userId,
+                'validator_id' => $validatorId,
+                'created_at' => now(),
+                'updated_at' => now()
+            ];
+        }
+
+        if (!empty($insertData)) {
+            DB::table('data.validators_comparison')->insert($insertData);
+        }
+    }
+
+    /**
+     * Migrate localStorage favorite data to database when user logs in
+     */
+    public function migrateLocalStorageFavoriteData($userId, $favoriteIds)
+    {
+        if (!$userId || empty($favoriteIds)) {
+            return;
+        }
+
+        // Get existing favorite records for this user
+        $existingFavorites = DB::table('data.validators_favorite')
+            ->where('user_id', $userId)
+            ->pluck('validator_id')
+            ->toArray();
+
+        // Filter out favorite IDs that already exist in the database
+        $newFavoriteIds = array_diff($favoriteIds, $existingFavorites);
+
+        // Insert new favorite records
+        $insertData = [];
+        foreach ($newFavoriteIds as $validatorId) {
+            $insertData[] = [
+                'user_id' => $userId,
+                'validator_id' => $validatorId,
+                'created_at' => now(),
+                'updated_at' => now()
+            ];
+        }
+
+        if (!empty($insertData)) {
+            DB::table('data.validators_favorite')->insert($insertData);
+        }
+    }
+
     public function fetchDataValidators($userId, string $filterType, int $offset, $totalStakeLamports)
     {
         $query = DB::table('data.validators')
