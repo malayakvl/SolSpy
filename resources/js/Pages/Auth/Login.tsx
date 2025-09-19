@@ -34,15 +34,61 @@ export default function Login({ status, canResetPassword }) {
     }));
   };
 
+  // Function to handle Google login with localStorage data
+  const handleGoogleLogin = (e) => {
+    e.preventDefault();
+    
+    // Get localStorage data
+    const validatorCompare = JSON.parse(localStorage.getItem('validatorCompare') || '[]');
+    const validatorFavorites = JSON.parse(localStorage.getItem('validatorFavorites') || '[]');
+    
+    // Redirect to Google auth with localStorage data as query parameters
+    let redirectUrl = '/auth/google/redirect';
+    const queryParams = [];
+    
+    if (validatorCompare.length > 0) {
+      queryParams.push(`validatorCompare=${encodeURIComponent(JSON.stringify(validatorCompare))}`);
+    }
+    
+    if (validatorFavorites.length > 0) {
+      queryParams.push(`validatorFavorites=${encodeURIComponent(JSON.stringify(validatorFavorites))}`);
+    }
+    
+    if (queryParams.length > 0) {
+      redirectUrl += '?' + queryParams.join('&');
+    }
+    
+    // Clear localStorage before redirecting
+    localStorage.removeItem('validatorCompare');
+    localStorage.removeItem('validatorFavorites');
+    
+    window.location.href = redirectUrl;
+  };
+
   const submit = e => {
     e.preventDefault();
+    
+    // Get localStorage data
+    const validatorCompare = JSON.parse(localStorage.getItem('validatorCompare') || '[]');
+    const validatorFavorites = JSON.parse(localStorage.getItem('validatorFavorites') || '[]');
+    
+    // Add localStorage data to the login request
+    const loginData = {
+      ...values,
+      validatorCompare: validatorCompare,
+      validatorFavorites: validatorFavorites
+    };
+    
     // post(route('password.confirm'), {
     //     onFinish: () => reset('password'),
     // });
     axios
-      .post('/login', values)
+      .post('/login', loginData)
       .then(response => {
         dispatch(setUserAction(response.config.data))
+        // Clear localStorage after successful login
+        localStorage.removeItem('validatorCompare');
+        localStorage.removeItem('validatorFavorites');
         location.href = '/dashboard';
       })
       .catch(error => {
@@ -116,7 +162,7 @@ export default function Login({ status, canResetPassword }) {
         <div className="flex mx-auto">
           <div className="flex justify-between items-center pt-4 w-full">
             <div>
-              <a href="/auth/google/redirect"
+              <a href="#" onClick={handleGoogleLogin}
                 className="bg-blue-800 hover:bg-gray-500 text-white text-sm font-bold py-2 px-4 rounded flex flex-start">
                 <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="24" height="24" className="google-icon" viewBox="0 0 50 50">
                   <path d="M 25.996094 48 C 13.3125 48 2.992188 37.683594 2.992188 25 C 2.992188 12.316406 13.3125 2 25.996094 2 C 31.742188 2 37.242188 4.128906 41.488281 7.996094 L 42.261719 8.703125 L 34.675781 16.289063 L 33.972656 15.6875 C 31.746094 13.78125 28.914063 12.730469 25.996094 12.730469 C 19.230469 12.730469 13.722656 18.234375 13.722656 25 C 13.722656 31.765625 19.230469 37.269531 25.996094 37.269531 C 30.875 37.269531 34.730469 34.777344 36.546875 30.53125 L 24.996094 30.53125 L 24.996094 20.175781 L 47.546875 20.207031 L 47.714844 21 C 48.890625 26.582031 47.949219 34.792969 43.183594 40.667969 C 39.238281 45.53125 33.457031 48 25.996094 48 Z"></path>
@@ -135,52 +181,6 @@ export default function Login({ status, canResetPassword }) {
               </a>
            </div>
           </div>
-          {/* <div className="mt-4 flex">
-            <a href="/auth/google/redirect"
-               className="bg-gray-700 hover:bg-gray-500 text-white text-sm font-bold py-2 px-4 rounded flex flex-start">
-              <svg className="w-6 h-6 mr-2" viewBox="0 0 48 48">
-                <path
-                    fill="#4285F4"
-                    d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
-                />
-                <path
-                    fill="#34A853"
-                    d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
-                />
-                <path
-                    fill="#FBBC05"
-                    d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.28-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
-                />
-                <path
-                    fill="#EA4335"
-                    d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
-                />
-              </svg>
-              Login with Google
-            </a>
-            <a href="/auth/google/redirect"
-               className="bg-gray-700 hover:bg-gray-500 text-white text-sm py-2 px-4 rounded flex items-center flex-end">
-              <svg className="w-6 h-6 mr-2" viewBox="0 0 48 48">
-                <path
-                    fill="#4285F4"
-                    d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
-                />
-                <path
-                    fill="#34A853"
-                    d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
-                />
-                <path
-                    fill="#FBBC05"
-                    d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.28-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
-                />
-                <path
-                    fill="#EA4335"
-                    d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
-                />
-              </svg>
-              Login with Apple
-            </a>
-          </div> */}
         </div>
       </form>
     </GuestLayout>

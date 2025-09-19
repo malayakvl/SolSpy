@@ -110,7 +110,6 @@ export default function ValidatorFavoriteActions({validator, onBanToggle}) {
     }
 
     const addToFavorite = async (validatorId) => {
-        console.log(validatorId)
         if (user?.id) {
             // Registered user - use API
             try {
