@@ -7,13 +7,14 @@ const lngHeader = {
     customers: 'Customer',
     currencies: 'Currencies',
     validators: 'Validators',
-    news: 'Manage News',
+    news: 'News',
     settings: 'Settings',
     epoch: 'epoch',
     login: 'Login', 
     register: 'Register',
+    banners: 'Banners',
     left: 'Left',
-    'discord-news': 'Manage Discord News'
+    'discord-news': 'Discord News'
   },
   'uk.menu': {
     dashboard: 'Панель керування',

@@ -17,6 +17,7 @@ const Modal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, childr
     const [list, setList] = useState(initialColumns || []);
     // Store the original initial state to revert to on Cancel
     const originalColumnsRef = useRef(JSON.parse(JSON.stringify(initialColumns || [])));
+    
     return (
         <div className="modal-overlay-columns relative z-50">
             <h2>{msg.get('validators.title')}&nbsp;</h2>

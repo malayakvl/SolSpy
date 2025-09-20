@@ -4,7 +4,8 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useSelector } from 'react-redux';
 import { appLangSelector } from '../../../Redux/Layout/selectors';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faCalendar, faUser, faPlus, faCog } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faCalendar, faUser, faPlus, faCog, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import { toast } from 'react-toastify';
 
 interface NewsItem {
     title: string;
@@ -22,6 +23,7 @@ interface NewsIndexProps {
         last_page: number;
         per_page: number;
         total: number;
+        error?: string;
     };
     featured?: NewsItem[];
     filters?: {
@@ -37,6 +39,7 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
     const [featuredFilter, setFeaturedFilter] = useState(filters.is_featured ? 'featured' : 'all');
+    const [selectedItems, setSelectedItems] = useState<number[]>([]);
 
     // Check if user has admin access
     const userRoles = auth?.user?.roles?.map(role => role.name) || [];
@@ -54,6 +57,44 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
             preserveState: true,
             preserveScroll: true
         });
+    };
+
+    const handleBulkAction = (action: string) => {
+        if (selectedItems.length === 0) {
+            toast.warning('Please select at least one item');
+            return;
+        }
+
+        if (confirm(`Are you sure you want to ${action} the selected items?`)) {
+            router.post(route('admin.discord.bulk-action'), {
+                action,
+                ids: selectedItems
+            }, {
+                onSuccess: () => {
+                    toast.success(`Bulk ${action} completed successfully`);
+                    setSelectedItems([]);
+                },
+                onError: () => {
+                    toast.error(`Failed to perform bulk ${action}`);
+                }
+            });
+        }
+    };
+
+    const toggleSelection = (index: number) => {
+        setSelectedItems(prev => 
+            prev.includes(index) 
+                ? prev.filter(item => item !== index)
+                : [...prev, index]
+        );
+    };
+
+    const toggleSelectAll = () => {
+        setSelectedItems(
+            selectedItems.length === news.data.length 
+                ? [] 
+                : news.data.map((_, index) => index)
+        );
     };
 
     const formatDate = (dateString: string) => {
@@ -79,6 +120,48 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
                         <h2 className="text-2xl font-bold">Discord News</h2>
                     </div>
 
+                    {/* Error message display */}
+                    {news.error && (
+                        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                            <div className="flex items-center">
+                                <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2" />
+                                <strong>Error:</strong>
+                            </div>
+                            <p className="mt-2">{news.error}</p>
+                        </div>
+                    )}
+
+                    {/* Bulk Actions */}
+                    {selectedItems.length > 0 && (
+                        <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                            <div className="flex items-center gap-4">
+                                <span className="text-sm font-medium">
+                                    {selectedItems.length} item(s) selected
+                                </span>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handleBulkAction('feature')}
+                                        className="px-3 py-1 text-xs bg-violet-500 text-white rounded hover:bg-yellow-600"
+                                    >
+                                        Toggle Top
+                                    </button>
+                                    {/* <button
+                                        onClick={() => handleBulkAction('unfeature')}
+                                        className="px-3 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
+                                    >
+                                        Unfeature
+                                    </button>
+                                    <button
+                                        onClick={() => handleBulkAction('delete')}
+                                        className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
+                                    >
+                                        Delete
+                                    </button> */}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Featured News Section */}
                     {/* Regular News Grid */}
                     {/* Replace the grid with a table */}
@@ -86,6 +169,14 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
                         <table className="min-w-full bg-white rounded-lg overflow-hidden">
                             <thead className="bg-gray-50">
                                 <tr>
+                                    <th className="px-6 py-3 text-left">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedItems.length === news.data.length && news.data.length > 0}
+                                            onChange={toggleSelectAll}
+                                            className="rounded"
+                                        />
+                                    </th>
                                     <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title & Description</th>
                                     <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Published Date</th>
                                     <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
@@ -93,8 +184,16 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {news.data.map((article) => (
-                                    <tr key={article.title} className="hover:bg-gray-50">
+                                {news.data && news.data.map((article, index) => (
+                                    <tr key={`${article.title}-${index}`} className={selectedItems.includes(index) ? 'bg-blue-50' : ''}>
+                                        <td className="px-6 py-4">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedItems.includes(index)}
+                                                onChange={() => toggleSelection(index)}
+                                                className="rounded"
+                                            />
+                                        </td>
                                         <td className="py-3 px-4">
                                             <a
                                                 href={article.url}
@@ -233,7 +332,7 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
                     )}
 
                     {/* No results message */}
-                    {news.data.length === 0 && (
+                    {(!news.data || news.data.length === 0) && !news.error && (
                         <div className="text-center py-8">
                             <p className="text-gray-500">No news articles found.</p>
                         </div>

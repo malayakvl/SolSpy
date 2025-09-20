@@ -62,6 +62,7 @@ Route::get('/news/{slug}', [NewsController::class, 'show'])->name('news.show');
 // Admin news routes - protected
 Route::middleware(['auth', 'check.role:Admin,Manager'])->prefix('admin')->group(function () {
     Route::get('/discord-news', [DiscordController::class, 'adminIndex'])->name('admin.discord.news');
+    Route::post('/discord-news/bulk-action', [DiscordController::class, 'bulkAction'])->name('admin.discord.bulk-action');
     Route::get('/news', [NewsController::class, 'adminIndex'])->name('admin.news.index');
     Route::get('/news/create', [NewsController::class, 'create'])->name('admin.news.create');
     Route::post('/news', [NewsController::class, 'store'])->name('admin.news.store');
@@ -74,6 +75,8 @@ Route::middleware(['auth', 'check.role:Admin,Manager'])->prefix('admin')->group(
     
     // Admin validators routes
     Route::get('/validators', [ValidatorController::class, 'adminIndex'])->name('admin.validators.index');
+    Route::get('/validators/top', [ValidatorController::class, 'adminTopIndex'])->name('admin.validators.top');
+    Route::post('/validators/bulk-action', [ValidatorController::class, 'bulkAction'])->name('admin.validators.bulk-action');
     
     // Admin customers routes
     Route::get('/customers', [UserController::class, 'index'])->name('admin.customers.index');

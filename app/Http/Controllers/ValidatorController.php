@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Favorits;
 use App\Models\Settings;
+use App\Models\ValidatorOrder;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -658,6 +659,116 @@ class ValidatorController extends Controller
             'filterType' => $filterType,
             'totalStakeData' => $stakeData[0],
             'topValidatorsData' => $topValidatorsWithRanks
+        ]);
+    }
+
+    /**
+     * Handle bulk actions for admin validators
+     */
+    public function bulkAction(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:top,highlight,ban,unban,delete',
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer'
+        ]);
+        
+        // Custom validation for validator IDs
+        $validIds = DB::table('data.validators')->whereIn('id', $validated['ids'])->pluck('id')->toArray();
+        $invalidIds = array_diff($validated['ids'], $validIds);
+        
+        if (!empty($invalidIds)) {
+            return back()->withErrors(['ids' => 'Some validator IDs are invalid: ' . implode(', ', $invalidIds)]);
+        }
+
+        $action = $validated['action'];
+        $ids = $validated['ids'];
+        $count = 0;
+
+        switch ($action) {
+            case 'top':
+                // Get current is_top status before toggling
+                $currentStatuses = DB::table('data.validators')
+                    ->select('id', 'is_top')
+                    ->whereIn('id', $ids)
+                    ->get()
+                    ->keyBy('id');
+                
+                // Toggle top status for validators
+                $count = DB::table('data.validators')
+                    ->whereIn('id', $ids)
+                    ->update(['is_top' => DB::raw('NOT is_top')]);
+                
+                // Manage validator order entries based on new status
+                foreach ($currentStatuses as $validatorId => $validator) {
+                    $newIsTop = !$validator->is_top; // This is the new status after toggle
+                    
+                    if ($newIsTop) {
+                        // Add to validator_order table with max sort_order + 1
+                        $maxSortOrder = ValidatorOrder::where('list_type', 'top')
+                            ->max('sort_order') ?? 0;
+                        
+                        ValidatorOrder::create([
+                            'validator_id' => $validatorId,
+                            'sort_order' => $maxSortOrder + 1,
+                            'list_type' => 'top'
+                        ]);
+                    } else {
+                        // Remove from validator_order table
+                        ValidatorOrder::where('validator_id', $validatorId)
+                            ->where('list_type', 'top')
+                            ->delete();
+                    }
+                }
+                break;
+                
+            case 'highlight':
+                // Toggle highlight status for validators
+                $count = DB::table('data.validators')
+                    ->whereIn('id', $ids)
+                    ->update(['is_highlighted' => DB::raw('NOT is_highlighted')]);
+                break;
+                
+            case 'ban':
+                // Ban validators (implementation depends on how banning is stored)
+                $count = DB::table('data.validators')
+                    ->whereIn('id', $ids)
+                    ->update(['is_banned' => true]);
+                break;
+                
+            case 'unban':
+                // Unban validators
+                $count = DB::table('data.validators')
+                    ->whereIn('id', $ids)
+                    ->update(['is_banned' => false]);
+                break;
+                
+            case 'delete':
+                // Delete validators (be careful with this action)
+                $count = DB::table('data.validators')
+                    ->whereIn('id', $ids)
+                    ->delete();
+                break;
+        }
+
+        return redirect()->route('admin.validators.index')
+            ->with('success', "Bulk {$action} completed successfully. {$count} validators affected.");
+    }
+
+    /**
+     * Display admin listing of top validators
+     */
+    public function adminTopIndex(Request $request): Response
+    {
+        $data = DB::table('data.validator_order')
+            ->leftJoin('data.validators', 'data.validators.id', '=', 'data.validator_order.validator_id')
+            ->select('data.validators.id', 'data.validators.name', 'data.validators.avatar_file_url')
+            ->orderBy('data.validator_order.sort_order')
+            ->get();
+        // Get top validators
+
+        return Inertia::render('Validators/Admin/TopIndex', [
+            'validatorsData' => $data,
         ]);
     }
 }

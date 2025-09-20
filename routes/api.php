@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\Api\ValidatorController as ApiValidatorController;
+use App\Http\Controllers\ValidatorOrderController;
 
 Route::get('/fetch-settings', [SettingsController::class, 'getDataWithHeader'])->name('settings.get');
 Route::get('/fetch-by-id-validators/{page?}', [ApiValidatorController::class, 'fetchByIds'])->name('validators.fetchByIds');
@@ -27,6 +28,10 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::post('/ban-validator', [ApiValidatorController::class, 'banValidator'])->name('api.validators.banValidator');
     Route::post('/mark-validators', [ApiValidatorController::class, 'markValidators'])->name('api.validators.markValidator');
     Route::post('/settings/update', [SettingsController::class, 'update'])->name('settings.update');
+
+    // Validator order routes
+    Route::post('/validator-order/update', [ValidatorOrderController::class, 'updateOrder'])->name('validator-order.update');
+    Route::get('/validator-order/{listType?}', [ValidatorOrderController::class, 'getOrder'])->name('validator-order.get');
 
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
