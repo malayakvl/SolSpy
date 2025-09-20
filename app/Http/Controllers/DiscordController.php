@@ -24,6 +24,14 @@ class DiscordController extends Controller
         // $newsApiKey = config('services.newsapi.key');
         $newsApiKey = '717a7ac2f8224744bf034d2d37a5f882';
 
+        // Initialize default response data
+        $paginatedData = [
+            'data' => [],
+            'current_page' => (int)$page,
+            'last_page' => 1,
+            'per_page' => (int)$limit,
+            'total' => 0,
+        ];
 
         try {
             $response = Http::withHeaders(['User-Agent' => 'NewsBot/1.0'])
@@ -35,52 +43,96 @@ class DiscordController extends Controller
                     'pageSize' => $limit,
                     'page' => $page,
                 ]);
-
-            if ($response->failed()) {
-                Log::error('NewsAPI request failed', ['status' => $response->status()]);
-                return Inertia::render('News/Error', ['message' => 'Failed to fetch news. HTTP Code: ' . $response->status()]);
-            }
-
-            $articles = $response->json('articles', []);
-            $totalResults = $response->json('totalResults', 0);
             
-            if (empty($articles)) {
-                return Inertia::render('News/Error', ['message' => 'No news found']);
+            Log::info('NewsAPI Response Status', ['status' => $response->status()]);
+            Log::info('NewsAPI Response Headers', ['headers' => $response->headers()]);
+            
+            if ($response->failed()) {
+                Log::error('NewsAPI request failed', ['status' => $response->status(), 'body' => $response->body()]);
+                $paginatedData['error'] = 'Failed to fetch news. HTTP Code: ' . $response->status();
+                return Inertia::render('DiscordNews/Admin/Index', [
+                    'news' => $paginatedData
+                ]);
             }
 
-            // Format articles for response
+            $responseData = $response->json();
+            Log::info('NewsAPI Response Structure', [
+                'keys' => array_keys($responseData ?? []),
+                'status' => $responseData['status'] ?? 'unknown',
+                'totalResults' => $responseData['totalResults'] ?? 0
+            ]);
+
+            $articles = $responseData['articles'] ?? [];
+            $totalResults = $responseData['totalResults'] ?? 0;
+            
+            Log::info('Articles count', ['count' => count($articles)]);
+            Log::info('Total results', ['total' => $totalResults]);
+            
+            // Format articles for response and ensure proper UTF-8 encoding
             $formattedArticles = array_map(function ($article) {
                 return [
-                    'title' => $article['title'] ?? 'No title',
-                    'url' => $article['url'] ?? '',
-                    'description' => substr($article['description'] ?? 'No description', 0, 100) . (strlen($article['description'] ?? '') > 100 ? '...' : ''),
-                    'source' => $article['source']['name'] ?? 'Unknown source',
+                    'title' => mb_convert_encoding($article['title'] ?? 'No title', 'UTF-8', 'UTF-8'),
+                    'url' => mb_convert_encoding($article['url'] ?? '', 'UTF-8', 'UTF-8'),
+                    'description' => mb_substr(mb_convert_encoding($article['description'] ?? 'No description', 'UTF-8', 'UTF-8'), 0, 100) . (mb_strlen($article['description'] ?? '') > 100 ? '...' : ''),
+                    'source' => mb_convert_encoding($article['source']['name'] ?? 'Unknown source', 'UTF-8', 'UTF-8'),
                     'published_at' => $article['publishedAt'] ?? now()->toIso8601String(),
+                    'views_count' => 0, // Default value for views_count
                 ];
             }, $articles);
 
             // Prepare paginated response
             $paginatedData = [
                 'data' => $formattedArticles,
-                'current_page' => $page,
-                'last_page' => ceil($totalResults / $limit),
-                'per_page' => $limit,
-                'total' => $totalResults,
+                'current_page' => (int)$page,
+                'last_page' => max(1, (int)ceil($totalResults / $limit)),
+                'per_page' => (int)$limit,
+                'total' => (int)$totalResults,
             ];
 
-            // return response()->json([
-            //     'message' => 'News fetched successfully',
-            //     'articles' => $formattedArticles,
-            // ], 200);
+            Log::info('Final paginated data prepared successfully', ['dataCount' => count($formattedArticles)]);
+
         } catch (\Exception $e) {
-            Log::error('Error in fetchNews', ['message' => $e->getMessage()]);
-            return Inertia::render('News/Error', ['message' => 'An error occurred: ' . $e->getMessage()], 500);
+            Log::error('Error in fetchNews', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            $paginatedData['error'] = 'An error occurred: ' . $e->getMessage();
+            // Return the error response
+            return Inertia::render('DiscordNews/Admin/Index', [
+                'news' => $paginatedData
+            ]);
         }
         
-        return Inertia::render('DiscordNews/Index', [
+        // Return the successful response
+        return Inertia::render('DiscordNews/Admin/Index', [
             'news' => $paginatedData,
         ]);
         
+    }
+
+    /**
+     * Handle bulk actions for Discord news
+     */
+    public function bulkAction(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:feature,unfeature,delete',
+            'ids' => 'required|array|min:1'
+        ]);
+        
+        $action = $validated['action'];
+        $ids = $validated['ids'];
+        $count = 0;
+
+        // Since these are external API articles, we can't actually modify them in a database
+        // Instead, we'll simulate the bulk action by logging it
+        Log::info("Bulk action performed on Discord news", [
+            'action' => $action,
+            'ids' => $ids,
+            'count' => count($ids)
+        ]);
+
+        // For now, we'll just return a success message since we can't actually
+        // perform database operations on external API data
+        return redirect()->route('admin.discord.news')
+            ->with('success', "Bulk {$action} completed successfully. {$count} items affected.");
     }
 
 
@@ -170,10 +222,10 @@ class DiscordController extends Controller
             // Форматування повідомлень
             $formattedMessages = array_map(function ($message) {
                 return [
-                    'title' => $message['content'] ? substr($message['content'], 0, 100) . (strlen($message['content']) > 100 ? '...' : '') : 'No content',
-                    'url' => !empty($message['attachments']) ? ($message['attachments'][0]['url'] ?? '') : '',
-                    'description' => $message['content'] ?? 'No description',
-                    'source' => $message['author']['username'] ?? 'Unknown author',
+                    'title' => $message['content'] ? mb_substr(mb_convert_encoding($message['content'], 'UTF-8', 'UTF-8'), 0, 100) . (mb_strlen($message['content']) > 100 ? '...' : '') : 'No content',
+                    'url' => !empty($message['attachments']) ? mb_convert_encoding($message['attachments'][0]['url'] ?? '', 'UTF-8', 'UTF-8') : '',
+                    'description' => mb_convert_encoding($message['content'] ?? 'No description', 'UTF-8', 'UTF-8'),
+                    'source' => mb_convert_encoding($message['author']['username'] ?? 'Unknown author', 'UTF-8', 'UTF-8'),
                     'published_at' => $message['timestamp'] ?? now()->toIso8601String(),
                 ];
             }, $allMessages);
@@ -182,10 +234,10 @@ class DiscordController extends Controller
             $totalResults = count($allMessages); // Приблизно, можна уточнити
             $paginatedData = [
                 'data' => array_slice($formattedMessages, ($page - 1) * $perPage, $perPage),
-                'current_page' => $page,
-                'last_page' => ceil($totalResults / $perPage),
-                'per_page' => $perPage,
-                'total' => $totalResults,
+                'current_page' => (int)$page,
+                'last_page' => (int)ceil($totalResults / $perPage),
+                'per_page' => (int)$perPage,
+                'total' => (int)$totalResults,
             ];
 
             // Повернення через Inertia

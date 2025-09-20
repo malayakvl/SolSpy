@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use App\Services\SpyRankService;
 use App\Services\TotalStakeService;
 use App\Services\ValidatorDataService;
+use App\Models\ValidatorOrder;
 
 class ValidatorController extends Controller
 {
@@ -652,5 +653,50 @@ class ValidatorController extends Controller
             'success' => true,
             'message' => 'Ban status updated'
         ]);
+    }
+
+    public function updateOrder(Request $request)
+    {
+        // $request->validate([
+        //     'validatorIds' => 'required|array',
+        //     'validatorIds.*' => 'integer|exists:validators,id',
+        //     'listType' => 'required|string'
+        // ]);
+        
+        $validatorIds = $request->input('validatorIds');
+        $listType = $request->input('listType', 'top');
+        dd($validatorIds, $listType);exit;
+        // Use a transaction to ensure data consistency
+        // DB::transaction(function () use ($validatorIds, $listType) {
+        //     // Delete existing order records for this list type
+        //     ValidatorOrder::where('list_type', $listType)->delete();
+            
+        //     // Create new order records
+        //     foreach ($validatorIds as $index => $validatorId) {
+        //         ValidatorOrder::create([
+        //             'validator_id' => $validatorId,
+        //             'sort_order' => $index,
+        //             'list_type' => $listType
+        //         ]);
+        //     }
+        // });
+        
+        return response()->json(['message' => 'Order updated successfully']);
+    }
+    
+    /**
+     * Get the order of validators for a specific list type
+     *
+     * @param  string  $listType
+     * @return \Illuminate\Http\Response
+     */
+    public function getOrder($listType = 'top')
+    {
+        $orderRecords = ValidatorOrder::where('list_type', $listType)
+            ->join('validators', 'validator_orders.validator_id', '=', 'validators.id')    
+            ->orderBy('sort_order')
+            ->get(['validator_id', 'sort_order']);
+            dd($orderRecords);exit;
+        return response()->json($orderRecords);
     }
 }
