@@ -44,6 +44,8 @@ export default function AdminIndex(validatorsData) {
     const [isLoading, setIsLoading] = useState(false); // Add loading state
     // Track if the current data fetch is due to pagination or sorting
     const [isPaginationOrSorting, setIsPaginationOrSorting] = useState(false);
+    const [selectedItems, setSelectedItems] = useState<number[]>([]);
+
 
     const msg = new Lang({
         messages: lngVaidators,
@@ -171,6 +173,33 @@ export default function AdminIndex(validatorsData) {
         } else {
             // Remove all visible validator IDs from checkedIds
             setCheckedIds(prev => prev.filter(id => !visibleValidatorIds.includes(id)));
+        }
+    };
+
+    // Handle bulk actions
+    const handleBulkAction = (action: string) => {
+        if (checkedIds.length === 0) {
+            toast.warning('Please select at least one validator');
+            return;
+        }
+
+        if (confirm(`Are you sure you want to ${action} the selected validators?`)) {
+            router.post(route('admin.validators.bulk-action'), {
+                action,
+                ids: checkedIds
+            }, {
+                onSuccess: () => {
+                    toast.success(`Bulk ${action} completed successfully`);
+                    // Clear selection
+                    setCheckedIds([]);
+                    setSelectAll(false);
+                    // Refresh data
+                    fetchData();
+                },
+                onError: () => {
+                    toast.error(`Failed to perform bulk ${action}`);
+                }
+            });
         }
     };
 
@@ -505,6 +534,49 @@ export default function AdminIndex(validatorsData) {
                         </div>
                     </div>
                     
+                    {/* Bulk Actions */}
+                    {checkedIds.length > 0 && (
+                        <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                            <div className="flex items-center gap-4">
+                                <span className="text-sm font-medium">
+                                    {checkedIds.length} validator(s) selected
+                                </span>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handleBulkAction('top')}
+                                        className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+                                    >
+                                        Toggle Top
+                                    </button>
+                                    <button
+                                        onClick={() => handleBulkAction('highlight')}
+                                        className="px-3 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                                    >
+                                        Toggle Highlight
+                                    </button>
+                                    {/* <button
+                                        onClick={() => handleBulkAction('ban')}
+                                        className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
+                                    >
+                                        Ban
+                                    </button>
+                                    <button
+                                        onClick={() => handleBulkAction('unban')}
+                                        className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                                    >
+                                        Unban
+                                    </button>
+                                    <button
+                                        onClick={() => handleBulkAction('delete')}
+                                        className="px-3 py-1 text-xs bg-red-700 text-white rounded hover:bg-red-800"
+                                    >
+                                        Delete
+                                    </button> */}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="mt-6">
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200 validator-table">
@@ -517,7 +589,7 @@ export default function AdminIndex(validatorsData) {
                                                     checked={selectAll}
                                                     onChange={handleSelectAllChange} 
                                                 />
-                                                {isAdmin && (
+                                                {/* {isAdmin && (
                                                     <ValidatorAdminActions 
                                                         checkedIds={checkedIds}
                                                         onActionComplete={() => {
@@ -525,7 +597,7 @@ export default function AdminIndex(validatorsData) {
                                                             fetchData(currentPage);
                                                         }}
                                                     />
-                                                )}
+                                                )} */}
                                             </div>
                                         </th>
                                         <th>Actions</th>
@@ -534,7 +606,7 @@ export default function AdminIndex(validatorsData) {
                                 </thead>
                                 <tbody>
                                 {data.map((validator, index) => (
-                                    <tr key={validator.id}>
+                                    <tr key={validator.id} className={checkedIds.includes(validator.id) ? 'bg-blue-50' : ''}>
                                         <td className="text-left">
                                             <div className="pl-[10px]">
                                                 <input 

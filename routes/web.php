@@ -74,6 +74,7 @@ Route::middleware(['auth', 'check.role:Admin,Manager'])->prefix('admin')->group(
     
     // Admin validators routes
     Route::get('/validators', [ValidatorController::class, 'adminIndex'])->name('admin.validators.index');
+    Route::post('/validators/bulk-action', [ValidatorController::class, 'bulkAction'])->name('admin.validators.bulk-action');
     
     // Admin customers routes
     Route::get('/customers', [UserController::class, 'index'])->name('admin.customers.index');

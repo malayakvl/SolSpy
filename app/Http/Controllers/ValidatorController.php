@@ -660,4 +660,68 @@ class ValidatorController extends Controller
             'topValidatorsData' => $topValidatorsWithRanks
         ]);
     }
+
+    /**
+     * Handle bulk actions for admin validators
+     */
+    public function bulkAction(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:top,highlight,ban,unban,delete',
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer'
+        ]);
+        
+        // Custom validation for validator IDs
+        $validIds = DB::table('data.validators')->whereIn('id', $validated['ids'])->pluck('id')->toArray();
+        $invalidIds = array_diff($validated['ids'], $validIds);
+        
+        if (!empty($invalidIds)) {
+            return back()->withErrors(['ids' => 'Some validator IDs are invalid: ' . implode(', ', $invalidIds)]);
+        }
+
+        $action = $validated['action'];
+        $ids = $validated['ids'];
+        $count = 0;
+
+        switch ($action) {
+            case 'top':
+                // Toggle top status for validators
+                $count = DB::table('data.validators')
+                    ->whereIn('id', $ids)
+                    ->update(['is_top' => DB::raw('NOT is_top')]);
+                break;
+                
+            case 'highlight':
+                // Toggle highlight status for validators
+                $count = DB::table('data.validators')
+                    ->whereIn('id', $ids)
+                    ->update(['is_highlighted' => DB::raw('NOT is_highlighted')]);
+                break;
+                
+            case 'ban':
+                // Ban validators (implementation depends on how banning is stored)
+                $count = DB::table('data.validators')
+                    ->whereIn('id', $ids)
+                    ->update(['is_banned' => true]);
+                break;
+                
+            case 'unban':
+                // Unban validators
+                $count = DB::table('data.validators')
+                    ->whereIn('id', $ids)
+                    ->update(['is_banned' => false]);
+                break;
+                
+            case 'delete':
+                // Delete validators (be careful with this action)
+                $count = DB::table('data.validators')
+                    ->whereIn('id', $ids)
+                    ->delete();
+                break;
+        }
+
+        return redirect()->route('admin.validators.index')
+            ->with('success', "Bulk {$action} completed successfully. {$count} validators affected.");
+    }
 }
