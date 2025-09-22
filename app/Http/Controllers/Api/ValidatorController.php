@@ -759,33 +759,16 @@ class ValidatorController extends Controller
             // Use the confirmed working path for solana command
             $solanaPath = "/root/.local/share/solana/install/active_release/bin/solana";
             
-            // Try to find the specific validator using grep
+            // Use the exact same command that works on the server
             $validatorCommand = "$solanaPath validators -um --sort=credits -r -n | grep -e " . escapeshellarg($pubkey);
             $output = $ssh->exec($validatorCommand);
             $exitStatus = $ssh->getExitStatus();
 
-            // If grep doesn't find anything, try a different approach
-            if (!$output || trim($output) === '' || $exitStatus !== 0) {
-                // Try to get all validators and search through them
-                $allValidatorsCommand = "$solanaPath validators -um --sort=credits -r -n";
-                $allValidatorsOutput = $ssh->exec($allValidatorsCommand);
-                $allValidatorsExitStatus = $ssh->getExitStatus();
-                
-                if ($allValidatorsExitStatus === 0 && $allValidatorsOutput) {
-                    $lines = explode("\n", $allValidatorsOutput);
-                    foreach ($lines as $line) {
-                        if (strpos($line, $pubkey) !== false) {
-                            $output = $line;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // If we still don't have output, the validator doesn't exist
+            // Even if grep returns exit status 1 (not found), we might still have output
+            // Only consider it an error if we have no output
             if (!$output || trim($output) === '') {
-                Log::error('Validator not found for pubkey: ' . $pubkey);
-                return ['error' => 'Validator not found', 'pubkey' => $pubkey];
+                Log::error('Validator not found for pubkey: ' . $pubkey . ' Exit status: ' . $exitStatus);
+                return ['error' => 'Validator not found', 'pubkey' => $pubkey, 'exit_status' => $exitStatus];
             }
 
             // Парсинг: "192 Hgo... DHo... 0% 368557078 ( 0) 368557047 ( 0) 0.00% 975094 2.3.8 15888.204260276 SOL (0.00%)"
@@ -833,13 +816,7 @@ class ValidatorController extends Controller
     private function getValidatorScoreLocally($pubkey)
     {
         try {
-            // Execute the solana command directly (no SSH needed)
-            $command = "solana validators -um --sort=credits -r -n | grep -e " . escapeshellarg($pubkey);
-            $process = Process::fromShellCommandline($command);
-            $process->setTimeout(30);
-            $process->run();
-            
-            // Check if the solana command exists
+            // First check if solana command exists
             $checkCommand = Process::fromShellCommandline("which solana");
             $checkCommand->run();
             
@@ -848,16 +825,37 @@ class ValidatorController extends Controller
                 return ['error' => 'Solana command not found on local system. Please install Solana CLI tools.'];
             }
             
+            // Get the path to solana command
+            $solanaPath = trim($checkCommand->getOutput());
+            if (empty($solanaPath)) {
+                $solanaPath = "solana"; // fallback to just 'solana'
+            }
+            
+            // Execute the solana command directly
+            $command = "$solanaPath validators -um --sort=credits -r -n | grep -e " . escapeshellarg($pubkey);
+            $process = Process::fromShellCommandline($command);
+            $process->setTimeout(30);
+            $process->run();
+            
             if (!$process->isSuccessful()) {
-                Log::error('Validator not found or command failed for pubkey: ' . $pubkey . ' Error: ' . $process->getErrorOutput() . ' Output: ' . $process->getOutput());
-                return ['error' => 'Validator not found or command failed', 'pubkey' => $pubkey, 'error_output' => $process->getErrorOutput(), 'output' => $process->getOutput()];
+                // Check if it's a "not found" error or actual validator not found
+                $errorOutput = $process->getErrorOutput();
+                $output = $process->getOutput();
+                
+                // If we have output, it might still be valid (grep returns 1 when no matches found)
+                if ($output && trim($output) !== '') {
+                    // Continue with parsing
+                } else {
+                    Log::error('Validator not found or command failed for pubkey: ' . $pubkey . ' Error: ' . $errorOutput . ' Output: ' . $output);
+                    return ['error' => 'Validator not found or command failed', 'pubkey' => $pubkey, 'error_output' => $errorOutput, 'output' => $output];
+                }
             }
             
             $output = $process->getOutput();
             
-            if (!$output) {
-                Log::error('Validator not found or command failed for pubkey: ' . $pubkey);
-                return ['error' => 'Validator not found or command failed - no output', 'pubkey' => $pubkey, 'output' => $output];
+            if (!$output || trim($output) === '') {
+                Log::error('Validator not found for pubkey: ' . $pubkey);
+                return ['error' => 'Validator not found', 'pubkey' => $pubkey, 'output' => $output];
             }
 
             // Парсинг: "192 Hgo... DHo... 0% 368557078 ( 0) 368557047 ( 0) 0.00% 975094 2.3.8 15888.204260276 SOL (0.00%)"
