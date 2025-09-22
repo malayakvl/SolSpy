@@ -40,7 +40,7 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
     const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
     const [featuredFilter, setFeaturedFilter] = useState(filters.is_featured ? 'featured' : 'all');
     const [selectedItems, setSelectedItems] = useState<number[]>([]);
-
+console.log(news)
     // Check if user has admin access
     const userRoles = auth?.user?.roles?.map(role => role.name) || [];
     const isAdmin = userRoles.includes('Admin') || userRoles.includes('Manager');
