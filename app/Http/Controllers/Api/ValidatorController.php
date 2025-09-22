@@ -887,4 +887,4 @@ class ValidatorController extends Controller
             return ['error' => 'Exception occurred: ' . $e->getMessage()];
         }
     }
-}
+} 
