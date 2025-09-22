@@ -10,6 +10,11 @@ use App\Services\SpyRankService;
 use App\Services\TotalStakeService;
 use App\Services\ValidatorDataService;
 use App\Models\ValidatorOrder;
+use Symfony\Component\Process\Process;
+use Symfony\Component\Process\Exception\ProcessFailedException;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use phpseclib3\Net\SSH2;
 
 class ValidatorController extends Controller
 {
@@ -257,7 +262,6 @@ class ValidatorController extends Controller
             ->where('user_id', $userId)
             ->delete();
 
-        // dd($userId, $validatorId);
     }
 
 
@@ -665,7 +669,8 @@ class ValidatorController extends Controller
         
         $validatorIds = $request->input('validatorIds');
         $listType = $request->input('listType', 'top');
-        dd($validatorIds, $listType);exit;
+        // Removed debugging statement
+        // exit;
         // Use a transaction to ensure data consistency
         // DB::transaction(function () use ($validatorIds, $listType) {
         //     // Delete existing order records for this list type
@@ -696,7 +701,192 @@ class ValidatorController extends Controller
             ->join('validators', 'validator_orders.validator_id', '=', 'validators.id')    
             ->orderBy('sort_order')
             ->get(['validator_id', 'sort_order']);
-            dd($orderRecords);exit;
+            // Removed debugging statement
+            // exit;
         return response()->json($orderRecords);
+    }
+
+
+    public function getValidatorScore(Request $request)
+    {
+        $pubkey = $request->query('pubkey');
+        
+        // Simple validation - ensure we have a pubkey parameter
+        if (!$pubkey) {
+            return response()->json(['error' => 'pubkey parameter required'], 400);
+        }
+
+        // Кэшируем данные на 10 секунд
+        $data = Cache::remember('validator_' . $pubkey, 10, function () use ($pubkey) {
+            // Check if we should use SSH (for local development) or direct execution (for server)
+            $useSSH = env('VALIDATOR_USE_SSH', false);
+            
+            if ($useSSH) {
+                return $this->getValidatorScoreViaSSH($pubkey);
+            } else {
+                return $this->getValidatorScoreLocally($pubkey);
+            }
+        });
+
+        if (isset($data['error'])) {
+            return response()->json(['error' => $data['error']], 404);
+        }
+
+        return response()->json($data);
+    }
+    
+    /**
+     * Get validator score via SSH connection (for local development)
+     */
+    private function getValidatorScoreViaSSH($pubkey)
+    {
+        $ssh = null;
+        try {
+            // Подключение к удалённому серверу
+            $ssh = new SSH2(env('VALIDATOR_SERVER_HOST', '103.167.235.81')); // IP сервера
+            
+            // Set timeout for the connection
+            $ssh->setTimeout(30);
+            
+            // Try to login
+            $loginSuccess = $ssh->login(env('VALIDATOR_SERVER_USER', 'root'), env('VALIDATOR_SERVER_PASSWORD'));
+            
+            if (!$loginSuccess) {
+                Log::error('SSH login failed for validator score fetch - login returned false');
+                return ['error' => 'SSH login failed - invalid credentials'];
+            }
+
+            // Use the confirmed working path for solana command
+            $solanaPath = "/root/.local/share/solana/install/active_release/bin/solana";
+            
+            // Try to find the specific validator using grep
+            $validatorCommand = "$solanaPath validators -um --sort=credits -r -n | grep -e " . escapeshellarg($pubkey);
+            $output = $ssh->exec($validatorCommand);
+            $exitStatus = $ssh->getExitStatus();
+
+            // If grep doesn't find anything, try a different approach
+            if (!$output || trim($output) === '' || $exitStatus !== 0) {
+                // Try to get all validators and search through them
+                $allValidatorsCommand = "$solanaPath validators -um --sort=credits -r -n";
+                $allValidatorsOutput = $ssh->exec($allValidatorsCommand);
+                $allValidatorsExitStatus = $ssh->getExitStatus();
+                
+                if ($allValidatorsExitStatus === 0 && $allValidatorsOutput) {
+                    $lines = explode("\n", $allValidatorsOutput);
+                    foreach ($lines as $line) {
+                        if (strpos($line, $pubkey) !== false) {
+                            $output = $line;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // If we still don't have output, the validator doesn't exist
+            if (!$output || trim($output) === '') {
+                Log::error('Validator not found for pubkey: ' . $pubkey);
+                return ['error' => 'Validator not found', 'pubkey' => $pubkey];
+            }
+
+            // Парсинг: "192 Hgo... DHo... 0% 368557078 ( 0) 368557047 ( 0) 0.00% 975094 2.3.8 15888.204260276 SOL (0.00%)"
+            $parts = preg_split('/\s+/', trim($output));
+
+            // Based on the actual output, we need 17 parts minimum
+            if (count($parts) < 17) {
+                Log::error('Invalid CLI output format for pubkey: ' . $pubkey . ' with parts count: ' . count($parts));
+                Log::error('Output was: ' . $output);
+                return ['error' => 'Invalid CLI output format', 'parts_count' => count($parts), 'output' => $output, 'parts' => $parts];
+            }
+
+            // Parse the output correctly based on actual format
+            return [
+                'rank' => (int)$parts[0],                    // 186
+                'votePubkey' => $parts[2],                   // HgozywotiKv4F5g3jCgideF3gh9sdD3vz4QtgXKjWCtB
+                'nodePubkey' => $parts[3],                   // DHoZJqvvMGvAXw85Lmsob7YwQzFVisYg8HY4rt5BAj6M
+                'uptime' => $parts[4],                       // 0%
+                'rootSlot' => (int)str_replace(['(', ')'], '', $parts[5]), // 368561621
+                'voteSlot' => (int)str_replace(['(', ')'], '', $parts[8]), // 368561590
+                'commission' => (float)str_replace('%', '', $parts[11]),   // 0.00%
+                'credits' => (int)$parts[12],                // 1047512
+                'version' => $parts[13],                     // 2.3.8
+                'stake' => $parts[14],                       // 15888.204260276
+                'stakePercent' => str_replace(['(', ')', '%'], '', $parts[16]), // 0.00%
+            ];
+        } catch (\Exception $e) {
+            Log::error('Exception in getValidatorScoreViaSSH: ' . $e->getMessage());
+            return ['error' => 'Exception occurred: ' . $e->getMessage()];
+        } finally {
+            // Ensure SSH connection is closed
+            if ($ssh instanceof SSH2) {
+                try {
+                    $ssh->disconnect();
+                } catch (\Exception $e) {
+                    Log::warning('Failed to disconnect SSH: ' . $e->getMessage());
+                }
+            }
+        }
+    }
+    
+    /**
+     * Get validator score locally (for server deployment)
+     */
+    private function getValidatorScoreLocally($pubkey)
+    {
+        try {
+            // Execute the solana command directly (no SSH needed)
+            $command = "solana validators -um --sort=credits -r -n | grep -e " . escapeshellarg($pubkey);
+            $process = Process::fromShellCommandline($command);
+            $process->setTimeout(30);
+            $process->run();
+            
+            // Check if the solana command exists
+            $checkCommand = Process::fromShellCommandline("which solana");
+            $checkCommand->run();
+            
+            if (!$checkCommand->isSuccessful()) {
+                Log::error('Solana command not found on local system');
+                return ['error' => 'Solana command not found on local system. Please install Solana CLI tools.'];
+            }
+            
+            if (!$process->isSuccessful()) {
+                Log::error('Validator not found or command failed for pubkey: ' . $pubkey . ' Error: ' . $process->getErrorOutput() . ' Output: ' . $process->getOutput());
+                return ['error' => 'Validator not found or command failed', 'pubkey' => $pubkey, 'error_output' => $process->getErrorOutput(), 'output' => $process->getOutput()];
+            }
+            
+            $output = $process->getOutput();
+            
+            if (!$output) {
+                Log::error('Validator not found or command failed for pubkey: ' . $pubkey);
+                return ['error' => 'Validator not found or command failed - no output', 'pubkey' => $pubkey, 'output' => $output];
+            }
+
+            // Парсинг: "192 Hgo... DHo... 0% 368557078 ( 0) 368557047 ( 0) 0.00% 975094 2.3.8 15888.204260276 SOL (0.00%)"
+            $parts = preg_split('/\s+/', trim($output));
+
+            // Based on the actual output, we need 17 parts minimum
+            if (count($parts) < 17) {
+                Log::error('Invalid CLI output format for pubkey: ' . $pubkey . ' with parts count: ' . count($parts));
+                Log::error('Output was: ' . $output);
+                return ['error' => 'Invalid CLI output format', 'parts_count' => count($parts), 'output' => $output, 'parts' => $parts];
+            }
+
+            // Parse the output correctly based on actual format
+            return [
+                'rank' => (int)$parts[0],                    // 186
+                'votePubkey' => $parts[2],                   // HgozywotiKv4F5g3jCgideF3gh9sdD3vz4QtgXKjWCtB
+                'nodePubkey' => $parts[3],                   // DHoZJqvvMGvAXw85Lmsob7YwQzFVisYg8HY4rt5BAj6M
+                'uptime' => $parts[4],                       // 0%
+                'rootSlot' => (int)str_replace(['(', ')'], '', $parts[5]), // 368561621
+                'voteSlot' => (int)str_replace(['(', ')'], '', $parts[8]), // 368561590
+                'commission' => (float)str_replace('%', '', $parts[11]),   // 0.00%
+                'credits' => (int)$parts[12],                // 1047512
+                'version' => $parts[13],                     // 2.3.8
+                'stake' => $parts[14],                       // 15888.204260276
+                'stakePercent' => str_replace(['(', ')', '%'], '', $parts[16]), // 0.00%
+            ];
+        } catch (\Exception $e) {
+            Log::error('Exception in getValidatorScoreLocally: ' . $e->getMessage());
+            return ['error' => 'Exception occurred: ' . $e->getMessage()];
+        }
     }
 }

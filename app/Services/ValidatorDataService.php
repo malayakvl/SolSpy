@@ -109,7 +109,7 @@ class ValidatorDataService
         }
 
         // Add the hack to filter validators starting from ID 19566
-        $validatorsData = $validatorsData->where('data.validators.id', '>=', '19566');
+        // $validatorsData = $validatorsData->where('data.validators.id', '>=', '19566');
         
         $validatorsData = $validatorsData
             ->orderBy('data.validators.id')
@@ -126,7 +126,7 @@ class ValidatorDataService
         }
         
         // Add the hack to filter validators starting from ID 19566 for count as well
-        $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
+        // $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
         
         $filteredTotalCount = $totalCountQuery->count();
 
@@ -158,11 +158,11 @@ class ValidatorDataService
     public function fetchDataTopValidators($sortedValidators, $totalStakeLamports) {
         //getting top validators
         $topValidators = DB::table('data.validators')
+            ->join('data.validator_order', 'data.validator_order.validator_id', '=', 'data.validators.id')
             ->where('data.validators.is_top', true)
-            ->orderBy('data.validators.activated_stake', 'DESC')
+            ->orderBy('data.validator_order.sort_order', 'ASC')
             ->limit(10)
             ->get();
-
         // Calculate TVC rank and Spy rank for top validators as well
         $topValidatorsWithRanks = $topValidators->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
             // Calculate TVC rank
@@ -229,7 +229,7 @@ class ValidatorDataService
         
         // Apply search filter if provided
         if (!empty($searchTerm)) {
-            $query = $query->where('data.validators.name', 'ILIKE', '%' . $searchTerm . '%');
+            $query = $query->where('data.validators.name', 'LIKE', '%' . $searchTerm . '%');
         }
         
         // Apply filter based on filterType
@@ -276,7 +276,7 @@ class ValidatorDataService
         }
         
         // Add the hack to filter validators starting from ID 19566
-        $query = $query->where('data.validators.id', '>=', '19566');
+        // $query = $query->where('data.validators.id', '>=', '19566');
         
         $validatorsData = $query
             ->limit($limit)->offset($offset)->get();
@@ -297,7 +297,7 @@ class ValidatorDataService
         }
         
         // Add the hack to filter validators starting from ID 19566 for count as well
-        $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
+        // $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
         
         $filteredTotalCount = $totalCountQuery->count();
         
@@ -638,7 +638,7 @@ class ValidatorDataService
         }
         
         // Add the hack to filter validators starting from ID 19566
-        $query = $query->where('data.validators.id', '>=', '19566');
+        // $query = $query->where('data.validators.id', '>=', '19566');
         
         $validatorsData = $query
             ->limit($limit)->offset($offset)->get();
@@ -689,7 +689,7 @@ class ValidatorDataService
         
         // Add the hack to filter validators starting from ID 19566 for count as well
         if ($userId || !empty($favoriteIds)) {
-            $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
+            // $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
             $filteredTotalCount = $totalCountQuery->count();
         }
         
@@ -899,18 +899,36 @@ class ValidatorDataService
         $sortedValidators = $validatorsAllData->toArray();
 
         // Рассчитываем tvcRank и spyRank для каждого валидатора из $validatorsData
+        // Преобразуем в коллекцию для удобной работы (не обязательно toArray, так как уже отсортировано)
+        $sortedValidators = $validatorsAllData->values(); // Сбрасываем ключи для последовательного индекса
+
+        // Рассчитываем tvcRank и spyRank для каждого валидатора из $validatorsData
         $results = $validatorsData->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
-            // Находим индекс валидатора в отсортированном массиве по vote_pubkey
-            $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
+            // Находим индекс валидатора в отсортированной коллекции по vote_pubkey
+            $tvcRank = $sortedValidators->search(function ($sortedValidator) use ($validator) {
+                return $sortedValidator->vote_pubkey === $validator->vote_pubkey;
+            });
 
             // Добавляем tvcRank к объекту валидатора
-            $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
-            
-            // Calculate spyRank
+            $validator->tvcRank = $tvcRank !== false ? $tvcRank + 1 : 'Not found';
+
+            // Рассчитываем spyRank (без изменений)
             $validator->spyRank = $this->spyRankService->calculateSpyRank($validator, $totalStakeLamports);
-            
+
             return $validator;
         });
+        // $results = $validatorsData->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
+        //     // Находим индекс валидатора в отсортированном массиве по vote_pubkey
+        //     $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
+
+        //     // Добавляем tvcRank к объекту валидатора
+        //     $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
+            
+        //     // Calculate spyRank
+        //     $validator->spyRank = $this->spyRankService->calculateSpyRank($validator, $totalStakeLamports);
+            
+        //     return $validator;
+        // });
 
         return [
             'validatorsData' => $results,
