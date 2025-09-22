@@ -12,9 +12,17 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\ValidatorDataService;
 
 class RegisteredUserController extends Controller
 {
+    protected $validatorDataService;
+
+    public function __construct(ValidatorDataService $validatorDataService)
+    {
+        $this->validatorDataService = $validatorDataService;
+    }
+
     /**
      * Display the registration view.
      */
@@ -34,6 +42,10 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'validatorCompare' => ['array'],
+            'validatorCompare.*' => ['integer'],
+            'validatorFavorites' => ['array'],
+            'validatorFavorites.*' => ['integer'],
         ]);
 
         $user = User::create([
@@ -45,6 +57,21 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         Auth::login($user);
+        
+        $userId = $user->id;
+
+        // Migrate localStorage data to database
+        // Get comparison data from request
+        $comparisonIds = $request->input('validatorCompare', []);
+        if (!empty($comparisonIds)) {
+            $this->validatorDataService->migrateLocalStorageComparisonData($userId, $comparisonIds);
+        }
+
+        // Get favorite data from request
+        $favoriteIds = $request->input('validatorFavorites', []);
+        if (!empty($favoriteIds)) {
+            $this->validatorDataService->migrateLocalStorageFavoriteData($userId, $favoriteIds);
+        }
 
         return redirect(route('dashboard', absolute: false));
     }

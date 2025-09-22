@@ -4,6 +4,7 @@ import PrimaryButton from '../../Components/Form/PrimaryButton';
 import TextInput from '../../Components/Form/TextInput';
 import GuestLayout from '../../Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 
 export default function Register() {
   const { data, setData, post, processing, errors, reset } = useForm({
@@ -16,8 +17,25 @@ export default function Register() {
   const submit = e => {
     e.preventDefault();
 
-    post(route('register'), {
-      onFinish: () => reset('password', 'password_confirmation'),
+    // Get localStorage data
+    const validatorCompare = JSON.parse(localStorage.getItem('validatorCompare') || '[]');
+    const validatorFavorites = JSON.parse(localStorage.getItem('validatorFavorites') || '[]');
+    
+    // Add localStorage data to the registration request
+    const registrationData = {
+      ...data,
+      validatorCompare: validatorCompare,
+      validatorFavorites: validatorFavorites
+    };
+
+    // Use router.post instead of post to have more control
+    router.post(route('register'), registrationData, {
+      onFinish: () => {
+        reset('password', 'password_confirmation');
+        // Clear localStorage after successful registration
+        localStorage.removeItem('validatorCompare');
+        localStorage.removeItem('validatorFavorites');
+      },
     });
   };
 

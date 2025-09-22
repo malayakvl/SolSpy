@@ -11,7 +11,9 @@ import {
     faBan,
     faCheck,
     faStar,
-    faGear
+    faGear,
+    faSortUp,
+    faSortDown
 } from '@fortawesome/free-solid-svg-icons';
 import ValidatorCredits from "../Partials/ValidatorCredits";
 import ValidatorRate from "../Partials/ValidatorRate";
@@ -30,6 +32,7 @@ import Modal from '../Partials/ColumnsModal';
 import ValidatorFilters from './Filters';
 import ValidatorPagination from './Pagination';
 import ValidatorAdminActions from './Actions';
+import { renderColumnHeader, renderColumnCell } from '../../../Components/Validators/ValidatorTableComponents';
 
 export default function AdminIndex(validatorsData) {
     const dispatch = useDispatch();
@@ -38,6 +41,11 @@ export default function AdminIndex(validatorsData) {
     const perPage = useSelector(perPageSelector);
     const appLang = useSelector(appLangSelector);
     const filterTypeDataSelector = validatorsData.filterType || useSelector(filterTypeSelector); // Filter type from props or Redux state
+    const [isLoading, setIsLoading] = useState(false); // Add loading state
+    // Track if the current data fetch is due to pagination or sorting
+    const [isPaginationOrSorting, setIsPaginationOrSorting] = useState(false);
+    const [selectedItems, setSelectedItems] = useState<number[]>([]);
+
 
     const msg = new Lang({
         messages: lngVaidators,
@@ -53,38 +61,47 @@ export default function AdminIndex(validatorsData) {
         top: 1,
         highlight: 1
     }); // Remember last page for each filter type
+    const [sortClickState, setSortClickState] = useState<{column: string, direction: string} | null>(null); // Track sort click state
+
+
     const [itemsPerPage] = useState(perPage); // Number of items per page
     const [selectAll, setSelectAll] = useState(false);
     const [checkedIds, setCheckedIds] = useState<string[]>([]);
     const [totalRecords, setTotalRecords] = useState(validatorsData.totalCount);
     const [showModal, setShowModal] = useState(false);
     const [columnSettings, setColumnSettings] = useState(null);
-    const [columnsConfig, setColumnsConfig] = useState(
-        validatorsData.settingsData?.table_fields ? 
-        JSON.parse(validatorsData.settingsData.table_fields) : 
-        [
-            { name: "Spy Rank", show: true },
-            { name: "Avatar", show: true },
-            { name: "Name", show: true },
-            { name: "Status", show: true },
-            { name: "TVC Score", show: true },
-            { name: "Vote Credits", show: true },
-            { name: "Active Stake", show: true },
-            { name: "Vote Rate", show: true },
-            { name: "Inflation Commission", show: true },
-            { name: "MEV Commission", show: true },
-            { name: "Uptime", show: true },
-            { name: "Client/Version", show: true },
-            { name: "Status SFDP", show: true },
-            { name: "Location", show: true },
-            { name: "Awards", show: true },
-            { name: "Website", show: true },
-            { name: "City", show: true },
-            { name: "ASN", show: true },
-            { name: "IP", show: true },
-            { name: "Jiito Score", show: true }
-        ]
-    );
+    const [columnsConfig, setColumnsConfig] = useState(() => {
+        if (validatorsData.settingsData?.table_fields) {
+            const parsedFields = JSON.parse(validatorsData.settingsData.table_fields);
+            // Fix any instances of "MEV Comission" to "MEV Commission"
+            return parsedFields.map(field => 
+                field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
+            );
+        } else {
+            return [
+                { name: "Spy Rank", show: true },
+                { name: "Avatar", show: true },
+                { name: "Name", show: true },
+                { name: "Status", show: true },
+                { name: "TVC Score", show: true },
+                { name: "Active Stake", show: true },
+                { name: "Vote Credits", show: true },
+                { name: "Vote Rate", show: true },
+                { name: "Inflation Commission", show: true },
+                { name: "MEV Commission", show: true },
+                { name: "Uptime", show: true },
+                { name: "Client/Version", show: true },
+                { name: "Status SFDP", show: true },
+                { name: "Location", show: true },
+                { name: "Awards", show: true },
+                { name: "Website", show: true },
+                { name: "City", show: true },
+                { name: "ASN", show: true },
+                { name: "IP", show: true },
+                { name: "Jiito Score", show: true }
+            ];
+        }
+    });
 
     // Get role names as array of strings
     const userRoleNames = user?.roles?.map(role => role.name) || [];
@@ -159,12 +176,58 @@ export default function AdminIndex(validatorsData) {
         }
     };
 
+    // Handle bulk actions
+    const handleBulkAction = (action: string) => {
+        if (checkedIds.length === 0) {
+            toast.warning('Please select at least one validator');
+            return;
+        }
+
+        if (confirm(`Are you sure you want to ${action} the selected validators?`)) {
+            router.post(route('admin.validators.bulk-action'), {
+                action,
+                ids: checkedIds
+            }, {
+                onSuccess: () => {
+                    toast.success(`Bulk ${action} completed successfully`);
+                    // Clear selection
+                    setCheckedIds([]);
+                    setSelectAll(false);
+                    // Refresh data
+                    fetchData();
+                },
+                onError: () => {
+                    toast.error(`Failed to perform bulk ${action}`);
+                }
+            });
+        }
+    };
+
     // Pagination logic - server-side
     const totalPages = Math.ceil(totalRecords / itemsPerPage);
 
     const handlePageChange = (pageNumber: number) => {
-        if (pageNumber >= 1 && pageNumber <= totalPages) {
+        if (pageNumber >= 1 && pageNumber <= totalPages && pageNumber !== currentPage) {
+            // Set flag to indicate this is a pagination operation
+            setIsPaginationOrSorting(true);
+            
+            // Update URL with new page number immediately
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('page', pageNumber.toString());
+            
+            // Only add filterType if it's not 'all' (default)
+            if (filterTypeDataSelector !== 'all') {
+                urlParams.set('filterType', filterTypeDataSelector);
+            }
+            
+            // Update the browser URL
+            const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+            window.history.replaceState({}, '', newUrl);
+            
+            // Update currentPage state
+            // This will trigger the useEffect to fetch data
             setCurrentPage(pageNumber);
+            
             // Save the current page for the current filter
             setLastPages(prev => ({
                 ...prev,
@@ -173,114 +236,68 @@ export default function AdminIndex(validatorsData) {
         }
     };
 
+    useEffect(() => {
+        // const intervalId = setInterval(fetchData(currentPage), 15000);
+        
+        const intervalId = setInterval(() => {
+            // Get current page from URL to ensure we're using the latest page
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
+            fetchData();
+        }, parseInt(validatorsData.settingsData.update_interval)*1000);
+        
+        // Listen for filter changes
+        const handleFilterChange = () => {
+            // Reset to first page when filter changes
+            setCurrentPage(1);
+        };
+        
+        window.addEventListener('filterChanged', handleFilterChange);
+        
+        return () => {
+            clearInterval(intervalId);
+            window.removeEventListener('filterChanged', handleFilterChange);
+        };
+    }, []);
+    
+    // Add useEffect to fetch data when currentPage changes
+    useEffect(() => {
+        fetchData();
+    }, [currentPage]);
+    
+    // Add useEffect to fetch data when sort parameters change
+    useEffect(() => {
+        const handleUrlChange = () => {
+            fetchData();
+        };
+        
+        // Listen for URL changes
+        window.addEventListener('popstate', handleUrlChange);
+        
+        // Check if URL has changed on component mount
+        handleUrlChange();
+        
+        return () => {
+            window.removeEventListener('popstate', handleUrlChange);
+        };
+    }, [window.location.search]);
+
     // Helper function to get ordered visible columns
     const getOrderedVisibleColumns = () => {
-        return columnsConfig.filter(col => col.show);
-    };
-
-    // Helper function to render column header by name
-    const renderColumnHeader = (columnName) => {
-        switch(columnName) {
-            case "Spy Rank": return <th key="spy-rank">Spy Rank</th>;
-            case "Avatar": return <th key="avatar">Avatar</th>;
-            case "Name": return <th key="name">Name</th>;
-            case "Status": return <th key="status">Status</th>;
-            case "TVC Score": return <th key="tvc-score">TVC Score</th>;
-            case "Vote Credits": return <th key="vote-credits">Vote Credits</th>;
-            case "Active Stake": return <th key="active-stake">Active Stake</th>;
-            case "Vote Rate": return <th key="vote-rate">Vote Rate</th>;
-            case "Inflation Commission": return <th key="inflation-commission">Inflation<br/>Commission</th>;
-            case "MEV Commission": return <th key="mev-commission">MEV<br/>Commission</th>;
-            case "Uptime": return <th key="uptime">Uptime</th>;
-            case "Client/Version": return <th key="client-version">Client/Version</th>;
-            case "Status SFDP": return <th key="status-sfdp">Status SFDP</th>;
-            case "Location": return <th key="location">Location</th>;
-            case "Awards": return <th key="awards">Awards</th>;
-            case "Website": return <th key="website">Website</th>;
-            case "City": return <th key="city">City</th>;
-            case "ASN": return <th key="asn">ASN</th>;
-            case "IP": return <th key="ip">IP</th>;
-            case "Jiito Score": return <th key="jiito-score">Jiito Score</th>;
-            default: return null;
-        }
+        const filtered = columnsConfig.filter(col => col.show);
+        // console.log('Filtering columns:', columnsConfig);
+        // console.log('Filtered columns:', filtered);
+        return filtered;
     };
 
     // Helper function to render column cell by name
-    const renderColumnCell = (columnName, validator, index) => {
-        switch(columnName) {
-            case "Spy Rank": 
-                return <td key="spy-rank" className="text-center"><ValidatorSpyRank validator={validator} /></td>;
-            case "Avatar": 
-                return (
-                    <td key="avatar" className="text-center py-2">
-                        {validator.avatar_file_url ? (
-                            <img
-                                src={validator.avatar_file_url}
-                                alt={validator.name}
-                                style={{ width: "35px", height: "35px", objectFit: "cover", borderRadius: "50%", margin: "0px auto" }}
-                            />
-                        ) : null}
-                    </td>
-                );
-            case "Name": 
-                return <td key="name"><ValidatorName validator={validator} /></td>;
-            case "Status": 
-                return (
-                    <td key="status" className="text-center">
-                        {!validator.delinquent ? (
-                            <FontAwesomeIcon icon={faCheck} className="mr-1" />
-                        ) : (
-                            <FontAwesomeIcon icon={faBan} className="mr-1" />
-                        )}
-                    </td>
-                );
-            case "TVC Score": 
-                return <td key="tvc-score" className="text-center"><ValidatorScore validator={validator} /></td>;
-            case "Vote Credits": 
-                return <td key="vote-credits" className="text-center"><ValidatorCredits epoch={epoch} validator={validator} /></td>;
-            case "Active Stake": 
-                return <td key="active-stake" className="text-center"><ValidatorActivatedStake epoch={epoch} validator={validator} /></td>;
-            case "Vote Rate": 
-                return <td key="vote-rate" className="text-center"><ValidatorRate epoch={epoch} validator={validator} /></td>;
-            case "Inflation Commission": 
-                return <td key="inflation-commission" className="text-center">{validator.commission}%</td>;
-            case "MEV Commission": 
-                return <td key="mev-commission" className="text-center">{validator.jito_commission ? `${ validator.jito_commission/100}%` : ''}</td>;
-            case "Uptime": 
-                return <td key="uptime" className="text-center"><ValidatorUptime epoch={epoch} validator={validator} /></td>;
-            case "Client/Version": 
-                return <td key="client-version" className="text-center">{`${validator.version}  ${validator.software_client || ''}`}</td>;
-            case "Status SFDP": 
-                return <td key="status-sfdp" className="text-center">SFDP</td>;
-            case "Location": 
-                return <td key="location" className="text-left whitespace-nowrap">{validator.country_iso} {validator.country}</td>;
-            case "Awards": 
-                return (
-                    <td key="awards" className="text-center">
-                        <FontAwesomeIcon icon={faStar} className="text-xs" />
-                        <FontAwesomeIcon icon={faStar} className="text-xs" />
-                        <FontAwesomeIcon icon={faStar} className="text-xs" />
-                    </td>
-                );
-            case "Website": 
-                return (
-                    <td key="website" className="text-center">
-                        {validator.url ?
-                            <a href={validator.url} target="_blank">{validator.url.slice(0, 4)}...{validator.url.slice(-4)}</a>
-                        : <></>
-                        }
-                    </td>
-                );
-            case "City": 
-                return <td key="city" className="text-center">{validator.city}</td>;
-            case "ASN": 
-                return <td key="asn" className="text-center">{validator.asn}</td>;
-            case "IP": 
-                return <td key="ip" className="text-center">{validator.ip}</td>;
-            case "Jiito Score": 
-                return <td key="jiito-score" className="text-center"> JS </td>;
-            default: return null;
-        }
+    const renderColumnCellLocal = (columnName, validator, index) => {
+        return renderColumnCell(columnName, validator, epoch, validatorsData.settingsData, validatorsData.totalStakeData, data);
+    };
+
+    // Helper function to render column header by name
+    const renderColumnHeaderLocal = (columnName) => {
+        return renderColumnHeader(columnName, sortClickState, setSortClickState, setCurrentPage, isLoading, setIsPaginationOrSorting);
     };
 
     const fetchColumnSettings = async () => {
@@ -288,7 +305,11 @@ export default function AdminIndex(validatorsData) {
             const response = await axios.get('/api/settings/columns');
             if (response.data && response.data.table_fields) {
                 const freshColumns = JSON.parse(response.data.table_fields);
-                setColumnsConfig(freshColumns);
+                // Fix any instances of "MEV Comission" to "MEV Commission"
+                const normalizedColumns = freshColumns.map(field => 
+                    field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
+                );
+                setColumnsConfig(normalizedColumns);
             }
         } catch (error) {
             console.error('Error fetching column settings:', error);
@@ -307,10 +328,15 @@ export default function AdminIndex(validatorsData) {
     const closeModal = () => setShowModal(false);
     
     const handleColumnSettingsSave = async (columns) => {
-        setColumnSettings(columns);
+        // Fix any instances of "MEV Comission" back to the correct spelling before saving
+        const normalizedColumns = columns.map(field => 
+            field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
+        );
+        
+        setColumnSettings(normalizedColumns);
         try {
             await axios.post('/api/settings/update', {
-                columns: columns
+                columns: normalizedColumns
             }, {
                 headers: {
                     'Content-Type': 'application/json',
@@ -325,16 +351,23 @@ export default function AdminIndex(validatorsData) {
         }
     };
 
-    const fetchData = async ( page, filterValue = 'all' ) => {
-        // Get filter value and page from current URL
+    const fetchData = async () => {
+        // Show loading indicator only for pagination and sorting operations
+        if (isPaginationOrSorting) {
+            setIsLoading(true);
+        }
+        
+        // Get filter value and other parameters from current URL
         const urlParams = new URLSearchParams(window.location.search);
         const currentFilterType = urlParams.get('filterType') || 'all';
-        const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
         const searchParam = urlParams.get('search') || '';
+        const sortColumn = urlParams.get('sortColumn') || 'id';
+        const sortDirection = urlParams.get('sortDirection') || 'ASC';
+        const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
         
         try {
             // Build URL with all parameters
-            let url = `/api/fetch-validators?page=${currentPageFromUrl}&filterType=${currentFilterType}`;
+            let url = `/api/fetch-validators-auth?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`;
             if (searchParam) {
                 url += `&search=${encodeURIComponent(searchParam)}`;
             }
@@ -342,20 +375,42 @@ export default function AdminIndex(validatorsData) {
             const response = await axios.get(url);
             setData(response.data.validatorsData);
             setTotalRecords(response.data.totalCount);
+            
+            // Mark that we've fetched data at least once
+            if (!dataFetched) {
+                setDataFetched(true);
+            }
+            
+            // Reset sort click state after data is fetched
+            setSortClickState(null);
         } catch (error) {
             console.error('Error:', error);
+            // Reset sort click state even if there's an error
+            setSortClickState(null);
+        } finally {
+            // Hide loading indicator after pagination or sorting operations
+            if (isPaginationOrSorting) {
+                setIsLoading(false);
+                // Reset the flag
+                setIsPaginationOrSorting(false);
+            }
         }
     };
 
     useEffect(() => {
         // const intervalId = setInterval(fetchData(currentPage), 15000);
-        const intervalId = setInterval(() => fetchData(currentPage), 15000);
+        
+        const intervalId = setInterval(() => {
+            // Get current page from URL to ensure we're using the latest page
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
+            fetchData();
+        }, parseInt(validatorsData.settingsData.update_interval)*1000);
         
         // Listen for filter changes
         const handleFilterChange = () => {
             // Reset to first page when filter changes
             setCurrentPage(1);
-            fetchData(1);
         };
         
         window.addEventListener('filterChanged', handleFilterChange);
@@ -364,7 +419,29 @@ export default function AdminIndex(validatorsData) {
             clearInterval(intervalId);
             window.removeEventListener('filterChanged', handleFilterChange);
         };
-    }, [dataFetched, currentPage]);
+    }, []);
+    
+    // Add useEffect to fetch data when currentPage changes
+    useEffect(() => {
+        fetchData();
+    }, [currentPage]);
+    
+    // Add useEffect to fetch data when sort parameters change
+    useEffect(() => {
+        const handleUrlChange = () => {
+            fetchData();
+        };
+        
+        // Listen for URL changes
+        window.addEventListener('popstate', handleUrlChange);
+        
+        // Check if URL has changed on component mount
+        handleUrlChange();
+        
+        return () => {
+            window.removeEventListener('popstate', handleUrlChange);
+        };
+    }, []);
 
     const handleFilterChange = (newFilterValue: string) => {
         // Save current page for current filter before switching
@@ -377,15 +454,41 @@ export default function AdminIndex(validatorsData) {
         const savedPage = lastPages[newFilterValue] || 1;
         
         dispatch(setFilterAction(newFilterValue));
+        
+        // Update URL with new filter and page
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('filterType', newFilterValue);
+        urlParams.set('page', savedPage.toString());
+        
+        // Update the browser URL
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+        
+        // Update currentPage state
+        // This will trigger the useEffect to fetch data
         setCurrentPage(savedPage);
     };
 
     // Listen for URL changes to trigger data refresh
     useEffect(() => {
         const handleUrlChange = () => {
-            // Reset to first page when search or filter changes
-            setCurrentPage(1);
-            fetchData(1);
+            // Get parameters from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const pageParam = parseInt(urlParams.get('page')) || 1;
+            const filterParam = urlParams.get('filterType') || 'all';
+            
+            // Update state if page has changed
+            if (pageParam !== currentPage) {
+                setCurrentPage(pageParam);
+            }
+            
+            // Update filter if it has changed
+            if (filterParam !== filterTypeDataSelector) {
+                dispatch(setFilterAction(filterParam));
+            }
+            
+            // Fetch data
+            fetchData();
         };
         
         // Listen for popstate events (back/forward navigation)
@@ -403,11 +506,26 @@ export default function AdminIndex(validatorsData) {
         <AuthenticatedLayout header={<Head />}>
             <Head title={msg.get('validators.title')} />
             <div className="py-0">
+                {/* Loading overlay - only shown during pagination and sorting */}
+                {isLoading && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white p-6 rounded-lg shadow-lg">
+                            <div className="flex flex-col items-center">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+                                <p className="text-gray-700">Завантаження даних...</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                
                 <div className="p-4 sm:p-8 mb-8 content-data bg-content">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold">{msg.get('validators.title')}&nbsp;</h2>
+                        <Link href={route('admin.validators.top')} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            {msg.get('validators.btnSort')}
+                        </Link>
                     </div>
-                    
+                        
                     <div className="flex justify-between items-start mb-6">
                         <div className="flex-1">
                             <ValidatorFilters 
@@ -419,6 +537,49 @@ export default function AdminIndex(validatorsData) {
                         </div>
                     </div>
                     
+                    {/* Bulk Actions */}
+                    {checkedIds.length > 0 && (
+                        <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                            <div className="flex items-center gap-4">
+                                <span className="text-sm font-medium">
+                                    {checkedIds.length} validator(s) selected
+                                </span>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handleBulkAction('top')}
+                                        className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+                                    >
+                                        Toggle Top
+                                    </button>
+                                    <button
+                                        onClick={() => handleBulkAction('highlight')}
+                                        className="px-3 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                                    >
+                                        Toggle Highlight
+                                    </button>
+                                    {/* <button
+                                        onClick={() => handleBulkAction('ban')}
+                                        className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
+                                    >
+                                        Ban
+                                    </button>
+                                    <button
+                                        onClick={() => handleBulkAction('unban')}
+                                        className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                                    >
+                                        Unban
+                                    </button>
+                                    <button
+                                        onClick={() => handleBulkAction('delete')}
+                                        className="px-3 py-1 text-xs bg-red-700 text-white rounded hover:bg-red-800"
+                                    >
+                                        Delete
+                                    </button> */}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="mt-6">
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200 validator-table">
@@ -431,7 +592,7 @@ export default function AdminIndex(validatorsData) {
                                                     checked={selectAll}
                                                     onChange={handleSelectAllChange} 
                                                 />
-                                                {isAdmin && (
+                                                {/* {isAdmin && (
                                                     <ValidatorAdminActions 
                                                         checkedIds={checkedIds}
                                                         onActionComplete={() => {
@@ -439,16 +600,16 @@ export default function AdminIndex(validatorsData) {
                                                             fetchData(currentPage);
                                                         }}
                                                     />
-                                                )}
+                                                )} */}
                                             </div>
                                         </th>
                                         <th>Actions</th>
-                                        {getOrderedVisibleColumns().map(column => renderColumnHeader(column.name))}
+                                        {getOrderedVisibleColumns().map(column => renderColumnHeaderLocal(column.name))}
                                     </tr>
                                 </thead>
                                 <tbody>
                                 {data.map((validator, index) => (
-                                    <tr key={validator.id}>
+                                    <tr key={validator.id} className={checkedIds.includes(validator.id) ? 'bg-blue-50' : ''}>
                                         <td className="text-left">
                                             <div className="pl-[10px]">
                                                 <input 
@@ -462,7 +623,7 @@ export default function AdminIndex(validatorsData) {
                                         <th className="text-center">
                                             <ValidatorActions validator={validator} onBanToggle={handleBanToggle} />
                                         </th>
-                                        {getOrderedVisibleColumns().map(column => renderColumnCell(column.name, validator, index))}
+                                        {getOrderedVisibleColumns().map(column => renderColumnCellLocal(column.name, validator, index))}
                                     </tr>
                                 ))}
                                 </tbody>
@@ -479,7 +640,13 @@ export default function AdminIndex(validatorsData) {
                         {(showModal && isAdmin) && (
                             <Modal 
                                 onClose={closeModal} 
-                                onSave={handleColumnSettingsSave}
+                                onSave={(columns) => {
+                                    // Normalize column names before saving
+                                    const normalizedColumns = columns.map(field => 
+                                        field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
+                                    );
+                                    handleColumnSettingsSave(normalizedColumns);
+                                }}
                                 initialColumns={columnsConfig}
                                 onColumnChange={(columnName, isVisible, index, updatedList) => {
                                     // Update the columns configuration

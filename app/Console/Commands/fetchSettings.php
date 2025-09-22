@@ -51,11 +51,6 @@ class FetchSettings extends Command
                 'jsonrpc' => '2.0',
                 'id' => 1,
                 'method' => 'getEpochInfo',
-                'params' => [
-                    [
-                        'commitment' => 'finalized'
-                    ]
-                ]
             ];
 
             // Initialize cURL

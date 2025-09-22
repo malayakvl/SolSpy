@@ -29,6 +29,10 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+            'validatorCompare' => ['array'],
+            'validatorCompare.*' => ['integer'],
+            'validatorFavorites' => ['array'],
+            'validatorFavorites.*' => ['integer'],
         ];
     }
 
@@ -97,5 +101,16 @@ class LoginRequest extends FormRequest
     public function throttleKey(): string
     {
         return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+    }
+    
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'validatorCompare' => $this->validatorCompare ?? [],
+            'validatorFavorites' => $this->validatorFavorites ?? [],
+        ]);
     }
 }

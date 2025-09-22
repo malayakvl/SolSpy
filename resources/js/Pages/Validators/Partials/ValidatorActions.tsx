@@ -29,8 +29,11 @@ export default function ValidatorActions({validator, onBanToggle}) {
             
             const favoritesList = JSON.parse(localStorage.getItem('validatorFavorites') || '[]');
             setIsInFavorites(favoritesList.includes(validator.id));
+        } else {
+            // For registered users, use the is_favorite property from the validator object
+            setIsInFavorites(validator.is_favorite || false);
         }
-    }, [validator.id, user?.id]);
+    }, [validator.id, validator.is_favorite, user?.id]);
 
     const addToCompare = async (validatorId) => {
         if (user?.id) {
@@ -169,6 +172,7 @@ export default function ValidatorActions({validator, onBanToggle}) {
                         pauseOnHover: true,
                         draggable: true,
                     });
+                    
                     return;
                 }
                 favoritesList.push(validatorId);

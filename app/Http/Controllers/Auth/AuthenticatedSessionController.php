@@ -10,9 +10,17 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\ValidatorDataService;
 
 class AuthenticatedSessionController extends Controller
 {
+    protected $validatorDataService;
+
+    public function __construct(ValidatorDataService $validatorDataService)
+    {
+        $this->validatorDataService = $validatorDataService;
+    }
+
     /**
      * Display the login view.
      */
@@ -32,6 +40,21 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        $userId = Auth::id();
+
+        // Migrate localStorage data to database
+        // Get comparison data from request
+        $comparisonIds = $request->input('validatorCompare', []);
+        if (!empty($comparisonIds)) {
+            $this->validatorDataService->migrateLocalStorageComparisonData($userId, $comparisonIds);
+        }
+
+        // Get favorite data from request
+        $favoriteIds = $request->input('validatorFavorites', []);
+        if (!empty($favoriteIds)) {
+            $this->validatorDataService->migrateLocalStorageFavoriteData($userId, $favoriteIds);
+        }
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

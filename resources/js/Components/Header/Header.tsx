@@ -108,10 +108,13 @@ export default function Header(auth) {
                       <Link href={'/admin/customers'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
                         {msg.get('menu.customers')}
                       </Link>
+                      <Link href={'/admin/discord-news'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
+                        {msg.get('menu.discord-news')}
+                      </Link>
                       <Link href={'/admin/news'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
                         {msg.get('menu.news')}
                       </Link>
-                       <Link href={'/admin/settings'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
+                      <Link href={'/admin/settings'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
                           {msg.get('menu.settings')}
                       </Link>
                     </>
@@ -162,7 +165,7 @@ export default function Header(auth) {
                         href="/register"
                         className="rounded-md px-3 py-2 text-white text-sm"
                     >
-                      {msg.get('menu.reigster')}
+                      {msg.get('menu.register')}
                     </Link>
                   </>
                 )}

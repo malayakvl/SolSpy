@@ -1,142 +1,281 @@
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout';
-import { Head, usePage } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import Lang from 'lang.js';
 import lngVaidators from '../../Lang/Validators/translation';
 import { useSelector } from 'react-redux';
 import { appEpochSelector, appLangSelector } from '../../Redux/Layout/selectors';
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faBan,
     faCheck,
     faStar
 } from '@fortawesome/free-solid-svg-icons';
 import ValidatorCredits from "./Partials/ValidatorCredits";
 import ValidatorRate from "./Partials/ValidatorRate";
-import ValidatorActions from "./Partials/ValidatorActions";
-import ValidatorName from "./Partials/ValidatorName";
 import ValidatorActivatedStake from "./Partials/ValidatorActivatedStake";
 import ValidatorUptime from "./Partials/ValidatorUptime";
-import ValidatorScore from "./Partials/ValidatorScore";
+import ValidatorSFDP from "./Partials/ValidatorSFDP";
 import axios from 'axios';
-import ValidatorSpyRank from "./Partials/ValidatorSpyRank";
-// import Utils from "Utils.ts";
-// import Map, { GeolocateControl } from 'react-map-gl';
-// import 'mapbox-gl/dist/mapbox-gl.css';
 import MapLayer from './Map';
-import { faker } from '@faker-js/faker';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
   Title,
   Tooltip,
   Legend,
+  PointElement,
+  LineElement,
 } from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2';
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  PointElement,
+  LineElement
 );
 
-export const options = {
-  responsive: true,
-  plugins: {
-    legend: {
-      position: 'top' as const,
-    },
-    title: {
-      display: true,
-      text: 'Chart.js Bar Chart',
-    },
-  },
-};
-
-// Simple implementation of Utils functions
-const Utils = {
-  months: ({ count }: { count: number }) => {
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    return months.slice(0, count);
-  },
-  rand: (min: number, max: number) => {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  },
-  CHART_COLORS: {
-    red: 'rgba(255, 99, 132, 0.5)',
-    blue: 'rgba(53, 162, 235, 0.5)',
+// Error boundary component for charts
+class ChartErrorBoundary extends React.Component<{children: any}, {hasError: boolean}> {
+  constructor(props: {children: any}) {
+    super(props);
+    this.state = { hasError: false };
   }
-};
 
-const DATA_COUNT = 7;
-const NUMBER_CFG = {count: DATA_COUNT, min: -100, max: 100};
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true };
+  }
 
-const labels = Utils.months({count: 7});
-const dataRnd = {
-  labels: labels,
-  datasets: [
-    {
-      label: 'Dataset 1',
-      data: labels.map(() => {
-        return [Utils.rand(-100, 100), Utils.rand(-100, 100)];
-      }),
-      backgroundColor: Utils.CHART_COLORS.red,
-    },
-    {
-      label: 'Dataset 2',
-      data: labels.map(() => {
-        return [Utils.rand(-100, 100), Utils.rand(-100, 100)];
-      }),
-      backgroundColor: Utils.CHART_COLORS.blue,
-    },
-  ]
-};
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error('Chart rendering error:', error, errorInfo);
+  }
 
-export const data = {
-  labels,
-  datasets: [
-    {
-      label: 'Dataset 1',
-      data: labels.map(() => faker.number.int({ min: 0, max: 1000 })),
-      backgroundColor: 'rgba(255, 99, 132, 0.5)',
-    },
-    {
-      label: 'Dataset 2',
-      data: labels.map(() => faker.number.int({ min: 0, max: 1000 })),
-      backgroundColor: 'rgba(53, 162, 235, 0.5)',
-    },
-  ],
-};
+  render() {
+    if (this.state.hasError) {
+      return <div className="text-red-500">Error loading chart component</div>;
+    }
 
-export default function Index({ validatorData }) {
+    return this.props.children;
+  }
+}
+
+// Updated function to fetch validator metrics from the database via API
+async function fetchValidatorMetrics(votePubkey, validatorIdentityPubkey) {
+  try {
+    const response = await axios.get('/api/validator-metrics', {
+      params: {
+        votePubkey: votePubkey,
+        validatorIdentityPubkey: validatorIdentityPubkey
+      }
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching validator metrics:", error);
+    return null;
+  }
+}
+
+// New function to fetch historical metrics
+async function fetchHistoricalMetrics(votePubkey, validatorIdentityPubkey) {
+  try {
+    const response = await axios.get('/api/historical-metrics', {
+      params: {
+        votePubkey: votePubkey,
+        validatorIdentityPubkey: validatorIdentityPubkey
+      }
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching historical metrics:", error);
+    return null;
+  }
+}
+
+export default function Index({ validatorData, settingsData, totalStakeData }) {
     const appLang = useSelector(appLangSelector);
     const msg = new Lang({
         messages: lngVaidators,
         locale: appLang,
     });
     const epoch = useSelector(appEpochSelector);
-    const dataChart = [
-        { year: 2010, count: 10 },
-        { year: 2011, count: 20 },
-        { year: 2012, count: 15 },
-        { year: 2013, count: 25 },
-        { year: 2014, count: 22 },
-        { year: 2015, count: 30 },
-        { year: 2016, count: 28 },
-    ];
+    const validatorCredits = JSON.parse(validatorData.epoch_credits);
+    const scheduleSlots = JSON.parse(validatorData.slots);
+    const dbData = JSON.parse(validatorData.epoch_credits_history);
+    const labelEpoch = dbData.map(function (item) {
+        return item[0]
+    });
+    const [data, setData] = useState<any>(validatorData);
+    const [historicalData, setHistoricalData] = useState<any>(null);
+    const votePubkey = validatorData.vote_pubkey;
+    const validatorIdentityPubkey = validatorData.node_pubkey;
+    const [chartTab, setChartTab] = useState<string>('epoch_credits');
 
+    const formatSOL = (lamports) => {
+        // Конвертация лампорта в SOL
+        const sol = lamports / 1e9; // 1e9 = 1,000,000,000
+        // Конвертация SOL в K SOL (тысячи SOL)
+        const kSol = sol / 1e3; // 1e3 = 1000
+        // Округление до двух десятичных знаков и форматирование
+        return kSol.toFixed(2);
+    }
 
-    // const Map = ReactMapboxGl({
-    //     accessToken:
-    //         'pk.eyJ1IjoiZmFicmljOCIsImEiOiJjaWc5aTV1ZzUwMDJwdzJrb2w0dXRmc2d0In0.p6GGlfyV-WksaDV_KdN27A'
-    // });
+    const echochValues = dbData.map(function (item) {
+        return (item[1]/1000000)
+    });
 
-console.log(validatorData.name)
+    const dataEpoch = {
+            labels: labelEpoch,
+            datasets: [{
+                label: 'Epoch',
+                data: echochValues,
+                backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1,
+                pointBackgroundColor: 'rgba(153, 102, 255, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(153, 102, 255, 1)',
+            }]
+        };
+    const optionsLine = {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top' as const,
+        },
+        title: {
+          display: true,
+          text: 'Epoch Credits History',
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+        },
+      },
+      elements: {
+        point: {
+          radius: 3,
+          hoverRadius: 6,
+        },
+        line: {
+          tension: 0.4,
+        }
+      }
+    };
+
+    // Options for the self-stake history chart
+    const optionsSelfStake = {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top' as const,
+        },
+        title: {
+          display: true,
+          text: 'Self-Stake History (Epochs 750-849)',
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: false,
+          title: {
+            display: true,
+            text: 'Self-Stake (SOL)',
+          },
+        },
+        x: {
+          title: {
+            display: true,
+            text: 'Epoch',
+          },
+          // For better readability with many data points
+          ticks: {
+            autoSkip: true,
+            maxTicksLimit: 20, // Show at most 20 tick labels
+          },
+        },
+      },
+      elements: {
+        point: {
+          radius: 2, // Smaller points for better visualization with many data points
+          hoverRadius: 6,
+        },
+        line: {
+          tension: 0.4,
+        }
+      }
+    };
+
+    useEffect(() => {
+        // Only run this in the browser, not during server-side rendering
+        if (typeof window !== "undefined") {
+            fetchValidatorMetrics(votePubkey, validatorIdentityPubkey)
+                .then(metrics => {
+                    // The SFDP status is now displayed directly in the UI using the ValidatorSFDP component
+                })
+                .catch(error => {
+                    console.error("Error fetching validator metrics:", error);
+                });
+                
+            // Fetch historical metrics for the chart
+            fetchHistoricalMetrics(votePubkey, validatorIdentityPubkey)
+                .then(data => {
+                    setHistoricalData(data);
+                })
+                .catch(error => {
+                    console.error("Error fetching historical metrics:", error);
+                });
+        }
+    }, [votePubkey, validatorIdentityPubkey]); // Re-run when these values change
+
+    // Prepare data for the self-stake history chart
+    const selfStakeChartData = () => {
+        if (!historicalData || !historicalData.selfStake || !historicalData.selfStake.history) {
+            return null;
+        }
+        
+        // Sort epochs numerically (not alphabetically)
+        const epochs = Object.keys(historicalData.selfStake.history)
+            .map(Number) // Convert to numbers
+            .sort((a, b) => a - b); // Sort numerically
+        
+        // Map stake values in the correct order
+        const stakeValues = epochs.map(epoch => historicalData.selfStake.history[epoch]);
+        
+        return {
+            labels: epochs,
+            datasets: [
+                {
+                    label: 'Self-Stake (SOL)',
+                    data: stakeValues,
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }
+            ]
+        };
+    };
+
+    const fetchData = async () => {
+        try {
+            // Build URL with all parameters
+            let url = `/api/fetch-validators-auth`;
+            
+            const response = await axios.get(url);
+            setData(response.data.validatorsData);
+            
+        } catch (error) {
+            console.error('Error:', error);
+            // Reset sort click state even if there's an error
+        }
+    };
 
     return (
         <AuthenticatedLayout header={<Head />}>
@@ -202,29 +341,34 @@ console.log(validatorData.name)
                                             <span className="font-medium mr-2">Activated stake:</span>
                                             <ValidatorActivatedStake validator={validatorData} epoch={epoch} />
                                         </li>
-                                        <li className="flex items-start">
-                                            <span className="font-medium mr-2">Identity:</span>
-                                            <span className="break-all">{validatorData.node_pubkey}</span>
-                                        </li>
-                                        <li className="flex items-start">
-                                            <span className="font-medium mr-2">Vote Key:</span>
-                                            <span className="break-all">{validatorData.vote_pubkey}</span>
-                                        </li>
                                          <li className="flex items-start">
                                             <span className="font-medium mr-2">Uptime:</span>
-                                            <span className="break-all">{validatorData.uptime}</span>
+                                            <span className="break-all">
+                                                <ValidatorUptime epoch={epoch} validator={validatorData} />
+                                            </span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">Client:</span>
-                                            <span className="break-all">{validatorData.uptime}</span>
+                                            <span className="break-all">
+                                                {`${validatorData.version}  ${validatorData.software_client || ''}`}
+                                            </span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">SFDP Status:</span>
-                                            <span className="break-all">{validatorData.uptime}</span>
+                                            <span className="break-all">
+                                                <ValidatorSFDP validator={validatorData} epoch={epoch} />
+                                            </span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="font-medium mr-2">Vote Credits:</span>
+                                            <span className="break-all"><ValidatorCredits epoch={epoch} validator={validatorData} /></span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">Vote Rate:</span>
-                                            <span className="break-all">{validatorData.uptime}</span>
+                                            <span className="break-all">
+                                                <ValidatorRate epoch={epoch} validator={validatorData} settingsData={settingsData} totalStakeData={totalStakeData}  />
+                                                {/* {actualVotes/approxExpectedVotes} */}
+                                            </span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">Jito Score:</span>
@@ -239,16 +383,24 @@ console.log(validatorData.name)
                                 <div className="flex items-start">
                                     <ul className="space-y-2 w-1/2 pr-2">
                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">Website:</span>
-                                            <span className="break-all">{validatorData.url}</span>
+                                            <span className="font-medium mr-2">MEV Commission:</span>
+                                            <span className="break-all">{validatorData.commission !== null && validatorData.commission !== undefined ? `${validatorData.commission}%` : 'N/A'}</span>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">Details:</span>
-                                            <span className="break-all">{validatorData.details}</span>
+                                            <span className="font-medium mr-2">Inflation Commission:</span>
+                                            <span className="break-all">{validatorData.jito_commission !== null && validatorData.jito_commission !== undefined ? `${validatorData.jito_commission}%` : 'N/A'}</span>
+                                        </li>
+                                        <li>
+                                            <span className="font-medium mr-2">Inflation Commission:</span>
+                                            <span className="break-all">
+                                                <FontAwesomeIcon icon={faStar} className="text-xs" />
+                                                <FontAwesomeIcon icon={faStar} className="text-xs" />
+                                                <FontAwesomeIcon icon={faStar} className="text-xs" />
+                                            </span>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">Location:</span>
-                                            <span className="break-all">{validatorData.country}</span>
+                                            <span className="font-medium mr-2">Country:</span>
+                                            <span className="break-all">{validatorData.country_iso} {validatorData.country}</span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">City:</span>
@@ -257,6 +409,14 @@ console.log(validatorData.name)
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">ASN:</span>
                                             <span className="break-all">{validatorData.asn}</span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="font-medium mr-2">Website:</span>
+                                            <span className="break-all">{validatorData.url}</span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="font-medium mr-2">Details:</span>
+                                            <span className="break-all">{validatorData.details}</span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="font-medium mr-2">IP:</span>
@@ -274,13 +434,37 @@ console.log(validatorData.name)
                             </div>
                         </div>
                         <div className="flex mt-6">
-                            <div className="w-1/2 w-[650px] h-[500px]">
+                            <div className="w-1/2 w-[650px] h-[500px] mr-2">
                                 <MapLayer validator={validatorData} />
                             </div>
-                            <div className="w-1/2">
-                                <Bar options={options} data={dataRnd} />
+                            <div className="w-1/2 ml-2">
+                                <ul className="flex flex-row w-full border-b border-gray-300">
+                                    <li onClick={() => setChartTab('stake')} className={`px-4 py-2 font-medium text-md cursor-pointer text-gray-500 hover:text-gray-700`}>Stake</li>
+                                    <li onClick={() => setChartTab('stake_accounts')} className="px-4 py-2 font-medium text-md cursor-pointer text-gray-500 hover:text-gray-700">Stake Accounts</li>
+                                    <li onClick={() => setChartTab('success_rate')} className="px-4 py-2 font-medium text-md cursor-pointer text-gray-500 hover:text-gray-700">Success Rate</li>
+                                    <li onClick={() => setChartTab('block_rewards')} className="px-4 py-2 font-medium text-md cursor-pointer text-gray-500 hover:text-gray-700">Block Rewards</li>
+                                    <li onClick={() => setChartTab('epoch_credits')} className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'epoch_credits' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>Epoch Credits</li>
+                                </ul>
+                                <div className={`w-full ${chartTab === 'epoch_credits' ? 'block' : 'hidden'}`}>
+                                    <ChartErrorBoundary>
+                                        <Line options={optionsLine} data={dataEpoch} />
+                                    </ChartErrorBoundary>
+                                </div>
+                                <div className={`w-full ${chartTab === 'stake_accounts' ? 'block' : 'hidden'}`}>
+                                    <ChartErrorBoundary>
+                                        {selfStakeChartData() ? (
+                                            <Line options={optionsSelfStake} data={selfStakeChartData()} />
+                                        ) : (
+                                            <div className="flex items-center justify-center h-full">
+                                                <div className="text-center">
+                                                    <div>Loading historical self-stake data...</div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </ChartErrorBoundary>
+                                </div>
                             </div>
-                        </div>  
+                        </div>
                     </div>
                     
                 </div>

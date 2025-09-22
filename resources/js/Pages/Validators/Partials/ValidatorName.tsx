@@ -17,7 +17,7 @@ import {
 import { Link } from "@inertiajs/react";
 import { toast } from 'react-toastify';
 
-export default function ValidatorName({validator, align = 'left'}) {
+export default function ValidatorName({validator, align = 'left', noTruncate = false}) {
     const copyToClipboard = async (text: string) => {
         try {
             await navigator.clipboard.writeText(text);
@@ -43,10 +43,10 @@ export default function ValidatorName({validator, align = 'left'}) {
     return (
         <>
             <div className="flex flex-col">
-                <span className="truncate v-truncate min-w-[190px]">{validator.name}</span>
+                <span className={`${noTruncate ? '' : 'truncate v-truncate min-w-[190px]'}`}>{validator.name}</span>
                 <div className={`flex items-center space-x-2 ${align === 'center' ? 'key-link' : ''}`}>
                   <span
-                      className="text-[14px] truncate v-truncate max-w-[150px] hover:underline"
+                      className={`text-[14px] ${noTruncate ? '' : 'truncate v-truncate max-w-[150px]'} hover:underline`}
                       title={validator.vote_pubkey} // Full vote_pubkey on hover
                   >
                     {validator.vote_pubkey.slice(0, 4)}...{validator.vote_pubkey.slice(-4)}

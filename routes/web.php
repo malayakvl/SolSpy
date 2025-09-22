@@ -5,7 +5,9 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\ValidatorController;
+use App\Http\Controllers\Api\ValidatorController as ApiValidatorController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\DiscordController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 
@@ -26,7 +28,7 @@ Route::get('/dashboard', function () {
 
 Route::get('/comparisons/{page?}', [ValidatorController::class, 'comparisons'])->name('validators.comparisons');
 Route::get('/favorites/{page?}', [ValidatorController::class, 'favorites'])->name('validators.favorites');
-Route::get('/mark-validators', [ValidatorController::class, 'markValidators'])->name('validators.mark');
+// 
 Route::get('/sortable', [ValidatorController::class, 'sortable'])->name('validators.sortable');
 
 // Specific validator routes
@@ -59,6 +61,8 @@ Route::get('/news/{slug}', [NewsController::class, 'show'])->name('news.show');
 
 // Admin news routes - protected
 Route::middleware(['auth', 'check.role:Admin,Manager'])->prefix('admin')->group(function () {
+    Route::get('/discord-news', [DiscordController::class, 'adminIndex'])->name('admin.discord.news');
+    Route::post('/discord-news/bulk-action', [DiscordController::class, 'bulkAction'])->name('admin.discord.bulk-action');
     Route::get('/news', [NewsController::class, 'adminIndex'])->name('admin.news.index');
     Route::get('/news/create', [NewsController::class, 'create'])->name('admin.news.create');
     Route::post('/news', [NewsController::class, 'store'])->name('admin.news.store');
@@ -67,9 +71,12 @@ Route::middleware(['auth', 'check.role:Admin,Manager'])->prefix('admin')->group(
     Route::delete('/news/{news}', [NewsController::class, 'destroy'])->name('admin.news.destroy');
     Route::post('/news/bulk-action', [NewsController::class, 'bulkAction'])->name('admin.news.bulk-action');
     Route::get('/settings', [SettingsController::class, 'adminIndex'])->name('admin.settings.index');
+    Route::put('/settings', [SettingsController::class, 'updateDataSettings'])->name('admin.settings.update');
     
     // Admin validators routes
     Route::get('/validators', [ValidatorController::class, 'adminIndex'])->name('admin.validators.index');
+    Route::get('/validators/top', [ValidatorController::class, 'adminTopIndex'])->name('admin.validators.top');
+    Route::post('/validators/bulk-action', [ValidatorController::class, 'bulkAction'])->name('admin.validators.bulk-action');
     
     // Admin customers routes
     Route::get('/customers', [UserController::class, 'index'])->name('admin.customers.index');
@@ -78,7 +85,6 @@ Route::middleware(['auth', 'check.role:Admin,Manager'])->prefix('admin')->group(
 // API routes for news utilities
 Route::post('/api/news/generate-slug', [NewsController::class, 'generateSlug'])->name('api.news.generateSlug');
 
-require __DIR__.'/auth.php';
-
 // Home page route - MUST be last to avoid catching other routes
+require __DIR__.'/auth.php';
 Route::get('/{page?}', [ValidatorController::class, 'index'])->name('home');

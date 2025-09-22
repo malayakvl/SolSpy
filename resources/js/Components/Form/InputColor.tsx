@@ -36,7 +36,7 @@ const InputColor: React.FC<Props> = ({
   };
 
   const handleChange = () => {
-    console.log('handle change');
+    // console.log('handle change');
   };
 
   const handleChangeComplete = (color: any) => {
@@ -67,7 +67,7 @@ const InputColor: React.FC<Props> = ({
   }, [colorSettings, name]);
 
   useEffect(() => {
-    console.log(defaultColor);
+    // console.log(defaultColor);
     setSelectedColor(defaultColor);
   }, [defaultColor]);
 

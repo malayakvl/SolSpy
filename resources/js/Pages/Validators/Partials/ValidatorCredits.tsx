@@ -1,29 +1,33 @@
 import React, { useEffect, useState } from 'react';
 
 export default function ValidatorCredits({ validator, epoch }) {
-    const [prevVoteCredit, setPrevVoteCredit] = useState(0);
+    const [prevCredits, setPrevCredits] = useState(0);
     const [colorClass, setColorClass] = useState('');
 
-    // Вычисление текущего значения voteCredit
-    let _voteCredit = 0;
+    // Вычисление текущего значения credits
+    let _credits = 0;
     const epochData = JSON.parse(validator?.epoch_credits ? validator.epoch_credits : '[]');
+
     if (epochData.length > 0) {
         const result = epochData.find(subArray => subArray[0] === epoch);
-        if (result) {
-            _voteCredit = Number(result[1]);
+        const resultIndex = epochData.findIndex(subArray => subArray[0] === epoch);
+        if (resultIndex >= 1) {
+            const previous = epochData[resultIndex - 1];
+            const tmpData = result[1] - previous[1];
+            _credits = Number(tmpData);
         }
     }
 
     useEffect(() => {
-        if (prevVoteCredit !== _voteCredit) {
-            const isLower = _voteCredit < prevVoteCredit;
+        if (prevCredits !== _credits) {
+            const isLower = _credits < prevCredits;
             setColorClass(isLower ? 'text-red-500' : 'text-green-500');
 
             const timeout = setTimeout(() => {
                 setColorClass(''); // Подсветка исчезает через 2 секунды
-            }, 2000);
+            }, 1000);
 
-            setPrevVoteCredit(_voteCredit);
+            setPrevCredits(_credits);
 
             return () => clearTimeout(timeout);
         } else {
@@ -31,11 +35,11 @@ export default function ValidatorCredits({ validator, epoch }) {
                 setColorClass(''); // Подсветка исчезает через 2 секунды
             }, 1000);
         }
-    }, [_voteCredit, prevVoteCredit]);
+    }, [_credits, prevCredits]);
 
     return (
         <span className={`transition-colors duration-300 ${colorClass}`}>
-      {_voteCredit.toLocaleString('en-US', {
+      {_credits.toLocaleString('en-US', {
           minimumFractionDigits: 0,
           maximumFractionDigits: 0
       })}

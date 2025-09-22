@@ -7,12 +7,14 @@ const lngHeader = {
     customers: 'Customer',
     currencies: 'Currencies',
     validators: 'Validators',
-    news: 'Manage News',
+    news: 'News',
     settings: 'Settings',
     epoch: 'epoch',
     login: 'Login', 
     register: 'Register',
-    left: 'Left'
+    banners: 'Banners',
+    left: 'Left',
+    'discord-news': 'Discord News'
   },
   'uk.menu': {
     dashboard: 'Панель керування',
@@ -24,12 +26,11 @@ const lngHeader = {
     login: 'Увійти',
     register: 'Зареєструватись',
     validators: 'Валідатори',
-    news: 'Керування новинами',
+    news: 'Новини',
     settings: 'Налаштування',
     epoch: 'епоха',
-    login: 'Увійти', 
-    register: 'Зареєструватись',
-    left: 'Лишилось'
+    left: 'Лишилось',
+    'discord-news': 'Discord новини'
   },
 };
 export default lngHeader;
