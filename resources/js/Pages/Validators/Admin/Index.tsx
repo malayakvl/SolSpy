@@ -522,7 +522,7 @@ export default function AdminIndex(validatorsData) {
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold">{msg.get('validators.title')}&nbsp;</h2>
                         <Link href={route('admin.validators.top')} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                            Sort Top Validators
+                            {msg.get('validators.btnSort')}
                         </Link>
                     </div>
                         

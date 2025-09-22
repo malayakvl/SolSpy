@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 
 export default function ValidatorRate({ validator, epoch, settingsData, totalStakeData }) {
     const [colorClass, setColorClass] = useState('');
-    const [prevVoteRate, setPrevVoteRate] = useState(0);
+    const prevVoteRateRef = useRef(null);
 
     const validatorCredits = JSON.parse(validator.epoch_credits) || [];
     const scheduleSlots = validator.slots ? JSON.parse(validator.slots) : [];
@@ -35,29 +35,34 @@ export default function ValidatorRate({ validator, epoch, settingsData, totalSta
     // console.log(`VoteRate Calc: ${_voteRate}`);
 
     useEffect(() => {
-        if (prevVoteRate !== _voteRate) {
-            const isLower = _voteRate < prevVoteRate;
+        // Skip highlighting on initial render
+        if (prevVoteRateRef.current === null) {
+            prevVoteRateRef.current = _voteRate;
+            return;
+        }
+        
+        // Only highlight if there's an actual change
+        if (prevVoteRateRef.current !== _voteRate) {
+            const isLower = _voteRate < prevVoteRateRef.current;
             setColorClass(isLower ? 'text-red-500' : 'text-green-500');
 
-            const timeout = setTimeout(() => {
-                setColorClass(''); // Подсветка исчезает через 2 секунды
-            }, 1000);
+            // Update the ref to current value
+            prevVoteRateRef.current = _voteRate;
 
-            setPrevVoteRate(_voteRate);
+            // Clear the highlight after 1 second
+            const timeout = setTimeout(() => {
+                setColorClass('');
+            }, 1000);
 
             return () => clearTimeout(timeout);
-        } else {
-            const timeout = setTimeout(() => {
-                setColorClass(''); // Подсветка исчезает через 2 секунды
-            }, 1000);
         }
-    }, [_voteRate, prevVoteRate]);
+    }, [_voteRate]);
 
 
 
     return (
-        <span className={`transition-colors duration-300 ${colorClass}`}>
-        {_voteRate.toFixed(4)}
+        <span className={`transition-colors duration-300 ${colorClass}`} style={{ width: '120px', display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {_voteRate.toString()}
     </span>
     );
 }

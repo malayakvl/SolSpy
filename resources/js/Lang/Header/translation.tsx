@@ -26,11 +26,11 @@ const lngHeader = {
     login: 'Увійти',
     register: 'Зареєструватись',
     validators: 'Валідатори',
-    news: 'Керування новинами',
+    news: 'Новини',
     settings: 'Налаштування',
     epoch: 'епоха',
     left: 'Лишилось',
-    'discord-news': 'Керування Discord новинами'
+    'discord-news': 'Discord новини'
   },
 };
 export default lngHeader;
