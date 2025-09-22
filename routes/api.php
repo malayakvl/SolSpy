@@ -6,6 +6,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\Api\ValidatorController as ApiValidatorController;
 use App\Http\Controllers\ValidatorOrderController;
+use App\Http\Controllers\DiscordNewsController;
 
 Route::get('/fetch-settings', [SettingsController::class, 'getDataWithHeader'])->name('settings.get');
 Route::get('/fetch-by-id-validators/{page?}', [ApiValidatorController::class, 'fetchByIds'])->name('validators.fetchByIds');
@@ -32,6 +33,17 @@ Route::middleware(['web', 'auth'])->group(function () {
     // Validator order routes
     Route::post('/validator-order/update', [ValidatorOrderController::class, 'updateOrder'])->name('validator-order.update');
     Route::get('/validator-order/{listType?}', [ValidatorOrderController::class, 'getOrder'])->name('validator-order.get');
+
+    // Discord news routes
+    Route::get('/discord-news', [DiscordNewsController::class, 'index'])->name('discord-news.index');
+    Route::post('/discord-news', [DiscordNewsController::class, 'store'])->name('discord-news.store');
+    Route::get('/discord-news/{discordNews}', [DiscordNewsController::class, 'show'])->name('discord-news.show');
+    Route::put('/discord-news/{discordNews}', [DiscordNewsController::class, 'update'])->name('discord-news.update');
+    Route::delete('/discord-news/{discordNews}', [DiscordNewsController::class, 'destroy'])->name('discord-news.destroy');
+    Route::post('/discord-news-order/update', [DiscordNewsController::class, 'updateOrder'])->name('discord-news-order.update');
+    Route::get('/discord-news-order', [DiscordNewsController::class, 'getOrder'])->name('discord-news-order.get');
+    Route::post('/discord-news/top', [DiscordNewsController::class, 'toggleTop'])->name('discord-news.top');
+    Route::get('/discord-news-top', [DiscordNewsController::class, 'getTop'])->name('discord-news.getTop');
 
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
