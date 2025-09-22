@@ -819,8 +819,8 @@ class ValidatorController extends Controller
             // Execute the solana command directly (as confirmed it works on the server)
             $command = "solana validators -um --sort=credits -r -n | grep -e " . escapeshellarg($pubkey);
             $process = Process::fromShellCommandline($command);
-            $process->setTimeout(30);
-            $process->run();
+            $process->setTimeout(5);
+            $process->run(); 
             
             // Even if grep returns exit status 1 (not found), we might still have output
             // Only consider it an error if we have no output at all
