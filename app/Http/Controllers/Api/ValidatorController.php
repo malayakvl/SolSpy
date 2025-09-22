@@ -761,8 +761,23 @@ class ValidatorController extends Controller
             
             // Use the exact same command that works on the server
             $validatorCommand = "$solanaPath validators -um --sort=credits -r -n | grep -e " . escapeshellarg($pubkey);
+            
+            // Log the command for debugging
+            Log::info('Executing SSH command for validator score', [
+                'command' => $validatorCommand,
+                'pubkey' => $pubkey
+            ]);
+            
             $output = $ssh->exec($validatorCommand);
             $exitStatus = $ssh->getExitStatus();
+            
+            // Log detailed information for debugging
+            Log::info('SSH validator command execution details', [
+                'command' => $validatorCommand,
+                'exit_status' => $exitStatus,
+                'output_length' => strlen($output),
+                'output' => $output
+            ]);
 
             // Even if grep returns exit status 1 (not found), we might still have output
             // Only consider it an error if we have no output
@@ -816,37 +831,68 @@ class ValidatorController extends Controller
     private function getValidatorScoreLocally($pubkey)
     {
         try {
-            // Execute the solana command directly (as confirmed it works on the server)
-            // $command = "solana validators -um --sort=credits -r -n | grep -e " . escapeshellarg($pubkey);
-            $command = "solana validators -um --sort=credits -r -n | grep -e HgozywotiKv4F5g3jCgideF3gh9sdD3vz4QtgXKjWCtB";
-// dd('TUT try to run command: '.$command);exit;            
-            $process = Process::fromShellCommandline($command);
-            $process->setTimeout(5);
-            $process->run(); 
+            // Use the symbolic link path which should be accessible to all users
+            $solanaPath = "/usr/local/bin/solana";
             
-            // Even if grep returns exit status 1 (not found), we might still have output
-            // Only consider it an error if we have no output at all
-            $output = $process->getOutput();
-            
-            if (!$output || trim($output) === '') {
-                // Log the error for debugging
-                $errorOutput = $process->getErrorOutput();
-                $exitCode = $process->getExitCode();
+            // Check if the solana binary exists and is executable via the symbolic link
+            if (!file_exists($solanaPath) || !is_executable($solanaPath)) {
+                Log::error('Solana binary not accessible via symbolic link', [
+                    'path' => $solanaPath,
+                    'exists' => file_exists($solanaPath),
+                    'executable' => is_executable($solanaPath)
+                ]);
                 
-                Log::error('Validator not found or command failed for pubkey: ' . $pubkey . ' Exit code: ' . $exitCode . ' Error: ' . $errorOutput);
-                
-                // Even with exit code 1, if we have output it's still valid
-                if ($exitCode == 1 && strpos($errorOutput, 'not found') === false) {
-                    // This is normal for grep when no matches found, continue
-                } else {
-                    return ['error' => 'Validator not found or command failed', 'pubkey' => $pubkey, 'exit_code' => $exitCode, 'error_output' => $errorOutput];
+                // Fallback to direct path
+                $solanaPath = "/root/.local/share/solana/install/active_release/bin/solana";
+                if (!file_exists($solanaPath) || !is_executable($solanaPath)) {
+                    return ['error' => 'Solana binary not found or not executable'];
                 }
             }
-
-            // If we have no output, that means validator not found
+            
+            // Execute the command using the accessible path
+            $command = "$solanaPath validators -um --sort=credits -r -n | grep -e " . escapeshellarg($pubkey);
+            
+            // Add environment variables that might be needed
+            $env = [
+                'HOME' => getenv('HOME') ?: '/var/www',
+                'PATH' => getenv('PATH') ?: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+                'SHELL' => getenv('SHELL') ?: '/bin/bash'
+            ];
+            
+            $process = Process::fromShellCommandline($command, null, $env, null, 60);
+            
+            // Run with more verbose error handling
+            $process->run();
+            
+            $output = $process->getOutput();
+            $errorOutput = $process->getErrorOutput();
+            $exitCode = $process->getExitCode();
+            
+            // Log detailed information for debugging
+            Log::info('Validator command execution details', [
+                'command' => $command,
+                'exit_code' => $exitCode,
+                'output_length' => strlen($output),
+                'output' => $output,
+                'error_output' => $errorOutput,
+                'working_directory' => getcwd(),
+                'user' => get_current_user(),
+                'env_path' => $env['PATH']
+            ]);
+            
+            // Even if grep returns exit code 1 (no matches), we might still have valid output
+            // But if we have no output at all, then it's an error
             if (!$output || trim($output) === '') {
-                Log::error('Validator not found for pubkey: ' . $pubkey);
-                return ['error' => 'Validator not found', 'pubkey' => $pubkey];
+                // Let's also check if there's meaningful error output
+                if ($errorOutput && trim($errorOutput) !== '' && strpos($errorOutput, 'not found') === false) {
+                    Log::error('Command execution failed with error output', [
+                        'error_output' => $errorOutput,
+                        'exit_code' => $exitCode
+                    ]);
+                    return ['error' => 'Command execution failed', 'pubkey' => $pubkey, 'exit_code' => $exitCode, 'error_output' => $errorOutput];
+                }
+                
+                return ['error' => 'Validator not found', 'pubkey' => $pubkey, 'exit_code' => $exitCode, 'error_output' => $errorOutput];
             }
 
             // Парсинг: "192 Hgo... DHo... 0% 368557078 ( 0) 368557047 ( 0) 0.00% 975094 2.3.8 15888.204260276 SOL (0.00%)"
@@ -854,8 +900,6 @@ class ValidatorController extends Controller
 
             // Based on the actual output, we need 17 parts minimum
             if (count($parts) < 17) {
-                Log::error('Invalid CLI output format for pubkey: ' . $pubkey . ' with parts count: ' . count($parts));
-                Log::error('Output was: ' . $output);
                 return ['error' => 'Invalid CLI output format', 'parts_count' => count($parts), 'output' => $output, 'parts' => $parts];
             }
 
@@ -874,7 +918,7 @@ class ValidatorController extends Controller
                 'stakePercent' => str_replace(['(', ')', '%'], '', $parts[16]), // 0.00%
             ];
         } catch (\Exception $e) {
-            Log::error('Exception in getValidatorScoreLocally: ' . $e->getMessage());
+            Log::error('Exception in getValidatorScoreLocally: ' . $e->getMessage(), ['exception' => $e]);
             return ['error' => 'Exception occurred: ' . $e->getMessage()];
         }
     }
