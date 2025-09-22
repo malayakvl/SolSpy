@@ -115,9 +115,6 @@ export default function Header(auth) {
                         {msg.get('menu.news')}
                       </Link>
                       <Link href={'/admin/settings'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
-                          {msg.get('menu.banners')}
-                      </Link>
-                      <Link href={'/admin/settings'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
                           {msg.get('menu.settings')}
                       </Link>
                     </>

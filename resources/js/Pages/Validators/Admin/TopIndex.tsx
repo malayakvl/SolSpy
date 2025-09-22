@@ -79,9 +79,9 @@ export default function TopIndex(validatorsData) {
                 <div className="p-4 sm:p-8 mb-8 content-data bg-content">
                     <div className="flex justify-between items-center mb-6">
                         <div>
-                            <h2 className="text-2xl font-bold">Top Validators</h2>
+                            <h2 className="text-2xl font-bold">{msg.get('validators.topTitle')}</h2>
                             <Link href={route('admin.validators.index')} className="text-blue-500 hover:underline">
-                                ← Back to All Validators
+                                ← {msg.get('validators.btnBack')}
                             </Link>
                         </div>
                     </div>
@@ -149,7 +149,7 @@ export default function TopIndex(validatorsData) {
                                     className="btn-submit"
                                     onClick={handleApplyChanges}
                                 >
-                                    Apply Changes
+                                    {msg.get('validators.btnApplyChanges')}
                                 </button>
                             </div>
                         </div>

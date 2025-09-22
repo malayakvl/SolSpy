@@ -4,10 +4,22 @@ const lngValidators = {
     all: 'All',
     top: 'Top Validators',
     highlight: 'Highlight Validators',
-    viewTitle: 'View Validator'
+    viewTitle: 'View Validator',
+    btnSort: 'Sort Top Validators',
+    topTitle: 'Top Validators',
+    btnBack: 'Back to All Validators',
+    btnApplyChanges: 'Apply Changes',
   },
   'uk.validators': {
     title: 'Валідатори',
+    all: 'Усі',
+    top: 'Top валідатори',
+    highlight: 'Підсвічені валідатори',
+    viewTitle: 'Переглянути валідатора',
+    btnSort: 'Сортувати Top валідатори',
+    topTitle: 'Top валідатори',
+    btnBack: 'Повернутися до усіх валідаторів',
+    btnApplyChanges: 'Pовернути зміни',
   },
 };
 export default lngValidators;
