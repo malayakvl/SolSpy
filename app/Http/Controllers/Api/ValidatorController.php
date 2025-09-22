@@ -818,6 +818,7 @@ class ValidatorController extends Controller
         try {
             // Execute the solana command directly (as confirmed it works on the server)
             $command = "solana validators -um --sort=credits -r -n | grep -e " . escapeshellarg($pubkey);
+dd('TUT try to run command: '.$command);exit;            
             $process = Process::fromShellCommandline($command);
             $process->setTimeout(5);
             $process->run(); 
