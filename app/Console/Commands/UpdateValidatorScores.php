@@ -95,7 +95,7 @@ class UpdateValidatorScores extends Command
             // Clear existing data and insert new data
             DB::transaction(function () use ($validators) {
                 // Clear existing data
-                DB::table('validator_scores')->truncate();
+                DB::table('data.validator_scores')->truncate();
                 
                 // Insert in batches to avoid memory issues
                 $chunks = array_chunk($validators, 100);
