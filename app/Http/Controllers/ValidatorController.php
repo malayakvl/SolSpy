@@ -472,7 +472,6 @@ class ValidatorController extends Controller
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
-
         // Fetch timeout data using service (this includes search and sorting functionality)
         $data = $this->validatorDataService->timeoutData(
             $sortColumn, 
@@ -769,5 +768,22 @@ class ValidatorController extends Controller
         return Inertia::render('Validators/Admin/TopIndex', [
             'validatorsData' => $data,
         ]);
+    }
+
+    /**
+     * Get the average rank from validator scores
+     */
+    public function getAverageRank(Request $request)
+    {
+        try {
+            $averageRank = DB::table('data.validator_scores')
+                ->avg('rank');
+            
+            return response()->json([
+                'average_rank' => $averageRank ? round($averageRank, 2) : 0
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to fetch average rank'], 500);
+        }
     }
 }

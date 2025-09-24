@@ -6,8 +6,10 @@ import { useSelector } from 'react-redux';
 import { appLangSelector } from '../../../Redux/Layout/selectors';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSave, faEye } from '@fortawesome/free-solid-svg-icons';
+import { useRef } from 'react';
 import { toast } from 'react-toastify';
-import RichTextEditor from '../../../Components/Form/RichTextEditor';
+// import RichTextEditor from '../../../Components/Form/RichTextEditor';
+import TextInput from '../../../Components/Form/TextInput';
 import lngSettings from '../../../Lang/Settings/translation';
 
 interface SettingsFormData {
@@ -27,6 +29,7 @@ export default function CreateEdit({ settingsData, isEdit = true, languages = [
     const appLang = useSelector(appLangSelector);
     const [activeTab, setActiveTab] = useState(languages[0]?.code || 'en');
     const [previewMode, setPreviewMode] = useState(false);
+    const collectScoreRetention = useRef();
     const msg = new Lang({
       messages: lngSettings,
       locale: appLang,
@@ -34,18 +37,9 @@ export default function CreateEdit({ settingsData, isEdit = true, languages = [
     
     const { data, setData, post, put, processing, errors, transform } = useForm<SettingsFormData>({
         update_interval: settingsData?.update_interval || '2',
+        collect_score_retention: settingsData?.collect_score_retention || '10',
     });
 
-    // Transform the data before submission
-    // transform((data) => {
-    //     // Filter out empty translations
-    //     const validTranslations = Object.entries(data.translations)
-    //         .filter(([language, translation]) => translation.title.trim() !== '' || translation.content.trim() !== '');
-        
-    //     return {
-    //         ...data,
-    //     };
-    // });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -83,7 +77,7 @@ export default function CreateEdit({ settingsData, isEdit = true, languages = [
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* General Settings */}
                         <div className="bg-white p-6 rounded-lg shadow">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-1 gap-4 md:max-w-2xl">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         {msg.get('settings.update_interval')}
@@ -96,6 +90,22 @@ export default function CreateEdit({ settingsData, isEdit = true, languages = [
                                         <option value="2">2</option>
                                         <option value="5">5</option>
                                         <option value="7">7</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        {msg.get('settings.collect_score_retention')}
+                                    </label>
+                                    <select
+                                        value={data.collect_score_retention}
+                                        onChange={(e) => setData('collect_score_retention', e.target.value)}
+                                        className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        <option value="2">5</option>
+                                        <option value="5">10</option>
+                                        <option value="7">20</option>
+                                        <option value="7">50</option>
+                                        <option value="7">100</option>
                                     </select>
                                 </div>
                             </div>

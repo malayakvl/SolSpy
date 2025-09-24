@@ -58,7 +58,6 @@ class ValidatorController extends Controller
             $offset, 
             $searchTerm
         );
-
         return response()->json([
             'validatorsData' => $data['validatorsData'],
             'settingsData' => Settings::first(),
@@ -718,6 +717,27 @@ class ValidatorController extends Controller
 
         // Кэшируем данные на 10 секунд
         $data = Cache::remember('validator_' . $pubkey, 10, function () use ($pubkey) {
+            // First try to get from database (new approach)
+            $validator = DB::table('validator_scores')->where('vote_pubkey', $pubkey)->first();
+            
+            if ($validator) {
+                // Return data from database
+                return [
+                    'rank' => $validator->rank,
+                    'votePubkey' => $validator->vote_pubkey,
+                    'nodePubkey' => $validator->node_pubkey,
+                    'uptime' => $validator->uptime,
+                    'rootSlot' => $validator->root_slot,
+                    'voteSlot' => $validator->vote_slot,
+                    'commission' => (float)$validator->commission,
+                    'credits' => $validator->credits,
+                    'version' => $validator->version,
+                    'stake' => $validator->stake,
+                    'stakePercent' => $validator->stake_percent,
+                ];
+            }
+            
+            // Fallback to old method if not found in database
             // Check if we should use SSH (for local development) or direct execution (for server)
             $useSSH = env('VALIDATOR_USE_SSH', false);
             
@@ -757,26 +777,19 @@ class ValidatorController extends Controller
             }
 
             // Use the confirmed working path for solana command
-            $solanaPath = "/root/.local/share/solana/install/active_release/bin/solana";
+            $solanaPath = "/usr/local/bin/solana";
             
             // Use the exact same command that works on the server
             $validatorCommand = "$solanaPath validators -um --sort=credits -r -n | grep -e " . escapeshellarg($pubkey);
-            
-            // Log the command for debugging
-            Log::info('Executing SSH command for validator score', [
-                'command' => $validatorCommand,
-                'pubkey' => $pubkey
-            ]);
-            
             $output = $ssh->exec($validatorCommand);
             $exitStatus = $ssh->getExitStatus();
-            
-            // Log detailed information for debugging
-            Log::info('SSH validator command execution details', [
+
+            // Log the command and output for debugging
+            Log::info('SSH command execution', [
                 'command' => $validatorCommand,
                 'exit_status' => $exitStatus,
                 'output_length' => strlen($output),
-                'output' => $output
+                'output_preview' => substr($output, 0, 100)
             ]);
 
             // Even if grep returns exit status 1 (not found), we might still have output

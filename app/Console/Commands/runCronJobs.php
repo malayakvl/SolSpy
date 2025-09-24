@@ -33,6 +33,8 @@ class runCronJobs extends Command
             // Например, вызов метода или сервиса
             // Вызов команды app:fetch-validators
             Artisan::call('app:fech-validators');
+            Artisan::call('validators:update-scores-auto');
+            
 
             // Вывод результата команды (опционально)
             $output = Artisan::output();

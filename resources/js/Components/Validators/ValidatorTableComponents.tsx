@@ -711,10 +711,14 @@ export const renderColumnCell = (columnName, validator, epoch, settingsData, tot
         case "Uptime": 
             return (
                 <td>
-                    <ValidatorUptime validator={validator} />
+                    {validator.uptime}
+                    {/* <ValidatorUptime validator={validator} /> */}
                 </td>
             );
-        case "Client/Version": return <td>{validator.version || validator.software_version || 'N/A'}</td>;
+        case "Client/Version": 
+            // Use the latest version from validator scores if available, fallback to existing fields
+            const version = validator.latestVersion || validator.version || validator.software_version || 'N/A';
+            return <td>{version}</td>;
         case "Status SFDP": 
             return (
                 <td>
