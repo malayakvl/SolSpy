@@ -28,7 +28,7 @@ export default function ValidatorActivatedStake({validator, epoch}) {
                 {Number(validator.activated_stake).toLocaleString('en-US', {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 0
-                })}
+                })} SOL
             </span>
         </>
     );

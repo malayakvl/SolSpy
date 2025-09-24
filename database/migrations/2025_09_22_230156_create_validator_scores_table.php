@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('validator_scores', function (Blueprint $table) {
+        Schema::create('data.validator_scores', function (Blueprint $table) {
             $table->id();
             $table->integer('rank');
             $table->string('vote_pubkey', 44);
@@ -30,6 +30,7 @@ return new class extends Migration
             $table->index('node_pubkey');
             $table->index('rank');
             $table->index('credits');
+            $table->index('collected_at');
         });
     }
 

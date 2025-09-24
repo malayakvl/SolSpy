@@ -3,26 +3,25 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Symfony\Component\Process\Process;
-use Symfony\Component\Process\Exception\ProcessFailedException;
+use phpseclib3\Net\SSH2;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class UpdateValidatorScores extends Command
+class UpdateValidatorScoresLocal extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'validators:update-scores {collectLength=3 : Number of collections to keep}';
+    protected $signature = 'validators:update-scores-local {collectLength=3 : Number of collections to keep}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Update validator scores from Solana CLI';
+    protected $description = 'Update validator scores from Solana CLI via SSH (for local development)';
 
     /**
      * Execute the console command.
@@ -32,37 +31,35 @@ class UpdateValidatorScores extends Command
     public function handle()
     {
         $collectLength = (int) $this->argument('collectLength');
-        $this->info("Updating validator scores (keeping last $collectLength collections)...");
+        $this->info("Updating validator scores via SSH (keeping last $collectLength collections)...");
         
         try {
-            // Use the symbolic link path which should be accessible
-            $solanaPath = "/usr/local/bin/solana";
+            // Connect to remote server
+            $ssh = new SSH2(env('VALIDATOR_SERVER_HOST', '103.167.235.81'));
+            $ssh->setTimeout(30);
             
-            // Check if the solana binary exists and is executable
-            if (!file_exists($solanaPath) || !is_executable($solanaPath)) {
-                // Fallback to direct path
-                $solanaPath = "/root/.local/share/solana/install/active_release/bin/solana";
-                if (!file_exists($solanaPath) || !is_executable($solanaPath)) {
-                    $this->error('Solana binary not found or not executable');
-                    return 1;
-                }
-            }
+            $loginSuccess = $ssh->login(
+                env('VALIDATOR_SERVER_USER', 'root'), 
+                env('VALIDATOR_SERVER_PASSWORD')
+            );
             
-            // Execute the command to get all validators
-            $command = "$solanaPath validators -um --sort=credits -r -n";
-            
-            $process = Process::fromShellCommandline($command, null, null, null, 120);
-            $process->run();
-            
-            if (!$process->isSuccessful()) {
-                $this->error('Command failed: ' . $process->getErrorOutput());
+            if (!$loginSuccess) {
+                $this->error('SSH login failed');
                 return 1;
             }
             
-            $output = $process->getOutput();
+            $this->info('SSH connection established');
             
-            if (empty($output)) {
-                $this->error('Command returned empty output');
+            // Use the confirmed working path for solana command
+            $solanaPath = "/usr/local/bin/solana";
+            
+            // Execute the command to get all validators
+            $command = "$solanaPath validators -um --sort=credits -r -n";
+            $output = $ssh->exec($command);
+            $exitStatus = $ssh->getExitStatus();
+            
+            if ($exitStatus !== 0 || empty($output)) {
+                $this->error('Command failed with exit status: ' . $exitStatus);
                 return 1;
             }
             
@@ -106,12 +103,14 @@ class UpdateValidatorScores extends Command
             // Clean up old data (keep only the specified number of collections)
             $this->cleanupOldData($collectLength);
             
-            $this->info('Validator scores updated successfully!');
+            $ssh->disconnect();
+            
+            $this->info('Validator scores updated successfully via SSH!');
             
             return 0;
         } catch (\Exception $e) {
             $this->error('Error updating validator scores: ' . $e->getMessage());
-            Log::error('Error updating validator scores: ' . $e->getMessage(), ['exception' => $e]);
+            Log::error('Error updating validator scores via SSH: ' . $e->getMessage(), ['exception' => $e]);
             return 1;
         }
     }

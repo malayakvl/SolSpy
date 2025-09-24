@@ -85,6 +85,9 @@ Route::middleware(['auth', 'check.role:Admin,Manager'])->prefix('admin')->group(
 // API routes for news utilities
 Route::post('/api/news/generate-slug', [NewsController::class, 'generateSlug'])->name('api.news.generateSlug');
 
+// API route for validator average rank
+Route::get('/api/validators/average-rank', [ValidatorController::class, 'getAverageRank'])->name('api.validators.average-rank');
+
 // Home page route - MUST be last to avoid catching other routes
 require __DIR__.'/auth.php';
 Route::get('/{page?}', [ValidatorController::class, 'index'])->name('home');

@@ -58,7 +58,6 @@ class ValidatorController extends Controller
             $offset, 
             $searchTerm
         );
-
         return response()->json([
             'validatorsData' => $data['validatorsData'],
             'settingsData' => Settings::first(),
@@ -718,6 +717,27 @@ class ValidatorController extends Controller
 
         // Кэшируем данные на 10 секунд
         $data = Cache::remember('validator_' . $pubkey, 10, function () use ($pubkey) {
+            // First try to get from database (new approach)
+            $validator = DB::table('validator_scores')->where('vote_pubkey', $pubkey)->first();
+            
+            if ($validator) {
+                // Return data from database
+                return [
+                    'rank' => $validator->rank,
+                    'votePubkey' => $validator->vote_pubkey,
+                    'nodePubkey' => $validator->node_pubkey,
+                    'uptime' => $validator->uptime,
+                    'rootSlot' => $validator->root_slot,
+                    'voteSlot' => $validator->vote_slot,
+                    'commission' => (float)$validator->commission,
+                    'credits' => $validator->credits,
+                    'version' => $validator->version,
+                    'stake' => $validator->stake,
+                    'stakePercent' => $validator->stake_percent,
+                ];
+            }
+            
+            // Fallback to old method if not found in database
             // Check if we should use SSH (for local development) or direct execution (for server)
             $useSSH = env('VALIDATOR_USE_SSH', false);
             
@@ -736,6 +756,92 @@ class ValidatorController extends Controller
     }
     
     /**
+<<<<<<< HEAD
+=======
+     * Get validator score via SSH connection (for local development)
+     */
+    private function getValidatorScoreViaSSH($pubkey)
+    {
+        $ssh = null;
+        try {
+            // Подключение к удалённому серверу
+            $ssh = new SSH2(env('VALIDATOR_SERVER_HOST', '103.167.235.81')); // IP сервера
+            
+            // Set timeout for the connection
+            $ssh->setTimeout(30);
+            
+            // Try to login
+            $loginSuccess = $ssh->login(env('VALIDATOR_SERVER_USER', 'root'), env('VALIDATOR_SERVER_PASSWORD'));
+            
+            if (!$loginSuccess) {
+                Log::error('SSH login failed for validator score fetch - login returned false');
+                return ['error' => 'SSH login failed - invalid credentials'];
+            }
+
+            // Use the confirmed working path for solana command
+            $solanaPath = "/usr/local/bin/solana";
+            
+            // Use the exact same command that works on the server
+            $validatorCommand = "$solanaPath validators -um --sort=credits -r -n | grep -e " . escapeshellarg($pubkey);
+            $output = $ssh->exec($validatorCommand);
+            $exitStatus = $ssh->getExitStatus();
+
+            // Log the command and output for debugging
+            Log::info('SSH command execution', [
+                'command' => $validatorCommand,
+                'exit_status' => $exitStatus,
+                'output_length' => strlen($output),
+                'output_preview' => substr($output, 0, 100)
+            ]);
+
+            // Even if grep returns exit status 1 (not found), we might still have output
+            // Only consider it an error if we have no output
+            if (!$output || trim($output) === '') {
+                Log::error('Validator not found for pubkey: ' . $pubkey . ' Exit status: ' . $exitStatus);
+                return ['error' => 'Validator not found', 'pubkey' => $pubkey, 'exit_status' => $exitStatus];
+            }
+
+            // Парсинг: "192 Hgo... DHo... 0% 368557078 ( 0) 368557047 ( 0) 0.00% 975094 2.3.8 15888.204260276 SOL (0.00%)"
+            $parts = preg_split('/\s+/', trim($output));
+
+            // Based on the actual output, we need 17 parts minimum
+            if (count($parts) < 17) {
+                Log::error('Invalid CLI output format for pubkey: ' . $pubkey . ' with parts count: ' . count($parts));
+                Log::error('Output was: ' . $output);
+                return ['error' => 'Invalid CLI output format', 'parts_count' => count($parts), 'output' => $output, 'parts' => $parts];
+            }
+
+            // Parse the output correctly based on actual format
+            return [
+                'rank' => (int)$parts[0],                    // 186
+                'votePubkey' => $parts[2],                   // HgozywotiKv4F5g3jCgideF3gh9sdD3vz4QtgXKjWCtB
+                'nodePubkey' => $parts[3],                   // DHoZJqvvMGvAXw85Lmsob7YwQzFVisYg8HY4rt5BAj6M
+                'uptime' => $parts[4],                       // 0%
+                'rootSlot' => (int)str_replace(['(', ')'], '', $parts[5]), // 368561621
+                'voteSlot' => (int)str_replace(['(', ')'], '', $parts[8]), // 368561590
+                'commission' => (float)str_replace('%', '', $parts[11]),   // 0.00%
+                'credits' => (int)$parts[12],                // 1047512
+                'version' => $parts[13],                     // 2.3.8
+                'stake' => $parts[14],                       // 15888.204260276
+                'stakePercent' => str_replace(['(', ')', '%'], '', $parts[16]), // 0.00%
+            ];
+        } catch (\Exception $e) {
+            Log::error('Exception in getValidatorScoreViaSSH: ' . $e->getMessage());
+            return ['error' => 'Exception occurred: ' . $e->getMessage()];
+        } finally {
+            // Ensure SSH connection is closed
+            if ($ssh instanceof SSH2) {
+                try {
+                    $ssh->disconnect();
+                } catch (\Exception $e) {
+                    Log::warning('Failed to disconnect SSH: ' . $e->getMessage());
+                }
+            }
+        }
+    }
+    
+    /**
+>>>>>>> 49796b807994e31655958982c8d801032ae64b0f
      * Get validator score locally (for server deployment)
      */
     private function getValidatorScoreLocally($pubkey)
