@@ -15,7 +15,7 @@ class UpdateValidatorScores extends Command
      *
      * @var string
      */
-    protected $signature = 'validators:update-scores';
+    protected $signature = 'validators:update-scores {collectLength=3 : Number of collections to keep}';
 
     /**
      * The console command description.
@@ -31,7 +31,8 @@ class UpdateValidatorScores extends Command
      */
     public function handle()
     {
-        $this->info('Updating validator scores...');
+        $collectLength = (int) $this->argument('collectLength');
+        $this->info("Updating validator scores (keeping last $collectLength collections)...");
         
         try {
             // Use the symbolic link path which should be accessible
@@ -74,8 +75,8 @@ class UpdateValidatorScores extends Command
                 if (count($parts) >= 17 && is_numeric($parts[0])) {
                     $validators[] = [
                         'rank' => (int)$parts[0],
-                        'vote_pubkey' => $parts[2],
-                        'node_pubkey' => $parts[3],
+                        'node_pubkey' => $parts[2],
+                        'vote_pubkey' => $parts[3],
                         'uptime' => $parts[4],
                         'root_slot' => (int)str_replace(['(', ')'], '', $parts[5]),
                         'vote_slot' => (int)str_replace(['(', ')'], '', $parts[8]),
@@ -84,6 +85,7 @@ class UpdateValidatorScores extends Command
                         'version' => $parts[13],
                         'stake' => $parts[14],
                         'stake_percent' => str_replace(['(', ')', '%'], '', $parts[16]),
+                        'collected_at' => now(),
                         'created_at' => now(),
                         'updated_at' => now()
                     ];
@@ -92,17 +94,17 @@ class UpdateValidatorScores extends Command
             
             $this->info('Found ' . count($validators) . ' validators');
             
-            // Clear existing data and insert new data
+            // Insert new data without truncating
             DB::transaction(function () use ($validators) {
-                // Clear existing data
-                DB::table('data.validator_scores')->truncate();
-                
                 // Insert in batches to avoid memory issues
                 $chunks = array_chunk($validators, 100);
                 foreach ($chunks as $chunk) {
-                    DB::table('validator_scores')->insert($chunk);
+                    DB::table('data.validator_scores')->insert($chunk);
                 }
             });
+            
+            // Clean up old data (keep only the specified number of collections)
+            $this->cleanupOldData($collectLength);
             
             $this->info('Validator scores updated successfully!');
             
@@ -111,6 +113,32 @@ class UpdateValidatorScores extends Command
             $this->error('Error updating validator scores: ' . $e->getMessage());
             Log::error('Error updating validator scores: ' . $e->getMessage(), ['exception' => $e]);
             return 1;
+        }
+    }
+    
+    /**
+     * Clean up old data, keeping only the specified number of collections
+     */
+    private function cleanupOldData($collectLength)
+    {
+        // Get the distinct collection times, ordered by newest first
+        $collections = DB::table('data.validator_scores')
+            ->select('collected_at')
+            ->groupBy('collected_at')
+            ->orderBy('collected_at', 'desc')
+            ->limit($collectLength)
+            ->pluck('collected_at');
+        
+        // If we have more than the specified number of collections, delete the oldest ones
+        if ($collections->count() >= $collectLength) {
+            $oldestToKeep = $collections->last();
+            $deleted = DB::table('data.validator_scores')
+                ->where('collected_at', '<', $oldestToKeep)
+                ->delete();
+                
+            if ($deleted > 0) {
+                $this->info("Cleaned up old data, deleted $deleted records. Keeping collections from " . $oldestToKeep);
+            }
         }
     }
 }

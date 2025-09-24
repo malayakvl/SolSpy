@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 
 class UpdateValidatorScoresAuto extends Command
 {
@@ -12,7 +13,7 @@ class UpdateValidatorScoresAuto extends Command
      *
      * @var string
      */
-    protected $signature = 'validators:update-scores-auto';
+    protected $signature = 'validators:update-scores-auto {collectLength=3 : Number of collections to keep}';
 
     /**
      * The console command description.
@@ -28,17 +29,18 @@ class UpdateValidatorScoresAuto extends Command
      */
     public function handle()
     {
-        $this->info('Updating validator scores automatically...');
+        $dbSettings = DB::table('data.settings')->first();
+        $collectLength = $dbSettings->collect_score_retention;
+
+        $this->info("Updating validator scores automatically (keeping last $collectLength collections)...");
         
         // Check if we should use SSH (for local development) or direct execution (for server)
         $useSSH = env('VALIDATOR_USE_SSH', false);
         
         if ($useSSH) {
-            $this->info('Using SSH method (local development mode)');
-            return Artisan::call('validators:update-scores-local', [], $this->getOutput());
+            return Artisan::call('validators:update-scores-local', ['collectLength' => $collectLength], $this->getOutput());
         } else {
-            $this->info('Using direct execution method (server mode)');
-            return Artisan::call('validators:update-scores', [], $this->getOutput());
+            return Artisan::call('validators:update-scores', ['collectLength' => $collectLength], $this->getOutput());
         }
     }
 }
