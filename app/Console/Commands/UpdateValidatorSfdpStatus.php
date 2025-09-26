@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Dotenv\Dotenv;
 use App\Models\Validator;
 
-class UpdateValidatorSfdpStatusLocal extends Command
+class UpdateValidatorSfdpStatus extends Command
 {
     /**
      * The name and signature of the console command.
