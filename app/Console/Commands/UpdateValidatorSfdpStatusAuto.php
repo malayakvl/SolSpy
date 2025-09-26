@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
 
 class UpdateValidatorSfdpStatusAuto extends Command
 {
@@ -29,8 +28,6 @@ class UpdateValidatorSfdpStatusAuto extends Command
      */
     public function handle()
     {
-        $dbSettings = DB::table('data.settings')->first();
-        $collectLength = $dbSettings->collect_score_retention;
         // Check if we should use SSH (for local development) or direct execution (for server)
         $useSSH = env('VALIDATOR_USE_SSH', false);
         if ($useSSH) {
