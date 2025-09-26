@@ -1,70 +1,46 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 
-export default function ValidatorScore({validator}) {
-    const [tvcScore, setTvcScore] = useState(null);
+export default function ValidatorScore({ validator, epoch }) {
+    const [prevCredits, setPrevCredits] = useState(0);
     const [colorClass, setColorClass] = useState('');
-    const prevScoreRef = useRef(null);
+
+    // Вычисление текущего значения credits
+    let _credits = validator.averageRank;
+    
+    // Ensure _credits is a number
+    if (_credits === undefined || _credits === null) {
+        _credits = 0;
+    } else if (typeof _credits === 'string') {
+        _credits = parseFloat(_credits) || 0;
+    }
 
     useEffect(() => {
-        // Always fetch live data from API
-        fetchValidatorScore();
-    }, [validator]);
-
-    const fetchValidatorScore = async () => {
-        // Removed setLoading(true)
-        try {
-            const response = await fetch(`/api/fetch-score?pubkey=${validator.node_pubkey}`);
-            const data = await response.json();
-            
-            if (response.ok) {
-                setTvcScore(data);
-            }
-        } catch (error) {
-            console.error('Error fetching validator score:', error);
-        } finally {
-            // Removed setLoading(false)
-        }
-    };
-
-    // Determine which value to display
-    const displayScore = tvcScore ? tvcScore.rank : (validator.tvcRank || '-');
-
-    // Handle color change effect
-    useEffect(() => {
-        // Skip highlighting on initial render
-        if (prevScoreRef.current === null) {
-            prevScoreRef.current = displayScore;
-            return;
-        }
-        
-        // Only highlight if there's an actual change and both values are numbers
-        if (prevScoreRef.current !== displayScore && 
-            !isNaN(prevScoreRef.current) && 
-            !isNaN(displayScore)) {
-            const isLower = Number(displayScore) > Number(prevScoreRef.current);
+        if (prevCredits !== _credits) {
+            const isLower = _credits < prevCredits;
             setColorClass(isLower ? 'text-red-500' : 'text-green-500');
 
-            // Update the ref to current value
-            prevScoreRef.current = displayScore;
-
-            // Clear the highlight after 1 second
             const timeout = setTimeout(() => {
-                setColorClass('');
+                setColorClass(''); // Подсветка исчезает через 2 секунды
             }, 1000);
+
+            setPrevCredits(_credits);
 
             return () => clearTimeout(timeout);
         } else {
-            // Update the ref even if we don't highlight
-            prevScoreRef.current = displayScore;
-        }
-    }, [displayScore]);
+            const timeout = setTimeout(() => {
+                setColorClass(''); // Подсветка исчезает через 2 секунды
+            }, 1000);
 
-    // Show data - from API if available, otherwise fallback
-    // Removed loading check
-    
+            return () => clearTimeout(timeout);
+        }
+    }, [_credits, prevCredits]);
+
     return (
-        <div className={`transition-colors duration-300 ${colorClass}`}>
-            {displayScore}
-        </div>
+        <span className={`transition-colors duration-300 ${colorClass}`}>
+      {_credits.toLocaleString('en-US', {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0
+      })}
+    </span>
     );
 }

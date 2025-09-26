@@ -126,7 +126,11 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
-
+        'sfdp' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/sfdp_errors.log'),
+            'level' => 'debug',
+        ],
     ],
 
 ];

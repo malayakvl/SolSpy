@@ -58,7 +58,6 @@ class ValidatorController extends Controller
             $offset, 
             $searchTerm
         );
-
         return response()->json([
             'validatorsData' => $data['validatorsData'],
             'settingsData' => Settings::first(),
@@ -718,6 +717,27 @@ class ValidatorController extends Controller
 
         // Кэшируем данные на 10 секунд
         $data = Cache::remember('validator_' . $pubkey, 10, function () use ($pubkey) {
+            // First try to get from database (new approach)
+            $validator = DB::table('validator_scores')->where('vote_pubkey', $pubkey)->first();
+            
+            if ($validator) {
+                // Return data from database
+                return [
+                    'rank' => $validator->rank,
+                    'votePubkey' => $validator->vote_pubkey,
+                    'nodePubkey' => $validator->node_pubkey,
+                    'uptime' => $validator->uptime,
+                    'rootSlot' => $validator->root_slot,
+                    'voteSlot' => $validator->vote_slot,
+                    'commission' => (float)$validator->commission,
+                    'credits' => $validator->credits,
+                    'version' => $validator->version,
+                    'stake' => $validator->stake,
+                    'stakePercent' => $validator->stake_percent,
+                ];
+            }
+            
+            // Fallback to old method if not found in database
             // Check if we should use SSH (for local development) or direct execution (for server)
             $useSSH = env('VALIDATOR_USE_SSH', false);
             
@@ -757,35 +777,26 @@ class ValidatorController extends Controller
             }
 
             // Use the confirmed working path for solana command
-            $solanaPath = "/root/.local/share/solana/install/active_release/bin/solana";
+            $solanaPath = "/usr/local/bin/solana";
             
-            // Try to find the specific validator using grep
+            // Use the exact same command that works on the server
             $validatorCommand = "$solanaPath validators -um --sort=credits -r -n | grep -e " . escapeshellarg($pubkey);
             $output = $ssh->exec($validatorCommand);
             $exitStatus = $ssh->getExitStatus();
 
-            // If grep doesn't find anything, try a different approach
-            if (!$output || trim($output) === '' || $exitStatus !== 0) {
-                // Try to get all validators and search through them
-                $allValidatorsCommand = "$solanaPath validators -um --sort=credits -r -n";
-                $allValidatorsOutput = $ssh->exec($allValidatorsCommand);
-                $allValidatorsExitStatus = $ssh->getExitStatus();
-                
-                if ($allValidatorsExitStatus === 0 && $allValidatorsOutput) {
-                    $lines = explode("\n", $allValidatorsOutput);
-                    foreach ($lines as $line) {
-                        if (strpos($line, $pubkey) !== false) {
-                            $output = $line;
-                            break;
-                        }
-                    }
-                }
-            }
+            // Log the command and output for debugging
+            Log::info('SSH command execution', [
+                'command' => $validatorCommand,
+                'exit_status' => $exitStatus,
+                'output_length' => strlen($output),
+                'output_preview' => substr($output, 0, 100)
+            ]);
 
-            // If we still don't have output, the validator doesn't exist
+            // Even if grep returns exit status 1 (not found), we might still have output
+            // Only consider it an error if we have no output
             if (!$output || trim($output) === '') {
-                Log::error('Validator not found for pubkey: ' . $pubkey);
-                return ['error' => 'Validator not found', 'pubkey' => $pubkey];
+                Log::error('Validator not found for pubkey: ' . $pubkey . ' Exit status: ' . $exitStatus);
+                return ['error' => 'Validator not found', 'pubkey' => $pubkey, 'exit_status' => $exitStatus];
             }
 
             // Парсинг: "192 Hgo... DHo... 0% 368557078 ( 0) 368557047 ( 0) 0.00% 975094 2.3.8 15888.204260276 SOL (0.00%)"
@@ -833,31 +844,68 @@ class ValidatorController extends Controller
     private function getValidatorScoreLocally($pubkey)
     {
         try {
-            // Execute the solana command directly (no SSH needed)
-            $command = "solana validators -um --sort=credits -r -n | grep -e " . escapeshellarg($pubkey);
-            $process = Process::fromShellCommandline($command);
-            $process->setTimeout(30);
+            // Use the symbolic link path which should be accessible to all users
+            $solanaPath = "/usr/local/bin/solana";
+            
+            // Check if the solana binary exists and is executable via the symbolic link
+            if (!file_exists($solanaPath) || !is_executable($solanaPath)) {
+                Log::error('Solana binary not accessible via symbolic link', [
+                    'path' => $solanaPath,
+                    'exists' => file_exists($solanaPath),
+                    'executable' => is_executable($solanaPath)
+                ]);
+                
+                // Fallback to direct path
+                $solanaPath = "/root/.local/share/solana/install/active_release/bin/solana";
+                if (!file_exists($solanaPath) || !is_executable($solanaPath)) {
+                    return ['error' => 'Solana binary not found or not executable'];
+                }
+            }
+            
+            // Execute the command using the accessible path
+            $command = "$solanaPath validators -um --sort=credits -r -n | grep -e " . escapeshellarg($pubkey);
+            
+            // Add environment variables that might be needed
+            $env = [
+                'HOME' => getenv('HOME') ?: '/var/www',
+                'PATH' => getenv('PATH') ?: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+                'SHELL' => getenv('SHELL') ?: '/bin/bash'
+            ];
+            
+            $process = Process::fromShellCommandline($command, null, $env, null, 60);
+            
+            // Run with more verbose error handling
             $process->run();
             
-            // Check if the solana command exists
-            $checkCommand = Process::fromShellCommandline("which solana");
-            $checkCommand->run();
-            
-            if (!$checkCommand->isSuccessful()) {
-                Log::error('Solana command not found on local system');
-                return ['error' => 'Solana command not found on local system. Please install Solana CLI tools.'];
-            }
-            
-            if (!$process->isSuccessful()) {
-                Log::error('Validator not found or command failed for pubkey: ' . $pubkey . ' Error: ' . $process->getErrorOutput() . ' Output: ' . $process->getOutput());
-                return ['error' => 'Validator not found or command failed', 'pubkey' => $pubkey, 'error_output' => $process->getErrorOutput(), 'output' => $process->getOutput()];
-            }
-            
             $output = $process->getOutput();
+            $errorOutput = $process->getErrorOutput();
+            $exitCode = $process->getExitCode();
             
-            if (!$output) {
-                Log::error('Validator not found or command failed for pubkey: ' . $pubkey);
-                return ['error' => 'Validator not found or command failed - no output', 'pubkey' => $pubkey, 'output' => $output];
+            // Log detailed information for debugging
+            Log::info('Validator command execution details', [
+                'command' => $command,
+                'exit_code' => $exitCode,
+                'output_length' => strlen($output),
+                'output' => $output,
+                'error_output' => $errorOutput,
+                'working_directory' => getcwd(),
+                'user' => get_current_user(),
+                'env_path' => $env['PATH']
+            ]);
+            
+            // Even if grep returns exit code 1 (no matches), we might still have valid output
+            // But if we have no output at all, then it's an error
+            if (!$output || trim($output) === '') {
+                // Let's also check if there's meaningful error output
+                if ($errorOutput && trim($errorOutput) !== '' && strpos($errorOutput, 'not found') === false) {
+                    Log::error('Command execution failed with error output', [
+                        'error_output' => $errorOutput,
+                        'exit_code' => $exitCode
+                    ]);
+                    return ['error' => 'Command execution failed', 'pubkey' => $pubkey, 'exit_code' => $exitCode, 'error_output' => $errorOutput];
+                }
+                
+                return ['error' => 'Validator not found', 'pubkey' => $pubkey, 'exit_code' => $exitCode, 'error_output' => $errorOutput];
             }
 
             // Парсинг: "192 Hgo... DHo... 0% 368557078 ( 0) 368557047 ( 0) 0.00% 975094 2.3.8 15888.204260276 SOL (0.00%)"
@@ -865,8 +913,6 @@ class ValidatorController extends Controller
 
             // Based on the actual output, we need 17 parts minimum
             if (count($parts) < 17) {
-                Log::error('Invalid CLI output format for pubkey: ' . $pubkey . ' with parts count: ' . count($parts));
-                Log::error('Output was: ' . $output);
                 return ['error' => 'Invalid CLI output format', 'parts_count' => count($parts), 'output' => $output, 'parts' => $parts];
             }
 
@@ -885,8 +931,8 @@ class ValidatorController extends Controller
                 'stakePercent' => str_replace(['(', ')', '%'], '', $parts[16]), // 0.00%
             ];
         } catch (\Exception $e) {
-            Log::error('Exception in getValidatorScoreLocally: ' . $e->getMessage());
+            Log::error('Exception in getValidatorScoreLocally: ' . $e->getMessage(), ['exception' => $e]);
             return ['error' => 'Exception occurred: ' . $e->getMessage()];
         }
     }
-}
+} 

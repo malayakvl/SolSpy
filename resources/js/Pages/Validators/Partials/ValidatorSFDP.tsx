@@ -1,11 +1,41 @@
 import React, { useEffect, useState } from 'react';
 
+async function checkSFDPStatus(pubkey) {
+  try {
+    const response = await fetch(
+      "https://api.solana.org/api/community/v1/sfdp_participants"
+    );
+
+    if (!response.ok) {
+      throw new Error(`Ошибка сети: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // data — массив участников SFDP
+    const participant = data.find(
+      (p) => p.mainnetBetaPubkey === pubkey || p.testnetPubkey === pubkey
+    );
+
+    if (participant) {
+      console.log(`Статус валидатора ${pubkey}: ${participant.state}`);
+    } else {
+      console.log(`Валидатор ${pubkey} не найден в SFDP.`);
+    }
+  } catch (err) {
+    console.error("Ошибка при проверке статуса:", err.message);
+  }
+}
+
 
 export default function ValidatorSFDP({ validator, epoch, type = 'table' }) {
     // Initialize result
     let isEligible = true;
     const reasons = [];
     const warnings = [];
+
+    // checkSFDPStatus(validator.vote_pubkey);
+    
 
     // Constants for SFDP eligibility criteria
     const VOTE_CREDITS_THRESHOLD = 0.97; // 97% of cluster average
