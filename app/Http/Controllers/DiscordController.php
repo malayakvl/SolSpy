@@ -69,8 +69,12 @@ class DiscordController extends Controller
             Log::info('Total results', ['total' => $totalResults]);
             
             // Format articles for response and ensure proper UTF-8 encoding
-            $formattedArticles = array_map(function ($article) {
+            $formattedArticles = array_map(function ($article, $index) use ($page, $limit) {
+                // Generate a unique ID based on the URL or create one from the title and position
+                $id = !empty($article['url']) ? md5($article['url']) : md5($article['title'] . $index . $page . $limit);
+                
                 return [
+                    'id' => $id, // Generate unique ID
                     'title' => mb_convert_encoding($article['title'] ?? 'No title', 'UTF-8', 'UTF-8'),
                     'url' => mb_convert_encoding($article['url'] ?? '', 'UTF-8', 'UTF-8'),
                     'description' => mb_substr(mb_convert_encoding($article['description'] ?? 'No description', 'UTF-8', 'UTF-8'), 0, 100) . (mb_strlen($article['description'] ?? '') > 100 ? '...' : ''),
@@ -78,7 +82,7 @@ class DiscordController extends Controller
                     'published_at' => $article['publishedAt'] ?? now()->toIso8601String(),
                     'views_count' => 0, // Default value for views_count
                 ];
-            }, $articles);
+            }, $articles, array_keys($articles));
 
             // Prepare paginated response
             $paginatedData = [
@@ -113,28 +117,72 @@ class DiscordController extends Controller
     public function bulkAction(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'action' => 'required|in:feature,unfeature,delete',
-            'ids' => 'required|array|min:1'
+            'action' => 'required|in:top',
+            'news' => 'required|array|min:1',
+            'news.*.id' => 'required|string', // Accept string IDs
+            'news.*.title' => 'required|string',
+            'news.*.url' => 'nullable|url',
+            'news.*.description' => 'nullable|string',
+            'news.*.source' => 'nullable|string',
+            'news.*.published_at' => 'nullable|date',
         ]);
         
         $action = $validated['action'];
-        $ids = $validated['ids'];
-        $count = 0;
+        $newsItems = $validated['news'];
+        $count = count($newsItems);
+        if ($action === 'top') {
+            // For Discord news that are fetched on-the-fly, we need to store them
+            // in a separate table to mark them as "top"
+            foreach ($newsItems as $newsItem) {
+                // Check if this news item is already marked as top
+                $existing = DB::table('data.discord_top_news')
+                    ->where('url', $newsItem['url'])
+                    ->where('title', $newsItem['title'])
+                    ->first();
+                
+                if ($existing) {
+                    // Remove from top news (toggle off)
+                    $deletedId = $existing->id;
+                    DB::table('data.discord_top_news')
+                        ->where('id', $deletedId)
+                        ->delete();
+                    
+                    // Also remove from news_top_sorting table
+                    DB::table('data.news_top_sorting')
+                        ->where('news_id', $deletedId)
+                        ->where('news_type', 'discord')
+                        ->delete();
+                } else {
+                    // Add to top news (toggle on)
+                    $insertedId = DB::table('data.discord_top_news')->insertGetId([
+                        'message_id' => $newsItem['id'], // Use the generated ID as message_id
+                        'title' => $newsItem['title'],
+                        'description' => $newsItem['description'] ?? null,
+                        'url' => $newsItem['url'] ?? null,
+                        'source' => $newsItem['source'] ?? null,
+                        'published_at' => $newsItem['published_at'] ?? now(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    
+                    // Also add to news_top_sorting table with highest sort order
+                    $maxSortOrder = DB::table('data.news_top_sorting')
+                        ->max('sort_order') ?? 0;
+                        
+                    DB::table('data.news_top_sorting')->insert([
+                        'news_id' => $insertedId,
+                        'news_type' => 'discord',
+                        'sort_order' => $maxSortOrder + 1,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+        }
 
-        // Since these are external API articles, we can't actually modify them in a database
-        // Instead, we'll simulate the bulk action by logging it
-        Log::info("Bulk action performed on Discord news", [
-            'action' => $action,
-            'ids' => $ids,
-            'count' => count($ids)
-        ]);
-
-        // For now, we'll just return a success message since we can't actually
-        // perform database operations on external API data
         return redirect()->route('admin.discord.news')
             ->with('success', "Bulk {$action} completed successfully. {$count} items affected.");
     }
-
 
     public function fetchDiscordMessages($limit = 50, $page = 1)
     {
@@ -143,7 +191,18 @@ class DiscordController extends Controller
             $botToken = env('DISCORD_BOT_TOKEN');
             if (!$botToken) {
                 Log::error('DISCORD_BOT_TOKEN not set in .env');
-                return Inertia::render('News/Error', ['message' => 'Discord Bot Token is not configured']);
+                // Return error data to the same view instead of a non-existent error view
+                $paginatedData = [
+                    'data' => [],
+                    'current_page' => (int)$page,
+                    'last_page' => 1,
+                    'per_page' => (int)$limit,
+                    'total' => 0,
+                    'error' => 'Discord Bot Token is not configured',
+                ];
+                return Inertia::render('DiscordNews/Admin/Index', [
+                    'news' => $paginatedData
+                ]);
             }
 
             // Список каналів
@@ -211,7 +270,18 @@ class DiscordController extends Controller
             }
 
             if (empty($allMessages)) {
-                return Inertia::render('News/Error', ['message' => 'No messages found in any of the channels']);
+                // Return error data to the same view instead of a non-existent error view
+                $paginatedData = [
+                    'data' => [],
+                    'current_page' => (int)$page,
+                    'last_page' => 1,
+                    'per_page' => (int)$limit,
+                    'total' => 0,
+                    'error' => 'No messages found in any of the channels',
+                ];
+                return Inertia::render('DiscordNews/Admin/Index', [
+                    'news' => $paginatedData
+                ]);
             }
 
             // Сортування повідомлень за датою (timestamp)
@@ -222,6 +292,7 @@ class DiscordController extends Controller
             // Форматування повідомлень
             $formattedMessages = array_map(function ($message) {
                 return [
+                    'id' => $message['id'], // Add the Discord message ID
                     'title' => $message['content'] ? mb_substr(mb_convert_encoding($message['content'], 'UTF-8', 'UTF-8'), 0, 100) . (mb_strlen($message['content']) > 100 ? '...' : '') : 'No content',
                     'url' => !empty($message['attachments']) ? mb_convert_encoding($message['attachments'][0]['url'] ?? '', 'UTF-8', 'UTF-8') : '',
                     'description' => mb_convert_encoding($message['content'] ?? 'No description', 'UTF-8', 'UTF-8'),
@@ -241,13 +312,24 @@ class DiscordController extends Controller
             ];
 
             // Повернення через Inertia
-            return Inertia::render('News/Index', $paginatedData);
+            return Inertia::render('DiscordNews/Admin/Index', [
+                'news' => $paginatedData
+            ]);
 
         } catch (\Exception $e) {
             Log::error('Error in fetchDiscordMessages', ['message' => $e->getMessage()]);
-            return Inertia::render('News/Error', [
-                'message' => 'An error occurred: ' . $e->getMessage(),
-            ], 500);
+            // Return error data to the same view instead of a non-existent error view
+            $paginatedData = [
+                'data' => [],
+                'current_page' => (int)$page,
+                'last_page' => 1,
+                'per_page' => (int)$limit,
+                'total' => 0,
+                'error' => 'An error occurred: ' . $e->getMessage(),
+            ];
+            return Inertia::render('DiscordNews/Admin/Index', [
+                'news' => $paginatedData
+            ]);
         }
     }
 }

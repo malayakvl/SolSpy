@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\News;
 use App\Models\NewsTranslation;
+use App\Models\NewsTopSorting;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -14,6 +15,58 @@ use Illuminate\Support\Facades\DB;
 
 class NewsController extends Controller
 {
+    /**
+     * Get top news items in the correct sort order
+     */
+    public function getTopNews()
+    {
+        // Get the current sort order from the news_top_sorting table
+        $sortedItems = NewsTopSorting::orderBy('sort_order')
+            ->get()
+            ->map(function ($sortItem) {
+                if ($sortItem->news_type === 'news') {
+                    // Get news item from the news table
+                    $newsItem = News::with('translations')->find($sortItem->news_id);
+                    if ($newsItem) {
+                        return [
+                            'id' => $newsItem->id,
+                            'type' => 'news',
+                            'title' => $newsItem->translations->first()->title ?? 'Untitled',
+                            'description' => $newsItem->translations->first()->excerpt ?? '',
+                            'source' => 'News',
+                            'url' => route('news.show', $newsItem->slug),
+                            'published_at' => $newsItem->published_at,
+                            'created_at' => $newsItem->created_at,
+                            'updated_at' => $newsItem->updated_at,
+                            'image_url' => $newsItem->image_url,
+                        ];
+                    }
+                } else {
+                    // Get news item from the discord_top_news table
+                    $discordItem = DB::table('data.discord_top_news')->find($sortItem->news_id);
+                    if ($discordItem) {
+                        return [
+                            'id' => $discordItem->id,
+                            'type' => 'discord',
+                            'title' => $discordItem->title,
+                            'description' => $discordItem->description,
+                            'source' => $discordItem->source,
+                            'url' => $discordItem->url,
+                            'published_at' => $discordItem->published_at,
+                            'created_at' => $discordItem->created_at,
+                            'updated_at' => $discordItem->updated_at,
+                            'image_url' => null,
+                        ];
+                    }
+                }
+                return null;
+            })
+            ->filter() // Remove null items
+            ->values(); // Re-index array
+
+        return response()->json($sortedItems);
+    }
+
     /**
      * Display a listing of news
      */
@@ -125,6 +178,7 @@ class NewsController extends Controller
                 'is_featured' => $validated['is_featured'] ?? false,
                 'published_at' => $validated['status'] === 'published' ? now() : null,
                 'image_url' => $validated['image_url'] ?? null,
+                'sort_order' => 0, // Initialize sort_order
             ]);
 
             foreach ($validated['translations'] as $translation) {
@@ -319,7 +373,7 @@ class NewsController extends Controller
     public function bulkAction(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'action' => 'required|in:publish,draft,feature,unfeature,delete',
+            'action' => 'required|in:publish,draft,feature,unfeature,delete,top',
             'ids' => 'required|array|min:1',
             'ids.*' => 'integer'
         ]);
@@ -359,10 +413,121 @@ class NewsController extends Controller
             case 'delete':
                 $count = News::whereIn('id', $ids)->delete();
                 break;
+
+            case 'top':
+                // Toggle is_top status for news items using DB query for efficiency
+                News::whereIn('id', $ids)->update([
+                    'is_top' => DB::raw('NOT is_top')
+                ]);
+                
+                // Also update the sorting table
+                // For items that are now top news, add them to the sorting table
+                // For items that are no longer top news, remove them from the sorting table
+                $toggledItems = News::whereIn('id', $ids)->get();
+                foreach ($toggledItems as $item) {
+                    if ($item->is_top) {
+                        // Add to sorting table with highest sort order
+                        $maxSortOrder = NewsTopSorting::max('sort_order') ?? 0;
+                        NewsTopSorting::create([
+                            'news_id' => $item->id,
+                            'news_type' => 'news',
+                            'sort_order' => $maxSortOrder + 1
+                        ]);
+                    } else {
+                        // Remove from sorting table
+                        NewsTopSorting::where('news_id', $item->id)
+                            ->where('news_type', 'news')
+                            ->delete();
+                    }
+                }
+                break;
         }
 
         return redirect()->route('admin.news.index')
             ->with('success', "Bulk {$action} completed successfully. {$count} items affected.");
+    }
+
+    /**
+     * Display the sort top news page with combined data from news and discord_top_news tables
+     */
+    public function sortTopNews(Request $request): Response
+    {
+        // Check if we have any sorting records, if not, populate with current top news
+        if (NewsTopSorting::count() === 0) {
+            DB::transaction(function () {
+                // Get all top news items from regular news table
+                $topNewsItems = News::where('is_top', true)->get();
+                
+                // Add regular news items to sorting table
+                foreach ($topNewsItems as $index => $newsItem) {
+                    NewsTopSorting::create([
+                        'news_id' => $newsItem->id,
+                        'news_type' => 'news',
+                        'sort_order' => $index
+                    ]);
+                }
+                
+                // Get all top news items from discord_top_news table
+                $topDiscordItems = DB::table('data.discord_top_news')->get();
+                
+                // Add Discord news items to sorting table
+                $startIndex = $topNewsItems->count();
+                foreach ($topDiscordItems as $index => $discordItem) {
+                    NewsTopSorting::create([
+                        'news_id' => $discordItem->id,
+                        'news_type' => 'discord',
+                        'sort_order' => $startIndex + $index
+                    ]);
+                }
+            });
+        }
+        
+        // Get the current sort order from the news_top_sorting table
+        $sortedItems = NewsTopSorting::orderBy('sort_order')
+            ->get()
+            ->map(function ($sortItem) {
+                if ($sortItem->news_type === 'news') {
+                    // Get news item from the news table
+                    $newsItem = News::with('translations')->find($sortItem->news_id);
+                    if ($newsItem) {
+                        return [
+                            'id' => $newsItem->id,
+                            'type' => 'news',
+                            'title' => $newsItem->translations->first()->title ?? 'Untitled',
+                            'description' => $newsItem->translations->first()->excerpt ?? '',
+                            'source' => 'News',
+                            'url' => route('news.show', $newsItem->slug),
+                            'published_at' => $newsItem->published_at,
+                            'created_at' => $newsItem->created_at,
+                            'updated_at' => $newsItem->updated_at,
+                            'image_url' => $newsItem->image_url,
+                        ];
+                    }
+                } else {
+                    // Get news item from the discord_top_news table
+                    $discordItem = DB::table('data.discord_top_news')->find($sortItem->news_id);
+                    if ($discordItem) {
+                        return [
+                            'id' => $discordItem->id,
+                            'type' => 'discord',
+                            'title' => $discordItem->title,
+                            'description' => $discordItem->description,
+                            'source' => $discordItem->source,
+                            'url' => $discordItem->url,
+                            'published_at' => $discordItem->published_at,
+                            'created_at' => $discordItem->created_at,
+                            'updated_at' => $discordItem->updated_at,
+                            'image_url' => null,
+                        ];
+                    }
+                }
+                return null;
+            })
+            ->filter(); // Remove null items
+
+        return Inertia::render('News/Admin/SortTop', [
+            'topNews' => $sortedItems
+        ]);
     }
 
     /**
