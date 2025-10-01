@@ -4,16 +4,18 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useSelector } from 'react-redux';
 import { appLangSelector } from '../../../Redux/Layout/selectors';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faCalendar, faUser, faPlus, faCog, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faCalendar, faUser, faPlus, faCog, faExclamationTriangle, faStar, faSort } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
 
 interface NewsItem {
+    id: string | number; // Accept both string and number IDs
     title: string;
     source?: string;
     url?: string;
     description?: string;
-    views_count: number;
+    views_count?: number;
     published_at: any;
+    is_top?: boolean; // Add is_top field
 }
 
 interface NewsIndexProps {
@@ -39,8 +41,8 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
     const [featuredFilter, setFeaturedFilter] = useState(filters.is_featured ? 'featured' : 'all');
-    const [selectedItems, setSelectedItems] = useState<number[]>([]);
-console.log(news)
+    const [selectedItemIds, setSelectedItemIds] = useState<(string | number)[]>([]); // Store both string and number IDs
+
     // Check if user has admin access
     const userRoles = auth?.user?.roles?.map(role => role.name) || [];
     const isAdmin = userRoles.includes('Admin') || userRoles.includes('Manager');
@@ -60,19 +62,32 @@ console.log(news)
     };
 
     const handleBulkAction = (action: string) => {
-        if (selectedItems.length === 0) {
+        if (selectedItemIds.length === 0) {
             toast.warning('Please select at least one item');
             return;
         }
 
         if (confirm(`Are you sure you want to ${action} the selected items?`)) {
+            // Get the full news objects for the selected IDs
+            const selectedNews = news.data.filter(item => selectedItemIds.includes(item.id));
+            
+            // Send only the essential data needed to identify and store the news
+            const newsData = selectedNews.map(item => ({
+                id: item.id,
+                title: item.title,
+                url: item.url,
+                description: item.description,
+                source: item.source,
+                published_at: item.published_at
+            }));
+
             router.post(route('admin.discord.bulk-action'), {
                 action,
-                ids: selectedItems
+                news: newsData
             }, {
                 onSuccess: () => {
                     toast.success(`Bulk ${action} completed successfully`);
-                    setSelectedItems([]);
+                    setSelectedItemIds([]);
                 },
                 onError: () => {
                     toast.error(`Failed to perform bulk ${action}`);
@@ -81,20 +96,44 @@ console.log(news)
         }
     };
 
-    const toggleSelection = (index: number) => {
-        setSelectedItems(prev => 
-            prev.includes(index) 
-                ? prev.filter(item => item !== index)
-                : [...prev, index]
-        );
+    const handleSortTopNews = () => {
+        router.visit(route('admin.sort-top-news'));
+    };
+
+    const toggleSelection = (newsItemId: string | number) => { // Accept both string and number IDs
+        setSelectedItemIds(prev => {
+            // Check if the item is already selected
+            const isSelected = prev.includes(newsItemId);
+            
+            if (isSelected) {
+                // Remove the item from selected items
+                return prev.filter(id => id !== newsItemId);
+            } else {
+                // Add the item to selected items
+                return [...prev, newsItemId];
+            }
+        });
     };
 
     const toggleSelectAll = () => {
-        setSelectedItems(
-            selectedItems.length === news.data.length 
-                ? [] 
-                : news.data.map((_, index) => index)
-        );
+        // Check if all items on the current page are already selected
+        const allPageItemsSelected = news.data.length > 0 && 
+            news.data.every(item => selectedItemIds.includes(item.id));
+        
+        if (allPageItemsSelected) {
+            // Deselect all items on the current page
+            setSelectedItemIds(prev => 
+                prev.filter(selectedId => 
+                    !news.data.some(pageItem => pageItem.id === selectedId)
+                )
+            );
+        } else {
+            // Select all items on the current page that are not already selected
+            const newIds = news.data
+                .filter(item => !selectedItemIds.includes(item.id))
+                .map(item => item.id);
+            setSelectedItemIds(prev => [...prev, ...newIds]);
+        }
     };
 
     const formatDate = (dateString: string) => {
@@ -118,6 +157,13 @@ console.log(news)
                 <div className="p-4 sm:p-8 mb-8 content-data bg-content">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold">Discord News</h2>
+                        <button
+                            onClick={handleSortTopNews}
+                            className="inline-flex items-center px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 text-sm"
+                        >
+                            <FontAwesomeIcon icon={faSort} className="mr-2" />
+                            Sort Top News
+                        </button>
                     </div>
 
                     {/* Error message display */}
@@ -132,31 +178,19 @@ console.log(news)
                     )}
 
                     {/* Bulk Actions */}
-                    {selectedItems.length > 0 && (
+                    {selectedItemIds.length > 0 && (
                         <div className="mb-4 p-3 bg-blue-50 rounded-lg">
                             <div className="flex items-center gap-4">
                                 <span className="text-sm font-medium">
-                                    {selectedItems.length} item(s) selected
+                                    {selectedItemIds.length} item(s) selected
                                 </span>
                                 <div className="flex gap-2">
                                     <button
-                                        onClick={() => handleBulkAction('feature')}
+                                        onClick={() => handleBulkAction('top')}
                                         className="px-3 py-1 text-xs bg-violet-500 text-white rounded hover:bg-yellow-600"
                                     >
                                         Toggle Top
                                     </button>
-                                    {/* <button
-                                        onClick={() => handleBulkAction('unfeature')}
-                                        className="px-3 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
-                                    >
-                                        Unfeature
-                                    </button>
-                                    <button
-                                        onClick={() => handleBulkAction('delete')}
-                                        className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
-                                    >
-                                        Delete
-                                    </button> */}
                                 </div>
                             </div>
                         </div>
@@ -172,7 +206,7 @@ console.log(news)
                                     <th className="px-6 py-3 text-left">
                                         <input
                                             type="checkbox"
-                                            checked={selectedItems.length === news.data.length && news.data.length > 0}
+                                            checked={news.data.length > 0 && news.data.every(item => selectedItemIds.includes(item.id))}
                                             onChange={toggleSelectAll}
                                             className="rounded"
                                         />
@@ -180,17 +214,17 @@ console.log(news)
                                     <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title & Description</th>
                                     <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Published Date</th>
                                     <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
-                                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Featured</th>
+                                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Top</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {news.data && news.data.map((article, index) => (
-                                    <tr key={`${article.title}-${index}`} className={selectedItems.includes(index) ? 'bg-blue-50' : ''}>
+                                {news.data && news.data.map((article) => (
+                                    <tr key={article.id} className={selectedItemIds.includes(article.id) ? 'bg-blue-50' : ''}>
                                         <td className="px-6 py-4">
                                             <input
                                                 type="checkbox"
-                                                checked={selectedItems.includes(index)}
-                                                onChange={() => toggleSelection(index)}
+                                                checked={selectedItemIds.includes(article.id)}
+                                                onChange={() => toggleSelection(article.id)} // Pass just the ID
                                                 className="rounded"
                                             />
                                         </td>
@@ -204,7 +238,7 @@ console.log(news)
                                                 {article.title}
                                             </a>
                                             <div className="text-sm text-gray-500 mt-1">
-                                                {article.description}
+                                                {truncateText(article.description || '')}
                                             </div>
                                         </td>
                                         <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-500">
@@ -226,9 +260,12 @@ console.log(news)
                                             )}
                                         </td>
                                         <td className="py-3 px-4 whitespace-nowrap">
-                                            <span className="text-gray-500 text-sm">No</span>
+                                            {article.is_top ? (
+                                                <FontAwesomeIcon icon={faStar} className="text-yellow-500" />
+                                            ) : (
+                                                <span className="text-gray-500 text-sm">No</span>
+                                            )}
                                         </td>
-                                        
                                     </tr>
                                 ))}
                             </tbody>

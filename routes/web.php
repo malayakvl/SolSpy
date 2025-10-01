@@ -62,6 +62,7 @@ Route::get('/news/{slug}', [NewsController::class, 'show'])->name('news.show');
 // Admin news routes - protected
 Route::middleware(['auth', 'check.role:Admin,Manager'])->prefix('admin')->group(function () {
     Route::get('/discord-news', [DiscordController::class, 'adminIndex'])->name('admin.discord.news');
+    Route::get('/sort-top-news', [NewsController::class, 'sortTopNews'])->name('admin.sort-top-news');
     Route::post('/discord-news/bulk-action', [DiscordController::class, 'bulkAction'])->name('admin.discord.bulk-action');
     Route::get('/news', [NewsController::class, 'adminIndex'])->name('admin.news.index');
     Route::get('/news/create', [NewsController::class, 'create'])->name('admin.news.create');

@@ -50,6 +50,100 @@ class ValidatorController extends Controller
         // Get top validators
         $topValidatorsWithRanks = $this->validatorDataService->fetchDataTopValidators($sortedValidators, $totalStakeLamports);
 
+        // Get top news items from the unified sorting table
+        // First, check if we need to populate the sorting table
+        if (\App\Models\NewsTopSorting::count() === 0) {
+            // Populate with existing top news items
+            \Illuminate\Support\Facades\DB::transaction(function () {
+                // Get all top news items from regular news table
+                $topNewsItems = \App\Models\News::where('is_top', true)->get();
+                
+                // Add regular news items to sorting table
+                foreach ($topNewsItems as $index => $newsItem) {
+                    \App\Models\NewsTopSorting::create([
+                        'news_id' => $newsItem->id,
+                        'news_type' => 'news',
+                        'sort_order' => $index
+                    ]);
+                }
+                
+                // Get all top news items from discord_top_news table
+                $topDiscordItems = \Illuminate\Support\Facades\DB::table('data.discord_top_news')->get();
+                
+                // Add Discord news items to sorting table
+                $startIndex = $topNewsItems->count();
+                foreach ($topDiscordItems as $index => $discordItem) {
+                    \App\Models\NewsTopSorting::create([
+                        'news_id' => $discordItem->id,
+                        'news_type' => 'discord',
+                        'sort_order' => $startIndex + $index
+                    ]);
+                }
+            });
+        }
+        
+        $topNewsItems = \Illuminate\Support\Facades\DB::table('data.news_top_sorting as nts')
+            ->select(
+                'nts.news_id',
+                'nts.news_type',
+                'nts.sort_order',
+                'n.slug as news_slug',
+                'n.image_url as news_image_url',
+                'n.published_at as news_published_at',
+                'nt.title as news_title',
+                'nt.excerpt as news_excerpt',
+                'dtn.title as discord_title',
+                'dtn.description as discord_description',
+                'dtn.url as discord_url',
+                'dtn.source as discord_source',
+                'dtn.published_at as discord_published_at'
+            )
+            ->leftJoin('data.news as n', function($join) {
+                $join->on('nts.news_id', '=', 'n.id')
+                     ->where('nts.news_type', '=', 'news');
+            })
+            ->leftJoin('data.news_translations as nt', function($join) {
+                $join->on('n.id', '=', 'nt.news_id')
+                     ->where('nt.language', '=', 'en'); // Default to English, can be changed based on user preference
+            })
+            ->leftJoin('data.discord_top_news as dtn', function($join) {
+                $join->on('nts.news_id', '=', 'dtn.id')
+                     ->where('nts.news_type', '=', 'discord');
+            })
+            ->orderBy('nts.sort_order')
+            ->limit(3) // Limit to top 3 news items
+            ->get()
+            ->map(function ($item) {
+                if ($item->news_type === 'news' && $item->news_title) {
+                    return [
+                        'id' => $item->news_id,
+                        'type' => 'news',
+                        'title' => $item->news_title,
+                        'description' => $item->news_excerpt ?? '',
+                        'source' => 'News',
+                        'url' => route('news.show', $item->news_slug),
+                        'published_at' => $item->news_published_at,
+                        'image_url' => $item->news_image_url,
+                    ];
+                } elseif ($item->news_type === 'discord' && $item->discord_title) {
+                    return [
+                        'id' => $item->news_id,
+                        'type' => 'discord',
+                        'title' => $item->discord_title,
+                        'description' => $item->discord_description ?? '',
+                        'source' => $item->discord_source ?? 'Discord',
+                        'url' => $item->discord_url,
+                        'published_at' => $item->discord_published_at,
+                        'image_url' => null,
+                    ];
+                }
+                return null;
+            })
+            ->filter() // Remove null items
+            ->values(); // Re-index array
+
+        // Debug output
+
         if (!$request->user()) {
             return Inertia::render('Validators/Index', [
                 'validatorsData' => $validators['results'],
@@ -58,7 +152,8 @@ class ValidatorController extends Controller
                 'currentPage' => $page,
                 'filterType' => $filterType,
                 'totalStakeData' => $stakeData[0],
-                'topValidatorsData' => $topValidatorsWithRanks
+                'topValidatorsData' => $topValidatorsWithRanks,
+                'topNewsData' => $topNewsItems
             ]);
         } else {
             return Inertia::render('Validators/Admin/Index', [
@@ -68,7 +163,8 @@ class ValidatorController extends Controller
                 'currentPage' => $page,
                 'filterType' => $filterType,
                 'totalStakeData' => $stakeData[0],
-                'topValidatorsData' => $topValidatorsWithRanks
+                'topValidatorsData' => $topValidatorsWithRanks,
+                'topNewsData' => $topNewsItems
             ]);
         }
     }

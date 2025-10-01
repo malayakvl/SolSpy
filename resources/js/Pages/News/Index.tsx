@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useSelector } from 'react-redux';
 import { appLangSelector } from '../../Redux/Layout/selectors';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faCalendar, faUser, faPlus, faCog } from '@fortawesome/free-solid-svg-icons';
+import axios from 'axios';
 
 interface NewsItem {
     id: number;
@@ -21,6 +22,19 @@ interface NewsItem {
         content: string;
         meta_tags?: any;
     };
+}
+
+interface TopNewsItem {
+    id: number;
+    type: 'news' | 'discord';
+    title: string;
+    description: string;
+    source: string;
+    url: string;
+    published_at: string;
+    created_at: string;
+    updated_at: string;
+    image_url?: string;
 }
 
 interface NewsIndexProps {
@@ -45,10 +59,28 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
     const [featuredFilter, setFeaturedFilter] = useState(filters.is_featured ? 'featured' : 'all');
+    const [topNews, setTopNews] = useState<TopNewsItem[]>([]);
+    const [loadingTopNews, setLoadingTopNews] = useState(true);
 
     // Check if user has admin access
     const userRoles = auth?.user?.roles?.map(role => role.name) || [];
     const isAdmin = userRoles.includes('Admin') || userRoles.includes('Manager');
+
+    // Fetch top news in correct sort order
+    useEffect(() => {
+        const fetchTopNews = async () => {
+            try {
+                const response = await axios.get('/api/top-news');
+                setTopNews(response.data);
+            } catch (error) {
+                console.error('Error fetching top news:', error);
+            } finally {
+                setLoadingTopNews(false);
+            }
+        };
+
+        fetchTopNews();
+    }, []);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -104,6 +136,61 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
                             </div>
                         )}
                     </div>
+
+                    {/* Top News Carousel */}
+                    {topNews.length > 0 && (
+                        <div className="mb-8">
+                            <h3 className="text-xl font-semibold mb-4">Top News</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {topNews.map((article, index) => (
+                                    <div key={`${article.type}-${article.id}`} className="bg-white rounded-lg shadow-md overflow-hidden border-2 border-purple-400">
+                                        {article.image_url && (
+                                            <img
+                                                src={article.image_url}
+                                                alt={article.title}
+                                                className="w-full h-48 object-cover"
+                                            />
+                                        )}
+                                        <div className="p-4">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
+                                                    Top #{index + 1}
+                                                </span>
+                                                <span className="text-xs text-gray-500">
+                                                    <FontAwesomeIcon icon={faCalendar} className="mr-1" />
+                                                    {formatDate(article.published_at)}
+                                                </span>
+                                            </div>
+                                            <h4 className="font-semibold text-lg mb-2 line-clamp-2">
+                                                <a
+                                                    href={article.url}
+                                                    className="text-gray-900 hover:text-blue-600"
+                                                >
+                                                    {article.title}
+                                                </a>
+                                            </h4>
+                                            {article.description && (
+                                                <p className="text-gray-600 text-sm mb-3 line-clamp-3">
+                                                    {truncateText(article.description)}
+                                                </p>
+                                            )}
+                                            <div className="flex items-center justify-between text-xs text-gray-500">
+                                                <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
+                                                    {article.type === 'news' ? 'News' : 'Discord'}
+                                                </span>
+                                                <a
+                                                    href={article.url}
+                                                    className="text-blue-500 hover:text-blue-700"
+                                                >
+                                                    Read more →
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Search and Filters */}
                     <form onSubmit={handleSearch} className="mb-6">
