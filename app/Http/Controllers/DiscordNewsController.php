@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\DiscordNews;
+use App\Models\NewsTopSorting;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -122,10 +123,34 @@ class DiscordNewsController extends Controller
 
         $ids = $request->input('ids');
 
+        // Get current status before toggling
+        $currentItems = DiscordNews::whereIn('id', $ids)->get();
+        
         // Toggle is_top status for news items
         DiscordNews::whereIn('id', $ids)->update([
             'is_top' => DB::raw('NOT is_top')
         ]);
+
+        // Also update the sorting table
+        // For items that are now top news, add them to the sorting table
+        // For items that are no longer top news, remove them from the sorting table
+        foreach ($currentItems as $item) {
+            // Check the OLD status to determine the NEW status after toggle
+            if (!$item->is_top) {  // If it WAS false, it's NOW true (added to top)
+                // Add to sorting table with highest sort order
+                $maxSortOrder = NewsTopSorting::max('sort_order') ?? 0;
+                NewsTopSorting::create([
+                    'news_id' => $item->id,
+                    'news_type' => 'discord',
+                    'sort_order' => $maxSortOrder + 1
+                ]);
+            } else {  // If it WAS true, it's NOW false (removed from top)
+                // Remove from sorting table
+                NewsTopSorting::where('news_id', $item->id)
+                    ->where('news_type', 'discord')
+                    ->delete();
+            }
+        }
 
         return response()->json(['message' => 'Top status updated successfully']);
     }
@@ -140,5 +165,59 @@ class DiscordNewsController extends Controller
             ->get();
 
         return response()->json($topNews);
+    }
+
+    /**
+     * Update the order of top news items (both regular news and Discord news)
+     */
+    public function updateTopNewsOrder(Request $request)
+    {
+        $request->validate([
+            'newsIds' => 'required|array',
+            'newsIds.*' => 'integer',
+            'discordIds' => 'required|array',
+            'discordIds.*' => 'integer',
+        ]);
+
+        $newsIds = $request->input('newsIds');
+        $discordIds = $request->input('discordIds');
+
+        // Use transactions to ensure data consistency
+        DB::transaction(function () use ($newsIds, $discordIds) {
+            // Clear existing sorting records
+            NewsTopSorting::truncate();
+            
+            // Add regular news items to sorting table
+            foreach ($newsIds as $index => $newsId) {
+                NewsTopSorting::create([
+                    'news_id' => $newsId,
+                    'news_type' => 'news',
+                    'sort_order' => $index
+                ]);
+            }
+            
+            // Add Discord news items to sorting table
+            foreach ($discordIds as $index => $discordId) {
+                NewsTopSorting::create([
+                    'news_id' => $discordId,
+                    'news_type' => 'discord',
+                    'sort_order' => $index
+                ]);
+            }
+        });
+
+        return response()->json(['message' => 'Top news order updated successfully']);
+    }
+
+    /**
+     * Get the order of top news items
+     */
+    public function getTopNewsOrder()
+    {
+        // Get order records from the unified sorting table
+        $orderRecords = NewsTopSorting::orderBy('sort_order')
+            ->get(['news_id', 'news_type', 'sort_order']);
+
+        return response()->json($orderRecords);
     }
 }

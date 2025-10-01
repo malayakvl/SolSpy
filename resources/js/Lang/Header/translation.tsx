@@ -4,7 +4,7 @@ const lngHeader = {
     profile: 'Profile',
     logout: 'Logout',
     create: 'Create',
-    customers: 'Customer',
+    customers: 'Customers',
     currencies: 'Currencies',
     validators: 'Validators',
     news: 'News',

@@ -33,6 +33,8 @@ import ValidatorFilters from './Filters';
 import ValidatorPagination from './Pagination';
 import ValidatorAdminActions from './Actions';
 import { renderColumnHeader, renderColumnCell } from '../../../Components/Validators/ValidatorTableComponents';
+import { CarouselProvider, Slider, Slide, ButtonBack, ButtonNext, DotGroup } from 'pure-react-carousel';
+import 'pure-react-carousel/dist/react-carousel.es.css';
 
 export default function AdminIndex(validatorsData) {
     const dispatch = useDispatch();
@@ -280,7 +282,7 @@ export default function AdminIndex(validatorsData) {
         return () => {
             window.removeEventListener('popstate', handleUrlChange);
         };
-    }, [window.location.search]);
+    }, []);
 
     // Helper function to get ordered visible columns
     const getOrderedVisibleColumns = () => {
@@ -526,6 +528,76 @@ export default function AdminIndex(validatorsData) {
                         </Link>
                     </div>
                         
+                    {/* Top News Section */}
+                    {validatorsData.topNewsData && validatorsData.topNewsData.length > 0 ? (
+                        <div className="mb-6 bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+                            <h3 className="text-lg font-semibold mb-3 text-gray-900">Top News</h3>
+                            <CarouselProvider
+                                naturalSlideWidth={100}
+                                naturalSlideHeight={75}
+                                totalSlides={Math.ceil(validatorsData.topNewsData.length / 1)}
+                                className="w-full"
+                            >
+                                <Slider>
+                                    {validatorsData.topNewsData.map((newsItem, index) => (
+                                        <Slide index={index} key={`${newsItem.type}-${newsItem.id}`}>
+                                            <div className="flex items-center justify-center p-2">
+                                                <div className="w-full bg-white border border-gray-200 rounded-lg shadow-sm p-3">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
+                                                            #{index + 1}
+                                                        </span>
+                                                        <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
+                                                            {newsItem.type === 'news' ? 'News' : 'Discord'}
+                                                        </span>
+                                                    </div>
+                                                    <h4 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">
+                                                        <a href={newsItem.url} className="hover:text-blue-600">
+                                                            {newsItem.title}
+                                                        </a>
+                                                    </h4>
+                                                    {newsItem.description && (
+                                                        <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                                                            {newsItem.description}
+                                                        </p>
+                                                    )}
+                                                    <div className="text-xs text-gray-500">
+                                                        {newsItem.source}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </Slide>
+                                    ))}
+                                </Slider>
+                                <div className="flex justify-between items-center mt-2">
+                                    <ButtonBack className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                                        Back
+                                    </ButtonBack>
+                                    <DotGroup 
+                                        dotComponent={({ isSelected, onClick }) => (
+                                            <button
+                                                onClick={onClick}
+                                                className={`w-3 h-3 rounded-full mx-1 ${
+                                                    isSelected ? 'bg-blue-500' : 'bg-gray-300'
+                                                }`}
+                                            />
+                                        )}
+                                    />
+                                    <ButtonNext className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                                        Next
+                                    </ButtonNext>
+                                </div>
+                            </CarouselProvider>
+                        </div>
+                    ) : (
+                        <div className="mb-6 bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+                            <h3 className="text-lg font-semibold mb-3 text-gray-900">Top News</h3>
+                            <div className="text-center py-4 text-gray-500">
+                                No top news available
+                            </div>
+                        </div>
+                    )}
+
                     <div className="flex justify-between items-start mb-6">
                         <div className="flex-1">
                             <ValidatorFilters 
