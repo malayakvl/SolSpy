@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Favorits;
-use App\Models\Settings;
-use App\Models\ValidatorOrder;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Services\SpyRankService;
-use App\Services\TotalStakeService;
+use App\Models\Settings;
+use App\Models\Favorits;
+use App\Models\ValidatorOrder;
 use App\Services\ValidatorDataService;
+use App\Services\TotalStakeService;
+use App\Services\SpyRankService;
+use Illuminate\Support\Facades\DB;
 
 class ValidatorController extends Controller
 {
@@ -30,27 +29,11 @@ class ValidatorController extends Controller
         $this->spyRankService = $spyRankService;
     }
 
-    public function index(Request $request): Response
+    /**
+     * Get top news items from the unified sorting table
+     */
+    private function getTopNewsItems()
     {
-        $limit = 10;
-        $page = max(1, (int) $request->get('page', 1));
-        $offset = ($page - 1) * $limit;
-        $filterType = $request->get('filterType', 'all');
-        $userId = $request->user() ? $request->user()->id : null;
-        
-        // Get total stake data
-        $stakeData = $this->totalStakeService->getTotalStake();
-        $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
-
-        // Fetch validators data using service
-        $validators = $this->validatorDataService->fetchDataValidators($userId ?? null, $filterType, $offset, $totalStakeLamports);
-        $sortedValidators = $validators['validatorsAllData']->toArray();
-        $filteredTotalCount = $validators['totalFilteredValidators'];
-
-        // Get top validators
-        $topValidatorsWithRanks = $this->validatorDataService->fetchDataTopValidators($sortedValidators, $totalStakeLamports);
-
-        // Get top news items from the unified sorting table
         // First, check if we need to populate the sorting table
         if (\App\Models\NewsTopSorting::count() === 0) {
             // Populate with existing top news items
@@ -141,6 +124,32 @@ class ValidatorController extends Controller
             })
             ->filter() // Remove null items
             ->values(); // Re-index array
+
+        return $topNewsItems;
+    }
+
+    public function index(Request $request)
+    {
+        $limit = 10;
+        $page = max(1, (int) $request->get('page', 1));
+        $offset = ($page - 1) * $limit;
+        $filterType = $request->get('filterType', 'all');
+        $userId = $request->user() ? $request->user()->id : null;
+        
+        // Get total stake data
+        $stakeData = $this->totalStakeService->getTotalStake();
+        $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
+
+        // Fetch validators data using service
+        $validators = $this->validatorDataService->fetchDataValidators($userId ?? null, $filterType, $offset, $totalStakeLamports);
+        $sortedValidators = $validators['validatorsAllData']->toArray();
+        $filteredTotalCount = $validators['totalFilteredValidators'];
+
+        // Get top validators
+        $topValidatorsWithRanks = $this->validatorDataService->fetchDataTopValidators($sortedValidators, $totalStakeLamports);
+
+        // Get top news items
+        $topNewsItems = $this->getTopNewsItems();
 
         // Debug output
 
@@ -555,7 +564,7 @@ class ValidatorController extends Controller
     /**
      * Display admin listing of validators
      */
-    public function adminIndex(Request $request): Response
+    public function adminIndex(Request $request)
     {
         $limit = 10;
         $page = max(1, (int) $request->get('page', 1));
@@ -579,7 +588,6 @@ class ValidatorController extends Controller
             $offset, 
             $searchTerm
         );
-
         // Get all validators for TVC rank calculation
         $validatorsAllData = DB::table('data.validators')
             ->orderBy('activated_stake', 'DESC')->get();
@@ -588,6 +596,9 @@ class ValidatorController extends Controller
         // Get top validators
         $topValidatorsWithRanks = $this->validatorDataService->fetchDataTopValidators($sortedValidators, $totalStakeLamports);
 
+        // Get top news items
+        $topNewsItems = $this->getTopNewsItems();
+
         return Inertia::render('Validators/Admin/Index', [
             'validatorsData' => $data['validatorsData'],
             'settingsData' => Settings::first(),
@@ -595,7 +606,8 @@ class ValidatorController extends Controller
             'currentPage' => $page,
             'filterType' => $filterType,
             'totalStakeData' => $stakeData[0],
-            'topValidatorsData' => $topValidatorsWithRanks
+            'topValidatorsData' => $topValidatorsWithRanks,
+            'topNewsData' => $topNewsItems
         ]);
     }
 
