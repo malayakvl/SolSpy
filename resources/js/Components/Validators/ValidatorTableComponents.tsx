@@ -652,25 +652,31 @@ export const renderColumnCell = (columnName, validator, epoch, settingsData, tot
         case "Spy Rank": 
             return (
                 <td>
-                    {validator.spyRank}
-                    {/* <ValidatorSpyRank validator={validator} /> */}
+                    {/* {validator.spyRank}/{validator.spy_rank} */}
+                    <ValidatorSpyRank validator={validator} />
                 </td>
             );
         case "Avatar": return (
             <td>
-                <img 
-                    src={validator.avatar_url || validator.avatar_file_url} 
-                    alt={`${validator.name} avatar`} 
-                    className="w-8 h-8 rounded-full"
-                    onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        // Create a fallback element
-                        const fallback = document.createElement('div');
-                        fallback.className = 'w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500';
-                        fallback.textContent = '';
-                        e.currentTarget.parentNode.appendChild(fallback);
-                    }}
-                />
+                {validator.avatar_url || validator.avatar_file_url ? (
+                    <img 
+                        src={validator.avatar_url || validator.avatar_file_url} 
+                        alt={`${validator.name} avatar`} 
+                        className="w-8 h-8 rounded-full"
+                        onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            // Create a fallback element
+                            const fallback = document.createElement('div');
+                            fallback.className = 'w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500';
+                            fallback.textContent = 'SP';
+                            e.currentTarget.parentNode.appendChild(fallback);
+                        }}
+                    />
+                ) : (
+                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                        <span className="text-xs text-gray-500 font-medium">SP</span>
+                    </div>
+                )}
             </td>
         );
         case "Name": 

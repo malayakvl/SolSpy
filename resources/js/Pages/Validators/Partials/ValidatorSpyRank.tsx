@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 export default function ValidatorSpyRank({ validator }) {
-    const [prevSpyRank, setPrevSpyRank] = useState(validator.spyRank);
+    const [prevSpyRank, setPrevSpyRank] = useState(validator.spy_rank);
     const [colorClass, setColorClass] = useState('');
 
     useEffect(() => {
@@ -26,7 +26,7 @@ export default function ValidatorSpyRank({ validator }) {
 
     return (
         <span className={`transition-colors duration-300 ${colorClass}`}>
-            -
+            {validator.spy_rank}
         </span>
     );
 }

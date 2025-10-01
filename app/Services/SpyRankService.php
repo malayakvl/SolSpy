@@ -30,7 +30,7 @@ class SpyRankService
         // 1. Uptime (40%)
         $credits = 0;
         $slots = 1;
-        
+        // dd($totalStake);exit;
         if ($epochCredits && is_array($epochCredits)) {
             $credits = array_sum(array_column($epochCredits, 1));
             $slots = array_sum(array_column($epochCredits, 2));

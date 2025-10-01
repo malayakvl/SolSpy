@@ -86,87 +86,169 @@ class ValidatorDataService
         }
     }
 
-    public function fetchDataValidators($userId, string $filterType, int $offset, $totalStakeLamports)
+    public function fetchDataValidators($userId, string $filterType, int $offset, $totalStakeLamports, $sortColumn = 'spyRank')
     {
         $query = DB::table('data.validators')
             ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
+            
         // Only join favorites table if user is authenticated
         if ($userId) {
             $query->leftJoin('data.validators_favorite', function($join) use ($userId) {
                 $join->on('data.validators.id', '=', 'data.validators_favorite.validator_id')
                      ->where('data.validators_favorite.user_id', '=', $userId);
             })
-            ->select('data.validators.*', 'data.validators_favorite.id as is_favorite', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
+            ->select('data.validators.*', 
+                'data.validators_favorite.id as is_favorite', 
+                'data.countries.iso as country_iso', 
+                'data.countries.iso3 as country_iso3', 
+                'data.countries.phone_code as country_phone_code')
+                ->groupBy(
+                    'data.validators.vote_pubkey', 
+                    'data.validators.id', 
+                    'data.validators_favorite.id',
+                    'data.countries.iso', 
+                    'data.countries.iso3', 
+                    'data.countries.phone_code'
+                );
         } else {
-            $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
+            $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code')
+                ->groupBy(
+                    'data.validators.vote_pubkey', 
+                    'data.validators.id', 
+                    'data.countries.iso', 
+                    'data.countries.iso3', 
+                    'data.countries.phone_code'
+                );
         }
-        $validatorsData = $query;
+        
         // Apply filter based on filterType
         if ($filterType === 'highlight') {
-            $validatorsData = $validatorsData->where('data.validators.is_highlighted', true);
+            $query = $query->where('data.validators.is_highlighted', true);
         } elseif ($filterType === 'top') {
-            $validatorsData = $validatorsData->where('data.validators.is_top', true);
+            $query = $query->where('data.validators.is_top', true);
         }
 
-        // Add the hack to filter validators starting from ID 19566
-        // $validatorsData = $validatorsData->where('data.validators.id', '>=', '19566');
-        
-        $validatorsData = $validatorsData
-            ->orderBy('data.validators.id')
-            ->limit(10)->offset($offset)->get();
-
-        // Calculate total count based on filter
-        $totalCountQuery = DB::table('data.validators');
+        // For spy_rank sorting, we need all validators to calculate and sort properly
+        if (empty($sortColumn) || $sortColumn === 'spyRank' || $sortColumn === 'spy_rank') {
+            // Fetch all validators that match the filter criteria (without pagination)
+            $allValidatorsData = $query->get();
             
-        // Apply same filter for count
-        if ($filterType === 'highlight') {
-            $totalCountQuery = $totalCountQuery->where('data.validators.is_highlighted', true);
-        } elseif ($filterType === 'top') {
-            $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
+            // Calculate total count based on filter
+            $totalCountQuery = DB::table('data.validators');
+                
+            // Apply same filter for count
+            if ($filterType === 'highlight') {
+                $totalCountQuery = $totalCountQuery->where('data.validators.is_highlighted', true);
+            } elseif ($filterType === 'top') {
+                $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
+            }
+            
+            $filteredTotalCount = $totalCountQuery->count();
+
+            $validatorsAllData = DB::table('data.validators')
+                ->orderBy('activated_stake', 'DESC')->get();
+            $sortedValidators = $validatorsAllData->toArray();
+
+            // Calculate spyRank for all validators
+            $allResults = $allValidatorsData->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
+                // Находим индекс валидатора в отсортированном массиве по vote_pubkey
+                $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
+                // Добавляем tvcRank к объекту валидатора
+                $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
+                
+                // Calculate voteScore using direct query
+                $voteScoreData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
+                    FROM data.validators 
+                    LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
+                    WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
+                $validator->voteScore = !empty($voteScoreData) && $voteScoreData[0]->average_rank ? round($voteScoreData[0]->average_rank, 2) : 0;
+                
+                // Calculate spyRank
+                // $validator->spyRank = $this->spyRankService->calculateSpyRank($validator, $totalStakeLamports);
+                
+                // Calculate average rank using direct query
+                $averageRankData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
+                    FROM data.validators 
+                    LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
+                    WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
+                $validator->averageRank = !empty($averageRankData) && $averageRankData[0]->average_rank ? round($averageRankData[0]->average_rank, 2) : null;
+                
+                // Get latest version from validator scores using direct query
+                $latestScore = DB::table('data.validator_scores')
+                    ->where('vote_pubkey', $validator->vote_pubkey)
+                    ->orderBy('collected_at', 'desc')
+                    ->first();
+                $validator->latestVersion = $latestScore ? $latestScore->version : null;
+                
+                return $validator;
+            });
+            
+            // Sort all validators by spyRank
+            $allResults = $allResults->sortByDesc(function ($validator) {
+                return $validator->spyRank ?? 0;
+            })->values();
+            
+            // Now apply pagination to the sorted results
+            $validatorsData = $allResults->slice($offset, 10);
+            $results = $validatorsData;
+        } else {
+            // For other sorting columns, use the original approach with database sorting and pagination
+            $validatorsData = $query
+                // ->orderBy('data.validators.id')
+                ->limit(10)->offset($offset)->get();
+
+            // Calculate total count based on filter
+            $totalCountQuery = DB::table('data.validators');
+                
+            // Apply same filter for count
+            if ($filterType === 'highlight') {
+                $totalCountQuery = $totalCountQuery->where('data.validators.is_highlighted', true);
+            } elseif ($filterType === 'top') {
+                $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
+            }
+            
+            $filteredTotalCount = $totalCountQuery->count();
+
+            $validatorsAllData = DB::table('data.validators')
+                ->orderBy('activated_stake', 'DESC')->get();
+            $sortedValidators = $validatorsAllData->toArray();
+
+            $results = $validatorsData->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
+                // Находим индекс валидатора в отсортированном массиве по vote_pubkey
+                $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
+                // Добавляем tvcRank к объекту валидатора
+                $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
+                
+                // Calculate voteScore using direct query
+                $voteScoreData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
+                    FROM data.validators 
+                    LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
+                    WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
+                $validator->voteScore = !empty($voteScoreData) && $voteScoreData[0]->average_rank ? round($voteScoreData[0]->average_rank, 2) : 0;
+                
+                // Calculate spyRank
+                // $validator->spyRank = $this->spyRankService->calculateSpyRank($validator, $totalStakeLamports);
+                
+                // Calculate average rank using direct query
+                $averageRankData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
+                    FROM data.validators 
+                    LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
+                    WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
+                $validator->averageRank = !empty($averageRankData) && $averageRankData[0]->average_rank ? round($averageRankData[0]->average_rank, 2) : null;
+                
+                // Get latest version from validator scores using direct query
+                $latestScore = DB::table('data.validator_scores')
+                    ->where('vote_pubkey', $validator->vote_pubkey)
+                    ->orderBy('collected_at', 'desc')
+                    ->first();
+                $validator->latestVersion = $latestScore ? $latestScore->version : null;
+                
+                return $validator;
+            });
+
+
         }
         
-        // Add the hack to filter validators starting from ID 19566 for count as well
-        // $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
-        
-        $filteredTotalCount = $totalCountQuery->count();
-
-        $validatorsAllData = DB::table('data.validators')
-            ->orderBy('activated_stake', 'DESC')->get();
-        $sortedValidators = $validatorsAllData->toArray();  
-
-        $results = $validatorsData->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
-            // Находим индекс валидатора в отсортированном массиве по vote_pubkey
-            $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
-            // Добавляем tvcRank к объекту валидатора
-            $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
-            
-            // Calculate voteScore using direct query
-            $voteScoreData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
-                FROM data.validators 
-                LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
-                WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
-            $validator->voteScore = !empty($voteScoreData) && $voteScoreData[0]->average_rank ? round($voteScoreData[0]->average_rank, 2) : 0;
-            
-            // Calculate spyRank
-            $validator->spyRank = $this->spyRankService->calculateSpyRank($validator, $totalStakeLamports);
-            
-            // Calculate average rank using direct query
-            $averageRankData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
-                FROM data.validators 
-                LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
-                WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
-            $validator->averageRank = !empty($averageRankData) && $averageRankData[0]->average_rank ? round($averageRankData[0]->average_rank, 2) : null;
-            
-            // Get latest version from validator scores using direct query
-            $latestScore = DB::table('data.validator_scores')
-                ->where('vote_pubkey', $validator->vote_pubkey)
-                ->orderBy('collected_at', 'desc')
-                ->first();
-            $validator->latestVersion = $latestScore ? $latestScore->version : null;
-            
-            return $validator;
-        });
-// dd($results);exit;        
         return [
             'sortedValidators' => $sortedValidators,
             'results' => $results,
@@ -224,10 +306,6 @@ class ValidatorDataService
             'ip' => 'data.validators.ip',
             'jito_score' => 'data.validators.jito_commission'
         ];
-
-        // Get the actual database column name
-        $dbSortColumn = $columnMap[$sortColumn] ?? 'data.validators.id';
-        
         // For TVC Rank, we need to sort by activated_stake in descending order
         // because higher activated_stake means better (lower) rank
         $actualSortDirection = $sortDirection;
@@ -235,19 +313,9 @@ class ValidatorDataService
             // Reverse the sort direction for TVC Rank
             $actualSortDirection = strtoupper($sortDirection) === 'ASC' ? 'DESC' : 'ASC';
         }
-        // $query = DB::table('data.validators')
-        //     ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
 
         $query = DB::table('data.validators')
-            ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name')
-            ->groupBy(
-                'data.validators.vote_pubkey', 
-                'data.validators.id', 
-                'validators_favorite.id',
-                'data.countries.iso', 
-                'data.countries.iso3', 
-                'data.countries.phone_code'
-            ); 
+            ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
         // Only join favorites table if user is authenticated
         if ($userId) {
             $query->leftJoin('data.validators_favorite', function($join) use ($userId) {
@@ -258,9 +326,24 @@ class ValidatorDataService
                 'data.validators_favorite.id as is_favorite', 
                 'data.countries.iso as country_iso', 
                 'data.countries.iso3 as country_iso3', 
-                'data.countries.phone_code as country_phone_code');
+                'data.countries.phone_code as country_phone_code')
+            ->groupBy(
+                'data.validators.vote_pubkey', 
+                'data.validators.id', 
+                'data.validators_favorite.id',
+                'data.countries.iso', 
+                'data.countries.iso3', 
+                'data.countries.phone_code'
+            );
         } else {
-            $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
+            $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code')
+            ->groupBy(
+                'data.validators.vote_pubkey', 
+                'data.validators.id', 
+                'data.countries.iso', 
+                'data.countries.iso3', 
+                'data.countries.phone_code'
+            );
         }
         
         // Apply search filter if provided
@@ -308,8 +391,10 @@ class ValidatorDataService
         } elseif ($sortColumn === 'jito_score') {
             $query->orderByRaw("CASE WHEN data.validators.jito_commission IS NULL THEN 1 ELSE 0 END, data.validators.jito_commission " . $sortDirection);
         } else {
-            $query->orderBy($dbSortColumn, $sortDirection);
-        }
+            // Sort by activated_stake as a proxy for spyRank (higher stake generally means higher spyRank)
+            $query->orderBy('data.validators.spy_rank', 'DESC');
+            $query->orderBy('id', 'asc');
+        } 
         
         // Add the hack to filter validators starting from ID 19566
         // $query = $query->where('data.validators.id', '>=', '19566');
@@ -349,7 +434,7 @@ class ValidatorDataService
             $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
             
             // Calculate spyRank
-            $validator->spyRank = $this->spyRankService->calculateSpyRank($validator, $totalStakeLamports);
+            // $validator->spyRank = $this->spyRankService->calculateSpyRank($validator, $totalStakeLamports);
             
             // Calculate average rank using direct query
             $averageRankData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
@@ -368,7 +453,12 @@ class ValidatorDataService
 
             return $validator;
         });
-
+        // Sort by spyRank when no sort column is specified or when sorting by ID or spy_rank
+        // if (empty($sortColumn) || $sortColumn === 'id' || $sortColumn === 'spyRank' || $sortColumn === 'spy_rank') {
+        //     $results = $results->sortByDesc(function ($validator) {
+        //         return $validator->spyRank ?? 0;
+        //     })->values();
+        // }
         return [
             'validatorsData' => $results,
             'totalCount' => $filteredTotalCount,
@@ -447,8 +537,8 @@ class ValidatorDataService
         $validatorsAllData = DB::table('data.validators')
             ->orderBy('activated_stake', 'DESC')->get();
         $sortedValidators = $validatorsAllData->toArray();  
-// dd(1);exit;
-        $results = $validatorsData->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
+        // Calculate spyRank values first to enable sorting
+        $validatorsWithSpyRank = $validatorsData->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
             // Находим индекс валидатора в отсортированном массиве по vote_pubkey
             $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
             // Добавляем tvcRank к объекту валидатора
@@ -461,7 +551,6 @@ class ValidatorDataService
                 FROM data.validators 
                 LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
                 WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
-            dd($averageRankData);exit;
             $validator->averageRank = !empty($averageRankData) && $averageRankData[0]->average_rank ? round($averageRankData[0]->average_rank, 2) : null;
             
             // Get latest version from validator scores using direct query
@@ -474,9 +563,16 @@ class ValidatorDataService
             return $validator;
         });
         
+        // Sort by spyRank when no sort column is specified
+        if (empty($sortColumn)) {
+            $validatorsWithSpyRank = $validatorsWithSpyRank->sortByDesc(function ($validator) {
+                return $validator->spyRank ?? 0;
+            })->values();
+        }
+        
         return [
             'sortedValidators' => $sortedValidators,
-            'results' => $results,
+            'results' => $validatorsWithSpyRank,
             'totalCount' => $filteredTotalCount,
             'totalFilteredValidators' => $filteredTotalCount,
             'validatorsData' => $validatorsData,
@@ -719,6 +815,9 @@ class ValidatorDataService
             $query->orderByRaw("CASE WHEN data.validators.ip IS NULL THEN 1 ELSE 0 END, data.validators.ip " . $sortDirection);
         } elseif ($sortColumn === 'jito_score') {
             $query->orderByRaw("CASE WHEN data.validators.jito_commission IS NULL THEN 1 ELSE 0 END, data.validators.jito_commission " . $sortDirection);
+        } elseif ($sortColumn === 'spyRank' || $sortColumn === 'spy_rank') {
+            // Sort by activated_stake as a proxy for spyRank (higher stake generally means higher spyRank)
+            $query->orderBy('data.validators.activated_stake', 'DESC');
         } else {
             $query->orderBy($dbSortColumn, $sortDirection);
         }
@@ -726,97 +825,203 @@ class ValidatorDataService
         // Add the hack to filter validators starting from ID 19566
         // $query = $query->where('data.validators.id', '>=', '19566');
         
-        $validatorsData = $query
-            ->limit($limit)->offset($offset)->get();
-
-        // Calculate total count based on filter
-        $totalCountQuery = DB::table('data.validators');
-        
-        // For authenticated users, use the favorites table
-        if ($userId) {
-            $totalCountQuery = $totalCountQuery
-                ->join('data.validators_favorite', function($join) use ($userId) {
-                    $join->on('data.validators.id', '=', 'data.validators_favorite.validator_id')
-                         ->where('data.validators_favorite.user_id', '=', $userId);
-                });
+        // For spy_rank sorting, we need all validators to calculate and sort properly
+        if ($sortColumn === 'spyRank' || $sortColumn === 'spy_rank') {
+            // Fetch all validators that match the filter criteria (without pagination)
+            $allValidatorsData = $query->get();
+            
+            // Calculate total count based on filter
+            $totalCountQuery = DB::table('data.validators');
+            
+            // For authenticated users, use the favorites table
+            if ($userId) {
+                $totalCountQuery = $totalCountQuery
+                    ->join('data.validators_favorite', function($join) use ($userId) {
+                        $join->on('data.validators.id', '=', 'data.validators_favorite.validator_id')
+                             ->where('data.validators_favorite.user_id', '=', $userId);
+                    });
+                    
+                // Apply search filter if provided
+                if (!empty($searchTerm)) {
+                    $totalCountQuery = $totalCountQuery->where('data.validators.name', 'ILIKE', '%' . $searchTerm . '%');
+                }
+                    
+                // Apply same filter for count
+                if ($filterType === 'highlight') {
+                    $totalCountQuery = $totalCountQuery->where('data.validators.is_highlighted', true);
+                } elseif ($filterType === 'top') {
+                    $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
+                }
+            }
+            // For unauthenticated users with specific favorite IDs
+            elseif (!empty($favoriteIds)) {
+                $totalCountQuery = $totalCountQuery->whereIn('data.validators.id', $favoriteIds);
                 
-            // Apply search filter if provided
-            if (!empty($searchTerm)) {
-                $totalCountQuery = $totalCountQuery->where('data.validators.name', 'ILIKE', '%' . $searchTerm . '%');
+                // Apply search filter if provided
+                if (!empty($searchTerm)) {
+                    $totalCountQuery = $totalCountQuery->where('data.validators.name', 'ILIKE', '%' . $searchTerm . '%');
+                }
+                    
+                // Apply same filter for count
+                if ($filterType === 'highlight') {
+                    $totalCountQuery = $totalCountQuery->where('data.validators.is_highlighted', true);
+                } elseif ($filterType === 'top') {
+                    $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
+                }
             }
-                
-            // Apply same filter for count
-            if ($filterType === 'highlight') {
-                $totalCountQuery = $totalCountQuery->where('data.validators.is_highlighted', true);
-            } elseif ($filterType === 'top') {
-                $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
+            // For unauthenticated users without favorite IDs, return zero count
+            else {
+                $filteredTotalCount = 0;
             }
-        }
-        // For unauthenticated users with specific favorite IDs
-        elseif (!empty($favoriteIds)) {
-            $totalCountQuery = $totalCountQuery->whereIn('data.validators.id', $favoriteIds);
             
-            // Apply search filter if provided
-            if (!empty($searchTerm)) {
-                $totalCountQuery = $totalCountQuery->where('data.validators.name', 'ILIKE', '%' . $searchTerm . '%');
+            // Add the hack to filter validators starting from ID 19566 for count as well
+            if ($userId || !empty($favoriteIds)) {
+                // $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
+                $filteredTotalCount = $totalCountQuery->count();
             }
-                
-            // Apply same filter for count
-            if ($filterType === 'highlight') {
-                $totalCountQuery = $totalCountQuery->where('data.validators.is_highlighted', true);
-            } elseif ($filterType === 'top') {
-                $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
-            }
-        }
-        // For unauthenticated users without favorite IDs, return zero count
-        else {
-            $filteredTotalCount = 0;
-        }
-        
-        // Add the hack to filter validators starting from ID 19566 for count as well
-        if ($userId || !empty($favoriteIds)) {
-            // $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
-            $filteredTotalCount = $totalCountQuery->count();
-        }
-        
-        $validatorsAllData = DB::table('data.validators')
-            ->orderBy('activated_stake', 'DESC')->get();
-        $sortedValidators = $validatorsAllData->toArray();
+            
+            $validatorsAllData = DB::table('data.validators')
+                ->orderBy('activated_stake', 'DESC')->get();
+            $sortedValidators = $validatorsAllData->toArray();
 
-        // Рассчитываем tvcRank и spyRank для каждого валидатора из $validatorsData
-        $results = $validatorsData->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
-            // Находим индекс валидатора в отсортированном массиве по vote_pubkey
-            $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
+            // Calculate spyRank for all validators
+            $allResults = $allValidatorsData->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
+                // Находим индекс валидатора в отсортированном массиве по vote_pubkey
+                $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
 
-            // Добавляем tvcRank к объекту валидатора
-            $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
+                // Добавляем tvcRank к объекту валидатора
+                $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
+                
+                // Calculate voteScore using direct query
+                $voteScoreData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
+                    FROM data.validators 
+                    LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
+                    WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
+                $validator->voteScore = !empty($voteScoreData) && $voteScoreData[0]->average_rank ? round($voteScoreData[0]->average_rank, 2) : 0;
+                
+                // Calculate spyRank
+                $validator->spyRank = $this->spyRankService->calculateSpyRank($validator, $totalStakeLamports);
+                
+                // Calculate average rank using direct query
+                $averageRankData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
+                    FROM data.validators 
+                    LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
+                    WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
+                $validator->averageRank = !empty($averageRankData) && $averageRankData[0]->average_rank ? round($averageRankData[0]->average_rank, 2) : null;
+                
+                // Get latest version from validator scores using direct query
+                $latestScore = DB::table('data.validator_scores')
+                    ->where('vote_pubkey', $validator->vote_pubkey)
+                    ->orderBy('collected_at', 'desc')
+                    ->first();
+                $validator->latestVersion = $latestScore ? $latestScore->version : null;
+                
+                return $validator;
+            });
             
-            // Calculate voteScore using direct query
-            $voteScoreData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
-                FROM data.validators 
-                LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
-                WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
-            $validator->voteScore = !empty($voteScoreData) && $voteScoreData[0]->average_rank ? round($voteScoreData[0]->average_rank, 2) : 0;
+            // Sort all validators by spyRank
+            $allResults = $allResults->sortByDesc(function ($validator) {
+                return $validator->spyRank ?? 0;
+            })->values();
             
-            // Calculate spyRank
-            $validator->spyRank = $this->spyRankService->calculateSpyRank($validator, $totalStakeLamports);
+            // Now apply pagination to the sorted results
+            $validatorsData = $allResults->slice($offset, $limit);
+            $results = $validatorsData;
+        } else {
+            // For other sorting columns, use the original approach with database sorting and pagination
+            $validatorsData = $query
+                ->limit($limit)->offset($offset)->get();
+
+            // Calculate total count based on filter
+            $totalCountQuery = DB::table('data.validators');
             
-            // Calculate average rank using direct query
-            $averageRankData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
-                FROM data.validators 
-                LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
-                WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
-            $validator->averageRank = !empty($averageRankData) && $averageRankData[0]->average_rank ? round($averageRankData[0]->average_rank, 2) : null;
+            // For authenticated users, use the favorites table
+            if ($userId) {
+                $totalCountQuery = $totalCountQuery
+                    ->join('data.validators_favorite', function($join) use ($userId) {
+                        $join->on('data.validators.id', '=', 'data.validators_favorite.validator_id')
+                             ->where('data.validators_favorite.user_id', '=', $userId);
+                    });
+                    
+                // Apply search filter if provided
+                if (!empty($searchTerm)) {
+                    $totalCountQuery = $totalCountQuery->where('data.validators.name', 'ILIKE', '%' . $searchTerm . '%');
+                }
+                    
+                // Apply same filter for count
+                if ($filterType === 'highlight') {
+                    $totalCountQuery = $totalCountQuery->where('data.validators.is_highlighted', true);
+                } elseif ($filterType === 'top') {
+                    $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
+                }
+            }
+            // For unauthenticated users with specific favorite IDs
+            elseif (!empty($favoriteIds)) {
+                $totalCountQuery = $totalCountQuery->whereIn('data.validators.id', $favoriteIds);
+                
+                // Apply search filter if provided
+                if (!empty($searchTerm)) {
+                    $totalCountQuery = $totalCountQuery->where('data.validators.name', 'ILIKE', '%' . $searchTerm . '%');
+                }
+                    
+                // Apply same filter for count
+                if ($filterType === 'highlight') {
+                    $totalCountQuery = $totalCountQuery->where('data.validators.is_highlighted', true);
+                } elseif ($filterType === 'top') {
+                    $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
+                }
+            }
+            // For unauthenticated users without favorite IDs, return zero count
+            else {
+                $filteredTotalCount = 0;
+            }
             
-            // Get latest version from validator scores using direct query
-            $latestScore = DB::table('data.validator_scores')
-                ->where('vote_pubkey', $validator->vote_pubkey)
-                ->orderBy('collected_at', 'desc')
-                ->first();
-            $validator->latestVersion = $latestScore ? $latestScore->version : null;
+            // Add the hack to filter validators starting from ID 19566 for count as well
+            if ($userId || !empty($favoriteIds)) {
+                // $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
+                $filteredTotalCount = $totalCountQuery->count();
+            }
             
-            return $validator;
-        });
+            $validatorsAllData = DB::table('data.validators')
+                ->orderBy('activated_stake', 'DESC')->get();
+            $sortedValidators = $validatorsAllData->toArray();
+
+            // Рассчитываем tvcRank и spyRank для каждого валидатора из $validatorsData
+            $results = $validatorsData->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
+                // Находим индекс валидатора в отсортированном массиве по vote_pubkey
+                $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
+
+                // Добавляем tvcRank к объекту валидатора
+                $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
+                
+                // Calculate voteScore using direct query
+                $voteScoreData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
+                    FROM data.validators 
+                    LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
+                    WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
+                $validator->voteScore = !empty($voteScoreData) && $voteScoreData[0]->average_rank ? round($voteScoreData[0]->average_rank, 2) : 0;
+                
+                // Calculate spyRank
+                $validator->spyRank = $this->spyRankService->calculateSpyRank($validator, $totalStakeLamports);
+                
+                // Calculate average rank using direct query
+                $averageRankData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
+                    FROM data.validators 
+                    LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
+                    WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
+                $validator->averageRank = !empty($averageRankData) && $averageRankData[0]->average_rank ? round($averageRankData[0]->average_rank, 2) : null;
+                
+                // Get latest version from validator scores using direct query
+                $latestScore = DB::table('data.validator_scores')
+                    ->where('vote_pubkey', $validator->vote_pubkey)
+                    ->orderBy('collected_at', 'desc')
+                    ->first();
+                $validator->latestVersion = $latestScore ? $latestScore->version : null;
+                
+                return $validator;
+            });
+
+        }
 
         return [
             'validatorsData' => $results,
@@ -944,39 +1149,24 @@ class ValidatorDataService
             $query->orderByRaw("CASE WHEN data.validators.ip IS NULL THEN 1 ELSE 0 END, data.validators.ip " . $sortDirection);
         } elseif ($sortColumn === 'jito_score') {
             $query->orderByRaw("CASE WHEN data.validators.jito_commission IS NULL THEN 1 ELSE 0 END, data.validators.jito_commission " . $sortDirection);
+        } elseif ($sortColumn === 'spyRank' || $sortColumn === 'spy_rank') {
+            // For spy_rank sorting, we need to fetch all validators, calculate spyRank for all, 
+            // sort them by spyRank, and then apply pagination
+            // This is handled after the query
         } else {
             $query->orderBy($dbSortColumn, $sortDirection);
         }
         
-        $validatorsData = $query
-            ->limit($limit)->offset($offset)->get();
-
-        // Calculate total count based on filter
-        $totalCountQuery = DB::table('data.validators');
+        // Add the hack to filter validators starting from ID 19566
+        // $query = $query->where('data.validators.id', '>=', '19566');
         
-        // For authenticated users, use the favorites table
-        if ($userId) {
-            $totalCountQuery = $totalCountQuery
-                ->join('data.validators_comparison', function($join) use ($userId) {
-                    $join->on('data.validators.id', '=', 'data.validators_comparison.validator_id')
-                         ->where('data.validators_comparison.user_id', '=', $userId);
-                });
-                
-            // Apply search filter if provided
-            if (!empty($searchTerm)) {
-                $totalCountQuery = $totalCountQuery->where('data.validators.name', 'ILIKE', '%' . $searchTerm . '%');
-            }
-                
-            // Apply same filter for count
-            if ($filterType === 'highlight') {
-                $totalCountQuery = $totalCountQuery->where('data.validators.is_highlighted', true);
-            } elseif ($filterType === 'top') {
-                $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
-            }
-        }
-        // For unauthenticated users with specific favorite IDs
-        elseif (!empty($compareIds)) {
-            $totalCountQuery = $totalCountQuery->whereIn('data.validators.id', $compareIds);
+        // For spy_rank sorting, we need all validators to calculate and sort properly
+        if ($sortColumn === 'spyRank' || $sortColumn === 'spy_rank') {
+            // Fetch all validators that match the filter criteria (without pagination)
+            $allValidatorsData = $query->get();
+            
+            // Calculate total count based on filter
+            $totalCountQuery = DB::table('data.validators');
             
             // Apply search filter if provided
             if (!empty($searchTerm)) {
@@ -989,62 +1179,126 @@ class ValidatorDataService
             } elseif ($filterType === 'top') {
                 $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
             }
-        }
-        // For unauthenticated users without favorite IDs, return zero count
-        else {
-            $filteredTotalCount = 0;
-        }
-        
-        // Add the hack to filter validators starting from ID 19566 for count as well
-        if ($userId || !empty($compareIds)) {
-//            $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
-            $filteredTotalCount = $totalCountQuery->count();
-        }
-        
-        $validatorsAllData = DB::table('data.validators')
-            ->orderBy('activated_stake', 'DESC')->get();
-        $sortedValidators = $validatorsAllData->toArray();
+            
+            // Add the hack to filter validators starting from ID 19566 for count as well
+            if ($userId || !empty($compareIds)) {
+                // $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
+                $filteredTotalCount = $totalCountQuery->count();
+            }
 
-        // Рассчитываем tvcRank и spyRank для каждого валидатора из $validatorsData
-        // Преобразуем в коллекцию для удобной работы (не обязательно toArray, так как уже отсортировано)
-        $sortedValidators = $validatorsAllData->values(); // Сбрасываем ключи для последовательного индекса
+            $validatorsAllData = DB::table('data.validators')
+                ->orderBy('activated_stake', 'DESC')->get();
+            $sortedValidators = $validatorsAllData->toArray();
 
-        // Рассчитываем tvcRank и spyRank для каждого валидатора из $validatorsData
-        $results = $validatorsData->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
-            // Находим индекс валидатора в отсортированной коллекции по vote_pubkey
-            $tvcRank = $sortedValidators->search(function ($sortedValidator) use ($validator) {
-                return $sortedValidator->vote_pubkey === $validator->vote_pubkey;
+            // Calculate spyRank for all validators
+            $allResults = $allValidatorsData->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
+                // Находим индекс валидатора в отсортированном массиве по vote_pubkey
+                $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
+
+                // Добавляем tvcRank к объекту валидатора
+                $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
+                
+                // Calculate voteScore using direct query
+                $voteScoreData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
+                    FROM data.validators 
+                    LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
+                    WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
+                $validator->voteScore = !empty($voteScoreData) && $voteScoreData[0]->average_rank ? round($voteScoreData[0]->average_rank, 2) : 0;
+                
+                // Calculate spyRank
+                $validator->spyRank = $this->spyRankService->calculateSpyRank($validator, $totalStakeLamports);
+                
+                // Calculate average rank using direct query
+                $averageRankData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
+                    FROM data.validators 
+                    LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
+                    WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
+                $validator->averageRank = !empty($averageRankData) && $averageRankData[0]->average_rank ? round($averageRankData[0]->average_rank, 2) : null;
+                
+                // Get latest version from validator scores using direct query
+                $latestScore = DB::table('data.validator_scores')
+                    ->where('vote_pubkey', $validator->vote_pubkey)
+                    ->orderBy('collected_at', 'desc')
+                    ->first();
+                $validator->latestVersion = $latestScore ? $latestScore->version : null;
+                
+                return $validator;
+            });
+            
+            // Sort all validators by spyRank
+            $allResults = $allResults->sortByDesc(function ($validator) {
+                return $validator->spyRank ?? 0;
+            })->values();
+            
+            // Now apply pagination to the sorted results
+            $validatorsData = $allResults->slice($offset, $limit);
+            $results = $validatorsData;
+        } else {
+            // For other sorting columns, use the original approach with database sorting and pagination
+            $validatorsData = $query
+                ->limit($limit)->offset($offset)->get();
+
+            // Calculate total count based on filter
+            $totalCountQuery = DB::table('data.validators');
+            
+            // Apply search filter if provided
+            if (!empty($searchTerm)) {
+                $totalCountQuery = $totalCountQuery->where('data.validators.name', 'ILIKE', '%' . $searchTerm . '%');
+            }
+                
+            // Apply same filter for count
+            if ($filterType === 'highlight') {
+                $totalCountQuery = $totalCountQuery->where('data.validators.is_highlighted', true);
+            } elseif ($filterType === 'top') {
+                $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
+            }
+            
+            // Add the hack to filter validators starting from ID 19566 for count as well
+            if ($userId || !empty($compareIds)) {
+                // $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
+                $filteredTotalCount = $totalCountQuery->count();
+            }
+
+            $validatorsAllData = DB::table('data.validators')
+                ->orderBy('activated_stake', 'DESC')->get();
+            $sortedValidators = $validatorsAllData->toArray();
+
+            // Рассчитываем tvcRank и spyRank для каждого валидатора из $validatorsData
+            $results = $validatorsData->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
+                // Находим индекс валидатора в отсортированном массиве по vote_pubkey
+                $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
+
+                // Добавляем tvcRank к объекту валидатора
+                $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
+                
+                // Calculate voteScore using direct query
+                $voteScoreData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
+                    FROM data.validators 
+                    LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
+                    WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
+                $validator->voteScore = !empty($voteScoreData) && $voteScoreData[0]->average_rank ? round($voteScoreData[0]->average_rank, 2) : 0;
+                
+                // Calculate spyRank
+                $validator->spyRank = $this->spyRankService->calculateSpyRank($validator, $totalStakeLamports);
+                
+                // Calculate average rank using direct query
+                $averageRankData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
+                    FROM data.validators 
+                    LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
+                    WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
+                $validator->averageRank = !empty($averageRankData) && $averageRankData[0]->average_rank ? round($averageRankData[0]->average_rank, 2) : null;
+                
+                // Get latest version from validator scores using direct query
+                $latestScore = DB::table('data.validator_scores')
+                    ->where('vote_pubkey', $validator->vote_pubkey)
+                    ->orderBy('collected_at', 'desc')
+                    ->first();
+                $validator->latestVersion = $latestScore ? $latestScore->version : null;
+                
+                return $validator;
             });
 
-            // Добавляем tvcRank к объекту валидатора
-            $validator->tvcRank = $tvcRank !== false ? $tvcRank + 1 : 'Not found';
-
-            // Рассчитываем spyRank (без изменений)
-            $validator->spyRank = $this->spyRankService->calculateSpyRank($validator, $totalStakeLamports);
-            
-            // Calculate voteScore using direct query
-            $voteScoreData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
-                FROM data.validators 
-                LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
-                WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
-            $validator->voteScore = !empty($voteScoreData) && $voteScoreData[0]->average_rank ? round($voteScoreData[0]->average_rank, 2) : 0;
-            
-            // Calculate average rank using direct query
-            $averageRankData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
-                FROM data.validators 
-                LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
-                WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
-            $validator->averageRank = !empty($averageRankData) && $averageRankData[0]->average_rank ? round($averageRankData[0]->average_rank, 2) : null;
-
-            // Get latest version from validator scores using direct query
-            $latestScore = DB::table('data.validator_scores')
-                ->where('vote_pubkey', $validator->vote_pubkey)
-                ->orderBy('collected_at', 'desc')
-                ->first();
-            $validator->latestVersion = $latestScore ? $latestScore->version : null;
-
-            return $validator;
-        });
+        }
 
         return [
             'validatorsData' => $results,
