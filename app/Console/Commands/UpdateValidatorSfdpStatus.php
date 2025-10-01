@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\DB;
 use Dotenv\Dotenv;
-use App\Models\Validator;
 
 class UpdateValidatorSfdpStatus extends Command
 {
