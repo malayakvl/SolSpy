@@ -48,7 +48,6 @@ export default function AdminIndex(validatorsData) {
     const [isPaginationOrSorting, setIsPaginationOrSorting] = useState(false);
     const [selectedItems, setSelectedItems] = useState<number[]>([]);
 
-
     const msg = new Lang({
         messages: lngVaidators,
         locale: appLang,

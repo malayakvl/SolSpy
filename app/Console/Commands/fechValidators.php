@@ -69,8 +69,20 @@ class fechValidators extends Command
                 echo "Delinquent count: " . (isset($jsonData['result']['delinquent']) ? count($jsonData['result']['delinquent']) : 0) . "\n";
                 // Remove the exit statement that was preventing cyclic execution
                 // exit;                
-                // Pass the entire response to the database function
-                $query = "SELECT data.update_validators_common('$response'::jsonb);";
+                
+                // Get current slot for TVR calculation
+                $currentSlot = $this->getCurrentSlot();
+                
+                // Pass the entire response to the database function with current slot
+                if ($currentSlot) {
+                    // $query = "SELECT data.update_validators_common_with_tvc('$response'::jsonb, $currentSlot);";
+                    $query = "SELECT data.update_validators_common_with_tvc_jito('$response'::jsonb, $currentSlot);";
+                } else {
+                    // Fallback to original function if slot retrieval fails
+                    // $query = "SELECT data.update_validators_common_with_tvc('$response'::jsonb, NULL);";
+                    $query = "SELECT data.update_validators_common_with_tvc_jito('$response'::jsonb, NULL);";
+                }
+                // dd($query);exit;
                 DB::statement($query);
             } else {
                 echo "Invalid response structure - no 'result' key found\n";
@@ -78,5 +90,31 @@ class fechValidators extends Command
         }
 //        echo "All validators was updated Each 5 second";
         $this->info('All validators was updated');
+    }
+
+    private function getCurrentSlot()
+    {
+        $data = [
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'method' => 'getSlot'
+        ];
+
+        $ch = curl_init('http://103.167.235.81:8899');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+
+        $response = curl_exec($ch);
+        if (curl_errno($ch)) {
+            $this->error('cURL Error (getSlot): ' . curl_error($ch));
+            curl_close($ch);
+            return null;
+        }
+        curl_close($ch);
+
+        $jsonData = json_decode($response, true);
+        return $jsonData['result'] ?? null;
     }
 }
