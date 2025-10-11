@@ -349,7 +349,7 @@ export default function Index(validatorsData) {
             }
         }
     };
-
+console.log(111111)
 
     return (
         <AuthenticatedLayout header={<Head />}>

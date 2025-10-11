@@ -10,6 +10,8 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('app:fetch-settings')->everyFiveMinutes();
+        $schedule->command('app:fetch-signatures')->everyTenMinutes();
+        // $schedule->command('app:run-cron-dayly-jobs')->daily();
     }
 
     protected function commands()
