@@ -65,6 +65,9 @@ export default function CustomersAdminIndex({ users }: CustomersAdminIndexProps)
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Joined
                                     </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        &nbsp;
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
@@ -85,6 +88,14 @@ export default function CustomersAdminIndex({ users }: CustomersAdminIndexProps)
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {formatDate(user.created_at)}
                                         </td>
+                                        <td>
+                                            <a
+                                                href={`/login-as/${user.id}`}
+                                                className="text-blue-500 hover:underline text-sm"
+                                            >
+                                                Login
+                                            </a>
+                                        </td> 
                                     </tr>
                                 ))}
                             </tbody>

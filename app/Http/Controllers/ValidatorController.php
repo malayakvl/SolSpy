@@ -151,9 +151,9 @@ class ValidatorController extends Controller
         // Get top news items
         $topNewsItems = $this->getTopNewsItems();
 
-        // Debug output
-
-        if (!$request->user()) {
+        
+        // Check if user is authenticated and has admin/manager role
+        if (!$request->user() || !$request->user()->hasRole(['Admin', 'Manager'])) {
             return Inertia::render('Validators/Index', [
                 'validatorsData' => $validators['results'],
                 'settingsData' => Settings::first(),
@@ -164,7 +164,18 @@ class ValidatorController extends Controller
                 'topValidatorsData' => $topValidatorsWithRanks,
                 'topNewsData' => $topNewsItems
             ]);
-        } else {
+        } elseif ($request->user()->hasRole('Admin')) {
+            return Inertia::render('Validators/Admin/Index', [
+                'validatorsData' => $validators['results'],
+                'settingsData' => Settings::first(),
+                'totalCount' => $filteredTotalCount,
+                'currentPage' => $page,
+                'filterType' => $filterType,
+                'totalStakeData' => $stakeData[0],
+                'topValidatorsData' => $topValidatorsWithRanks,
+                'topNewsData' => $topNewsItems
+            ]);
+        } elseif ($request->user()->hasRole('Manager')) {
             return Inertia::render('Validators/Admin/Index', [
                 'validatorsData' => $validators['results'],
                 'settingsData' => Settings::first(),

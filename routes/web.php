@@ -10,6 +10,7 @@ use App\Http\Controllers\NewsController;
 use App\Http\Controllers\DiscordController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\DashboardController;
 
 use Inertia\Inertia;
 
@@ -22,9 +23,18 @@ use Inertia\Inertia;
 //     ]);
 // });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Dashboard route - redirect based on user role
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+
+// Customer dashboard route
+Route::get('/dashboard/customer', function () {
+    return Inertia::render('Dashboard/Customer/Index');
+})->middleware(['auth', 'verified'])->name('dashboard.customer');
+
+// Manager dashboard route
+Route::get('/dashboard/manager', function () {
+    return Inertia::render('Dashboard/Manager/Index');
+})->middleware(['auth', 'verified'])->name('dashboard.manager');
 
 Route::get('/comparisons/{page?}', [ValidatorController::class, 'comparisons'])->name('validators.comparisons');
 Route::get('/favorites/{page?}', [ValidatorController::class, 'favorites'])->name('validators.favorites');
