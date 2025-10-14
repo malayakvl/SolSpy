@@ -46,7 +46,7 @@ class ValidatorController extends Controller
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
-        
+
         // Fetch timeout data using service
         $data = $this->validatorDataService->timeoutData(
             $sortColumn, 
@@ -756,6 +756,8 @@ class ValidatorController extends Controller
     }
     
     /**
+<<<<<<< HEAD
+=======
      * Get validator score via SSH connection (for local development)
      */
     private function getValidatorScoreViaSSH($pubkey)
@@ -839,6 +841,7 @@ class ValidatorController extends Controller
     }
     
     /**
+>>>>>>> 49796b807994e31655958982c8d801032ae64b0f
      * Get validator score locally (for server deployment)
      */
     private function getValidatorScoreLocally($pubkey)
@@ -932,6 +935,84 @@ class ValidatorController extends Controller
             ];
         } catch (\Exception $e) {
             Log::error('Exception in getValidatorScoreLocally: ' . $e->getMessage(), ['exception' => $e]);
+            return ['error' => 'Exception occurred: ' . $e->getMessage()];
+        }
+    }
+
+
+    
+    
+    /**
+     * Get validator score locally (for server deployment)
+     */
+    private function getValidatorScoreLocallyOld($pubkey)
+    {
+        try {
+            // Execute the solana command directly (as confirmed it works on the server)
+            // $command = "solana validators -um --sort=credits -r -n | grep -e " . escapeshellarg($pubkey);
+            // $command = "solana validators -um --sort=credits -r -n | grep -e " . escapeshellarg($pubkey);
+            $command = "/root/.local/share/solana/install/active_release/bin/solana validators -um --sort=credits -r -n | grep -e HgozywotiKv4F5g3jCgideF3gh9sdD3vz4QtgXKjWCtB";
+            $process = Process::fromShellCommandline($command, null, null, null, 30);
+            
+            // Run with more verbose error handling
+            $process->run();
+            
+            $output = $process->getOutput();
+
+            $process = Process::fromShellCommandline($command);
+            $process->setTimeout(30);
+            $process->run(); 
+            
+            // Even if grep returns exit status 1 (not found), we might still have output
+            // Only consider it an error if we have no output at all
+            $output = $process->getOutput();
+            if (!$output || trim($output) === '') {
+                // Log the error for debugging
+                $errorOutput = $process->getErrorOutput();
+                $exitCode = $process->getExitCode();
+                
+                Log::error('Validator not found or command failed for pubkey: ' . $pubkey . ' Exit code: ' . $exitCode . ' Error: ' . $errorOutput);
+                
+                // Even with exit code 1, if we have output it's still valid
+                if ($exitCode == 1 && strpos($errorOutput, 'not found') === false) {
+                    // This is normal for grep when no matches found, continue
+                } else {
+                    return ['error' => 'Validator not found or command failed', 'pubkey' => $pubkey, 'exit_code' => $exitCode, 'error_output' => $errorOutput];
+                }
+            }
+
+            // If we have no output, that means validator not found
+            if (!$output || trim($output) === '') {
+                Log::error('Validator not found for pubkey: ' . $pubkey);
+                return ['error' => 'Validator not found', 'pubkey' => $pubkey];
+            }
+
+            // Парсинг: "192 Hgo... DHo... 0% 368557078 ( 0) 368557047 ( 0) 0.00% 975094 2.3.8 15888.204260276 SOL (0.00%)"
+            $parts = preg_split('/\s+/', trim($output));
+
+            // Based on the actual output, we need 17 parts minimum
+            if (count($parts) < 17) {
+                Log::error('Invalid CLI output format for pubkey: ' . $pubkey . ' with parts count: ' . count($parts));
+                Log::error('Output was: ' . $output);
+                return ['error' => 'Invalid CLI output format', 'parts_count' => count($parts), 'output' => $output, 'parts' => $parts];
+            }
+
+            // Parse the output correctly based on actual format
+            return [
+                'rank' => (int)$parts[0],                    // 186
+                'votePubkey' => $parts[2],                   // HgozywotiKv4F5g3jCgideF3gh9sdD3vz4QtgXKjWCtB
+                'nodePubkey' => $parts[3],                   // DHoZJqvvMGvAXw85Lmsob7YwQzFVisYg8HY4rt5BAj6M
+                'uptime' => $parts[4],                       // 0%
+                'rootSlot' => (int)str_replace(['(', ')'], '', $parts[5]), // 368561621
+                'voteSlot' => (int)str_replace(['(', ')'], '', $parts[8]), // 368561590
+                'commission' => (float)str_replace('%', '', $parts[11]),   // 0.00%
+                'credits' => (int)$parts[12],                // 1047512
+                'version' => $parts[13],                     // 2.3.8
+                'stake' => $parts[14],                       // 15888.204260276
+                'stakePercent' => str_replace(['(', ')', '%'], '', $parts[16]), // 0.00%
+            ];
+        } catch (\Exception $e) {
+            Log::error('Exception in getValidatorScoreLocally: ' . $e->getMessage());
             return ['error' => 'Exception occurred: ' . $e->getMessage()];
         }
     }

@@ -56,6 +56,12 @@ class AuthenticatedSessionController extends Controller
             $this->validatorDataService->migrateLocalStorageFavoriteData($userId, $favoriteIds);
         }
 
+        // Check if the user has the Customer role and redirect accordingly
+        $user = Auth::user();
+        if ($user && $user->hasRole('Customer')) {
+            return redirect()->intended(route('dashboard.customer', absolute: false));
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

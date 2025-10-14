@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Favorits;
-use App\Models\Settings;
-use App\Models\ValidatorOrder;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Services\SpyRankService;
-use App\Services\TotalStakeService;
+use App\Models\Settings;
+use App\Models\Favorits;
+use App\Models\ValidatorOrder;
 use App\Services\ValidatorDataService;
+use App\Services\TotalStakeService;
+use App\Services\SpyRankService;
+use Illuminate\Support\Facades\DB;
 
 class ValidatorController extends Controller
 {
@@ -30,18 +29,115 @@ class ValidatorController extends Controller
         $this->spyRankService = $spyRankService;
     }
 
-    public function index(Request $request): Response
+    /**
+     * Get top news items from the unified sorting table
+     */
+    private function getTopNewsItems()
+    {
+        // First, check if we need to populate the sorting table
+        if (\App\Models\NewsTopSorting::count() === 0) {
+            // Populate with existing top news items
+            \Illuminate\Support\Facades\DB::transaction(function () {
+                // Get all top news items from regular news table
+                $topNewsItems = \App\Models\News::where('is_top', true)->get();
+                
+                // Add regular news items to sorting table
+                foreach ($topNewsItems as $index => $newsItem) {
+                    \App\Models\NewsTopSorting::create([
+                        'news_id' => $newsItem->id,
+                        'news_type' => 'news',
+                        'sort_order' => $index
+                    ]);
+                }
+                
+                // Get all top news items from discord_top_news table
+                $topDiscordItems = \Illuminate\Support\Facades\DB::table('data.discord_top_news')->get();
+                
+                // Add Discord news items to sorting table
+                $startIndex = $topNewsItems->count();
+                foreach ($topDiscordItems as $index => $discordItem) {
+                    \App\Models\NewsTopSorting::create([
+                        'news_id' => $discordItem->id,
+                        'news_type' => 'discord',
+                        'sort_order' => $startIndex + $index
+                    ]);
+                }
+            });
+        }
+        
+        $topNewsItems = \Illuminate\Support\Facades\DB::table('data.news_top_sorting as nts')
+            ->select(
+                'nts.news_id',
+                'nts.news_type',
+                'nts.sort_order',
+                'n.slug as news_slug',
+                'n.image_url as news_image_url',
+                'n.published_at as news_published_at',
+                'nt.title as news_title',
+                'nt.excerpt as news_excerpt',
+                'dtn.title as discord_title',
+                'dtn.description as discord_description',
+                'dtn.url as discord_url',
+                'dtn.source as discord_source',
+                'dtn.published_at as discord_published_at'
+            )
+            ->leftJoin('data.news as n', function($join) {
+                $join->on('nts.news_id', '=', 'n.id')
+                     ->where('nts.news_type', '=', 'news');
+            })
+            ->leftJoin('data.news_translations as nt', function($join) {
+                $join->on('n.id', '=', 'nt.news_id')
+                     ->where('nt.language', '=', 'en'); // Default to English, can be changed based on user preference
+            })
+            ->leftJoin('data.discord_top_news as dtn', function($join) {
+                $join->on('nts.news_id', '=', 'dtn.id')
+                     ->where('nts.news_type', '=', 'discord');
+            })
+            ->orderBy('nts.sort_order')
+            ->limit(3) // Limit to top 3 news items
+            ->get()
+            ->map(function ($item) {
+                if ($item->news_type === 'news' && $item->news_title) {
+                    return [
+                        'id' => $item->news_id,
+                        'type' => 'news',
+                        'title' => $item->news_title,
+                        'description' => $item->news_excerpt ?? '',
+                        'source' => 'News',
+                        'url' => route('news.show', $item->news_slug),
+                        'published_at' => $item->news_published_at,
+                        'image_url' => $item->news_image_url,
+                    ];
+                } elseif ($item->news_type === 'discord' && $item->discord_title) {
+                    return [
+                        'id' => $item->news_id,
+                        'type' => 'discord',
+                        'title' => $item->discord_title,
+                        'description' => $item->discord_description ?? '',
+                        'source' => $item->discord_source ?? 'Discord',
+                        'url' => $item->discord_url,
+                        'published_at' => $item->discord_published_at,
+                        'image_url' => null,
+                    ];
+                }
+                return null;
+            })
+            ->filter() // Remove null items
+            ->values(); // Re-index array
+
+        return $topNewsItems;
+    }
+
+    public function index(Request $request)
     {
         $limit = 10;
         $page = max(1, (int) $request->get('page', 1));
         $offset = ($page - 1) * $limit;
         $filterType = $request->get('filterType', 'all');
         $userId = $request->user() ? $request->user()->id : null;
-        
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
-
         // Fetch validators data using service
         $validators = $this->validatorDataService->fetchDataValidators($userId ?? null, $filterType, $offset, $totalStakeLamports);
         $sortedValidators = $validators['validatorsAllData']->toArray();
@@ -50,7 +146,10 @@ class ValidatorController extends Controller
         // Get top validators
         $topValidatorsWithRanks = $this->validatorDataService->fetchDataTopValidators($sortedValidators, $totalStakeLamports);
 
-        if (!$request->user()) {
+        // Get top news items
+        $topNewsItems = $this->getTopNewsItems();
+        // Check if user is authenticated and has admin/manager role
+        if (!$request->user() || !$request->user()->hasRole(['Admin', 'Manager'])) {
             return Inertia::render('Validators/Index', [
                 'validatorsData' => $validators['results'],
                 'settingsData' => Settings::first(),
@@ -58,9 +157,10 @@ class ValidatorController extends Controller
                 'currentPage' => $page,
                 'filterType' => $filterType,
                 'totalStakeData' => $stakeData[0],
-                'topValidatorsData' => $topValidatorsWithRanks
+                'topValidatorsData' => $topValidatorsWithRanks,
+                'topNewsData' => $topNewsItems
             ]);
-        } else {
+        } elseif ($request->user()->hasRole('Admin')) {
             return Inertia::render('Validators/Admin/Index', [
                 'validatorsData' => $validators['results'],
                 'settingsData' => Settings::first(),
@@ -68,7 +168,19 @@ class ValidatorController extends Controller
                 'currentPage' => $page,
                 'filterType' => $filterType,
                 'totalStakeData' => $stakeData[0],
-                'topValidatorsData' => $topValidatorsWithRanks
+                'topValidatorsData' => $topValidatorsWithRanks,
+                'topNewsData' => $topNewsItems
+            ]);
+        } elseif ($request->user()->hasRole('Manager')) {
+            return Inertia::render('Validators/Admin/Index', [
+                'validatorsData' => $validators['results'],
+                'settingsData' => Settings::first(),
+                'totalCount' => $filteredTotalCount,
+                'currentPage' => $page,
+                'filterType' => $filterType,
+                'totalStakeData' => $stakeData[0],
+                'topValidatorsData' => $topValidatorsWithRanks,
+                'topNewsData' => $topNewsItems
             ]);
         }
     }
@@ -86,7 +198,6 @@ class ValidatorController extends Controller
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
-
         // Fetch timeout data using service
         $data = $this->validatorDataService->timeoutData(
             $sortColumn, 
@@ -459,7 +570,7 @@ class ValidatorController extends Controller
     /**
      * Display admin listing of validators
      */
-    public function adminIndex(Request $request): Response
+    public function adminIndex(Request $request)
     {
         $limit = 10;
         $page = max(1, (int) $request->get('page', 1));
@@ -483,7 +594,6 @@ class ValidatorController extends Controller
             $offset, 
             $searchTerm
         );
-
         // Get all validators for TVC rank calculation
         $validatorsAllData = DB::table('data.validators')
             ->orderBy('activated_stake', 'DESC')->get();
@@ -492,6 +602,9 @@ class ValidatorController extends Controller
         // Get top validators
         $topValidatorsWithRanks = $this->validatorDataService->fetchDataTopValidators($sortedValidators, $totalStakeLamports);
 
+        // Get top news items
+        $topNewsItems = $this->getTopNewsItems();
+
         return Inertia::render('Validators/Admin/Index', [
             'validatorsData' => $data['validatorsData'],
             'settingsData' => Settings::first(),
@@ -499,7 +612,8 @@ class ValidatorController extends Controller
             'currentPage' => $page,
             'filterType' => $filterType,
             'totalStakeData' => $stakeData[0],
-            'topValidatorsData' => $topValidatorsWithRanks
+            'topValidatorsData' => $topValidatorsWithRanks,
+            'topNewsData' => $topNewsItems
         ]);
     }
 

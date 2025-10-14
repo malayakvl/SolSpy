@@ -7,6 +7,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\Api\ValidatorController as ApiValidatorController;
 use App\Http\Controllers\ValidatorOrderController;
 use App\Http\Controllers\DiscordNewsController;
+use App\Http\Controllers\NewsController;
 
 Route::get('/fetch-settings', [SettingsController::class, 'getDataWithHeader'])->name('settings.get');
 Route::get('/fetch-by-id-validators/{page?}', [ApiValidatorController::class, 'fetchByIds'])->name('validators.fetchByIds');
@@ -45,6 +46,13 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/discord-news-order', [DiscordNewsController::class, 'getOrder'])->name('discord-news-order.get');
     Route::post('/discord-news/top', [DiscordNewsController::class, 'toggleTop'])->name('discord-news.top');
     Route::get('/discord-news-top', [DiscordNewsController::class, 'getTop'])->name('discord-news.getTop');
+
+    // Top news order routes
+    Route::post('/top-news-order/update', [DiscordNewsController::class, 'updateTopNewsOrder'])->name('top-news-order.update');
+    Route::get('/top-news-order', [DiscordNewsController::class, 'getTopNewsOrder'])->name('top-news-order.get');
+    
+    // Get top news in correct sort order
+    Route::get('/top-news', [NewsController::class, 'getTopNews'])->name('top-news.get');
 
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

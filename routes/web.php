@@ -10,6 +10,7 @@ use App\Http\Controllers\NewsController;
 use App\Http\Controllers\DiscordController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\DashboardController;
 
 use Inertia\Inertia;
 
@@ -22,9 +23,16 @@ use Inertia\Inertia;
 //     ]);
 // });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Dashboard route - redirect based on user role
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+
+// Customer dashboard route
+Route::get('/dashboard/customer', [DashboardController::class, 'indexCustomer'])->middleware(['auth', 'verified'])->name('dashboard.customer');
+
+// Manager dashboard route
+Route::get('/dashboard/manager', function () {
+    return Inertia::render('Dashboard/Manager/Index');
+})->middleware(['auth', 'verified'])->name('dashboard.manager');
 
 Route::get('/comparisons/{page?}', [ValidatorController::class, 'comparisons'])->name('validators.comparisons');
 Route::get('/favorites/{page?}', [ValidatorController::class, 'favorites'])->name('validators.favorites');
@@ -62,6 +70,7 @@ Route::get('/news/{slug}', [NewsController::class, 'show'])->name('news.show');
 // Admin news routes - protected
 Route::middleware(['auth', 'check.role:Admin,Manager'])->prefix('admin')->group(function () {
     Route::get('/discord-news', [DiscordController::class, 'adminIndex'])->name('admin.discord.news');
+    Route::get('/sort-top-news', [NewsController::class, 'sortTopNews'])->name('admin.sort-top-news');
     Route::post('/discord-news/bulk-action', [DiscordController::class, 'bulkAction'])->name('admin.discord.bulk-action');
     Route::get('/news', [NewsController::class, 'adminIndex'])->name('admin.news.index');
     Route::get('/news/create', [NewsController::class, 'create'])->name('admin.news.create');

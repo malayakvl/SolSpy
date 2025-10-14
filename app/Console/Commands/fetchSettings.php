@@ -78,7 +78,6 @@ class FetchSettings extends Command
                     slot_in_epoch=' .$_result->result->slotsInEpoch.', 
                     transaction_count=' .$_result->result->transactionCount.'
                 ');
-// echo($query);exit;                
                 DB::statement($query);
                 $this->info('Update time to '.$_result->result->absoluteSlot);
             }

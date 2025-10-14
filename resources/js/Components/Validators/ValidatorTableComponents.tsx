@@ -12,6 +12,7 @@ import ValidatorUptime from '../../Pages/Validators/Partials/ValidatorUptime';
 import ValidatorName from '../../Pages/Validators/Partials/ValidatorName';
 import ValidatorScore from '../../Pages/Validators/Partials/ValidatorScore';
 import ValidatorSFDP from '../../Pages/Validators/Partials/ValidatorSFDP';
+import ValidatorJiitoScore from '../../Pages/Validators/Partials/ValidatorJiitoScore';
 
 // Shared function to render column headers
 export const renderColumnHeader = (columnName, sortClickState, setSortClickState, setCurrentPage, isLoading = false, setIsPaginationOrSorting = null) => {
@@ -36,7 +37,7 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
         "City": "city",
         "ASN": "asn",
         "IP": "ip",
-        "Jito Score": "jito_score"
+        "Jito Score": "jiito_score"
     };
 
     // Get sort key for this column
@@ -298,6 +299,34 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                                 className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'vote_rate' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'vote_rate' && sortClickState.direction === 'DESC') 
+                                    ? 'text-blue-500' : 'text-gray-400'
+                                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                                onClick={() => handleSort('DESC')}
+                            />
+                        </div>
+                    </div>
+                </th>
+            );
+        case "Jiito Score": 
+            return (
+                <th key="jiito-score" className="cursor-pointer">
+                    <div className="flex items-center justify-between">
+                        <span>Jiito Score</span>
+                        <div className="flex flex-col ml-2">
+                            <FontAwesomeIcon 
+                                icon={faSortUp} 
+                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                                    (currentSortColumn === 'jiito_score' && currentSortDirection === 'ASC') || 
+                                    (sortClickState && sortClickState.column === 'jiito_score' && sortClickState.direction === 'ASC') 
+                                    ? 'text-blue-500' : 'text-gray-400'
+                                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                                onClick={() => handleSort('ASC')}
+                            />
+                            <FontAwesomeIcon 
+                                icon={faSortDown} 
+                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                                    (currentSortColumn === 'jiito_score' && currentSortDirection === 'DESC') || 
+                                    (sortClickState && sortClickState.column === 'jiito_score' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
                                 onClick={() => handleSort('DESC')}
@@ -652,25 +681,31 @@ export const renderColumnCell = (columnName, validator, epoch, settingsData, tot
         case "Spy Rank": 
             return (
                 <td>
-                    {validator.spyRank}
-                    {/* <ValidatorSpyRank validator={validator} /> */}
+                    {/* {validator.spyRank}/{validator.spy_rank} */}
+                    <ValidatorSpyRank validator={validator} />
                 </td>
             );
         case "Avatar": return (
             <td>
-                <img 
-                    src={validator.avatar_url || validator.avatar_file_url} 
-                    alt={`${validator.name} avatar`} 
-                    className="w-8 h-8 rounded-full"
-                    onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        // Create a fallback element
-                        const fallback = document.createElement('div');
-                        fallback.className = 'w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500';
-                        fallback.textContent = '';
-                        e.currentTarget.parentNode.appendChild(fallback);
-                    }}
-                />
+                {validator.avatar_url || validator.avatar_file_url ? (
+                    <img 
+                        src={validator.avatar_url || validator.avatar_file_url} 
+                        alt={`${validator.name} avatar`} 
+                        className="w-8 h-8 rounded-full"
+                        onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            // Create a fallback element
+                            const fallback = document.createElement('div');
+                            fallback.className = 'w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500';
+                            fallback.textContent = 'SP';
+                            e.currentTarget.parentNode.appendChild(fallback);
+                        }}
+                    />
+                ) : (
+                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                        <span className="text-xs text-gray-500 font-medium">SP</span>
+                    </div>
+                )}
             </td>
         );
         case "Name": 
@@ -703,6 +738,12 @@ export const renderColumnCell = (columnName, validator, epoch, settingsData, tot
             return (
                 <td>
                     <ValidatorRate validator={validator} epoch={epoch} settingsData={settingsData} totalStakeData={totalStakeData} />
+                </td>
+            );
+        case "Jiito Score": 
+            return (
+                <td>
+                    <ValidatorJiitoScore validator={validator} epoch={epoch} />
                 </td>
             );
         case "Inflation Commission": return <td>{validator.jito_commission !== undefined ? `${(parseFloat(validator.jito_commission) / 100).toFixed(2)}%` : 'N/A'}</td>;

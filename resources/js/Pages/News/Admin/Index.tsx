@@ -11,7 +11,8 @@ import {
     faTrash, 
     faPlus,
     faStar,
-    faEyeSlash
+    faEyeSlash,
+    faSort
 } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
 
@@ -24,11 +25,17 @@ interface NewsItem {
     views_count: number;
     created_at: string;
     updated_at: string;
-    translation?: {
+    translations?: Array<{
+        id: number;
+        language: string;
         title: string;
         excerpt?: string;
         content: string;
-    };
+        meta_tags?: {
+            description?: string;
+            keywords?: string;
+        };
+    }>;
 }
 
 interface AdminNewsIndexProps {
@@ -112,6 +119,10 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
         }
     };
 
+    const handleSortTopNews = () => {
+        router.visit(route('admin.sort-top-news'));
+    };
+
     const toggleSelection = (id: number) => {
         setSelectedItems(prev => 
             prev.includes(id) 
@@ -138,6 +149,25 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
         });
     };
 
+    const getArticleTitle = (article: NewsItem) => {
+        // Find translation for the current language
+        if (article.translations && article.translations.length > 0) {
+            const currentLangTranslation = article.translations.find(t => t.language === appLang);
+            if (currentLangTranslation) {
+                return currentLangTranslation.title;
+            }
+            // Fallback to English translation if current language not available
+            const englishTranslation = article.translations.find(t => t.language === 'en');
+            if (englishTranslation) {
+                return englishTranslation.title;
+            }
+            // Fallback to any available translation
+            return article.translations[0].title;
+        }
+        // Fallback if no translations
+        return 'Untitled';
+    };
+
     const getStatusBadge = (status: string) => {
         const statusConfig = {
             published: { color: 'bg-green-100 text-green-800', label: 'Published' },
@@ -161,13 +191,22 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                 <div className="p-4 sm:p-8 mb-8 content-data bg-content">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold">Manage News</h2>
-                        <Link
-                            href={route('admin.news.create')}
-                            className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
-                        >
-                            <FontAwesomeIcon icon={faPlus} className="mr-2" />
-                            Create News
-                        </Link>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={handleSortTopNews}
+                                className="inline-flex items-center px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 text-sm"
+                            >
+                                <FontAwesomeIcon icon={faSort} className="mr-2" />
+                                Sort Top News
+                            </button>
+                            <Link
+                                href={route('admin.news.create')}
+                                className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                            >
+                                <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                                Create News
+                            </Link>
+                        </div>
                     </div>
 
                     {/* Search and Filters */}
@@ -350,13 +389,13 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                                                 {article.image_url && (
                                                     <img
                                                         src={article.image_url}
-                                                        alt={article.translation?.title}
+                                                        alt={getArticleTitle(article)}
                                                         className="w-12 h-12 object-cover rounded mr-4"
                                                     />
                                                 )}
                                                 <div>
                                                     <div className="text-sm font-medium text-gray-900">
-                                                        {article.translation?.title}
+                                                        {getArticleTitle(article)}
                                                     </div>
                                                     <div className="text-sm text-gray-500">
                                                         {article.slug}

@@ -8,7 +8,8 @@ import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faCheck,
-    faStar
+    faStar,
+    faBan
 } from '@fortawesome/free-solid-svg-icons';
 import ValidatorCredits from "./Partials/ValidatorCredits";
 import ValidatorRate from "./Partials/ValidatorRate";
@@ -297,6 +298,15 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                                         <FontAwesomeIcon icon={faCheck} />
                                         <span className="ml-2">Stake</span>
                                     </button>
+                                    <button 
+                                        className="stake-button flex items-center ml-4"
+                                        onClick={() => {
+                                            // Stake functionality would go here
+                                        }}
+                                    >
+                                        <FontAwesomeIcon icon={faBan} />
+                                        <span className="ml-2">Block</span>
+                                    </button>
                                 </div>
                             </div>
                             <div className="flex w-full justify-between mb-4 items-center">
@@ -370,9 +380,31 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                                                 {/* {actualVotes/approxExpectedVotes} */}
                                             </span>
                                         </li>
+                                       
                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">Jito Score:</span>
-                                            <span className="break-all">{validatorData.uptime}</span>
+                                            <span className="font-medium mr-2">TVCs Earned:</span>
+                                            <span className="break-all">{validatorData.earned_credits}</span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="font-medium mr-2">TVC Rank:</span>
+                                            <span className="break-all">{validatorData.tvc_rank}</span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="font-medium mr-2">Timely Vote Rate:</span>
+                                            <span className="break-all">{(validatorData.tvr * 100).toFixed(2)}%</span>
+                                        </li>
+
+                                         <li className="flex items-start">
+                                            <span className="font-medium mr-2">Jiito Score:</span>
+                                            <span className="break-all">{validatorData.jiito_score}</span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="font-medium mr-2">Jiito Score (Voter):</span>
+                                            <span className="break-all">{validatorData.jiito_score_voter}</span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="font-medium mr-2">Jiito Score (Validator):</span>
+                                            <span className="break-all">{validatorData.jiito_score_validator}</span>
                                         </li>
                                     </ul>
                                 </div>

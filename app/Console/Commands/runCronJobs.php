@@ -32,7 +32,8 @@ class runCronJobs extends Command
             $this->info('Cron every 1 sec...');
             // Например, вызов метода или сервиса
             // Вызов команды app:fetch-validators
-            Artisan::call('app:fech-validators');
+            Artisan::call('app:update-epoch-max-credits'); //Need to start hourly
+            Artisan::call('app:fetch-validators');
             Artisan::call('validators:update-scores-auto');
             
 
@@ -42,7 +43,7 @@ class runCronJobs extends Command
                 $this->info($output);
             }
 
-            // Задержка 5 секунд
+            // Задержка 1 секунд
             sleep(1);
         }
 

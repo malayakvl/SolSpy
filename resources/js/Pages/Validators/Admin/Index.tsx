@@ -33,6 +33,8 @@ import ValidatorFilters from './Filters';
 import ValidatorPagination from './Pagination';
 import ValidatorAdminActions from './Actions';
 import { renderColumnHeader, renderColumnCell } from '../../../Components/Validators/ValidatorTableComponents';
+import ValidatorCard from '../../../Components/Validators/ValidatorCard'; 
+import TopContentCarousel from '../../../Components/Validators/TopContentCarousel';
 
 export default function AdminIndex(validatorsData) {
     const dispatch = useDispatch();
@@ -45,7 +47,6 @@ export default function AdminIndex(validatorsData) {
     // Track if the current data fetch is due to pagination or sorting
     const [isPaginationOrSorting, setIsPaginationOrSorting] = useState(false);
     const [selectedItems, setSelectedItems] = useState<number[]>([]);
-
 
     const msg = new Lang({
         messages: lngVaidators,
@@ -62,7 +63,6 @@ export default function AdminIndex(validatorsData) {
         highlight: 1
     }); // Remember last page for each filter type
     const [sortClickState, setSortClickState] = useState<{column: string, direction: string} | null>(null); // Track sort click state
-
 
     const [itemsPerPage] = useState(perPage); // Number of items per page
     const [selectAll, setSelectAll] = useState(false);
@@ -280,7 +280,7 @@ export default function AdminIndex(validatorsData) {
         return () => {
             window.removeEventListener('popstate', handleUrlChange);
         };
-    }, [window.location.search]);
+    }, []);
 
     // Helper function to get ordered visible columns
     const getOrderedVisibleColumns = () => {
@@ -526,7 +526,17 @@ export default function AdminIndex(validatorsData) {
                         </Link>
                     </div>
                         
-                    <div className="flex justify-between items-start mb-6">
+                    {/* Top Validators and News Section */}
+                    <TopContentCarousel 
+                      topValidatorsData={validatorsData.topValidatorsData}
+                      topNewsData={validatorsData.topNewsData}
+                      epoch={epoch}
+                      settingsData={validatorsData.settingsData}
+                      totalStakeData={validatorsData.totalStakeData}
+                      validatorsData={validatorsData.validatorsData}
+                    />
+
+                    <div className="flex justify-between items-start mt-10">
                         <div className="flex-1">
                             <ValidatorFilters 
                                 filterType={filterTypeDataSelector}

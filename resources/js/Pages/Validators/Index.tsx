@@ -34,6 +34,9 @@ import 'pure-react-carousel/dist/react-carousel.es.css';
 import ValidatorPagination from './Pagination';
 import { renderColumnHeader, renderColumnCell } from '../../Components/Validators/ValidatorTableComponents';
 import ValidatorCard from '../../Components/Validators/ValidatorCard'; 
+import TopContentCarousel from '../../Components/Validators/TopContentCarousel';
+import ValidatorFilters from './Partials/ValidatorFilters';
+
 
 export default function Index(validatorsData) {
     const dispatch = useDispatch();
@@ -129,6 +132,32 @@ export default function Index(validatorsData) {
     // Filter out banned validators from the data
     // const filteredData = data.filter(validator => !bannedValidators.includes(validator.id));
     const filteredData = data;
+
+    const handleFilterChange = (newFilterValue: string) => {
+        // Save current page for current filter before switching
+        setLastPages(prev => ({
+            ...prev,
+            [filterTypeDataSelector]: currentPage
+        }));
+        
+        // Get the saved page for the new filter
+        const savedPage = lastPages[newFilterValue] || 1;
+        
+        dispatch(setFilterAction(newFilterValue));
+        
+        // Update URL with new filter and page
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('filterType', newFilterValue);
+        urlParams.set('page', savedPage.toString());
+        
+        // Update the browser URL
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+        
+        // Update currentPage state
+        // This will trigger the useEffect to fetch data
+        setCurrentPage(savedPage);
+    };
 
     const handleCheckboxChange = (id) => {
         if (checkedIds.includes(id)) {
@@ -349,7 +378,6 @@ export default function Index(validatorsData) {
         }
     };
 
-
     return (
         <AuthenticatedLayout header={<Head />}>
             <Head title={msg.get('validators.title')} />
@@ -370,51 +398,25 @@ export default function Index(validatorsData) {
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold">{msg.get('validators.title')}&nbsp;</h2>
                     </div>
-                    <div className="flex">
-                        <div className="flex items-start mb-6 w-1/2 bg-blue-300 mr-3" style={{ height: '200px' }}>
-                            <CarouselProvider
-                                naturalSlideWidth={100}
-                                naturalSlideHeight={75}
-                                totalSlides={3}
-                                className="w-full h-full"
-                            >
-                                <Slider className="h-full">
-                                    {validatorsData.topValidatorsData.map(validator => (
-                                        <Slide index={validator.index}>
-                                            <ValidatorCard
-                                                validator={validator}
-                                                epoch={epoch}
-                                                settingsData={validatorsData.settingsData}
-                                                totalStakeData={validatorsData.totalStakeData}
-                                                validators={validatorsData.validators}
-                                            />
-                                        </Slide>
-                                    ))}
-                                    
-                                </Slider>
-                                <div className="flex justify-between items-center mt-2">
-                                    <ButtonBack className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                                        Back
-                                    </ButtonBack>
-                                    <DotGroup 
-                                        dotComponent={({ isSelected, onClick }) => (
-                                            <button
-                                                onClick={onClick}
-                                                className={`w-3 h-3 rounded-full mx-1 ${
-                                                    isSelected ? 'bg-blue-500' : 'bg-gray-300'
-                                                }`}
-                                            />
-                                        )}
-                                    />
-                                    <ButtonNext className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                                        Next
-                                    </ButtonNext>
-                                </div>
-                            </CarouselProvider>
-                        </div>
-                        
-                    </div>
                     
+                    {/* Top Validators and News Section */}
+                    <TopContentCarousel 
+                      topValidatorsData={validatorsData.topValidatorsData}
+                      topNewsData={validatorsData.topNewsData}
+                      epoch={epoch}
+                      settingsData={validatorsData.settingsData}
+                      totalStakeData={validatorsData.totalStakeData}
+                      validatorsData={validatorsData.validators}
+                    />
+                    <div className="flex justify-between items-start mt-10">
+                        <div className="flex-1">
+                            <ValidatorFilters 
+                                filterType={filterTypeDataSelector}
+                                onFilterChange={handleFilterChange}
+                            />
+                        </div>
+                    </div>
+
                     <div className="mt-6">
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200 validator-table">

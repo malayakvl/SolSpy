@@ -16,6 +16,7 @@ class News extends Model
         'slug',
         'status',
         'is_featured',
+        'is_top',
         'published_at',
         'image_url',
         'views_count'
@@ -23,6 +24,7 @@ class News extends Model
 
     protected $casts = [
         'is_featured' => 'boolean',
+        'is_top' => 'boolean',
         'published_at' => 'datetime',
         'views_count' => 'integer'
     ];
