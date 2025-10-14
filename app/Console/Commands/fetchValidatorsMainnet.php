@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Exception;
 
 
-class fechValidatorsMainnet extends Command
+class fetchValidatorsMainnet extends Command
 {
     /**
      * The name and signature of the console command.

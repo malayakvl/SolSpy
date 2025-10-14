@@ -6,14 +6,14 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class fechValidators extends Command
+class fetchValidators extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:fech-validators';
+    protected $signature = 'app:fetch-validators';
 
     /**
      * The console command description.

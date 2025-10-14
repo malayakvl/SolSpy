@@ -6,14 +6,14 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class fechClusterNodes extends Command
+class fetchClusterNodes extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:fech-cluster-nodes';
+    protected $signature = 'app:fetch-cluster-nodes';
 
     /**
      * The console command description.
