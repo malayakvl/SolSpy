@@ -131,6 +131,11 @@ return [
             'path' => storage_path('logs/sfdp_errors.log'),
             'level' => 'debug',
         ],
+        'cron' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/cron.log'),
+            'level' => 'info',
+        ],
     ],
 
 ];
