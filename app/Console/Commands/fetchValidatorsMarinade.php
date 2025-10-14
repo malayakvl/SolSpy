@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
-class fechValidatorsMarinade extends Command
+class fetchValidatorsMarinade extends Command
 {
     /**
      * The name and signature of the console command.

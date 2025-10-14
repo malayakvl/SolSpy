@@ -33,7 +33,7 @@ class runCronJobs extends Command
             // Например, вызов метода или сервиса
             // Вызов команды app:fetch-validators
             Artisan::call('app:update-epoch-max-credits'); //Need to start hourly
-            Artisan::call('app:fech-validators');
+            Artisan::call('app:fetch-validators');
             Artisan::call('validators:update-scores-auto');
             
 
