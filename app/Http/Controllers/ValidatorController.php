@@ -135,11 +135,9 @@ class ValidatorController extends Controller
         $offset = ($page - 1) * $limit;
         $filterType = $request->get('filterType', 'all');
         $userId = $request->user() ? $request->user()->id : null;
-        
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
-
         // Fetch validators data using service
         $validators = $this->validatorDataService->fetchDataValidators($userId ?? null, $filterType, $offset, $totalStakeLamports);
         $sortedValidators = $validators['validatorsAllData']->toArray();
@@ -150,8 +148,6 @@ class ValidatorController extends Controller
 
         // Get top news items
         $topNewsItems = $this->getTopNewsItems();
-
-        
         // Check if user is authenticated and has admin/manager role
         if (!$request->user() || !$request->user()->hasRole(['Admin', 'Manager'])) {
             return Inertia::render('Validators/Index', [
@@ -202,7 +198,6 @@ class ValidatorController extends Controller
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
-
         // Fetch timeout data using service
         $data = $this->validatorDataService->timeoutData(
             $sortColumn, 

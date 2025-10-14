@@ -64,7 +64,6 @@ export default function AdminIndex(validatorsData) {
     }); // Remember last page for each filter type
     const [sortClickState, setSortClickState] = useState<{column: string, direction: string} | null>(null); // Track sort click state
 
-
     const [itemsPerPage] = useState(perPage); // Number of items per page
     const [selectAll, setSelectAll] = useState(false);
     const [checkedIds, setCheckedIds] = useState<string[]>([]);

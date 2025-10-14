@@ -35,6 +35,8 @@ import ValidatorPagination from './Pagination';
 import { renderColumnHeader, renderColumnCell } from '../../Components/Validators/ValidatorTableComponents';
 import ValidatorCard from '../../Components/Validators/ValidatorCard'; 
 import TopContentCarousel from '../../Components/Validators/TopContentCarousel';
+import ValidatorFilters from './Partials/ValidatorFilters';
+
 
 export default function Index(validatorsData) {
     const dispatch = useDispatch();
@@ -130,6 +132,32 @@ export default function Index(validatorsData) {
     // Filter out banned validators from the data
     // const filteredData = data.filter(validator => !bannedValidators.includes(validator.id));
     const filteredData = data;
+
+    const handleFilterChange = (newFilterValue: string) => {
+        // Save current page for current filter before switching
+        setLastPages(prev => ({
+            ...prev,
+            [filterTypeDataSelector]: currentPage
+        }));
+        
+        // Get the saved page for the new filter
+        const savedPage = lastPages[newFilterValue] || 1;
+        
+        dispatch(setFilterAction(newFilterValue));
+        
+        // Update URL with new filter and page
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('filterType', newFilterValue);
+        urlParams.set('page', savedPage.toString());
+        
+        // Update the browser URL
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+        
+        // Update currentPage state
+        // This will trigger the useEffect to fetch data
+        setCurrentPage(savedPage);
+    };
 
     const handleCheckboxChange = (id) => {
         if (checkedIds.includes(id)) {
@@ -349,7 +377,6 @@ export default function Index(validatorsData) {
             }
         }
     };
-console.log(111111)
 
     return (
         <AuthenticatedLayout header={<Head />}>
@@ -381,6 +408,14 @@ console.log(111111)
                       totalStakeData={validatorsData.totalStakeData}
                       validatorsData={validatorsData.validators}
                     />
+                    <div className="flex justify-between items-start mt-10">
+                        <div className="flex-1">
+                            <ValidatorFilters 
+                                filterType={filterTypeDataSelector}
+                                onFilterChange={handleFilterChange}
+                            />
+                        </div>
+                    </div>
 
                     <div className="mt-6">
                         <div className="overflow-x-auto">

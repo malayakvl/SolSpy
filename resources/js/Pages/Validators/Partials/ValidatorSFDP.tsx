@@ -25,11 +25,11 @@ export default function ValidatorSFDP({ validator, epoch, type = 'table' }) {
         <>
             {type !== 'card' ? (
                 <span className={`${statusColorClass} ${bgColorClass} border rounded-lg px-2 py-1 text-[12px] font-semibold`}>
-                    {validator.sfdp_status}
+                    {validator.sfdp_status || 'unknown'}
                 </span>
             ) : (
                 <span className={`${statusColorClass} ${bgColorClass} border rounded-lg px-2 py-1 text-[10px] font-semibold uppercase`}>
-                    {validator.sfdp_status}
+                    {validator.sfdp_status || 'unknown'}
                 </span>
             )}
         </>

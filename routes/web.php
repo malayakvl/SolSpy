@@ -27,9 +27,7 @@ use Inertia\Inertia;
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 // Customer dashboard route
-Route::get('/dashboard/customer', function () {
-    return Inertia::render('Dashboard/Customer/Index');
-})->middleware(['auth', 'verified'])->name('dashboard.customer');
+Route::get('/dashboard/customer', [DashboardController::class, 'indexCustomer'])->middleware(['auth', 'verified'])->name('dashboard.customer');
 
 // Manager dashboard route
 Route::get('/dashboard/manager', function () {
