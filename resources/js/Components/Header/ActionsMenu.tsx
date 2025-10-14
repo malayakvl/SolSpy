@@ -24,13 +24,13 @@ export default function ActionsMenu(props) {
     return (
         <>
             <div className="md:space-x-4 md:flex md:pr-[30px]">
-                <Link href={'comparisons'} className="inline-flex items-center menu-main-btn text-sm">
+                <Link href={'/comparisons'} className="inline-flex items-center menu-main-btn text-sm">
                     <FontAwesomeIcon icon={faScaleBalanced} className="w-[16px] h-[16px] text-white" />
                 </Link>
-                <Link href={'favorites'} className="inline-flex items-center menu-main-btn text-sm">
+                <Link href={'/favorites'} className="inline-flex items-center menu-main-btn text-sm">
                     <FontAwesomeIcon icon={faHeart} className="w-[16px] h-[16px] text-white" />
                 </Link>
-                <Link className="inline-flex items-center menu-main-btn text-sm">
+                <Link href={'/blocked'} className="inline-flex items-center menu-main-btn text-sm">
                     <FontAwesomeIcon icon={faBell} className="w-[16px] h-[16px] text-white" />
                 </Link>
             </div>

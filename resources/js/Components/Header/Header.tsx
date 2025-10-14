@@ -73,6 +73,7 @@ export default function Header(auth) {
   const userRoleNames = user?.roles?.map(role => role.name) || [];
   const isAdmin = userRoleNames.includes('Admin');
   const isManager = userRoleNames.includes('Manager');
+  const isCustomer = userRoleNames.includes('Customer');
 
   return (
     <header className="bg-white">
@@ -120,6 +121,9 @@ export default function Header(auth) {
                     </>
                   ) : (
                     <> 
+                     <Link href={'/dashboard'} className="inline-flex items-center menu-main-btn text-sm nav-link">
+                        {msg.get('menu.dashboard')}
+                      </Link>
                       <Link href={'/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link">
                         {msg.get('menu.validators')}
                       </Link>
@@ -178,9 +182,6 @@ export default function Header(auth) {
           <div className="space-y-1 px-2 pt-2 pb-3">
             {/* <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-white/5 hover:text-white" --> */}
             <a href="#" aria-current="page" className="block rounded-md bg-gray-900 px-3 py-2 text-base font-medium text-white">Dashboard</a>
-            <a href="#" className="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5 hover:text-white">Team</a>
-            <a href="#" className="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5 hover:text-white">Projects</a>
-            <a href="#" className="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-white/5 hover:text-white">Calendar</a>
           </div>
         </div>
       </nav>

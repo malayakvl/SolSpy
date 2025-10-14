@@ -8,7 +8,8 @@ import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faCheck,
-    faStar
+    faStar,
+    faBan
 } from '@fortawesome/free-solid-svg-icons';
 import ValidatorCredits from "./Partials/ValidatorCredits";
 import ValidatorRate from "./Partials/ValidatorRate";
@@ -296,6 +297,15 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                                     >
                                         <FontAwesomeIcon icon={faCheck} />
                                         <span className="ml-2">Stake</span>
+                                    </button>
+                                    <button 
+                                        className="stake-button flex items-center ml-4"
+                                        onClick={() => {
+                                            // Stake functionality would go here
+                                        }}
+                                    >
+                                        <FontAwesomeIcon icon={faBan} />
+                                        <span className="ml-2">Block</span>
                                     </button>
                                 </div>
                             </div>
