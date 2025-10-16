@@ -22,6 +22,7 @@ Route::get('/fetch-score', [ApiValidatorController::class, 'getValidatorScore'])
 // Session-based authentication for SPA API calls (this is what you need for authenticated users)
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/fetch-validators-auth', [ApiValidatorController::class, 'timeoutData'])->name('validators.timeoutDataAuth');
+    Route::get('/fetch-blocke-validators', [ApiValidatorController::class, 'timeoutBlockedData'])->name('validators.timeoutBlockedData');
     Route::get('/fetch-favorite-validators', [ApiValidatorController::class, 'timeoutFavoriteData'])->name('validators.timeoutFavoriteData');
     Route::get('/fetch-comparison-validators', [ApiValidatorController::class, 'timeoutComparisonData'])->name('validators.timeoutComparisonData');
     Route::get('/remove-comparison-validators', [ApiValidatorController::class, 'removeComparisons'])->name('validators.removeComparisons');

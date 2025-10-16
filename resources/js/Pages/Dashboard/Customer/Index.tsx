@@ -9,6 +9,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import ValidatorActions from '../../../Pages/Validators/Partials/ValidatorActions';
 // import ValidatorTable from '../../../Components/Validators/ValidatorTable';
 import Favorites from '../../../Pages/Dashboard/Customer/Favorites';
+import Blocked from '../../../Pages/Dashboard/Customer/Blocked';
 
 
 export default function Dashboard(validatorsData) {
@@ -31,7 +32,7 @@ export default function Dashboard(validatorsData) {
     const [columnsConfig, setColumnsConfig] = useState(() => {
         return initializeColumnsConfig(validatorsData.settingsData);
     });
-
+console.log(validatorsData)
     const handleCheckboxChange = (id) => {
         if (checkedIds.includes(id)) {
             // Remove from checkedIds
@@ -153,8 +154,7 @@ export default function Dashboard(validatorsData) {
                                 )}
                                 {activeTab === 'blocked' && (
                                     <div id="blocked">
-                                        Blocked
-                                        {/* Blocked content will go here */}
+                                        <Blocked validatorsData={validatorsData}/>
                                     </div>
                                 )}
                             </div>
