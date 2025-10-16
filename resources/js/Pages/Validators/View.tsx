@@ -118,6 +118,7 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
     const votePubkey = validatorData.vote_pubkey;
     const validatorIdentityPubkey = validatorData.node_pubkey;
     const [chartTab, setChartTab] = useState<string>('epoch_credits');
+    const [isBlocked, setIsBlocked] = useState<boolean>(validatorData.blocked_id ? true : false);
 
     const formatSOL = (lamports) => {
         // Конвертация лампорта в SOL
@@ -131,7 +132,6 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
     const echochValues = dbData.map(function (item) {
         return (item[1]/1000000)
     });
-
     const dataEpoch = {
             labels: labelEpoch,
             datasets: [{
@@ -238,6 +238,7 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                     pauseOnHover: true,
                     draggable: true,
                 });
+                setIsBlocked(!isBlocked);
             } catch (error) {
                 console.error('Error:', error);
                 toast.error('Failed to update ban list', {
@@ -380,14 +381,14 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                                         <span className="ml-2">Stake</span>
                                     </button>
                                     <button 
-                                        className="stake-button flex items-center ml-4"
+                                        className={`ban-button flex items-center ml-4 ${isBlocked ? 'bg-red-300 hover:bg-red-500' : 'bg-blue-300 hover:bg-blue-500'}`}
                                         onClick={() => {
                                             // Stake functionality would go here
                                             addToBlock();
                                         }}
                                     >
                                         <FontAwesomeIcon icon={faBan} />
-                                        <span className="ml-2">Block</span>
+                                        <span className="ml-2">{isBlocked ? 'Unblock' : 'Block'}</span>
                                     </button>
                                 </div>
                             </div>

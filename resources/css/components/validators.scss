@@ -30,6 +30,19 @@
 .validator-details .stake-button svg {
     margin-right: 0.5rem;
 }
+.validator-details .ban-button {
+    color: white;
+    border-radius: 0.375rem;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+}
+
+// .validator-details .ban-button:hover {
+//     background-color: #2563eb;
+// }
 
 /* Star block styling */
 .star-block {

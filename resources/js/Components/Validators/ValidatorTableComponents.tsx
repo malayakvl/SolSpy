@@ -12,6 +12,7 @@ import ValidatorUptime from '../../Pages/Validators/Partials/ValidatorUptime';
 import ValidatorName from '../../Pages/Validators/Partials/ValidatorName';
 import ValidatorScore from '../../Pages/Validators/Partials/ValidatorScore';
 import ValidatorSFDP from '../../Pages/Validators/Partials/ValidatorSFDP';
+import ValidatorStatus from '../../Pages/Validators/Partials/ValidatorStatus';
 import ValidatorJiitoScore from '../../Pages/Validators/Partials/ValidatorJiitoScore';
 
 // Shared function to render column headers
@@ -714,7 +715,7 @@ export const renderColumnCell = (columnName, validator, epoch, settingsData, tot
                     <ValidatorName validator={validator} />
                 </td>
             );
-        case "Status": return <td>{validator.delinquent ? 'Delinquent' : 'Active'}</td>;
+        case "Status": return <td><ValidatorStatus validator={validator} /></td>;
         case "TVC Score": 
             return (
                 <td>
