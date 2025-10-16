@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout';
 import { Head, usePage, router } from '@inertiajs/react';
 import Lang from 'lang.js';
-import lngVaidators from '../../Lang/Validators/translation';
+// import lngVaidators from '../../../Lang/Validators/translation';
+import lngVaidators from '../../../Lang/Validators/translation';
+
 import { useSelector, useDispatch } from 'react-redux';
-import { appEpochSelector, appLangSelector } from '../../Redux/Layout/selectors';
-import { setFilterAction } from '../../Redux/Validators/actions';
+import { appEpochSelector, appLangSelector } from '../../../Redux/Layout/selectors';
+import { setFilterAction } from '../../../Redux/Validators/actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faBan,
@@ -25,22 +27,20 @@ import ValidatorScore from "./Partials/ValidatorScore";
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import ValidatorSpyRank from "./Partials/ValidatorSpyRank";
-import { perPageSelector, filterTypeSelector } from '../../Redux/Validators/selectors';
+import { perPageSelector, filterTypeSelector } from '../../../Redux/Validators/selectors';
 import { Link } from "@inertiajs/react";
-import { userSelector } from '../../Redux/Users/selectors';
+import { userSelector } from '../../../Redux/Users/selectors';
 import Modal from './Partials/ColumnsModal';
 import { CarouselProvider, Slider, Slide, ButtonBack, ButtonNext, DotGroup } from 'pure-react-carousel';
 import 'pure-react-carousel/dist/react-carousel.es.css';
 import ValidatorPagination from './Pagination';
-import { renderColumnHeader, renderColumnCell, initializeColumnsConfig } from '../../Components/Validators/ValidatorTableComponents';
-import ValidatorCard from '../../Components/Validators/ValidatorCard'; 
-import TopContentCarousel from '../../Components/Validators/TopContentCarousel';
+import { renderColumnHeader, renderColumnCell, initializeColumnsConfig } from '../../../Components/Validators/ValidatorTableComponents';
 import ValidatorFilters from './Partials/ValidatorFilters';
-import ValidatorTable from '../../Components/Validators/ValidatorTable';
+import ValidatorTable from '../../../Components/Validators/ValidatorTable';
 
-export default function Index(validatorsData) {
+export default function Favorites({validatorsData}) {
     const dispatch = useDispatch();
-    const [data, setData] = useState<any>(validatorsData.validatorsData);
+    const [data, setData] = useState<any>(validatorsData.favoriteValidators);
     const [bannedValidators, setBannedValidators] = useState<number[]>([]);
     const perPage = useSelector(perPageSelector);
     const appLang = useSelector(appLangSelector);
@@ -316,8 +316,8 @@ export default function Index(validatorsData) {
             // Build URL with all parameters
             // Use authenticated endpoint if user is logged in, otherwise use public endpoint
             let url = user ? 
-                `/api/fetch-validators-auth?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}` :
-                `/api/fetch-validators?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`;
+                `/api/fetch-favorite-validators?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}` :
+                `/api/fetch-favorite-validators?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`;
                 
             if (searchParam) {
                 url += `&search=${encodeURIComponent(searchParam)}`;
@@ -348,75 +348,33 @@ export default function Index(validatorsData) {
             }
         }
     };
-
     return (
-        <AuthenticatedLayout header={<Head />}>
-            <Head title={msg.get('validators.title')} />
-            <div className="py-0">
-                {/* Loading overlay - only shown during pagination and sorting */}
-                {isLoading && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white p-6 rounded-lg shadow-lg">
-                            <div className="flex flex-col items-center">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-                                <p className="text-gray-700">Завантаження даних...</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                
-                <div className="p-4 sm:p-8 mb-8 content-data bg-content">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold">{msg.get('validators.title')}&nbsp;</h2>
-                    </div>
-                    
-                    {/* Top Validators and News Section */}
-                    <TopContentCarousel 
-                      topValidatorsData={validatorsData.topValidatorsData}
-                      topNewsData={validatorsData.topNewsData}
-                      epoch={epoch}
-                      settingsData={validatorsData.settingsData}
-                      totalStakeData={validatorsData.totalStakeData}
-                      validatorsData={validatorsData.validators}
-                    />
-                    <div className="flex justify-between items-start mt-10">
-                        <div className="flex-1">
-                            <ValidatorFilters 
-                                filterType={filterTypeDataSelector}
-                                onFilterChange={handleFilterChange}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="mt-6">
-                        <ValidatorTable
-                            data={data}
-                            columnsConfig={columnsConfig}
-                            selectAll={selectAll}
-                            checkedIds={checkedIds}
-                            handleSelectAllChange={handleSelectAllChange}
-                            handleCheckboxChange={handleCheckboxChange}
-                            handleBanToggle={handleBanToggle}
-                            sortClickState={sortClickState}
-                            setSortClickState={setSortClickState}
-                            setCurrentPage={setCurrentPage}
-                            isLoading={isLoading}
-                            setIsPaginationOrSorting={setIsPaginationOrSorting}
-                            epoch={epoch}
-                            settingsData={validatorsData.settingsData}
-                            totalStakeData={validatorsData.totalStakeData}
-                            getOrderedVisibleColumns={getOrderedVisibleColumns}
-                        />
+        <div className="mt-6">
+            <ValidatorTable
+                data={data}
+                columnsConfig={columnsConfig}
+                selectAll={selectAll}
+                checkedIds={checkedIds}
+                handleSelectAllChange={handleSelectAllChange}
+                handleCheckboxChange={handleCheckboxChange}
+                handleBanToggle={handleBanToggle}
+                sortClickState={sortClickState}
+                setSortClickState={setSortClickState}
+                setCurrentPage={setCurrentPage}
+                isLoading={isLoading}
+                setIsPaginationOrSorting={setIsPaginationOrSorting}
+                epoch={epoch}
+                settingsData={validatorsData.settingsData}
+                totalStakeData={validatorsData.totalStakeData}
+                getOrderedVisibleColumns={getOrderedVisibleColumns}
+            /> 
                         
-                        <ValidatorPagination 
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            filterType={filterTypeDataSelector}
-                            onPageChange={handlePageChange}
-                        />
-                    </div>
-                </div>
-            </div>
-        </AuthenticatedLayout>
+            {/* <ValidatorPagination 
+                currentPage={currentPage}
+                totalPages={totalPages}
+                filterType={filterTypeDataSelector}
+                onPageChange={handlePageChange}
+            /> */}
+        </div>
     );
 }
