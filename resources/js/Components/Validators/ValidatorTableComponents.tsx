@@ -775,3 +775,37 @@ export const renderColumnCell = (columnName, validator, epoch, settingsData, tot
         default: return null;
     }
 };
+
+// Shared function to initialize columns configuration
+export const initializeColumnsConfig = (settingsData) => {
+    if (settingsData?.table_fields) {
+        const parsedFields = JSON.parse(settingsData.table_fields);
+        // Fix any instances of "MEV Comission" to "MEV Commission"
+        return parsedFields.map(field => 
+            field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
+        );
+    } else {
+        return [
+            { name: "Spy Rank", show: true },
+            { name: "Avatar", show: true },
+            { name: "Name", show: true },
+            { name: "Status", show: true },
+            { name: "TVC Score", show: true },
+            { name: "Active Stake", show: true },
+            { name: "Vote Credits", show: true },
+            { name: "Vote Rate", show: true },
+            { name: "Inflation Commission", show: true },
+            { name: "MEV Commission", show: true },
+            { name: "Uptime", show: true },
+            { name: "Client/Version", show: true },
+            { name: "Status SFDP", show: true },
+            { name: "Location", show: true },
+            { name: "Awards", show: true },
+            { name: "Website", show: true },
+            { name: "City", show: true },
+            { name: "ASN", show: true },
+            { name: "IP", show: true },
+            { name: "Jiito Score", show: true }
+        ];
+    }
+};

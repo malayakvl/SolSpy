@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import Lang from 'lang.js';
+import { toast } from 'react-toastify';
 import lngVaidators from '../../Lang/Validators/translation';
 import { useSelector } from 'react-redux';
 import { appEpochSelector, appLangSelector } from '../../Redux/Layout/selectors';
@@ -100,6 +101,7 @@ async function fetchHistoricalMetrics(votePubkey, validatorIdentityPubkey) {
 
 export default function Index({ validatorData, settingsData, totalStakeData }) {
     const appLang = useSelector(appLangSelector);
+    const user = usePage().props.auth.user;
     const msg = new Lang({
         messages: lngVaidators,
         locale: appLang,
@@ -214,6 +216,85 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
       }
     };
 
+    const addToBlock = async () => {
+        const validatorId = validatorData.id;
+        if (user?.id) {
+            // Registered user - use API
+            try {
+                await axios.post('/api/ban-validator', {
+                    validatorId: validatorId
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                // setIsInFavorites(!isInFavorites);
+                toast.success('Ban list updated', {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                toast.error('Failed to update ban list', {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+            }
+        } else {
+            // Unregistered user - use localStorage with max 5 items
+            const banList = JSON.parse(localStorage.getItem('validatorBlocked') || '[]');
+            
+            if (banList.includes(validatorId)) {
+                // Remove from favorites
+                const updatedList = banList.filter(id => id !== validatorId);
+                localStorage.setItem('validatorBlocked', JSON.stringify(updatedList));
+                // setIsInFavorites(false);
+                toast.info('Validator removed from block list', {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+            } else {
+                // Add to favorites
+                if (banList.length >= 5) {
+                    toast.error('Maximum 5 validators can be added to favorites for unregistered users', {
+                        position: "top-right",
+                        autoClose: 1000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                    });
+                    
+                    return;
+                }
+                banList.push(validatorId);
+                localStorage.setItem('validatorBlocked', JSON.stringify(banList));
+                setIsInFavorites(true);
+                toast.success('Validator added to block list', {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+            }
+        }
+    }
+
     useEffect(() => {
         // Only run this in the browser, not during server-side rendering
         if (typeof window !== "undefined") {
@@ -302,6 +383,7 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                                         className="stake-button flex items-center ml-4"
                                         onClick={() => {
                                             // Stake functionality would go here
+                                            addToBlock();
                                         }}
                                     >
                                         <FontAwesomeIcon icon={faBan} />
