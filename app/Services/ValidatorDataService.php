@@ -1010,7 +1010,7 @@ class ValidatorDataService
         ];
     }
 
-    public function timeoutBlockedData($sortColumn, $sortDirection, $totalStakeLamports, $userId = null, $filterType = 'all', $limit = 10, $offset = 0, $searchTerm = '', $favoriteIds = null)
+    public function timeoutBlockedData($sortColumn, $sortDirection, $totalStakeLamports, $userId = null, $filterType = 'all', $limit = 10, $offset = 0, $searchTerm = '', $blockedIds = null)
     { 
         // Map frontend column names to database column names
         $columnMap = [
@@ -1045,7 +1045,6 @@ class ValidatorDataService
             // Reverse the sort direction for TVC Rank
             $actualSortDirection = strtoupper($sortDirection) === 'ASC' ? 'DESC' : 'ASC';
         }
-        
         // For authenticated users, use the blocked table
         if ($userId) {
             $query = DB::table('data.validators')
@@ -1073,7 +1072,7 @@ class ValidatorDataService
             $query = DB::table('data.validators')
                 ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name')
                 ->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code')
-                ->whereIn('data.validators.id', $favoriteIds);
+                ->whereIn('data.validators.id', $blockedIds);
                 
             // Apply search filter if provided
             if (!empty($searchTerm)) {
@@ -1142,7 +1141,6 @@ class ValidatorDataService
         }
         // Add the hack to filter validators starting from ID 19566
         // $query = $query->where('data.validators.id', '>=', '19566');
-        
         // For spy_rank sorting, we need all validators to calculate and sort properly
         if ($sortColumn === 'spyRank' || $sortColumn === 'spy_rank') {
             // Fetch all validators that match the filter criteria (without pagination)
@@ -1241,7 +1239,6 @@ class ValidatorDataService
             $allResults = $allResults->sortByDesc(function ($validator) {
                 return $validator->spyRank ?? 0;
             })->values();
-            
             // Now apply pagination to the sorted results
             $validatorsData = $allResults->slice($offset, $limit);
             $results = $validatorsData;
@@ -1256,8 +1253,8 @@ class ValidatorDataService
             // For authenticated users, use the favorites table
             if ($userId) {
                 $totalCountQuery = $totalCountQuery
-                    ->join('data.validators_favorite', function($join) use ($userId) {
-                        $join->on('data.validators.id', '=', 'data.validators_favorite.validator_id')
+                    ->join('data.validators_blocked', function($join) use ($userId) {
+                        $join->on('data.validators.id', '=', 'data.validators_blocked.validator_id')
                              ->where('data.validators_blocked.user_id', '=', $userId);
                     });
                     

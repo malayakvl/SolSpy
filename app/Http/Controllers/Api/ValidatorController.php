@@ -127,11 +127,11 @@ class ValidatorController extends Controller
         $userId = $request->user() ? $request->user()->id : null;
         
         // For unauthenticated users, get favorite validator IDs from request parameter
-        $favoriteIds = null;
+        $blockedIds = null;
         if (!$userId) {
-            $favoriteIds = $request->input('validatorBlocked', []); // Get from localStorage parameter
-            if (is_string($favoriteIds)) {
-                $favoriteIds = json_decode($favoriteIds, true) ?: [];
+            $blockedIds = $request->input('validatorBlocked', []); // Get from localStorage parameter
+            if (is_string($blockedIds)) {
+                $blockedIds = json_decode($blockedIds, true) ?: [];
             }
         }
         
@@ -140,7 +140,7 @@ class ValidatorController extends Controller
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
 
         // Fetch timeout data using service
-        $data = $this->validatorDataService->timeoutFavoriteData(
+        $data = $this->validatorDataService->timeoutBlockedData(
             $sortColumn, 
             $sortDirection, 
             $totalStakeLamports,
@@ -149,7 +149,7 @@ class ValidatorController extends Controller
             $limit, 
             $offset, 
             $searchTerm,
-            $favoriteIds
+            $blockedIds
         );
 
         return response()->json([
