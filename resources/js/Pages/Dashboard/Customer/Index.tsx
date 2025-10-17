@@ -10,6 +10,7 @@ import ValidatorActions from '../../../Pages/Validators/Partials/ValidatorAction
 // import ValidatorTable from '../../../Components/Validators/ValidatorTable';
 import Favorites from '../../../Pages/Dashboard/Customer/Favorites';
 import Blocked from '../../../Pages/Dashboard/Customer/Blocked';
+import Compare from '../../../Pages/Dashboard/Customer/Compare';
 
 
 export default function Dashboard(validatorsData) {
@@ -143,13 +144,12 @@ console.log(validatorsData)
                             <div className="mt-4">
                                 {activeTab === 'favorites' && (
                                     <div id="favorites">
-                                        <Favorites validatorsData={validatorsData}/>
+                                        {/* <Favorites validatorsData={validatorsData}/> */}
                                     </div>
                                 )}
                                 {activeTab === 'comparisons' && (
                                     <div id="comparisons">
-                                        Comparisons
-                                        {/* Comparisons content will go here */}
+                                        {/* <Compare validatorsData={validatorsData}/> */}
                                     </div>
                                 )}
                                 {activeTab === 'blocked' && (
