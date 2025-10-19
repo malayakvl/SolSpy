@@ -1,27 +1,27 @@
 import React, { useEffect, useState } from 'react';
 
-export default function ValidatorJiitoScore({ validator }) {
+export default function ValidatorTVCScore({ validator }) {
     const [prevScore, setPrevScore] = useState(0);
     const [colorClass, setColorClass] = useState('');
 
-    // Ensure jiito_score is a number
-    let jiitoScore = validator.jiito_score;
-    if (jiitoScore === undefined || jiitoScore === null) {
-        jiitoScore = 0;
-    } else if (typeof jiitoScore === 'string') {
-        jiitoScore = parseFloat(jiitoScore) || 0;
+    // Ensure tvc_score is a number
+    let tvcScore = validator.tvc_score;
+    if (tvcScore === undefined || tvcScore === null) {
+        tvcScore = 0;
+    } else if (typeof tvcScore === 'string') {
+        tvcScore = parseFloat(tvcScore) || 0;
     }
 
     useEffect(() => {
-        if (prevScore !== jiitoScore) {
-            const isLower = jiitoScore < prevScore;
+        if (prevScore !== tvcScore) {
+            const isLower = tvcScore < prevScore;
             setColorClass(isLower ? 'text-red-500' : 'text-green-500');
 
             const timeout = setTimeout(() => {
                 setColorClass(''); // Подсветка исчезает через 2 секунды
             }, 2000);
 
-            setPrevScore(jiitoScore);
+            setPrevScore(tvcScore);
 
             return () => clearTimeout(timeout);
         } else {
@@ -29,12 +29,12 @@ export default function ValidatorJiitoScore({ validator }) {
                 setColorClass(''); // Подсветка исчезает через 2 секунды
             }, 2000);
         }
-    }, [jiitoScore, prevScore]);
+    }, [tvcScore, prevScore]);
 
 
     return (
         <span className={`transition-colors duration-300 ${colorClass}`}>
-            {jiitoScore.toFixed(2)}
+            {tvcScore.toFixed(2)}
         </span>
     );
 }

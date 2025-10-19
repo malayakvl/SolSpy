@@ -100,67 +100,7 @@ console.log(validatorsData)
     return (
             <AuthenticatedLayout header={<Head />}>
                 <Head title={msg.get('dashboard.title')} />
-                <div className="py-0">
-                    <div className="p-4 sm:p-8 mb-8 content-data bg-content">
-                        <h2>{msg.get('dashboard.title')}&nbsp;Customer</h2>
-                        <div className="mt-6">
-                            {/* Tabs navigation */}
-                            <div className="border-b border-gray-200">
-                                <nav className="flex space-x-8">
-                                    <button
-                                        onClick={() => setActiveTab('favorites')}
-                                        className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                                            activeTab === 'favorites'
-                                                ? 'border-blue-500 text-blue-600'
-                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                        }`}
-                                    >
-                                        {msg.get('dashboard.favorites')}
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('comparisons')}
-                                        className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                                            activeTab === 'comparisons'
-                                                ? 'border-blue-500 text-blue-600'
-                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                        }`}
-                                    >
-                                        {msg.get('dashboard.comparisons')}
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('blocked')}
-                                        className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                                            activeTab === 'blocked'
-                                                ? 'border-blue-500 text-blue-600'
-                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                        }`}
-                                    >
-                                        {msg.get('dashboard.blocked')}
-                                    </button>
-                                </nav>
-                            </div>
-                            
-                            {/* Tab content */}
-                            <div className="mt-4">
-                                {activeTab === 'favorites' && (
-                                    <div id="favorites">
-                                        {/* <Favorites validatorsData={validatorsData}/> */}
-                                    </div>
-                                )}
-                                {activeTab === 'comparisons' && (
-                                    <div id="comparisons">
-                                        {/* <Compare validatorsData={validatorsData}/> */}
-                                    </div>
-                                )}
-                                {activeTab === 'blocked' && (
-                                    <div id="blocked">
-                                        <Blocked validatorsData={validatorsData}/>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                
             </AuthenticatedLayout>
         )
 }

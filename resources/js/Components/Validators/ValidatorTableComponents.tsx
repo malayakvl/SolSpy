@@ -14,6 +14,7 @@ import ValidatorScore from '../../Pages/Validators/Partials/ValidatorScore';
 import ValidatorSFDP from '../../Pages/Validators/Partials/ValidatorSFDP';
 import ValidatorStatus from '../../Pages/Validators/Partials/ValidatorStatus';
 import ValidatorJiitoScore from '../../Pages/Validators/Partials/ValidatorJiitoScore';
+import ValidatorTVCScore from '../../Pages/Validators/Partials/ValidatorTVCScore';
 
 // Shared function to render column headers
 export const renderColumnHeader = (columnName, sortClickState, setSortClickState, setCurrentPage, isLoading = false, setIsPaginationOrSorting = null) => {
@@ -719,7 +720,7 @@ export const renderColumnCell = (columnName, validator, epoch, settingsData, tot
         case "TVC Score": 
             return (
                 <td>
-                    <ValidatorScore validator={validator} />
+                    <ValidatorTVCScore validator={validator} />
                 </td>
             );
         case "TVC Rank": return <td>{validator.tvcRank || 'N/A'}</td>;

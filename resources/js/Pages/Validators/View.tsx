@@ -258,7 +258,7 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                 // Remove from favorites
                 const updatedList = banList.filter(id => id !== validatorId);
                 localStorage.setItem('validatorBlocked', JSON.stringify(updatedList));
-                // setIsInFavorites(false);
+                setIsBlocked(false);
                 toast.info('Validator removed from block list', {
                     position: "top-right",
                     autoClose: 2000,
@@ -268,9 +268,9 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                     draggable: true,
                 });
             } else {
-                // Add to favorites
+                // Add to blockedlist
                 if (banList.length >= 5) {
-                    toast.error('Maximum 5 validators can be added to favorites for unregistered users', {
+                    toast.error('Maximum 5 validators can be added to blocked for unregistered users', {
                         position: "top-right",
                         autoClose: 1000,
                         hideProgressBar: false,
@@ -283,7 +283,7 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                 }
                 banList.push(validatorId);
                 localStorage.setItem('validatorBlocked', JSON.stringify(banList));
-                setIsInFavorites(true);
+                setIsBlocked(true);
                 toast.success('Validator added to block list', {
                     position: "top-right",
                     autoClose: 2000,

@@ -56,6 +56,12 @@ class AuthenticatedSessionController extends Controller
             $this->validatorDataService->migrateLocalStorageFavoriteData($userId, $favoriteIds);
         }
 
+        // Get favorite data from request
+        $blockedIds = $request->input('validatorBlocked', []);
+        if (!empty($blockedIds)) {
+            $this->validatorDataService->migrateLocalStorageBlockedData($userId, $blockedIds);
+        }
+
         // Check if the user has the Customer role and redirect accordingly
         $user = Auth::user();
         if ($user && $user->hasRole('Customer')) {

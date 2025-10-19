@@ -5,7 +5,7 @@ export default function ValidatorScore({ validator, epoch }) {
     const [colorClass, setColorClass] = useState('');
 
     // Вычисление текущего значения credits
-    let _credits = validator.averageRank;
+    let _credits = validator.tvc_score;
     
     // Ensure _credits is a number
     if (_credits === undefined || _credits === null) {
@@ -37,10 +37,11 @@ export default function ValidatorScore({ validator, epoch }) {
 
     return (
         <span className={`transition-colors duration-300 ${colorClass}`}>
-      {_credits.toLocaleString('en-US', {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0
-      })}
-    </span>
+            {_credits.toLocaleString('en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            })}
+            <br/>{validator.tvc_score}
+        </span>
     );
 }
