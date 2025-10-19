@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import Lang from 'lang.js';
+import { toast } from 'react-toastify';
 import lngVaidators from '../../Lang/Validators/translation';
 import { useSelector } from 'react-redux';
 import { appEpochSelector, appLangSelector } from '../../Redux/Layout/selectors';
@@ -100,6 +101,7 @@ async function fetchHistoricalMetrics(votePubkey, validatorIdentityPubkey) {
 
 export default function Index({ validatorData, settingsData, totalStakeData }) {
     const appLang = useSelector(appLangSelector);
+    const user = usePage().props.auth.user;
     const msg = new Lang({
         messages: lngVaidators,
         locale: appLang,
@@ -116,6 +118,7 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
     const votePubkey = validatorData.vote_pubkey;
     const validatorIdentityPubkey = validatorData.node_pubkey;
     const [chartTab, setChartTab] = useState<string>('epoch_credits');
+    const [isBlocked, setIsBlocked] = useState<boolean>(validatorData.blocked_id ? true : false);
 
     const formatSOL = (lamports) => {
         // Конвертация лампорта в SOL
@@ -129,7 +132,6 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
     const echochValues = dbData.map(function (item) {
         return (item[1]/1000000)
     });
-
     const dataEpoch = {
             labels: labelEpoch,
             datasets: [{
@@ -213,6 +215,86 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
         }
       }
     };
+
+    const addToBlock = async () => {
+        const validatorId = validatorData.id;
+        if (user?.id) {
+            // Registered user - use API
+            try {
+                await axios.post('/api/ban-validator', {
+                    validatorId: validatorId
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                // setIsInFavorites(!isInFavorites);
+                toast.success('Ban list updated', {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+                setIsBlocked(!isBlocked);
+            } catch (error) {
+                console.error('Error:', error);
+                toast.error('Failed to update ban list', {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+            }
+        } else {
+            // Unregistered user - use localStorage with max 5 items
+            const banList = JSON.parse(localStorage.getItem('validatorBlocked') || '[]');
+            
+            if (banList.includes(validatorId)) {
+                // Remove from favorites
+                const updatedList = banList.filter(id => id !== validatorId);
+                localStorage.setItem('validatorBlocked', JSON.stringify(updatedList));
+                setIsBlocked(false);
+                toast.info('Validator removed from block list', {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+            } else {
+                // Add to blockedlist
+                if (banList.length >= 5) {
+                    toast.error('Maximum 5 validators can be added to blocked for unregistered users', {
+                        position: "top-right",
+                        autoClose: 1000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                    });
+                    
+                    return;
+                }
+                banList.push(validatorId);
+                localStorage.setItem('validatorBlocked', JSON.stringify(banList));
+                setIsBlocked(true);
+                toast.success('Validator added to block list', {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+            }
+        }
+    }
 
     useEffect(() => {
         // Only run this in the browser, not during server-side rendering
@@ -299,13 +381,14 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                                         <span className="ml-2">Stake</span>
                                     </button>
                                     <button 
-                                        className="stake-button flex items-center ml-4"
+                                        className={`ban-button flex items-center ml-4 ${isBlocked ? 'bg-red-300 hover:bg-red-500' : 'bg-blue-300 hover:bg-blue-500'}`}
                                         onClick={() => {
                                             // Stake functionality would go here
+                                            addToBlock();
                                         }}
                                     >
                                         <FontAwesomeIcon icon={faBan} />
-                                        <span className="ml-2">Block</span>
+                                        <span className="ml-2">{isBlocked ? 'Unblock' : 'Block'}</span>
                                     </button>
                                 </div>
                             </div>

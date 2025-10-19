@@ -135,11 +135,12 @@ class ValidatorController extends Controller
         $offset = ($page - 1) * $limit;
         $filterType = $request->get('filterType', 'all');
         $userId = $request->user() ? $request->user()->id : null;
+        $searchTerm = $request->get('search', '');
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
         // Fetch validators data using service
-        $validators = $this->validatorDataService->fetchDataValidators($userId ?? null, $filterType, $offset, $totalStakeLamports);
+        $validators = $this->validatorDataService->fetchDataValidators($userId ?? null, $filterType, $offset, $totalStakeLamports, 'spy_rank', $searchTerm);
         $sortedValidators = $validators['validatorsAllData']->toArray();
         $filteredTotalCount = $validators['totalFilteredValidators'];
 
@@ -148,6 +149,7 @@ class ValidatorController extends Controller
 
         // Get top news items
         $topNewsItems = $this->getTopNewsItems();
+        
         // Check if user is authenticated and has admin/manager role
         if (!$request->user() || !$request->user()->hasRole(['Admin', 'Manager'])) {
             return Inertia::render('Validators/Index', [
@@ -232,19 +234,21 @@ class ValidatorController extends Controller
                      ->when($epoch, function($query, $epoch) {
                          return $query->where('data.leader_schedule.epoch', '=', $epoch);
                      });
-            });
+            })
+            // Adding join with validators_blocked table
+            ->leftJoin('data.validators_blocked', 'data.validators.id', '=', 'data.validators_blocked.validator_id');
             
         $userId = $request->user() ? $request->user()->id : null;
             
-        // Only join favorites table if user is authenticated
+        // Only join favorites/blocked table if user is authenticated
         if ($userId) {
             $query->leftJoin('data.favorites', function($join) use ($userId) {
                 $join->on('data.validators.id', '=', 'data.favorites.validator_id')
                      ->where('data.favorites.user_id', '=', $userId);
             })
-            ->select('data.validators.*', 'data.leader_schedule.slots as slots', 'data.favorites.id as favorite_id', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
+            ->select('data.validators.*', 'data.leader_schedule.slots as slots', 'data.favorites.id as favorite_id', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code', 'data.validators_blocked.id as blocked_id');
         } else {
-            $query->select('data.validators.*', 'data.leader_schedule.slots as slots', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code');
+            $query->select('data.validators.*', 'data.leader_schedule.slots as slots', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code', 'data.validators_blocked.id as blocked_id');
         }
         
         $validatorData = $query

@@ -20,12 +20,14 @@ export default function Register() {
     // Get localStorage data
     const validatorCompare = JSON.parse(localStorage.getItem('validatorCompare') || '[]');
     const validatorFavorites = JSON.parse(localStorage.getItem('validatorFavorites') || '[]');
+    const validatorBlocked = JSON.parse(localStorage.getItem('validatorBlocked') || '[]');
     
     // Add localStorage data to the registration request
     const registrationData = {
       ...data,
       validatorCompare: validatorCompare,
-      validatorFavorites: validatorFavorites
+      validatorFavorites: validatorFavorites,
+      validatorBlocked: validatorBlocked
     };
 
     // Use router.post instead of post to have more control
@@ -35,6 +37,7 @@ export default function Register() {
         // Clear localStorage after successful registration
         localStorage.removeItem('validatorCompare');
         localStorage.removeItem('validatorFavorites');
+        localStorage.removeItem('validatorBlocked');
       },
     });
   };

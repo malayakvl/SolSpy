@@ -12,7 +12,9 @@ import ValidatorUptime from '../../Pages/Validators/Partials/ValidatorUptime';
 import ValidatorName from '../../Pages/Validators/Partials/ValidatorName';
 import ValidatorScore from '../../Pages/Validators/Partials/ValidatorScore';
 import ValidatorSFDP from '../../Pages/Validators/Partials/ValidatorSFDP';
+import ValidatorStatus from '../../Pages/Validators/Partials/ValidatorStatus';
 import ValidatorJiitoScore from '../../Pages/Validators/Partials/ValidatorJiitoScore';
+import ValidatorTVCScore from '../../Pages/Validators/Partials/ValidatorTVCScore';
 
 // Shared function to render column headers
 export const renderColumnHeader = (columnName, sortClickState, setSortClickState, setCurrentPage, isLoading = false, setIsPaginationOrSorting = null) => {
@@ -714,11 +716,11 @@ export const renderColumnCell = (columnName, validator, epoch, settingsData, tot
                     <ValidatorName validator={validator} />
                 </td>
             );
-        case "Status": return <td>{validator.delinquent ? 'Delinquent' : 'Active'}</td>;
+        case "Status": return <td><ValidatorStatus validator={validator} /></td>;
         case "TVC Score": 
             return (
                 <td>
-                    <ValidatorScore validator={validator} />
+                    <ValidatorTVCScore validator={validator} />
                 </td>
             );
         case "TVC Rank": return <td>{validator.tvcRank || 'N/A'}</td>;
@@ -773,5 +775,39 @@ export const renderColumnCell = (columnName, validator, epoch, settingsData, tot
         case "ASN": return <td>{validator.autonomous_system_number || validator.ip_asn || 'N/A'}</td>;
         case "IP": return <td>{validator.ip || 'N/A'}</td>;
         default: return null;
+    }
+};
+
+// Shared function to initialize columns configuration
+export const initializeColumnsConfig = (settingsData) => {
+    if (settingsData?.table_fields) {
+        const parsedFields = JSON.parse(settingsData.table_fields);
+        // Fix any instances of "MEV Comission" to "MEV Commission"
+        return parsedFields.map(field => 
+            field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
+        );
+    } else {
+        return [
+            { name: "Spy Rank", show: true },
+            { name: "Avatar", show: true },
+            { name: "Name", show: true },
+            { name: "Status", show: true },
+            { name: "TVC Score", show: true },
+            { name: "Active Stake", show: true },
+            { name: "Vote Credits", show: true },
+            { name: "Vote Rate", show: true },
+            { name: "Inflation Commission", show: true },
+            { name: "MEV Commission", show: true },
+            { name: "Uptime", show: true },
+            { name: "Client/Version", show: true },
+            { name: "Status SFDP", show: true },
+            { name: "Location", show: true },
+            { name: "Awards", show: true },
+            { name: "Website", show: true },
+            { name: "City", show: true },
+            { name: "ASN", show: true },
+            { name: "IP", show: true },
+            { name: "Jiito Score", show: true }
+        ];
     }
 };

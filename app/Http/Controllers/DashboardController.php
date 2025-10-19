@@ -67,23 +67,22 @@ class DashboardController extends Controller
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
-        // Fetch validators data using service
-        $validators = $this->validatorDataService->fetchDataFavoriteValidators($userId, $filterType, $offset, $totalStakeLamports, $favoriteIds);
-        // dd($validators['results']);exit;
-        $sortedValidators = $validators['validatorsAllData']->toArray();
-        $filteredTotalCount = $validators['totalFilteredValidators'];
-        // Get top validators
-        $topValidatorsWithRanks = $this->validatorDataService->fetchDataTopValidators($sortedValidators, $totalStakeLamports);
+        // Fetch favorites data using service
+        $validatorsFavorites = $this->validatorDataService->fetchDataFavoriteValidators($userId, $filterType, $offset, $totalStakeLamports, $favoriteIds);
+        $favoritesTotalCount = $validatorsFavorites['totalFilteredValidators'];
+        // Fetch blocked data using service
+        $validatorsBlocked = $this->validatorDataService->fetchDataBlockedValidators($userId, $filterType, $offset, $totalStakeLamports, $favoriteIds);
+        $blockedTotalCount = $validatorsBlocked['totalFilteredValidators'];
         
         return Inertia::render('Dashboard/Customer/Index', [
-            'favoriteValidators' => $validators['results'],
+            'favoriteValidators' => $validatorsFavorites['results'],
+            'favoritesTotalCount' => $favoritesTotalCount,
+            'blockedValidators' => $validatorsBlocked['results'],
+            'blockedTotalCount' => $blockedTotalCount,
             'settingsData' => Settings::first(),
-            'totalCount' => $filteredTotalCount,
             'currentPage' => $page,
             'filterType' => $filterType,
             'totalStakeData' => $stakeData[0],
-            'topValidatorsData' => $topValidatorsWithRanks
         ]);
-        // return Inertia::render('Dashboard/Customer');
     }
 }

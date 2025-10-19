@@ -121,9 +121,9 @@ export default function Header(auth) {
                     </>
                   ) : (
                     <> 
-                     <Link href={'/dashboard'} className="inline-flex items-center menu-main-btn text-sm nav-link">
+                     {/* <Link href={'/dashboard'} className="inline-flex items-center menu-main-btn text-sm nav-link">
                         {msg.get('menu.dashboard')}
-                      </Link>
+                      </Link> */}
                       <Link href={'/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link">
                         {msg.get('menu.validators')}
                       </Link>
