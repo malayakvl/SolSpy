@@ -41,6 +41,7 @@ export default function Login({ status, canResetPassword }) {
     // Get localStorage data
     const validatorCompare = JSON.parse(localStorage.getItem('validatorCompare') || '[]');
     const validatorFavorites = JSON.parse(localStorage.getItem('validatorFavorites') || '[]');
+    const validatorBlocked = JSON.parse(localStorage.getItem('validatorBlocked') || '[]');
     
     // Redirect to Google auth with localStorage data as query parameters
     let redirectUrl = '/auth/google/redirect';
@@ -53,6 +54,9 @@ export default function Login({ status, canResetPassword }) {
     if (validatorFavorites.length > 0) {
       queryParams.push(`validatorFavorites=${encodeURIComponent(JSON.stringify(validatorFavorites))}`);
     }
+    if (validatorBlocked.length > 0) {
+      queryParams.push(`validatorBlocked=${encodeURIComponent(JSON.stringify(validatorBlocked))}`);
+    }
     
     if (queryParams.length > 0) {
       redirectUrl += '?' + queryParams.join('&');
@@ -61,6 +65,7 @@ export default function Login({ status, canResetPassword }) {
     // Clear localStorage before redirecting
     localStorage.removeItem('validatorCompare');
     localStorage.removeItem('validatorFavorites');
+    localStorage.removeItem('validatorBlocked');
     
     window.location.href = redirectUrl;
   };
