@@ -780,8 +780,9 @@ export const renderColumnCell = (columnName, validator, epoch, settingsData, tot
 
 // Shared function to initialize columns configuration
 export const initializeColumnsConfig = (settingsData) => {
+    console.log(typeof settingsData.table_fields);
     if (settingsData?.table_fields) {
-        const parsedFields = JSON.parse(settingsData.table_fields);
+        const parsedFields = typeof settingsData.table_fields === 'object' ? settingsData.table_fields : JSON.parse(settingsData.table_fields);
         // Fix any instances of "MEV Comission" to "MEV Commission"
         return parsedFields.map(field => 
             field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
