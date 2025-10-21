@@ -94,7 +94,7 @@ export default function Login({ status, canResetPassword }) {
         // Clear localStorage after successful login
         localStorage.removeItem('validatorCompare');
         localStorage.removeItem('validatorFavorites');
-        location.href = '/dashboard';
+        location.href = '/validators';
       })
       .catch(error => {
         console.error('ERROR:: ', error.response.data);

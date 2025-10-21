@@ -12,4 +12,8 @@ class Settings extends Model
     protected $fillable = [
         'table_fields',
     ];
+
+    protected $casts = [
+        'table_fields' => 'array',
+    ];
 }

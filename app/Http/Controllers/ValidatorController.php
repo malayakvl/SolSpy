@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Models\Settings;
+use App\Models\Settings2User;
 use App\Models\Favorits;
 use App\Models\ValidatorOrder;
 use App\Services\ValidatorDataService;
@@ -135,6 +136,7 @@ class ValidatorController extends Controller
         $offset = ($page - 1) * $limit;
         $filterType = $request->get('filterType', 'all');
         $userId = $request->user() ? $request->user()->id : null;
+        
         $searchTerm = $request->get('search', '');
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
@@ -151,7 +153,7 @@ class ValidatorController extends Controller
         $topNewsItems = $this->getTopNewsItems();
         
         // Check if user is authenticated and has admin/manager role
-        if (!$request->user() || !$request->user()->hasRole(['Admin', 'Manager'])) {
+        if (!$request->user()) {
             return Inertia::render('Validators/Index', [
                 'validatorsData' => $validators['results'],
                 'settingsData' => Settings::first(),
@@ -177,6 +179,22 @@ class ValidatorController extends Controller
             return Inertia::render('Validators/Admin/Index', [
                 'validatorsData' => $validators['results'],
                 'settingsData' => Settings::first(),
+                'totalCount' => $filteredTotalCount,
+                'currentPage' => $page,
+                'filterType' => $filterType,
+                'totalStakeData' => $stakeData[0],
+                'topValidatorsData' => $topValidatorsWithRanks,
+                'topNewsData' => $topNewsItems
+            ]);
+        } elseif ($request->user()->hasRole('Customer')) {
+            $settings = Settings::first();
+            $settings2User = Settings2User::where('user_id', $request->user()->id)->first();
+            if ($settings2User) {
+                $settings = $settings2User;
+            }
+            return Inertia::render('Validators/Customer/Index', [
+                'validatorsData' => $validators['results'],
+                'settingsData' => $settings,
                 'totalCount' => $filteredTotalCount,
                 'currentPage' => $page,
                 'filterType' => $filterType,

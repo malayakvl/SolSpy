@@ -17,7 +17,7 @@ interface FiltersProps {
 
 export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, onGearClick }: FiltersProps) {
     const appLang = useSelector(appLangSelector);
-    const [currentFilter, setCurrentFilter] = useState('all');
+    const [currentFilter, setCurrentFilter] = useState(filterType || 'all');
     const [searchTerm, setSearchTerm] = useState('');
     const dispatch = useDispatch();
 
@@ -27,9 +27,9 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
     });
 
     // Update local state when filterType prop changes
-    // useEffect(() => {
-    //     setCurrentFilter(filterType || 'all');
-    // }, [filterType]);
+    useEffect(() => {
+        setCurrentFilter(filterType || 'all');
+    }, [filterType]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -47,7 +47,7 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
             params.filterType = currentFilter;
         }
         
-        router.get('/validators', params, {
+        router.get('/admin/validators', params, {
             preserveState: true,
             preserveScroll: true,
             replace: true,
@@ -70,13 +70,13 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
         if (searchTerm) {
             params.search = searchTerm;
         }
-      
+        
         // Only add filterType if it's not 'all' (default)
         if (newFilterValue !== 'all') {
             params.filterType = newFilterValue;
         }
         
-        router.get('/validators', params, {
+        router.get('/admin/validators', params, {
             preserveState: true,
             preserveScroll: true,
             replace: true,
@@ -99,7 +99,7 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
         onFilterChange('all');
         
         // Clear URL parameters
-        router.get('/validators', {}, {
+        router.get('/admin/validators', {}, {
             preserveState: true,
             preserveScroll: true,
             replace: true,
@@ -119,12 +119,6 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
                 placeholder="Search by name..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleSearch(e);
-                    }
-                }}
             />
             <button 
                 type="submit"
@@ -132,13 +126,34 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
             >
                 Search
             </button>
-            <button 
-                type="button"
-                onClick={handleClearFilters}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
-            >
-                Clear
-            </button>
+            {isAdmin && (
+                <>
+                    <button 
+                        type="button"
+                        onClick={handleClearFilters}
+                        className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
+                    >
+                        Clear
+                    </button>
+                    <select 
+                        value={currentFilter}
+                        onChange={(e) => handleFilterChange(e.target.value)}
+                        className="p-2 border border-gray-300 rounded text-sm"
+                    >
+                        <option value="all">{msg.get('validators.all')}</option>
+                        <option value="top">{msg.get('validators.top')}</option>
+                        <option value="highlight">{msg.get('validators.highlight')}</option>
+                    </select>
+                    <button 
+                        type="button"
+                        onClick={onGearClick}
+                        className="p-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+                        title="Configure Columns"
+                    >
+                        <FontAwesomeIcon icon={faGear} />
+                    </button>
+                </>
+            )}
         </form>
     );
 }
