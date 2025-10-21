@@ -15,7 +15,9 @@ import {
     faGear,
     faSortUp,
     faSortDown,
-    faColumns
+    faColumns,
+    faTable,
+    faTh
 } from '@fortawesome/free-solid-svg-icons';
 import ValidatorCredits from "../Partials/ValidatorCredits";
 import ValidatorRate from "../Partials/ValidatorRate";
@@ -24,6 +26,7 @@ import ValidatorName from "../Partials/ValidatorName";
 import ValidatorActivatedStake from "../Partials/ValidatorActivatedStake";
 import ValidatorUptime from "../Partials/ValidatorUptime";
 import ValidatorScore from "../Partials/ValidatorScore";
+import ValidatorSFDP from "../Partials/ValidatorSFDP";
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import ValidatorSpyRank from "../Partials/ValidatorSpyRank";
@@ -35,7 +38,9 @@ import ValidatorFilters from './Filters';
 import ValidatorPagination from './Pagination';
 import ValidatorAdminActions from './Actions';
 import { renderColumnHeader, renderColumnCell } from '../../../Components/Validators/ValidatorTableComponents';
+import { renderBlock } from '../../../Components/Validators/ValidatorGridComponents';
 import ValidatorCard from '../../../Components/Validators/ValidatorCard'; 
+import ValidatorGridCard from '../../../Components/Validators/ValidatorGridCard';
 import TopContentCarousel from '../../../Components/Validators/TopContentCarousel';
 
 export default function CustomerIndex(validatorsData) {
@@ -72,13 +77,12 @@ export default function CustomerIndex(validatorsData) {
 
     const [itemsPerPage] = useState(perPage); // Number of items per page
     const [selectAll, setSelectAll] = useState(false);
-    const [checkedIds, setCheckedIds] = useState<string[]>([]);
+    const [checkedIds, setCheckedIds] = useState<(string | number)[]>([]);
     const [totalRecords, setTotalRecords] = useState(validatorsData.totalCount);
     const [showModal, setShowModal] = useState(false);
     const [columnSettings, setColumnSettings] = useState(null);
     const [columnsConfig, setColumnsConfig] = useState(() => {
         if (validatorsData.settingsData?.table_fields) {
-            console.log(typeof validatorsData.settingsData.table_fields)
             const parsedFields = (validatorsData.settingsData.table_fields);
             // Fix any instances of "MEV Comission" to "MEV Commission"
             return parsedFields.map(field => 
@@ -117,7 +121,11 @@ export default function CustomerIndex(validatorsData) {
         top: false,
         highlight: false
     });
-    const displayDropdownRef = useRef(null);
+    
+    // View mode state - table or grid
+    const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+    
+    const displayDropdownRef = useRef<HTMLDivElement>(null);
 
     // Get role names as array of strings
     const userRoleNames = user?.roles?.map(role => role.name) || [];
@@ -156,7 +164,7 @@ export default function CustomerIndex(validatorsData) {
     // const filteredData = data.filter(validator => !bannedValidators.includes(validator.id));
     const filteredData = data;
 
-    const handleCheckboxChange = (id) => {
+    const handleCheckboxChange = (id: string | number) => {
         if (checkedIds.includes(id)) {
             // Remove from checkedIds
             setCheckedIds(prev => prev.filter(checkedId => checkedId !== id));
@@ -198,8 +206,8 @@ export default function CustomerIndex(validatorsData) {
                 return newCheckedIds;
             });
         } else {
-            // Remove all visible validator IDs from checkedIds
-            setCheckedIds(prev => prev.filter(id => !visibleValidatorIds.includes(id)));
+            // Clear all checkedIds
+            setCheckedIds([]);
         }
     };
 
@@ -321,6 +329,15 @@ export default function CustomerIndex(validatorsData) {
     const renderColumnCellLocal = (columnName, validator, index) => {
         return renderColumnCell(columnName, validator, epoch, validatorsData.settingsData, validatorsData.totalStakeData, data);
     };
+
+    const renderGridLocal = (columnName, validator, index) => {
+        return renderColumnCell(columnName, validator, epoch, validatorsData.settingsData, validatorsData.totalStakeData, data);
+    };
+
+    const renderBlockLocal = (columnName, validator, index) => {
+        return renderBlock(columnName, validator, epoch, validatorsData.settingsData, validatorsData.totalStakeData, data);
+    };
+
 
     // Helper function to render column header by name
     const renderColumnHeaderLocal = (columnName) => {
@@ -697,12 +714,19 @@ export default function CustomerIndex(validatorsData) {
                                         <span>Columns</span>
                                     </div>
                                 </button>
-                                <Link href={route('admin.validators.top')} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 ml-3 flex-shrink-0">
-                                    <div className="flex items-center">
-                                        <FontAwesomeIcon icon={faColumns} className="w-5 h-5 mr-2" />
-                                        <span>Output</span>
+                                <button 
+                                    onClick={() => setViewMode(viewMode === 'table' ? 'grid' : 'table')}
+                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 ml-3 flex-shrink-0 w-[150px]"
+                                >
+                                    <div className="flex items-center justify-center">
+                                        <FontAwesomeIcon 
+                                            icon={viewMode === 'table' ? faTh : faTable} 
+                                            className="w-5 h-5 mr-2" 
+                                        />
+                                        <span>{viewMode === 'table' ? 'Grid View' : 'Table View'}</span>
                                     </div>
-                                </Link>
+                                </button>
+                                
                             </div>
                         </div>
                     </div>
@@ -733,46 +757,64 @@ export default function CustomerIndex(validatorsData) {
                     )}
 
                     <div className="mt-6">
-                        <div className="overflow-x-auto">
-                            
-                            <table className="min-w-full divide-y divide-gray-200 validator-table">
-                                <thead>
-                                    <tr>
-                                        <th className="relative">
-                                            <div className="flex items-center gap-2">
-                                                <input 
-                                                    type="checkbox" 
-                                                    checked={selectAll}
-                                                    onChange={handleSelectAllChange} 
-                                                />
-                                            </div>
-                                        </th>
-                                        <th>Actions</th>
-                                        {getOrderedVisibleColumns().map(column => renderColumnHeaderLocal(column.name))}
-                                    </tr>
-                                </thead>
-                                <tbody>
+                        {viewMode === 'table' ? (
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200 validator-table">
+                                    <thead>
+                                        <tr>
+                                            <th className="relative">
+                                                <div className="flex items-center gap-2">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={selectAll}
+                                                        onChange={handleSelectAllChange} 
+                                                    />
+                                                </div>
+                                            </th>
+                                            <th>Actions</th>
+                                            {getOrderedVisibleColumns().map(column => renderColumnHeaderLocal(column.name))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    {data.map((validator, index) => (
+                                        <tr key={validator.id} className={checkedIds.includes(validator.id) ? 'bg-blue-50' : ''}>
+                                            <td className="text-left">
+                                                <div className="pl-[10px]">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        id={validator.id} 
+                                                        checked={checkedIds.includes(validator.id)}
+                                                        onChange={() => handleCheckboxChange(validator.id)} 
+                                                    />
+                                                </div>
+                                            </td>
+                                            <th className="text-center">
+                                                <ValidatorActions validator={validator} onBanToggle={handleBanToggle} />
+                                            </th>
+                                            {getOrderedVisibleColumns().map(column => renderColumnCellLocal(column.name, validator, index))}
+                                        </tr>
+                                    ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            // Grid View
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {data.map((validator, index) => (
-                                    <tr key={validator.id} className={checkedIds.includes(validator.id) ? 'bg-blue-50' : ''}>
-                                        <td className="text-left">
-                                            <div className="pl-[10px]">
-                                                <input 
-                                                    type="checkbox" 
-                                                    id={validator.id} 
-                                                    checked={checkedIds.includes(validator.id)}
-                                                    onChange={() => handleCheckboxChange(validator.id)} 
-                                                />
-                                            </div>
-                                        </td>
-                                        <th className="text-center">
-                                            <ValidatorActions validator={validator} onBanToggle={handleBanToggle} />
-                                        </th>
-                                        {getOrderedVisibleColumns().map(column => renderColumnCellLocal(column.name, validator, index))}
-                                    </tr>
+                                    <div className="relative border mx-2 my-2 px-4 py-2" key={validator.id}>
+                                        <div className="pl-[10px]">
+                                            <input 
+                                                type="checkbox" 
+                                                id={validator.id} 
+                                                checked={checkedIds.includes(validator.id)}
+                                                onChange={() => handleCheckboxChange(validator.id)} 
+                                            />
+                                        </div>
+                                        {getOrderedVisibleColumns().map(column => renderBlockLocal(column.name, validator, index))}
+                                    </div>
                                 ))}
-                                </tbody>
-                            </table>
-                        </div>
+                            </div>
+                        )}
                         
                         <ValidatorPagination 
                             currentPage={currentPage}

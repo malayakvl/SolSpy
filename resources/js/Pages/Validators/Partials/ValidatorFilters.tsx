@@ -70,7 +70,7 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
         if (searchTerm) {
             params.search = searchTerm;
         }
-console.log('here')        
+      
         // Only add filterType if it's not 'all' (default)
         if (newFilterValue !== 'all') {
             params.filterType = newFilterValue;
