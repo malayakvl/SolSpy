@@ -47,6 +47,5 @@ class runCronJobs extends Command
             // Задержка 1 секунд
             sleep(1);
         }
-
     }
 }

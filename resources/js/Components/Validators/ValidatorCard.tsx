@@ -17,7 +17,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import ValidatorSFDP from '../../Pages/Validators/Partials/ValidatorSFDP';
 
-export default function ValidatorCard({validator, epoch, settingsData, totalStakeData, validators}) {
+export default function ValidatorCard({validator, epoch, settingsData, totalStakeData, validators, isSelected, onCheckboxChange}) {
   const user = usePage().props.auth.user;
   const appLang = useSelector(appLangSelector);
   const lng = new Lang({
@@ -26,7 +26,19 @@ export default function ValidatorCard({validator, epoch, settingsData, totalStak
   });
 
   return (
-      <div className="flex flex-col v-card">
+      <div className={`flex flex-col v-card ${isSelected ? 'ring-2 ring-blue-500' : ''}`}>
+        <div className="flex items-center p-2 bg-gray-50">
+            <input 
+                type="checkbox" 
+                id={`card-${validator.id}`} 
+                checked={isSelected}
+                onChange={() => onCheckboxChange(validator.id)}
+                className="mr-2"
+            />
+            <label htmlFor={`card-${validator.id}`} className="text-sm font-medium text-gray-700">
+                Select
+            </label>
+        </div>
         <div className="flex flex-col h-[200px] items-center bg-white border md:flex-row hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
             <img 
                 src={validator.avatar_url || validator.avatar_file_url} 
@@ -77,30 +89,6 @@ export default function ValidatorCard({validator, epoch, settingsData, totalStak
                     </div>
                     <div className="text-center"><ValidatorSFDP validator={validator} epoch={epoch} type={'card'} /></div>
                 </div>
-                {/* <div className="grid grid-cols-8 gap-1 text-[13px]">
-                    <div className="w-[60px] text-center border border-1 border-black">Rank</div>
-                    <div className="w-[60px] text-center border border-1 border-black">TVC</div>
-                    <div className="whitespace-nowrap min-w-[120px] text-center  border border-1 border-black">Stake Pool</div>
-                    <div className="w-[60px] text-center  border border-1 border-black">INF %</div>
-                    <div className="w-[60px] text-center  border border-1 border-black">MEV %</div>
-                    <div className="w-[80px] text-center  border border-1 border-black">Uptime</div>
-                    <div className="w-[80px] text-center  border border-1 border-black">Client</div>
-                    <div className="whitespace-nowrap min-w-[90px] text-center">SPDF</div>
-
-                    <div className="w-[60px] text-center">{validator.spyRank}</div>
-                    <div className="w-[60px] text-center">{validator.tvcRank || 'N/A'}</div>
-                    <div className="whitespace-nowrap px-1 min-w-[120px] text-center">
-                        <FontAwesomeIcon icon={faFrog} className="mr-[2px]" />
-                        <FontAwesomeIcon icon={faFire} className="mr-[2px]" />
-                        <FontAwesomeIcon icon={faHouse} className="mr-[2px]" />
-                        <FontAwesomeIcon icon={faCircleRadiation} className="mr-[2px]" />
-                    </div>
-                    <div className="w-[60px] text-center">{validator.jito_commission !== undefined ? `${(parseFloat(validator.jito_commission) / 100).toFixed(2)}%` : 'N/A'}</div>
-                    <div className="w-[60px] text-center">{validator.commission !== undefined ? `${(parseFloat(validator.commission) / 100).toFixed(2)}%` : 'N/A'}</div>
-                    <div className="w-[80px] text-center"><ValidatorUptime validator={validator} /></div>
-                    <div className="w-[80px] text-center">{validator.version || validator.software_version || 'N/A'}</div>
-                    <div className="whitespace-nowrap min-w-[90px] text-center"><ValidatorSFDP validator={validator} epoch={epoch} /></div>
-                </div> */}
             </div>
         </div>
       </div>

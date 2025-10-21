@@ -83,6 +83,7 @@ export default function Index(validatorsData) {
     // Check if user has Admin/Manager role
     const isAdmin = userRoleNames.includes('Admin');
     const isManager = userRoleNames.includes('Manager');
+    const isCustomer = userRoleNames.includes('Customer');
 
     useEffect(() => {
         const bannedList = JSON.parse(localStorage.getItem('validatorBanned') || '[]');
@@ -372,12 +373,12 @@ export default function Index(validatorsData) {
                     
                     {/* Top Validators and News Section */}
                     <TopContentCarousel 
-                      topValidatorsData={validatorsData.topValidatorsData}
-                      topNewsData={validatorsData.topNewsData}
-                      epoch={epoch}
-                      settingsData={validatorsData.settingsData}
-                      totalStakeData={validatorsData.totalStakeData}
-                      validatorsData={validatorsData.validators}
+                        topValidatorsData={validatorsData.topValidatorsData}
+                        topNewsData={validatorsData.topNewsData}
+                        epoch={epoch}
+                        settingsData={validatorsData.settingsData}
+                        totalStakeData={validatorsData.totalStakeData}
+                        validatorsData={validatorsData.validators}
                     />
                     <div className="flex justify-between items-start mt-10">
                         <div className="flex-1">
