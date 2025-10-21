@@ -47,7 +47,6 @@ export default function AdminIndex(validatorsData) {
     // Track if the current data fetch is due to pagination or sorting
     const [isPaginationOrSorting, setIsPaginationOrSorting] = useState(false);
     const [selectedItems, setSelectedItems] = useState<number[]>([]);
-
     const msg = new Lang({
         messages: lngVaidators,
         locale: appLang,
@@ -72,7 +71,8 @@ export default function AdminIndex(validatorsData) {
     const [columnSettings, setColumnSettings] = useState(null);
     const [columnsConfig, setColumnsConfig] = useState(() => {
         if (validatorsData.settingsData?.table_fields) {
-            const parsedFields = JSON.parse(validatorsData.settingsData.table_fields);
+            const parsedFields = typeof validatorsData.settingsData.table_fields === 'object' ? validatorsData.settingsData.table_fields : JSON.parse(validatorsData.settingsData.table_fields);
+            //const parsedFields = JSON.parse(validatorsData.settingsData.table_fields);
             // Fix any instances of "MEV Comission" to "MEV Commission"
             return parsedFields.map(field => 
                 field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
