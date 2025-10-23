@@ -72,14 +72,11 @@ class FetchValidatorsServer extends Command
             
             // Parse the output
             $lines = explode("\n", trim($output));
-<<<<<<< HEAD:app/Console/Commands/RPC/FetchTvcScoresServer.php
             $validators = [];
-=======
             
             // Parse the output and insert into database using PostgreSQL function
             $parsedValidators = [];
             
->>>>>>> 4e216f7d68f17a1f657d8865c95124c7aa467e6e:app/Console/Commands/RPC/FetchValidatorsServer.php
             foreach ($lines as $line) {
                 $parts = preg_split('/\s+/', trim($line));
                 if (count($parts) >= 17 && is_numeric($parts[0])) {
@@ -101,7 +98,6 @@ class FetchValidatorsServer extends Command
                     ];
                 }
             }
-<<<<<<< HEAD:app/Console/Commands/RPC/FetchTvcScoresServer.php
             $this->info('Found ' . count($validators) . ' validators');
             
             // Insert new data without truncating
@@ -115,7 +111,6 @@ class FetchValidatorsServer extends Command
             
             // Clean up old data (keep only the specified number of collections)
             // $this->cleanupOldData($collectLength);
-=======
             
             $this->info('Found ' . count($parsedValidators) . ' validators');
             
@@ -129,7 +124,6 @@ class FetchValidatorsServer extends Command
             // Clean up old data (keep only the specified number of collections)
             
             $this->cleanupOldData($collectLength);
->>>>>>> 4e216f7d68f17a1f657d8865c95124c7aa467e6e:app/Console/Commands/RPC/FetchValidatorsServer.php
             
             $this->info('Validator scores updated successfully!');
             
