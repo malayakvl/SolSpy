@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Validators;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
-class fetchStakeAccounts extends Command
+class FetchStakeAccounts extends Command
 {
     /**
      * The name and signature of the console command.
