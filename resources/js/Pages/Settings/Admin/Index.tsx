@@ -101,11 +101,10 @@ export default function CreateEdit({ settingsData, isEdit = true, languages = [
                                         onChange={(e) => setData('collect_score_retention', e.target.value)}
                                         className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
                                     >
-                                        <option value="2">5</option>
-                                        <option value="5">10</option>
-                                        <option value="7">20</option>
-                                        <option value="7">50</option>
-                                        <option value="7">100</option>
+                                        <option value="10">10</option>
+                                        <option value="20">20</option>
+                                        <option value="30">30</option>
+                                        <option value="50">50</option>
                                     </select>
                                 </div>
                             </div>
