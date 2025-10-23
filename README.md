@@ -71,12 +71,4 @@ php artisan tvc:calculate-ranks
 
 ### Update Validators with TVC and Jito Calculations
 
-To update validators with both TVC and Jito calculations:
-
-```bash
-php artisan validators:update-tvc-jito
 ```
-
-## License
-
-The SolSpy project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

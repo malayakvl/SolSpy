@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Console\Command;
 use App\Models\CronJobLog;
 
-class runCronDaylyJobs extends Command
+class RunCronDailyJobs extends Command
 {
     /**
      * The name and signature of the console command.

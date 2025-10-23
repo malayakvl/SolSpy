@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class updateEpochMaxCredits extends Command
+class UpdateEpochMaxCredits extends Command
 {
     protected $signature = 'app:update-epoch-max-credits';
     protected $description = 'Fetch vote accounts and update epoch max credits table';

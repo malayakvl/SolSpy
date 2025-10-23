@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Validators;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class fetchClusterNodes extends Command
+class FetchClusterNodes extends Command
 {
     /**
      * The name and signature of the console command.
@@ -52,14 +52,7 @@ class fetchClusterNodes extends Command
         // Выполнение запроса
         $response = curl_exec($ch);
         $data = json_decode($response);
-//        dd($data->result);exit;
-        foreach ($data->result as $_data) {
-//            dd($_data->pubkey);exit;
-            if ($_data->pubkey === 'beefKGBWeSpHzYBHZXwp5So7wdQGX6mu4ZHCsH3uTar') {
-                dd(1);exit;
-            }
-        }
-        exit;
+        
         // Проверка на ошибки
         if (curl_errno($ch)) {
             echo 'cURL Error: ' . curl_error($ch);

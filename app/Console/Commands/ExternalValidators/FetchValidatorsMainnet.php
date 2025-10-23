@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\ExternalValidators;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Exception;
 
 
-class fetchValidatorsMainnet extends Command
+class FetchValidatorsMainnet extends Command
 {
     /**
      * The name and signature of the console command.
