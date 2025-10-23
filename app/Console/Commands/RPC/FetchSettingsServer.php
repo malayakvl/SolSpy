@@ -72,51 +72,24 @@ class FetchSettingsServer extends Command
             
             // Parse the output
             $lines = explode("\n", trim($output));
-            
+            // $query = ('UPDATE data.settings SET 
+            //         absolute_slot=' .$_result->result->absoluteSlot.', 
+            //         block_height=' .$_result->result->blockHeight.', 
+            //         epoch=' .$_result->result->epoch.', 
+            //         slot_index=' .$_result->result->slotIndex.', 
+            //         slot_in_epoch=' .$_result->result->slotsInEpoch.', 
+            //         transaction_count=' .$_result->result->transactionCount.'
+            //     ');
+            //     DB::statement($query);
             // Parse the output and insert into database using PostgreSQL function
-            $parsedValidators = [];
             
-            foreach ($lines as $line) {
-                $parts = preg_split('/\s+/', trim($line));
-                if (count($parts) >= 17 && is_numeric($parts[0])) {
-                    $parsedValidators[] = [
-                        'rank' => (int)$parts[0],
-                        'node_pubkey' => $parts[2],
-                        'vote_pubkey' => $parts[3],
-                        'uptime' => $parts[4],
-                        'root_slot' => (int)str_replace(['(', ')'], '', $parts[5]),
-                        'vote_slot' => (int)str_replace(['(', ')'], '', $parts[8]),
-                        'commission' => (float)str_replace('%', '', $parts[11]),
-                        'credits' => (int)$parts[12],
-                        'version' => $parts[13],
-                        'stake' => (float)str_replace(['SOL', ','], '', $parts[14]),
-                        'stake_percent' => (float)str_replace(['(', ')', '%'], '', $parts[16]),
-                        'collected_at' => now()->format('Y-m-d H:i:s'),
-                        'created_at' => now()->format('Y-m-d H:i:s'),
-                        'updated_at' => now()->format('Y-m-d H:i:s')
-                    ];
-                }
-            }
             
-            $this->info('Found ' . count($parsedValidators) . ' validators');
-            
-            // Insert parsed validator scores into database using PostgreSQL function
-            if (!empty($parsedValidators)) {
-                $scoresJson = json_encode($parsedValidators);
-                $insertedCount = DB::select("SELECT data.insert_validator_scores(?::jsonb) as count", [$scoresJson])[0]->count;
-                $this->info("Inserted $insertedCount validator scores into database using PostgreSQL function");
-            }
-            
-            // Clean up old data (keep only the specified number of collections)
-            
-            $this->cleanupOldData($collectLength);
-            
-            $this->info('Validator scores updated successfully!');
+            $this->info('Validator settings update successfully!');
             
             return 0;
         } catch (\Exception $e) {
-            $this->error('Error updating validator scores: ' . $e->getMessage());
-            Log::error('Error updating validator scores: ' . $e->getMessage(), ['exception' => $e]);
+            $this->error('Error updating validator settings: ' . $e->getMessage());
+            Log::error('Error updating validator settings: ' . $e->getMessage(), ['exception' => $e]);
             return 1;
         }
     }
