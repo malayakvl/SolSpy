@@ -678,17 +678,18 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
 };
 
 // Shared function to render column cells
-export const renderColumnCell = (columnName, validator, epoch, settingsData, totalStakeData, validators = []) => {
+export const renderBlock = (columnName, validator, epoch, settingsData, totalStakeData, validators = []) => {
     switch(columnName) {
         case "Spy Rank": 
             return (
-                <td>
-                    {/* {validator.spyRank}/{validator.spy_rank} */}
+                <div>
+                    Spy Rank:
                     <ValidatorSpyRank validator={validator} />
-                </td>
+                </div>
             );
         case "Avatar": return (
-            <td>
+            <div className="flex items-center justify-between">
+                Avatar:
                 {validator.avatar_url || validator.avatar_file_url ? (
                     <img 
                         src={validator.avatar_url || validator.avatar_file_url} 
@@ -708,81 +709,86 @@ export const renderColumnCell = (columnName, validator, epoch, settingsData, tot
                         <span className="text-xs text-gray-500 font-medium">SP</span>
                     </div>
                 )}
-            </td>
+            </div>
         );
         case "Name": 
             return (
-                <td>
+                <div className="flex items-center justify-between">
+                    <div>Name:</div>
                     <ValidatorName validator={validator} />
-                </td>
+                </div>
             );
-        case "Status": return <td><ValidatorStatus validator={validator} /></td>;
+        case "Status": return <div className="flex items-center justify-between">Status: <ValidatorStatus validator={validator} /></div>;
         case "TVC Score": 
             return (
-                <td>
+                <div className="flex items-center justify-between">
+                    TVC Score:
                     <ValidatorTVCScore validator={validator} />
-                </td>
+                </div>
             );
-        case "TVC Rank": return <td>{validator.tvcRank || 'N/A'}</td>;
+        case "TVC Rank": return <div className="flex items-center justify-between">TVC Rank: <ValidatorTVCRank validator={validator} /></div>;
         case "Vote Credits": 
             return (
-                <td>
+                <div className="flex items-center justify-between">
+                    
+                    <div>Vote Credits:</div> 
                     <ValidatorCredits validator={validator} epoch={epoch} />
-                </td>
+                </div>
             );
         case "Active Stake": 
             return (
-                <td>
+                <div className="flex items-center justify-between">
+                    <div>Active Stake:</div> 
                     <ValidatorActivatedStake validator={validator} epoch={epoch} />
-                </td>
+                </div>
             );
         case "Vote Rate": 
             return (
-                <td>
+                <div className="flex items-center justify-between">
+                    <div>Vote Rate: </div> 
                     <ValidatorRate validator={validator} epoch={epoch} settingsData={settingsData} totalStakeData={totalStakeData} />
-                </td>
+                </div>
             );
         case "Jiito Score": 
             return (
-                <td>
+                <div className="flex items-center justify-between">
+                    <div>Jiito Score:</div>
                     <ValidatorJiitoScore validator={validator} epoch={epoch} />
-                </td>
+                </div>
             );
-        case "Inflation Commission": return <td>{validator.jito_commission !== undefined ? `${(parseFloat(validator.jito_commission) / 100).toFixed(2)}%` : 'N/A'}</td>;
-        case "MEV Commission": return <td>{validator.commission !== undefined ? `${parseFloat(validator.commission).toFixed(2)}%` : 'N/A'}</td>;
-        case "Jito Score": return <td>{validator.jito_commission !== undefined ? parseFloat(validator.jito_commission).toFixed(4) : 'N/A'}</td>;
+        case "Inflation Commission": return <div className="flex items-center justify-between"><div>Inflation Commission:</div> {validator.jito_commission !== undefined ? `${(parseFloat(validator.jito_commission) / 100).toFixed(2)}%` : 'N/A'}</div>;
+        case "MEV Commission": return <div className="flex items-center justify-between"><div>MEV Commission:</div> {validator.commission !== undefined ? `${parseFloat(validator.commission).toFixed(2)}%` : 'N/A'}</div>;
+        case "Jito Score": return <div className="flex items-center justify-between"><div>Jito Score:</div> {validator.jito_commission !== undefined ? parseFloat(validator.jito_commission).toFixed(4) : 'N/A'}</div>;
         case "Uptime": 
             return (
-                <td>
-                    {validator.uptime}
-                    {/* <ValidatorUptime validator={validator} /> */}
-                </td>
+                <div className="flex items-center justify-between">
+                   <div> Uptime:</div> {validator.uptime}
+                </div>
             );
         case "Client/Version": 
             // Use the latest version from validator scores if available, fallback to existing fields
             const version = validator.latestVersion || validator.version || validator.software_version || 'N/A';
-            return <td>{version}</td>;
+            return <div className="flex items-center justify-between"><div>Client/Version:</div> {version}</div>;
         case "Status SFDP": 
             return (
-                <td>
-                    <ValidatorSFDP validator={validator} epoch={epoch} />
-                </td>
+                <div className="flex items-center justify-between">
+                    <div>Status SFDP:</div> <ValidatorSFDP validator={validator} epoch={epoch} />
+                </div>
             );
-        case "Location": return <td>{validator.country || validator.ip_country || 'N/A'}</td>;
-        case "Awards": return <td>{validator.awards || 'N/A'}</td>;
-        case "Website": return <td>{validator.url || validator.www_url || 'N/A'}</td>;
-        case "City": return <td>{validator.city || validator.ip_city || 'N/A'}</td>;
-        case "ASN": return <td>{validator.autonomous_system_number || validator.ip_asn || 'N/A'}</td>;
-        case "IP": return <td>{validator.ip || 'N/A'}</td>;
+        case "Location": return <div className="flex items-center justify-between"><div>Location:</div> {validator.country || validator.ip_country || 'N/A'}</div>;
+        case "Awards": return <div className="flex items-center justify-between"><div>Awards:</div> {validator.awards || 'N/A'}</div>;
+        case "Website": return <div className="flex items-center justify-between"><div>Website:</div> {validator.url || validator.www_url || 'N/A'}</div>;
+        case "City": return <div className="flex items-center justify-between"><div>City:</div> {validator.city || validator.ip_city || 'N/A'}</div>;
+        case "ASN": return <div className="flex items-center justify-between"><div>ASN:</div> {validator.autonomous_system_number || validator.ip_asn || 'N/A'}</div>;
+        case "IP": return <div className="flex items-center justify-between"><div>IP:</div> {validator.ip || 'N/A'}</div>;
         default: return null;
     }
 };
 
 // Shared function to initialize columns configuration
 export const initializeColumnsConfig = (settingsData) => {
-    console.log(typeof settingsData.table_fields);
     if (settingsData?.table_fields) {
-        const parsedFields = typeof settingsData.table_fields === 'object' ? settingsData.table_fields : JSON.parse(settingsData.table_fields);
+        const parsedFields = JSON.parse(settingsData.table_fields);
         // Fix any instances of "MEV Comission" to "MEV Commission"
         return parsedFields.map(field => 
             field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field

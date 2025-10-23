@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Rpc;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -8,21 +8,21 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
-class FetchSettings extends Command
+class FetchSettingsLocal extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:fetch-settings';
+    protected $signature = 'rpc:fetch-settings-local';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Fetch settings';
+    protected $description = 'Fetch settings local';
 
     /**
      * Execute the console command.
@@ -70,6 +70,7 @@ class FetchSettings extends Command
             } else {
                 // Output the response
                 $_result = json_decode($response);
+                dd($_result);exit;
                 $query = ('UPDATE data.settings SET 
                     absolute_slot=' .$_result->result->absoluteSlot.', 
                     block_height=' .$_result->result->blockHeight.', 

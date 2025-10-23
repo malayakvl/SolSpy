@@ -6,6 +6,9 @@ const lngProfile = {
     name: 'Name',
     save: 'Save',
     saved: 'Saved.',
+    'setup.notice': 'Setup Notifications',
+    'export': 'Export Data',
+    'view.profile': 'Edit Profile',
     'update.title': 'Update Password',
     'update.descr':
       'Ensure your account is using a long, random password to stay secure.',
@@ -26,6 +29,9 @@ const lngProfile = {
     name: 'Ім`я',
     save: 'Зберегти',
     saved: 'Збережено.',
+    'setup.notice': 'Налаштування сповіщень',
+    'export': 'Експортувати',
+    'view.profile': 'Profile',
     'update.title': 'Оновити пароль',
     'update.descr':
       'Переконайтеся, що ваш обліковий запис використовує довгий довільний пароль, щоб залишатися в безпеці.',
