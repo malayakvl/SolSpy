@@ -6,7 +6,6 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Exception;
 
 class FetchSettingsServer extends Command
@@ -32,10 +31,6 @@ class FetchSettingsServer extends Command
      */
     public function handle()
     {
-        // Get collectLength from settings table
-        $dbSettings = DB::table('data.settings')->first();
-        $collectLength = $dbSettings->collect_score_retention ?? 10;
-        
         $this->info("Updating settings");
         
         try {
@@ -52,8 +47,8 @@ class FetchSettingsServer extends Command
                 }
             }
             
-            // Execute the command to get all validators
-            $command = "$solanaPath solana epoch-info";
+            // Execute the command to get epoch info
+            $command = "$solanaPath epoch-info";
             
             $process = Process::fromShellCommandline($command, null, null, null, 120);
             $process->run();
@@ -64,7 +59,7 @@ class FetchSettingsServer extends Command
             }
             
             $output = $process->getOutput();
-            
+
             if (empty($output)) {
                 $this->error('Command returned empty output');
                 return 1;
@@ -73,77 +68,108 @@ class FetchSettingsServer extends Command
             // Parse the output
             $lines = explode("\n", trim($output));
             
-            // Parse the output and insert into database using PostgreSQL function
-            $parsedValidators = [];
+            // Initialize variables to store parsed values
+            $absoluteSlot = null;
+            $blockHeight = null;
+            $epoch = null;
+            $slotIndex = null;
+            $slotsInEpoch = null;
+            $transactionCount = null;
+            $epochCompletedPercent = null;
+            $epochCompletedTime = '';
+            $epochTotalTime = '';
+            $epochRemainingTime = '';
             
+            // Parse each line of the output
             foreach ($lines as $line) {
-                $parts = preg_split('/\s+/', trim($line));
-                if (count($parts) >= 17 && is_numeric($parts[0])) {
-                    $parsedValidators[] = [
-                        'rank' => (int)$parts[0],
-                        'node_pubkey' => $parts[2],
-                        'vote_pubkey' => $parts[3],
-                        'uptime' => $parts[4],
-                        'root_slot' => (int)str_replace(['(', ')'], '', $parts[5]),
-                        'vote_slot' => (int)str_replace(['(', ')'], '', $parts[8]),
-                        'commission' => (float)str_replace('%', '', $parts[11]),
-                        'credits' => (int)$parts[12],
-                        'version' => $parts[13],
-                        'stake' => (float)str_replace(['SOL', ','], '', $parts[14]),
-                        'stake_percent' => (float)str_replace(['(', ')', '%'], '', $parts[16]),
-                        'collected_at' => now()->format('Y-m-d H:i:s'),
-                        'created_at' => now()->format('Y-m-d H:i:s'),
-                        'updated_at' => now()->format('Y-m-d H:i:s')
-                    ];
+                $parts = explode(':', $line, 2);
+                if (count($parts) == 2) {
+                    $key = trim($parts[0]);
+                    $value = trim($parts[1]);
+                    
+                    // Remove commas from numbers for proper parsing
+                    $value = str_replace(',', '', $value);
+                    
+                    switch ($key) {
+                        case 'Slot':
+                            $absoluteSlot = (int)$value;
+                            break;
+                        case 'Epoch':
+                            $epoch = (int)$value;
+                            break;
+                        case 'Transaction Count':
+                            $transactionCount = (int)$value;
+                            break;
+                        case 'Epoch Completed Percent':
+                            $epochCompletedPercent = floatval($value);
+                            break;
+                        case 'Block height':
+                            $blockHeight = (int)$value;
+                            break;
+                        case 'Epoch Completed Slots':
+                            // Parse the format: "298099/432000 (133901 remaining)"
+                            if (preg_match('/(\d+)\/(\d+)/', $value, $matches)) {
+                                $slotIndex = (int)$matches[1];     // 298099
+                                $slotsInEpoch = (int)$matches[2];  // 432000
+                            }
+                            break;
+                        case 'Epoch Completed Time':
+                            // Parse the format: "1day 9h 31m 26s/1day 23h 45m 6s (14h 13m 40s remaining)"
+                            // Extract the three time components
+                            if (preg_match('/^(.*?)\/(.*?)\s*\((.*?)\s+remaining\)$/', $value, $timeMatches)) {
+                                $epochCompletedTime = $timeMatches[1];   // 1day 9h 31m 26s
+                                $epochTotalTime = $timeMatches[2];       // 1day 23h 45m 6s
+                                $epochRemainingTime = $timeMatches[3];   // 14h 13m 40s
+                            }
+                            break;
+                    }
                 }
             }
             
-            $this->info('Found ' . count($parsedValidators) . ' validators');
+            // Block height is typically slot - slotIndex
+            // if ($absoluteSlot !== null && $slotIndex !== null) {
+            //     $blockHeight = $absoluteSlot - $slotIndex;
+            // }
             
-            // Insert parsed validator scores into database using PostgreSQL function
-            if (!empty($parsedValidators)) {
-                $scoresJson = json_encode($parsedValidators);
-                $insertedCount = DB::select("SELECT data.insert_validator_scores(?::jsonb) as count", [$scoresJson])[0]->count;
-                $this->info("Inserted $insertedCount validator scores into database using PostgreSQL function");
+            // Calculate epoch completed percent if not provided
+            if ($epochCompletedPercent === null && $slotsInEpoch !== null && $slotsInEpoch > 0 && $slotIndex !== null) {
+                $epochCompletedPercent = ($slotIndex / $slotsInEpoch) * 100;
             }
+
             
-            // Clean up old data (keep only the specified number of collections)
-            
-            $this->cleanupOldData($collectLength);
-            
-            $this->info('Validator scores updated successfully!');
+            // Update the settings table with parsed values
+            if ($absoluteSlot !== null && $blockHeight !== null && $epoch !== null && 
+                $slotIndex !== null && $slotsInEpoch !== null && $transactionCount !== null) {
+                
+                // Use Laravel's query builder to properly escape values
+                DB::table('data.settings')->update([
+                    'absolute_slot' => $absoluteSlot,
+                    'block_height' => $blockHeight,
+                    'epoch' => $epoch,
+                    'slot_index' => $slotIndex,
+                    'slot_in_epoch' => $slotsInEpoch,
+                    'transaction_count' => $transactionCount,
+                    'epoch_completed_percent' => $epochCompletedPercent,
+                    'epoch_completed_time' => $epochCompletedTime,
+                    'epoch_total_time' => $epochTotalTime,
+                    'epoch_remaining_time' => $epochRemainingTime
+                ]);
+                
+                $this->info('Settings updated successfully!');
+                $this->info("Epoch completed: " . number_format($epochCompletedPercent, 2) . "%");
+                $this->info("Completed time: " . $epochCompletedTime);
+                $this->info("Total time: " . $epochTotalTime);
+                $this->info("Remaining time: " . $epochRemainingTime);
+            } else {
+                $this->error('Failed to parse all required values from epoch-info output');
+                return 1;
+            }
             
             return 0;
         } catch (\Exception $e) {
-            $this->error('Error updating validator scores: ' . $e->getMessage());
-            Log::error('Error updating validator scores: ' . $e->getMessage(), ['exception' => $e]);
+            $this->error('Error updating validator settings: ' . $e->getMessage());
+            Log::error('Error updating validator settings: ' . $e->getMessage(), ['exception' => $e]);
             return 1;
-        }
-    }
-    
-    /**
-     * Clean up old data, keeping only the specified number of collections
-     */
-    private function cleanupOldData($collectLength)
-    {
-        // Get the distinct collection times, ordered by newest first
-        $collections = DB::table('data.validator_scores')
-            ->select('collected_at')
-            ->groupBy('collected_at')
-            ->orderBy('collected_at', 'desc')
-            ->limit($collectLength)
-            ->pluck('collected_at');
-        
-        // If we have more than the specified number of collections, delete the oldest ones
-        if ($collections->count() >= $collectLength) {
-            $oldestToKeep = $collections->last();
-            $deleted = DB::table('data.validator_scores')
-                ->where('collected_at', '<', $oldestToKeep)
-                ->delete();
-                
-            if ($deleted > 0) {
-                $this->info("Cleaned up old data, deleted $deleted records. Keeping collections from " . $oldestToKeep);
-            }
         }
     }
 }
