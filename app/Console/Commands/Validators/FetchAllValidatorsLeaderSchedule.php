@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Validators;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -8,7 +8,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Pool;
 use GuzzleHttp\Psr7\Request;
 
-class fetchAllValidatorsLeaderSchedule extends Command
+class FetchAllValidatorsLeaderSchedule extends Command
 {
     protected $signature = 'app:fetch-all-validators-leader-scedule {epoch}';
     // protected $signature = 'app:update-all-votes {epoch? : The epoch number to fetch (default: current epoch)}';

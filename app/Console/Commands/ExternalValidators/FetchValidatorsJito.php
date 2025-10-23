@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\ExternalValidators;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
-class fetchValidatorsJito extends Command
+class FetchValidatorsJito extends Command
 {
     /**
      * The name and signature of the console command.
@@ -42,9 +42,6 @@ class fetchValidatorsJito extends Command
             // Проверяем, успешен ли запрос
             $data = $response->json();
 
-            
-            
-            // dd($data['validators'][0]);exit;
             $updResult = [
                 "result" => ["current" => ($data['validators'])],
             ];
@@ -54,24 +51,6 @@ class fetchValidatorsJito extends Command
             $query = "SELECT data.update_validators_jiito('$responseStripped'::jsonb);";
             DB::statement($query);
             $this->info('Executing query with improved error handling...');
-            
-            // Check how many validators will be affected
-            // $voteAccounts = array_column($data['validators'], 'vote_account');
-            // $existingCount = DB::table('data.validators')
-            //     ->whereIn('vote_pubkey', $voteAccounts)
-            //     ->count();
-            
-            // $this->info("Found $existingCount existing validators out of " . count($voteAccounts) . " from API");
-            
-            
-            
-            // // Verify the update worked
-            // $updatedCount = DB::table('data.validators')
-            //     ->whereIn('vote_pubkey', $voteAccounts)
-            //     ->whereNotNull('jito_commission')
-            //     ->count();
-            
-            // $this->info("Successfully updated jito_commission for $updatedCount validators");
             
             return;
 

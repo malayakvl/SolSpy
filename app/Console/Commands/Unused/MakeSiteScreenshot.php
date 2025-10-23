@@ -9,7 +9,7 @@ use HeadlessChromium\BrowserFactory;
 use App\Models\Validator;
 use Exception;
 
-class makeSiteScreenshot extends Command
+class MakeSiteScreenshot extends Command
 {
     /**
      * The name and signature of the console command.

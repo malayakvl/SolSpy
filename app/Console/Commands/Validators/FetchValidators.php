@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Validators;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class fetchValidators extends Command
+class FetchValidators extends Command
 {
     /**
      * The name and signature of the console command.
@@ -61,14 +61,11 @@ class fetchValidators extends Command
             curl_close($ch);
             // Parse the JSON response
             $jsonData = json_decode($response, true);
-            // dd($response,);exit;
             // Check if response structure is valid
             if (isset($jsonData['result'])) {
                 // Log the response structure
                 echo "Processing validators. Current count: " . (isset($jsonData['result']['current']) ? count($jsonData['result']['current']) : 0) . "\n";
                 echo "Delinquent count: " . (isset($jsonData['result']['delinquent']) ? count($jsonData['result']['delinquent']) : 0) . "\n";
-                // Remove the exit statement that was preventing cyclic execution
-                // exit;                
                 
                 // Get current slot for TVR calculation
                 $currentSlot = $this->getCurrentSlot();
@@ -82,13 +79,11 @@ class fetchValidators extends Command
                     // $query = "SELECT data.update_validators_common_with_tvc('$response'::jsonb, NULL);";
                     $query = "SELECT data.update_validators_common_with_tvc_jito('$response'::jsonb, NULL);";
                 }
-                // dd($query);exit;
                 DB::statement($query);
             } else {
                 echo "Invalid response structure - no 'result' key found\n";
             }
         }
-//        echo "All validators was updated Each 5 second";
         $this->info('All validators was updated');
     }
 
