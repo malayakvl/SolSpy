@@ -9,6 +9,9 @@ class Settings extends Model
     //
     protected $table = 'data.settings';
 
+    // Ensure the model uses timestamps
+    public $timestamps = true;
+
     protected $fillable = [
         'table_fields',
     ];

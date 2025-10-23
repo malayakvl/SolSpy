@@ -103,7 +103,7 @@ class FetchTvcScoresServer extends Command
                 // Insert in batches to avoid memory issues
                 $chunks = array_chunk($validators, 100);
                 foreach ($chunks as $chunk) {
-                    DB::table('validator_scores')->insert($chunk);
+                    DB::table('data.validator_scores')->insert($chunk);
                 }
             });
             
@@ -126,7 +126,7 @@ class FetchTvcScoresServer extends Command
     private function cleanupOldData($collectLength)
     {
         // Get the distinct collection times, ordered by newest first
-        $collections = DB::table('validator_scores')
+        $collections = DB::table('data.validator_scores')
             ->select('collected_at')
             ->groupBy('collected_at')
             ->orderBy('collected_at', 'desc')
