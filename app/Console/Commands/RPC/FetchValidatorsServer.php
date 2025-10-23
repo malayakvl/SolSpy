@@ -72,6 +72,7 @@ class FetchValidatorsServer extends Command
             
             // Parse the output
             $lines = explode("\n", trim($output));
+            $validators = [];
             
             // Parse the output and insert into database using PostgreSQL function
             $parsedValidators = [];
@@ -97,6 +98,19 @@ class FetchValidatorsServer extends Command
                     ];
                 }
             }
+            $this->info('Found ' . count($validators) . ' validators');
+            
+            // Insert new data without truncating
+            DB::transaction(function () use ($validators) {
+                // Insert in batches to avoid memory issues
+                $chunks = array_chunk($validators, 100);
+                foreach ($chunks as $chunk) {
+                    DB::table('data.validator_scores')->insert($chunk);
+                }
+            });
+            
+            // // Clean up old data (keep only the specified number of collections)
+            // $this->cleanupOldData($collectLength);
             
             $this->info('Found ' . count($parsedValidators) . ' validators');
             
