@@ -59,7 +59,7 @@ class FetchSettingsServer extends Command
             }
             
             $output = $process->getOutput();
-            
+
             if (empty($output)) {
                 $this->error('Command returned empty output');
                 return 1;
@@ -75,6 +75,10 @@ class FetchSettingsServer extends Command
             $slotIndex = null;
             $slotsInEpoch = null;
             $transactionCount = null;
+            $epochCompletedPercent = null;
+            $epochCompletedTime = '';
+            $epochTotalTime = '';
+            $epochRemainingTime = '';
             
             // Parse each line of the output
             foreach ($lines as $line) {
@@ -96,11 +100,26 @@ class FetchSettingsServer extends Command
                         case 'Transaction Count':
                             $transactionCount = (int)$value;
                             break;
-                        case 'Epoch Slots':
-                            // This line contains both slot index and slots in epoch
-                            if (preg_match('/(\d+) completed, (\d+) remaining/', $line, $matches)) {
-                                $slotIndex = (int)$matches[1];
-                                $slotsInEpoch = (int)$matches[2] + (int)$matches[1]; // Total slots = completed + remaining
+                        case 'Epoch Completed Percent':
+                            $epochCompletedPercent = floatval($value);
+                            break;
+                        case 'Block height':
+                            $blockHeight = (int)$value;
+                            break;
+                        case 'Epoch Completed Slots':
+                            // Parse the format: "298099/432000 (133901 remaining)"
+                            if (preg_match('/(\d+)\/(\d+)/', $value, $matches)) {
+                                $slotIndex = (int)$matches[1];     // 298099
+                                $slotsInEpoch = (int)$matches[2];  // 432000
+                            }
+                            break;
+                        case 'Epoch Completed Time':
+                            // Parse the format: "1day 9h 31m 26s/1day 23h 45m 6s (14h 13m 40s remaining)"
+                            // Extract the three time components
+                            if (preg_match('/^(.*?)\/(.*?)\s*\((.*?)\s+remaining\)$/', $value, $timeMatches)) {
+                                $epochCompletedTime = $timeMatches[1];   // 1day 9h 31m 26s
+                                $epochTotalTime = $timeMatches[2];       // 1day 23h 45m 6s
+                                $epochRemainingTime = $timeMatches[3];   // 14h 13m 40s
                             }
                             break;
                     }
@@ -108,25 +127,39 @@ class FetchSettingsServer extends Command
             }
             
             // Block height is typically slot - slotIndex
-            if ($absoluteSlot !== null && $slotIndex !== null) {
-                $blockHeight = $absoluteSlot - $slotIndex;
+            // if ($absoluteSlot !== null && $slotIndex !== null) {
+            //     $blockHeight = $absoluteSlot - $slotIndex;
+            // }
+            
+            // Calculate epoch completed percent if not provided
+            if ($epochCompletedPercent === null && $slotsInEpoch !== null && $slotsInEpoch > 0 && $slotIndex !== null) {
+                $epochCompletedPercent = ($slotIndex / $slotsInEpoch) * 100;
             }
+
             
             // Update the settings table with parsed values
             if ($absoluteSlot !== null && $blockHeight !== null && $epoch !== null && 
                 $slotIndex !== null && $slotsInEpoch !== null && $transactionCount !== null) {
                 
-                $query = "UPDATE data.settings SET 
-                    absolute_slot = $absoluteSlot,
-                    block_height = $blockHeight,
-                    epoch = $epoch,
-                    slot_index = $slotIndex,
-                    slot_in_epoch = $slotsInEpoch,
-                    transaction_count = $transactionCount";
-                dd($query);
-                exit;
-                DB::statement($query);
+                // Use Laravel's query builder to properly escape values
+                DB::table('data.settings')->update([
+                    'absolute_slot' => $absoluteSlot,
+                    'block_height' => $blockHeight,
+                    'epoch' => $epoch,
+                    'slot_index' => $slotIndex,
+                    'slot_in_epoch' => $slotsInEpoch,
+                    'transaction_count' => $transactionCount,
+                    'epoch_completed_percent' => $epochCompletedPercent,
+                    'epoch_completed_time' => $epochCompletedTime,
+                    'epoch_total_time' => $epochTotalTime,
+                    'epoch_remaining_time' => $epochRemainingTime
+                ]);
+                
                 $this->info('Settings updated successfully!');
+                $this->info("Epoch completed: " . number_format($epochCompletedPercent, 2) . "%");
+                $this->info("Completed time: " . $epochCompletedTime);
+                $this->info("Total time: " . $epochTotalTime);
+                $this->info("Remaining time: " . $epochRemainingTime);
             } else {
                 $this->error('Failed to parse all required values from epoch-info output');
                 return 1;

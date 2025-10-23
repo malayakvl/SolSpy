@@ -13,10 +13,17 @@ class Settings extends Model
     public $timestamps = true;
 
     protected $fillable = [
-        'table_fields',
+        'sol_rate',
+        'epoch',
+        'epoch_completed_percent',
+        'epoch_completed_time',
+        'epoch_total_time',
+        'epoch_remaining_time',
     ];
 
     protected $casts = [
-        'table_fields' => 'array',
+        'sol_rate' => 'float',
+        'epoch' => 'float',
+        'epoch_completed_percent' => 'decimal:2',
     ];
 }
