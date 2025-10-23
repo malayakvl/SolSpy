@@ -6,14 +6,14 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
-class FetchTvcScores extends Command
+class FetchValidators extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'rpc:fetch-tvc-scores';
+    protected $signature = 'rpc:fetch-validators';
 
     /**
      * The console command description.
@@ -38,9 +38,9 @@ class FetchTvcScores extends Command
         $useSSH = env('VALIDATOR_USE_SSH', false);
         
         if ($useSSH) {
-            return Artisan::call('rpc:fetch-tvc-scores-local', [], $this->getOutput());
+            return Artisan::call('rpc:fetch-validators-local', [], $this->getOutput());
         } else {
-            return Artisan::call('rpc:fetch-tvc-scores-server', [], $this->getOutput());
+            return Artisan::call('rpc:fetchvalidators-server', [], $this->getOutput());
         }
     }
 }
