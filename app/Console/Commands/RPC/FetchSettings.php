@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Rpc;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +15,7 @@ class FetchSettings extends Command
      *
      * @var string
      */
-    protected $signature = 'app:fetch-settings';
+    protected $signature = 'rpc:fetch-settings';
 
     /**
      * The console command description.
