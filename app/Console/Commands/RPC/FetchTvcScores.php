@@ -1,19 +1,19 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Rpc;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
-class UpdateValidatorScoresAuto extends Command
+class FetchTvcScores extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'validators:update-scores-auto {collectLength=3 : Number of collections to keep}';
+    protected $signature = 'rpc:fetch-tvc-scores';
 
     /**
      * The console command description.
@@ -38,9 +38,9 @@ class UpdateValidatorScoresAuto extends Command
         $useSSH = env('VALIDATOR_USE_SSH', false);
         
         if ($useSSH) {
-            return Artisan::call('validators:update-scores-local', ['collectLength' => $collectLength], $this->getOutput());
+            return Artisan::call('rpc:fetch-tvc-scores-local', [], $this->getOutput());
         } else {
-            return Artisan::call('validators:update-scores', ['collectLength' => $collectLength], $this->getOutput());
+            return Artisan::call('rpc:fetch-tvc-scores-server', [], $this->getOutput());
         }
     }
 }
