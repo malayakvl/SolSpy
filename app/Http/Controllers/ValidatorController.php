@@ -188,9 +188,11 @@ class ValidatorController extends Controller
             ]);
         } elseif ($request->user()->hasRole('Customer')) {
             $settings = Settings::first();
+            $updateInterval = $settings->update_interval;
             $settings2User = Settings2User::where('user_id', $request->user()->id)->first();
             if ($settings2User) {
                 $settings = $settings2User;
+                $settings->update_interval = $updateInterval;
             }
             return Inertia::render('Validators/Customer/Index', [
                 'validatorsData' => $validators['results'],

@@ -121,7 +121,6 @@ export default function CustomerIndex(validatorsData) {
         top: false,
         highlight: false
     });
-    
     // View mode state - table or grid
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
     
@@ -229,7 +228,7 @@ export default function CustomerIndex(validatorsData) {
                     setCheckedIds([]);
                     setSelectAll(false);
                     // Refresh data
-                    fetchData();
+                    // fetchData();
                 },
                 onError: () => {
                     toast.error(`Failed to perform bulk ${action}`);
@@ -271,51 +270,27 @@ export default function CustomerIndex(validatorsData) {
         }
     };
 
-    useEffect(() => {
-        // const intervalId = setInterval(fetchData(currentPage), 15000);
-        
-        const intervalId = setInterval(() => {
-            // Get current page from URL to ensure we're using the latest page
-            const urlParams = new URLSearchParams(window.location.search);
-            const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
-            fetchData();
-        }, parseInt(validatorsData.settingsData.update_interval)*1000);
-        
-        // Listen for filter changes
-        const handleFilterChange = () => {
-            // Reset to first page when filter changes
-            setCurrentPage(1);
-        };
-        
-        window.addEventListener('filterChanged', handleFilterChange);
-        
-        return () => {
-            clearInterval(intervalId);
-            window.removeEventListener('filterChanged', handleFilterChange);
-        };
-    }, []);
-    
     // Add useEffect to fetch data when currentPage changes
-    useEffect(() => {
-        fetchData();
-    }, [currentPage]);
+    // useEffect(() => {
+    //     fetchData();
+    // }, [currentPage]);
     
     // Add useEffect to fetch data when sort parameters change
-    useEffect(() => {
-        const handleUrlChange = () => {
-            fetchData();
-        };
+    // useEffect(() => {
+    //     const handleUrlChange = () => {
+    //         fetchData();
+    //     };
         
-        // Listen for URL changes
-        window.addEventListener('popstate', handleUrlChange);
+    //     // Listen for URL changes
+    //     window.addEventListener('popstate', handleUrlChange);
         
-        // Check if URL has changed on component mount
-        handleUrlChange();
+    //     // Check if URL has changed on component mount
+    //     handleUrlChange();
         
-        return () => {
-            window.removeEventListener('popstate', handleUrlChange);
-        };
-    }, []);
+    //     return () => {
+    //         window.removeEventListener('popstate', handleUrlChange);
+    //     };
+    // }, []);
 
     // Helper function to get ordered visible columns
     const getOrderedVisibleColumns = () => {
@@ -395,6 +370,32 @@ export default function CustomerIndex(validatorsData) {
         }
     };
 
+    const handleFilterChange = (newFilterValue: string) => {
+        // Save current page for current filter before switching
+        setLastPages(prev => ({
+            ...prev,
+            [filterTypeDataSelector]: currentPage
+        }));
+        
+        // Get the saved page for the new filter
+        const savedPage = lastPages[newFilterValue] || 1;
+        
+        dispatch(setFilterAction(newFilterValue));
+        
+        // Update URL with new filter and page
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('filterType', newFilterValue);
+        urlParams.set('page', savedPage.toString());
+        
+        // Update the browser URL
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+        
+        // Update currentPage state
+        // This will trigger the useEffect to fetch data
+        setCurrentPage(savedPage);
+    };
+
     const fetchData = async () => {
         // Show loading indicator only for pagination and sorting operations
         if (isPaginationOrSorting) {
@@ -441,18 +442,18 @@ export default function CustomerIndex(validatorsData) {
         }
     };
 
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (displayDropdownRef.current && !displayDropdownRef.current.contains(event.target)) {
-                setIsDisplayDropdownOpen(false);
-            }
-        };
+    // useEffect(() => {
+    //     const handleClickOutside = (event) => {
+    //         if (displayDropdownRef.current && !displayDropdownRef.current.contains(event.target)) {
+    //             setIsDisplayDropdownOpen(false);
+    //         }
+    //     };
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
+    //     document.addEventListener('mousedown', handleClickOutside);
+    //     return () => {
+    //         document.removeEventListener('mousedown', handleClickOutside);
+    //     };
+    // }, []);
 
     useEffect(() => {
         // const intervalId = setInterval(fetchData(currentPage), 15000);
@@ -464,14 +465,6 @@ export default function CustomerIndex(validatorsData) {
             fetchData();
         }, parseInt(validatorsData.settingsData.update_interval)*1000);
         
-        // Listen for filter changes
-        const handleFilterChange = () => {
-            // Reset to first page when filter changes
-            setCurrentPage(1);
-        };
-        
-        window.addEventListener('filterChanged', handleFilterChange);
-        
         return () => {
             clearInterval(intervalId);
             window.removeEventListener('filterChanged', handleFilterChange);
@@ -479,85 +472,61 @@ export default function CustomerIndex(validatorsData) {
     }, []);
     
     // Add useEffect to fetch data when currentPage changes
-    useEffect(() => {
-        fetchData();
-    }, [currentPage]);
+    // useEffect(() => {
+    //     fetchData();
+    // }, [currentPage]);
     
     // Add useEffect to fetch data when sort parameters change
-    useEffect(() => {
-        const handleUrlChange = () => {
-            fetchData();
-        };
+    // useEffect(() => {
+    //     const handleUrlChange = () => {
+    //         // fetchData();
+    //     };
         
-        // Listen for URL changes
-        window.addEventListener('popstate', handleUrlChange);
+    //     // Listen for URL changes
+    //     window.addEventListener('popstate', handleUrlChange);
         
-        // Check if URL has changed on component mount
-        handleUrlChange();
+    //     // Check if URL has changed on component mount
+    //     handleUrlChange();
         
-        return () => {
-            window.removeEventListener('popstate', handleUrlChange);
-        };
-    }, []);
+    //     return () => {
+    //         window.removeEventListener('popstate', handleUrlChange);
+    //     };
+    // }, []);
 
-    const handleFilterChange = (newFilterValue: string) => {
-        // Save current page for current filter before switching
-        setLastPages(prev => ({
-            ...prev,
-            [filterTypeDataSelector]: currentPage
-        }));
-        
-        // Get the saved page for the new filter
-        const savedPage = lastPages[newFilterValue] || 1;
-        
-        dispatch(setFilterAction(newFilterValue));
-        
-        // Update URL with new filter and page
-        const urlParams = new URLSearchParams(window.location.search);
-        urlParams.set('filterType', newFilterValue);
-        urlParams.set('page', savedPage.toString());
-        
-        // Update the browser URL
-        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
-        window.history.replaceState({}, '', newUrl);
-        
-        // Update currentPage state
-        // This will trigger the useEffect to fetch data
-        setCurrentPage(savedPage);
-    };
+    
 
     // Listen for URL changes to trigger data refresh
-    useEffect(() => {
-        const handleUrlChange = () => {
-            // Get parameters from URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const pageParam = parseInt(urlParams.get('page')) || 1;
-            const filterParam = urlParams.get('filterType') || 'all';
+    // useEffect(() => {
+    //     const handleUrlChange = () => {
+    //         // Get parameters from URL
+    //         const urlParams = new URLSearchParams(window.location.search);
+    //         const pageParam = parseInt(urlParams.get('page')) || 1;
+    //         const filterParam = urlParams.get('filterType') || 'all';
             
-            // Update state if page has changed
-            if (pageParam !== currentPage) {
-                setCurrentPage(pageParam);
-            }
+    //         // Update state if page has changed
+    //         if (pageParam !== currentPage) {
+    //             setCurrentPage(pageParam);
+    //         }
             
-            // Update filter if it has changed
-            if (filterParam !== filterTypeDataSelector) {
-                dispatch(setFilterAction(filterParam));
-            }
+    //         // Update filter if it has changed
+    //         if (filterParam !== filterTypeDataSelector) {
+    //             dispatch(setFilterAction(filterParam));
+    //         }
             
-            // Fetch data
-            fetchData();
-        };
+    //         // Fetch data
+    //         // fetchData();
+    //     };
         
-        // Listen for popstate events (back/forward navigation)
-        window.addEventListener('popstate', handleUrlChange);
+    //     // Listen for popstate events (back/forward navigation)
+    //     window.addEventListener('popstate', handleUrlChange);
         
-        // Check if URL has changed on component mount
-        handleUrlChange();
+    //     // Check if URL has changed on component mount
+    //     handleUrlChange();
         
-        return () => {
-            window.removeEventListener('popstate', handleUrlChange);
-        };
-    }, []);
+    //     return () => {
+    //         window.removeEventListener('popstate', handleUrlChange);
+    //     };
+    // }, []);
 
     return (
         <AuthenticatedLayout header={<Head />}>

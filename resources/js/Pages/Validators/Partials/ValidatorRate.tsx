@@ -9,22 +9,27 @@ export default function ValidatorRate({ validator, epoch, settingsData, totalSta
     const scheduleSlots = validator.slots ? JSON.parse(validator.slots) : [];
     let _voteRate = 0;
 
-
     // Фактично відправлені голоси
     const epochCredits = validatorCredits.find(([_epoch]) => _epoch === epoch);
     const actualVotes = epochCredits ? epochCredits[1] : 0;
-
     // Отримуємо дані для розрахунку очікуваних голосів
     const activatedStake = validator.activated_stake;
     const expectedVotes = scheduleSlots.length || 0;
-    const slotsInEpoch = settingsData.slot_in_epoch;
+    const slotsInEpoch = settingsData.slot_in_epoch || 0;
 
-    const totalNetworkStakeSOL = totalStakeData.total_network_stake_sol;
-    const validatorCount = totalStakeData.validator_count;
+    const totalNetworkStakeSOL = totalStakeData.total_network_stake_sol || 1;
+    const validatorCount = totalStakeData.validator_count || 1;
 
-    const stakeFraction = activatedStake / totalNetworkStakeSOL;
-    const approxExpectedVotes = Math.round(stakeFraction * slotsInEpoch * 0.4);
-    _voteRate = actualVotes/approxExpectedVotes;
+    // Add safety checks to prevent division by zero
+    const stakeFraction = totalNetworkStakeSOL > 0 ? activatedStake / totalNetworkStakeSOL : 0;
+    const approxExpectedVotes = Math.round(stakeFraction * slotsInEpoch * 0.4) || 1;
+    
+    // Prevent division by zero
+    _voteRate = approxExpectedVotes > 0 ? actualVotes / approxExpectedVotes : 0;
+    
+    // console.log('stakeFraction: ', stakeFraction);
+    // console.log('totalNetworkStakeSOL: ', totalNetworkStakeSOL);
+    // console.log(stakeFraction * slotsInEpoch)
 
     // Виведення
     // console.log(`Валідатор: ${validator.vote_pubkey}`);
