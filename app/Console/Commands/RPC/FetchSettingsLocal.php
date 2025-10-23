@@ -22,7 +22,7 @@ class FetchSettingsLocal extends Command
      *
      * @var string
      */
-    protected $description = 'Fetch settings';
+    protected $description = 'Fetch settings local';
 
     /**
      * Execute the console command.
@@ -70,6 +70,7 @@ class FetchSettingsLocal extends Command
             } else {
                 // Output the response
                 $_result = json_decode($response);
+                dd($_result);exit;
                 $query = ('UPDATE data.settings SET 
                     absolute_slot=' .$_result->result->absoluteSlot.', 
                     block_height=' .$_result->result->blockHeight.', 
