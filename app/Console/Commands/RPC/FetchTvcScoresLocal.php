@@ -5,6 +5,7 @@ namespace App\Console\Commands\Rpc;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Exception;
 
 class FetchTvcScoresLocal extends Command
@@ -30,8 +31,12 @@ class FetchTvcScoresLocal extends Command
      */
     public function handle()
     {
+        // Get collectLength from settings table
+        $dbSettings = DB::table('data.settings')->first();
+        $collectLength = $dbSettings->collect_score_retention ?? 10;
+        
         Log::info('Command rpc:fetch-tvc-scores executed at ' . now());
-        $this->info('Start fetching tvc scores info!');
+        $this->info("Start fetching tvc scores info (keeping last $collectLength collections)!");
 
         $this->info("Connecting to RPC: {$this->rpcUrl}");
 
