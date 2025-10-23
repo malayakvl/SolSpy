@@ -9,14 +9,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Exception;
 
-class FetchTvcScoresServer extends Command
+class FetchValidatorsServer extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'rpc:fetch-tvc-scores-server';
+    protected $signature = 'rpc:fetch-validators-server';
 
     /**
      * The console command description.
@@ -72,12 +72,14 @@ class FetchTvcScoresServer extends Command
             
             // Parse the output
             $lines = explode("\n", trim($output));
-            $validators = [];
+            
+            // Parse the output and insert into database using PostgreSQL function
+            $parsedValidators = [];
             
             foreach ($lines as $line) {
                 $parts = preg_split('/\s+/', trim($line));
                 if (count($parts) >= 17 && is_numeric($parts[0])) {
-                    $validators[] = [
+                    $parsedValidators[] = [
                         'rank' => (int)$parts[0],
                         'node_pubkey' => $parts[2],
                         'vote_pubkey' => $parts[3],
@@ -87,27 +89,26 @@ class FetchTvcScoresServer extends Command
                         'commission' => (float)str_replace('%', '', $parts[11]),
                         'credits' => (int)$parts[12],
                         'version' => $parts[13],
-                        'stake' => $parts[14],
-                        'stake_percent' => str_replace(['(', ')', '%'], '', $parts[16]),
-                        'collected_at' => now(),
-                        'created_at' => now(),
-                        'updated_at' => now()
+                        'stake' => (float)str_replace(['SOL', ','], '', $parts[14]),
+                        'stake_percent' => (float)str_replace(['(', ')', '%'], '', $parts[16]),
+                        'collected_at' => now()->format('Y-m-d H:i:s'),
+                        'created_at' => now()->format('Y-m-d H:i:s'),
+                        'updated_at' => now()->format('Y-m-d H:i:s')
                     ];
                 }
             }
             
-            $this->info('Found ' . count($validators) . ' validators');
+            $this->info('Found ' . count($parsedValidators) . ' validators');
             
-            // Insert new data without truncating
-            DB::transaction(function () use ($validators) {
-                // Insert in batches to avoid memory issues
-                $chunks = array_chunk($validators, 100);
-                foreach ($chunks as $chunk) {
-                    DB::table('data.validator_scores')->insert($chunk);
-                }
-            });
+            // Insert parsed validator scores into database using PostgreSQL function
+            if (!empty($parsedValidators)) {
+                $scoresJson = json_encode($parsedValidators);
+                $insertedCount = DB::select("SELECT data.insert_validator_scores(?::jsonb) as count", [$scoresJson])[0]->count;
+                $this->info("Inserted $insertedCount validator scores into database using PostgreSQL function");
+            }
             
             // Clean up old data (keep only the specified number of collections)
+            
             $this->cleanupOldData($collectLength);
             
             $this->info('Validator scores updated successfully!');
@@ -136,7 +137,7 @@ class FetchTvcScoresServer extends Command
         // If we have more than the specified number of collections, delete the oldest ones
         if ($collections->count() >= $collectLength) {
             $oldestToKeep = $collections->last();
-            $deleted = DB::table('validator_scores')
+            $deleted = DB::table('data.validator_scores')
                 ->where('collected_at', '<', $oldestToKeep)
                 ->delete();
                 

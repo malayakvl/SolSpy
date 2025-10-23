@@ -4,25 +4,24 @@ namespace App\Console\Commands\Rpc;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Exception;
 
-class FetchTvcScoresLocal extends Command
+class FetchValidatorsLocal extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'rpc:fetch-tvc-scores-local';
+    protected $signature = 'rpc:fetch-validators-local';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Fetch tvc scores from RPC';
+    protected $description = 'Fetch validators local from RPC';
     
     protected $rpcUrl = 'http://103.167.235.81:8899';
 
@@ -90,15 +89,10 @@ class FetchTvcScoresLocal extends Command
                 return $bCredits <=> $aCredits;
             });
             
-            // Display header
-            $header = '     Identity                                      Vote Account                            Commission  Last Vote        Root Slot     Skip Rate  Credits  Version            Active Stake';
-            $this->line($header);
+            // Prepare validator data for database insertion (similar to FetchValidatorsServer)
+            $validatorScores = [];
             
-            // Prepare lines for output and file storage
-            $lines = [];
-            $lines[] = $header;
-            
-            // Display all validators and prepare file content
+            // Process all validators and prepare data for database insertion
             for ($i = 0; $i < count($validators); $i++) {
                 $v = $validators[$i];
                 $identity = $v['nodePubkey'] ?? '';
@@ -123,48 +117,38 @@ class FetchTvcScoresLocal extends Command
                 $stakeSol = $activatedStake / 1000000000; // Convert lamports to SOL
                 $stakePercentage = 0.02; // Placeholder percentage
                 
-                // Calculate slot differences
-                $lastVoteDiff = 0; // Placeholder
-                $rootSlotDiff = 0; // Placeholder
-                $skipRate = 0.00; // Placeholder
-                
-                $line = sprintf(
-                    "%3d  %-44s  %-44s   %2d%%  %9d (%3d)  %9d (%3d)  %6.2f%%  %7s   %-14s %15.9f SOL (%0.2f%%)",
-                    $i + 1,
-                    $identity,
-                    $vote,
-                    $commission,
-                    $lastVote,
-                    $lastVoteDiff,
-                    $rootSlot,
-                    $rootSlotDiff,
-                    $skipRate,
-                    number_format($credits),
-                    $version,
-                    $stakeSol,
-                    $stakePercentage
-                );
-                
-                // Display first 50 validators to console
-                if ($i < 50) {
-                    $this->line($line);
-                }
-                
-                $lines[] = $line;
+                // Prepare data for database insertion (similar to FetchValidatorsServer lines 75-97)
+                $validatorScores[] = [
+                    'rank' => $i + 1,
+                    'node_pubkey' => $identity,
+                    'vote_pubkey' => $vote,
+                    'uptime' => '100.00%', // Placeholder, similar to how it would be in CLI output
+                    'root_slot' => (int)$rootSlot,
+                    'vote_slot' => (int)$lastVote,
+                    'commission' => (float)$commission,
+                    'credits' => (int)$credits,
+                    'version' => $version,
+                    'stake' => $stakeSol, // Store as decimal, not string with "SOL"
+                    'stake_percent' => $stakePercentage,
+                    'collected_at' => now()->format('Y-m-d H:i:s'),
+                    'created_at' => now()->format('Y-m-d H:i:s'),
+                    'updated_at' => now()->format('Y-m-d H:i:s')
+                ];
             }
             
-            // Save to file
-            $output = implode("\n", $lines);
-            $filename = 'validators-' . now()->format('Y-m-d_H-i-s') . '.txt';
-            Storage::put("private/solana/{$filename}", $output);
-            Storage::put('private/solana/latest.txt', $output);
+            // Insert validator scores into database using PostgreSQL function
+            if (!empty($validatorScores)) {
+                $scoresJson = json_encode($validatorScores);
+                $insertedCount = DB::select("SELECT data.insert_validator_scores(?::jsonb) as count", [$scoresJson])[0]->count;
+                $this->info("Inserted $insertedCount validator scores into database using PostgreSQL function");
+            }
             
-            $this->line("");
+            // Clean up old data (keep only the specified number of collections)
+            $this->cleanupOldData($collectLength);
+            
             $this->info("Total validators: " . count($validators));
             $this->info("Current validators: " . count($currentValidators));
             $this->info("Delinquent validators: " . count($delinquentValidators));
-            $this->info("Saved: storage/app/private/solana/{$filename}");
-            $this->info("Saved: storage/app/private/solana/latest.txt");
             
             $this->info('Data fetched and displayed successfully');
             
@@ -174,6 +158,32 @@ class FetchTvcScoresLocal extends Command
             $this->error('RPC Error: ' . $e->getMessage());
             \Log::error('Solana RPC failed', ['error' => $e->getMessage()]);
             return 1;
+        }
+    }
+    
+    /**
+     * Clean up old data, keeping only the specified number of collections
+     */
+    private function cleanupOldData($collectLength)
+    {
+        // Get the distinct collection times, ordered by newest first
+        $collections = DB::table('data.validator_scores')
+            ->select('collected_at')
+            ->groupBy('collected_at')
+            ->orderBy('collected_at', 'desc')
+            ->limit($collectLength)
+            ->pluck('collected_at');
+        
+        // If we have more than the specified number of collections, delete the oldest ones
+        if ($collections->count() >= $collectLength) {
+            $oldestToKeep = $collections->last();
+            $deleted = DB::table('data.validator_scores')
+                ->where('collected_at', '<', $oldestToKeep)
+                ->delete();
+                
+            if ($deleted > 0) {
+                $this->info("Cleaned up old data, deleted $deleted records. Keeping collections from " . $oldestToKeep);
+            }
         }
     }
     
