@@ -127,7 +127,7 @@ class ValidatorDataService
     {
         // Вызов функции PostgreSQL
         // dd("SELECT * FROM data.search_validators('', 'all', 8, 'spy_rank', 0, 10);");
-        $query = DB::select("SELECT * FROM data.search_validators('', 'all', 8, 'spy_rank', 0, 10);");
+        $query = DB::select("SELECT * FROM data.search_validators('" .$searchTerm. "', 'all', 8, 'spy_rank', 0, 10);");
 
         // Преобразуем результат в коллекцию для дальнейшей обработки
         $validatorsData = collect($query);
@@ -139,14 +139,13 @@ class ValidatorDataService
         } elseif ($filterType === 'top') {
             $totalCountQuery->where('is_top', true);
         }
-        // if ($searchTerm) {
-        //     $totalCountQuery->where(function ($q) use ($searchTerm) {
-        //         $q->where('name', 'ILIKE', '%' . $searchTerm . '%')
-        //         ->orWhere('vote_pubkey', 'ILIKE', '%' . $searchTerm . '%');
-        //     });
-        // }
+        if ($searchTerm) {
+            $totalCountQuery->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'ILIKE', '%' . $searchTerm . '%')
+                ->orWhere('vote_pubkey', 'ILIKE', '%' . $searchTerm . '%');
+            });
+        }
         $filteredTotalCount = $totalCountQuery->count();
-
         // Дополнительная обработка для spyRank и других вычислений
         $validatorsAllData = DB::table('data.validators')
             ->orderByRaw('tvc_rank DESC NULLS LAST')

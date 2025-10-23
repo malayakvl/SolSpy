@@ -151,7 +151,6 @@ class ValidatorController extends Controller
 
         // Get top news items
         $topNewsItems = $this->getTopNewsItems();
-        
         // Check if user is authenticated and has admin/manager role
         if (!$request->user()) {
             return Inertia::render('Validators/Index', [
