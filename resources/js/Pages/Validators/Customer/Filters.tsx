@@ -47,7 +47,7 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
             params.filterType = currentFilter;
         }
         
-        router.get('/admin/validators', params, {
+        router.get('/validators', params, {
             preserveState: true,
             preserveScroll: true,
             replace: true,
