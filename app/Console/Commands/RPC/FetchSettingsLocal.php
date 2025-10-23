@@ -46,7 +46,7 @@ class FetchSettingsLocal extends Command
             DB::statement($query);
 
             $url = 'http://103.167.235.81:8899';
-            // JSON payload
+            // JSON payload for getEpochInfo
             $payload = [
                 'jsonrpc' => '2.0',
                 'id' => 1,
@@ -70,20 +70,97 @@ class FetchSettingsLocal extends Command
             } else {
                 // Output the response
                 $_result = json_decode($response);
-                dd($_result);exit;
-                $query = ('UPDATE data.settings SET 
-                    absolute_slot=' .$_result->result->absoluteSlot.', 
-                    block_height=' .$_result->result->blockHeight.', 
-                    epoch=' .$_result->result->epoch.', 
-                    slot_index=' .$_result->result->slotIndex.', 
-                    slot_in_epoch=' .$_result->result->slotsInEpoch.', 
-                    transaction_count=' .$_result->result->transactionCount.'
-                ');
-                DB::statement($query);
-                $this->info('Update time to '.$_result->result->absoluteSlot);
+                
+                // Get the epoch info data
+                $absoluteSlot = $_result->result->absoluteSlot;
+                $blockHeight = $_result->result->blockHeight;
+                $epoch = $_result->result->epoch;
+                $slotIndex = $_result->result->slotIndex;
+                $slotsInEpoch = $_result->result->slotsInEpoch;
+                $transactionCount = $_result->result->transactionCount;
+                
+                // Calculate additional values to match server version
+                // Epoch Slot Range: [374976000..375408000) - start and end slots
+                $epochStartSlot = $absoluteSlot - $slotIndex;
+                $epochEndSlot = $epochStartSlot + $slotsInEpoch;
+                
+                // Epoch Completed Percent
+                $epochCompletedPercent = 0.00;
+                if ($slotsInEpoch > 0) {
+                    $epochCompletedPercent = ($slotIndex / $slotsInEpoch) * 100;
+                }
+                
+                // Epoch Completed Slots: 298099/432000 (133901 remaining)
+                $remainingSlots = $slotsInEpoch - $slotIndex;
+                
+                // Try to get time-based information
+                // We can estimate time based on average slot time
+                // Solana has approximately 400ms per slot
+                $slotTimeMs = 400; // milliseconds per slot
+                
+                // Calculate time durations
+                $completedTimeMs = $slotIndex * $slotTimeMs;
+                $totalTimeMs = $slotsInEpoch * $slotTimeMs;
+                $remainingTimeMs = $remainingSlots * $slotTimeMs;
+                
+                // Convert milliseconds to human readable format
+                $completedTimeFormatted = $this->formatMilliseconds($completedTimeMs);
+                $totalTimeFormatted = $this->formatMilliseconds($totalTimeMs);
+                $remainingTimeFormatted = $this->formatMilliseconds($remainingTimeMs);
+                
+                // Use Laravel's query builder to properly escape values
+                DB::table('data.settings')->update([
+                    'absolute_slot' => $absoluteSlot,
+                    'block_height' => $blockHeight,
+                    'epoch' => $epoch,
+                    'slot_index' => $slotIndex,
+                    'slot_in_epoch' => $slotsInEpoch,
+                    'transaction_count' => $transactionCount,
+                    'epoch_completed_percent' => $epochCompletedPercent,
+                    'epoch_completed_time' => $completedTimeFormatted,
+                    'epoch_total_time' => $totalTimeFormatted,
+                    'epoch_remaining_time' => $remainingTimeFormatted
+                ]);
+                
+                $this->info('Update time to '.$absoluteSlot);
+                $this->info("Epoch completed: " . number_format($epochCompletedPercent, 2) . "%");
+                $this->info("Epoch Slot Range: [{$epochStartSlot}..{$epochEndSlot})");
+                $this->info("Epoch Completed Slots: {$slotIndex}/{$slotsInEpoch} ({$remainingSlots} remaining)");
+                $this->info("Epoch Completed Time: {$completedTimeFormatted}/{$totalTimeFormatted} ({$remainingTimeFormatted} remaining)");
             }
+            curl_close($ch);
         } catch (Exception $e) {
             echo "Error: " . $e->getMessage() . "\n";
         }
+    }
+    
+    /**
+     * Format milliseconds to human readable time format
+     */
+    private function formatMilliseconds($milliseconds)
+    {
+        $seconds = floor($milliseconds / 1000);
+        $minutes = floor($seconds / 60);
+        $seconds = $seconds % 60;
+        $hours = floor($minutes / 60);
+        $minutes = $minutes % 60;
+        $days = floor($hours / 24);
+        $hours = $hours % 24;
+        
+        $parts = [];
+        if ($days > 0) {
+            $parts[] = $days . 'day' . ($days != 1 ? 's' : '');
+        }
+        if ($hours > 0) {
+            $parts[] = $hours . 'h';
+        }
+        if ($minutes > 0) {
+            $parts[] = $minutes . 'm';
+        }
+        if ($seconds > 0) {
+            $parts[] = $seconds . 's';
+        }
+        
+        return !empty($parts) ? implode(' ', $parts) : '0s';
     }
 }
