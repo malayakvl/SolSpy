@@ -6,7 +6,6 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Exception;
 
 class FetchSettingsServer extends Command
@@ -32,10 +31,6 @@ class FetchSettingsServer extends Command
      */
     public function handle()
     {
-        // Get collectLength from settings table
-        $dbSettings = DB::table('data.settings')->first();
-        $collectLength = $dbSettings->collect_score_retention ?? 10;
-        
         $this->info("Updating settings");
         
         try {
@@ -52,8 +47,8 @@ class FetchSettingsServer extends Command
                 }
             }
             
-            // Execute the command to get all validators
-            $command = "$solanaPath solana epoch-info";
+            // Execute the command to get epoch info
+            $command = "$solanaPath epoch-info";
             
             $process = Process::fromShellCommandline($command, null, null, null, 120);
             $process->run();
@@ -72,51 +67,76 @@ class FetchSettingsServer extends Command
             
             // Parse the output
             $lines = explode("\n", trim($output));
-            // $query = ('UPDATE data.settings SET 
-            //         absolute_slot=' .$_result->result->absoluteSlot.', 
-            //         block_height=' .$_result->result->blockHeight.', 
-            //         epoch=' .$_result->result->epoch.', 
-            //         slot_index=' .$_result->result->slotIndex.', 
-            //         slot_in_epoch=' .$_result->result->slotsInEpoch.', 
-            //         transaction_count=' .$_result->result->transactionCount.'
-            //     ');
-            //     DB::statement($query);
-            // Parse the output and insert into database using PostgreSQL function
             
+            // Initialize variables to store parsed values
+            $absoluteSlot = null;
+            $blockHeight = null;
+            $epoch = null;
+            $slotIndex = null;
+            $slotsInEpoch = null;
+            $transactionCount = null;
             
-            $this->info('Validator settings update successfully!');
+            // Parse each line of the output
+            foreach ($lines as $line) {
+                $parts = explode(':', $line, 2);
+                if (count($parts) == 2) {
+                    $key = trim($parts[0]);
+                    $value = trim($parts[1]);
+                    
+                    // Remove commas from numbers for proper parsing
+                    $value = str_replace(',', '', $value);
+                    
+                    switch ($key) {
+                        case 'Slot':
+                            $absoluteSlot = (int)$value;
+                            break;
+                        case 'Epoch':
+                            $epoch = (int)$value;
+                            break;
+                        case 'Transaction Count':
+                            $transactionCount = (int)$value;
+                            break;
+                        case 'Epoch Slots':
+                            // This line contains both slot index and slots in epoch
+                            if (preg_match('/(\d+) completed, (\d+) remaining/', $line, $matches)) {
+                                $slotIndex = (int)$matches[1];
+                                $slotsInEpoch = (int)$matches[2] + (int)$matches[1]; // Total slots = completed + remaining
+                            }
+                            break;
+                    }
+                }
+            }
+            
+            // Block height is typically slot - slotIndex
+            if ($absoluteSlot !== null && $slotIndex !== null) {
+                $blockHeight = $absoluteSlot - $slotIndex;
+            }
+            
+            // Update the settings table with parsed values
+            if ($absoluteSlot !== null && $blockHeight !== null && $epoch !== null && 
+                $slotIndex !== null && $slotsInEpoch !== null && $transactionCount !== null) {
+                
+                $query = "UPDATE data.settings SET 
+                    absolute_slot = $absoluteSlot,
+                    block_height = $blockHeight,
+                    epoch = $epoch,
+                    slot_index = $slotIndex,
+                    slot_in_epoch = $slotsInEpoch,
+                    transaction_count = $transactionCount";
+                dd($query);
+                exit;
+                DB::statement($query);
+                $this->info('Settings updated successfully!');
+            } else {
+                $this->error('Failed to parse all required values from epoch-info output');
+                return 1;
+            }
             
             return 0;
         } catch (\Exception $e) {
             $this->error('Error updating validator settings: ' . $e->getMessage());
             Log::error('Error updating validator settings: ' . $e->getMessage(), ['exception' => $e]);
             return 1;
-        }
-    }
-    
-    /**
-     * Clean up old data, keeping only the specified number of collections
-     */
-    private function cleanupOldData($collectLength)
-    {
-        // Get the distinct collection times, ordered by newest first
-        $collections = DB::table('data.validator_scores')
-            ->select('collected_at')
-            ->groupBy('collected_at')
-            ->orderBy('collected_at', 'desc')
-            ->limit($collectLength)
-            ->pluck('collected_at');
-        
-        // If we have more than the specified number of collections, delete the oldest ones
-        if ($collections->count() >= $collectLength) {
-            $oldestToKeep = $collections->last();
-            $deleted = DB::table('data.validator_scores')
-                ->where('collected_at', '<', $oldestToKeep)
-                ->delete();
-                
-            if ($deleted > 0) {
-                $this->info("Cleaned up old data, deleted $deleted records. Keeping collections from " . $oldestToKeep);
-            }
         }
     }
 }
