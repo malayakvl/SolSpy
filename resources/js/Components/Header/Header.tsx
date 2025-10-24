@@ -11,7 +11,7 @@ import ProfileMenu from "./ProfileMenu";
 import axios from 'axios';
 import {useEffect, useState} from "react";
 import ProgressBar from "./ProgressBar";
-import { setEpochAction } from "../../Redux/Layout";
+import { setEpochAction, setSettingsAction } from "../../Redux/Layout";
 
 export default function Header(auth) {
   const dispatch = useDispatch();
@@ -23,6 +23,7 @@ export default function Header(auth) {
   const [settingsFetched, setSettingsFetched] = useState(false)
   const [barProgress, setBarProgress] = useState(null);
   const [barProgressCaption, setBarProgressCaption] = useState('');
+  const [completedPersent, setCompletedPersent] = useState(100);
 
 
   const msg = new Lang({
@@ -34,25 +35,24 @@ export default function Header(auth) {
   const fetchData = async () => {
     try {
       const response = await axios.get('/api/fetch-settings');
-
       setSolRate(response.data.data.sol_rate)
       setSettingsData(response.data.data);
       dispatch(setEpochAction(response.data.data.epoch));
+      dispatch(setSettingsAction(response.data.data));
+      setEpochPersent(response.data.data.epoch_completed_percent);
+      setCompletedPersent(response.data.data.epoch_completed_percent);
 
-      const progressPercent = (response.data.data.slot_index / response.data.data.slot_in_epoch) * 100;
-      setEpochPersent(progressPercent.toFixed(2));
-      // console.log(`Прогрес епохи: ${progressPercent.toFixed(2)}%`);
+      // const progress = response.data.data.slot_index / response.data.data.slot_in_epoch;
+      // setBarProgress(response.data.data.epoch_completed_percent); // надо уточнить
+      // const slotsLeft = response.data.data.slot_in_epoch - response.data.data.slot_index;
+      // const timeLeftSeconds = slotsLeft * 0.4; // час до кінця епохи в секундах
 
-      const progress = response.data.data.slot_index / response.data.data.slot_in_epoch;
-      setBarProgress(progress); // надо уточнить
-      const slotsLeft = response.data.data.slot_in_epoch - response.data.data.slot_index;
-      const timeLeftSeconds = slotsLeft * 0.4; // час до кінця епохи в секундах
-
-      const days = Math.floor(timeLeftSeconds / (24 * 3600));
-      const hours = Math.floor((timeLeftSeconds % (24 * 3600)) / 3600);
-      const minutes = Math.floor((timeLeftSeconds % 3600) / 60);
-      const seconds = Math.floor(timeLeftSeconds % 60);
-      setBarProgressCaption(`${days} d, ${hours} h, ${minutes} m`);
+      // const days = Math.floor(timeLeftSeconds / (24 * 3600));
+      // const hours = Math.floor((timeLeftSeconds % (24 * 3600)) / 3600);
+      // const minutes = Math.floor((timeLeftSeconds % 3600) / 60);
+      // const seconds = Math.floor(timeLeftSeconds % 60);
+      // setBarProgressCaption(`${days} d, ${hours} h, ${minutes} m`);
+      setBarProgressCaption(response.data.data.epoch_remaining_time);
 
 
       // console.log(`Залишилось: ${days} дн, ${hours} год, ${minutes} хв, ${seconds} сек`);
@@ -61,12 +61,14 @@ export default function Header(auth) {
     }
   };
 
+  
+
   useEffect(() => {
     if (!settingsFetched) {
       fetchData();
       setSettingsFetched(true);
     }
-    const intervalId = setInterval(fetchData, 50000);
+    const intervalId = setInterval(fetchData, 60000);
     return () => clearInterval(intervalId);
   }, [settingsFetched])
 
@@ -121,9 +123,6 @@ export default function Header(auth) {
                     </>
                   ) : (
                     <> 
-                     {/* <Link href={'/dashboard'} className="inline-flex items-center menu-main-btn text-sm nav-link">
-                        {msg.get('menu.dashboard')}
-                      </Link> */}
                       <Link href={'/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link">
                         {msg.get('menu.validators')}
                       </Link>
@@ -136,7 +135,7 @@ export default function Header(auth) {
             </div>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 nav-link">
               <div className="flex whitespace-nowrap text-[#fff] ml-[0px] mt-[0px]">
-                 <ProgressBar progress={barProgress*100} caption={`${msg.get('menu.left')} ${barProgressCaption}`} />
+                 <ProgressBar progress={100 - completedPersent} caption={`${msg.get('menu.left')} ${barProgressCaption}`} />
               </div>
             </div>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 nav-link">

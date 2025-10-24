@@ -21,5 +21,5 @@ while (true) {
         ]);
     }
     
-    sleep(1);
+    sleep(60);
 }

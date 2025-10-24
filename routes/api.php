@@ -10,6 +10,7 @@ use App\Http\Controllers\DiscordNewsController;
 use App\Http\Controllers\NewsController;
 
 Route::get('/fetch-settings', [SettingsController::class, 'getDataWithHeader'])->name('settings.get');
+Route::get('/fetch-settings-data', [SettingsController::class, 'getDataWithHeaderNew'])->name('settings.getNew');
 Route::get('/fetch-by-id-validators/{page?}', [ApiValidatorController::class, 'fetchByIds'])->name('validators.fetchByIds');
 
 // Public API routes - accessible to everyone
