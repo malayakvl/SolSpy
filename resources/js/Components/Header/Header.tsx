@@ -141,7 +141,7 @@ export default function Header(auth) {
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 nav-link">
               <div className="flex whitespace-nowrap text-[#fff] ml-[0px]  mt-[0px]">
                   <div className="md:space-x-4 md:flex md:pr-[30px] inline align-middle text-[14px] whitespace-nowrap w-[150px]">
-                    {msg.get('menu.epoch')}  {settingsData?.epoch} ({epochPersent}%)
+                    {msg.get('menu.epoch')}  {settingsData?.epoch} ({100 - epochPersent}%)
                   </div>
                   <div className="md:space-x-4 md:flex md:pr-[30px] inline align-middle text-[14px] whitespace-nowrap">
                     1 SOL = {settingsData?.sol_rate}$
