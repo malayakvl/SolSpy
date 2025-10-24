@@ -6,7 +6,8 @@ import {
     setSwitchToggleAction,
     setPopupAction,
     showOverlayAction,
-    setEpochAction
+    setEpochAction,
+    setSettingsAction
 } from './actions';
 import { PaginationType } from '../../Constants';
 const initPagination = { limit: 25, offset: 0, sort: 'DESC', column: 'created_at', query: '' };
@@ -27,7 +28,8 @@ const initialState: State.Layouts = {
     selectedLng: 'en',
     appLang: 'en',
     showEmailNotification: false,
-    epoch: ''
+    epoch: '',
+    settingsData: {}
 };
 
 // ------------------------------------
@@ -58,6 +60,12 @@ const ACTION_HANDLERS: any = {
             epoch: action.payload
         })
     },
+    [setSettingsAction]: {
+        next: (state: State.Layouts, action: Action<string>): State.Layouts => ({
+            ...state,
+            settingsData: action.payload
+        })
+    },
 }
 
 export {
@@ -66,7 +74,8 @@ export {
     setSwitchToggleAction,
     setPopupAction,
     showOverlayAction,
-    setEpochAction
+    setEpochAction,
+    setSettingsAction
 }
 
 export default handleActions(ACTION_HANDLERS, initialState);

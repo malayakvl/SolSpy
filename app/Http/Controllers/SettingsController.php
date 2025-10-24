@@ -24,7 +24,6 @@ class SettingsController extends Controller
         ]);
     }
 
-
     public function getDataWithHeaderByUser(Request $request)
     {
         // Fixed the incomplete line and used the proper model reference
