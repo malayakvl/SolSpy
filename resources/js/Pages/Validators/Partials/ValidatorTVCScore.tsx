@@ -5,7 +5,7 @@ export default function ValidatorTVCScore({ validator }) {
     const [colorClass, setColorClass] = useState('');
 
     // Ensure tvc_score is a number
-    let tvcScore = validator.tvc_score;
+    let tvcScore = validator.avg_rank;
     if (tvcScore === undefined || tvcScore === null) {
         tvcScore = 0;
     } else if (typeof tvcScore === 'string') {
