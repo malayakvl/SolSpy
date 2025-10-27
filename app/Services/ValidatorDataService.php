@@ -156,17 +156,8 @@ class ValidatorDataService
             // tvcRank уже возвращается функцией
             $validator->tvcRank = $validator->tvc_rank ?: 'Not found';
 
-            // Calculate voteScore
-            $voteScoreData = DB::select(
-                'SELECT AVG(data.validator_scores.rank) as average_rank 
-                FROM data.validators 
-                LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
-                WHERE data.validators.vote_pubkey = ?',
-                [$validator->vote_pubkey]
-            );
-            $validator->voteScore = !empty($voteScoreData) && $voteScoreData[0]->average_rank 
-                ? round($voteScoreData[0]->average_rank, 2) 
-                : 0;
+            // Calculate voteScore from the avg_rank returned by the function
+            $validator->voteScore = $validator->avg_rank ? round($validator->avg_rank, 2) : 0;
 
             // Calculate spyRank
             $validator->spyRank = $validator->tvcRank;
@@ -198,11 +189,171 @@ class ValidatorDataService
         ];
     }
 
+    public function timeoutData($sortColumn, $sortDirection, $totalStakeLamports, $userId = null, $filterType = 'all', $limit = 10, $offset = 0, $searchTerm = '')
+    { 
+        // For TVC Rank, we need to sort by activated_stake in descending order
+        // because higher activated_stake means better (lower) rank
+        $actualSortDirection = $sortDirection;
+        if ($sortColumn === 'tvc_rank' || $sortColumn === 'id') {
+            // Reverse the sort direction for TVC Rank
+            $actualSortDirection = strtoupper($sortDirection) === 'ASC' ? 'DESC' : 'ASC';
+        }
+        if ($userId)
+            $queryNew = "SELECT * FROM data.search_validators_timeout('" .$searchTerm. "', '" .$filterType. "', $userId, '" .$sortColumn. "', $offset, $limit);";
+        else
+            $queryNew = "SELECT * FROM data.search_validators_timeout('" .$searchTerm. "', '" .$filterType. "', null, '" .$sortColumn. "', $offset, $limit);";
+        $validatorsData = DB::select($queryNew);
+        // dd($validatorsData);exit;
+        // $query = DB::table('data.validators')
+        //     ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
+        // // Only join favorites table if user is authenticated
+        // if ($userId) {
+        //     $query->leftJoin('data.validators_favorite', function($join) use ($userId) {
+        //         $join->on('data.validators.id', '=', 'data.validators_favorite.validator_id')
+        //              ->where('data.validators_favorite.user_id', '=', $userId);
+        //     })
+        //     ->select('data.validators.*', 
+        //         'data.validators_favorite.id as is_favorite', 
+        //         'data.countries.iso as country_iso', 
+        //         'data.countries.iso3 as country_iso3', 
+        //         'data.countries.phone_code as country_phone_code')
+        //     ->groupBy(
+        //         'data.validators.vote_pubkey', 
+        //         'data.validators.id', 
+        //         'data.validators_favorite.id',
+        //         'data.countries.iso', 
+        //         'data.countries.iso3', 
+        //         'data.countries.phone_code'
+        //     );
+        // } else {
+        //     $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code')
+        //     ->groupBy(
+        //         'data.validators.vote_pubkey', 
+        //         'data.validators.id', 
+        //         'data.countries.iso', 
+        //         'data.countries.iso3', 
+        //         'data.countries.phone_code'
+        //     );
+        // }
+        // // Apply search filter if provided
+        // if (!empty($searchTerm)) {
+        //     $query = $query->where('data.validators.name', 'LIKE', '%' . $searchTerm . '%');
+        // }
+        // // Apply filter based on filterType
+        // if ($filterType === 'highlight') {
+        //     $query = $query->where('data.validators.is_highlighted', true);
+        // } elseif ($filterType === 'top') {
+        //     $query = $query->where('data.validators.is_top', true);
+        // }
+        // // Apply sorting
+        // if ($sortColumn === 'uptime') {
+        //     $query->orderBy('data.validators.avg_uptime', $sortDirection);
+        // } elseif ($sortColumn === 'tvc_score') {
+        //     $query->orderBy('data.validators.id', $sortDirection);
+        // } elseif ($sortColumn === 'tvc_rank') {
+        //     $query->orderBy('data.validators.activated_stake', $actualSortDirection);
+        // } elseif ($sortColumn === 'vote_credits') {
+        //     $query->orderByRaw("CASE WHEN data.validators.epoch_credits IS NULL THEN 1 ELSE 0 END, data.validators.epoch_credits " . $sortDirection);
+        // } elseif ($sortColumn === 'active_stake') {
+        //     $query->orderBy('data.validators.activated_stake', $sortDirection);
+        // } elseif ($sortColumn === 'vote_rate') {
+        //     $query->orderBy('data.validators.vote_distance_score', $sortDirection);
+        // } elseif ($sortColumn === 'inflation_commission') {
+        //     $query->orderByRaw("CASE WHEN data.validators.jito_commission IS NULL THEN 1 ELSE 0 END, data.validators.jito_commission " . $sortDirection);
+        // } elseif ($sortColumn === 'mev_commission') {
+        //     $query->orderByRaw("CASE WHEN data.validators.commission IS NULL THEN 1 ELSE 0 END, data.validators.commission " . $sortDirection);
+        // } elseif ($sortColumn === 'client_version') {
+        //     $query->orderByRaw("CASE WHEN data.validators.version IS NULL THEN 1 ELSE 0 END, data.validators.version " . $sortDirection);
+        // } elseif ($sortColumn === 'status_sfdp') {
+        //     $query->orderBy('data.validators.delinquent', $sortDirection);
+        // } elseif ($sortColumn === 'location') {
+        //     $query->orderByRaw("CASE WHEN data.validators.country IS NULL THEN 1 ELSE 0 END, data.validators.country " . $sortDirection);
+        // } elseif ($sortColumn === 'website') {
+        //     $query->orderByRaw("CASE WHEN data.validators.url IS NULL THEN 1 ELSE 0 END, data.validators.url " . $sortDirection);
+        // } elseif ($sortColumn === 'city') {
+        //     $query->orderByRaw("CASE WHEN data.validators.city IS NULL THEN 1 ELSE 0 END, data.validators.city " . $sortDirection);
+        // } elseif ($sortColumn === 'asn') {
+        //     $query->orderByRaw("CASE WHEN data.validators.autonomous_system_number IS NULL THEN 1 ELSE 0 END, data.validators.autonomous_system_number " . $sortDirection);
+        // } elseif ($sortColumn === 'ip') {
+        //     $query->orderByRaw("CASE WHEN data.validators.ip IS NULL THEN 1 ELSE 0 END, data.validators.ip " . $sortDirection);
+        // } elseif ($sortColumn === 'jito_score') {
+        //     $query->orderByRaw("CASE WHEN data.validators.jito_commission IS NULL THEN 1 ELSE 0 END, data.validators.jito_commission " . $sortDirection);
+        // } else {
+        //     // Sort by tvc_rank with NULL values at the end
+        //     // For tvc_rank, higher values are better, so we respect the sortDirection parameter
+        //     // NULL values should still be at the end
+        //     // $query->orderByRaw('data.validators.tvc_rank IS NULL ASC, data.validators.tvc_rank ' . $sortDirection);
+        //     $query->orderByRaw('data.validators.tvc_rank IS NULL ASC, data.validators.tvc_rank DESC');
+        //     // $query->orderBy('id', 'asc');
+        // }
+        // // Add the hack to filter validators starting from ID 19566
+        // // $query = $query->where('data.validators.id', '>=', '19566');
+        // $validatorsData = $query
+        //     ->limit($limit)->offset($offset)->get();
+        
+        // Calculate total count based on filter
+        $totalCountQuery = DB::table('data.validators');
+        
+        // Apply search filter if provided
+        if (!empty($searchTerm)) {
+            $totalCountQuery = $totalCountQuery->where('data.validators.name', 'ILIKE', '%' . $searchTerm . '%');
+        }
+            
+        // Apply same filter for count
+        if ($filterType === 'highlight') {
+            $totalCountQuery = $totalCountQuery->where('data.validators.is_highlighted', true);
+        } elseif ($filterType === 'top') {
+            $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
+        }
+        
+        // Add the hack to filter validators starting from ID 19566 for count as well
+        // $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
+        
+        $filteredTotalCount = $totalCountQuery->count();
+        
+        $validatorsAllData = DB::table('data.validators')
+            ->orderBy('activated_stake', 'DESC')->get();
+        $sortedValidators = $validatorsAllData->toArray();
+
+        // Рассчитываем tvcRank и spyRank для каждого валидатора из $validatorsData
+        $results = collect($validatorsData)->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
+            $validator = (object)$validator;
+            // Добавляем tvcRank к объекту валидатора
+            // $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
+            $validator->spyRank = $validator->tvc_rank; // Если не найден, возвращаем 'Not found'
+            
+            // Calculate spyRank
+            // $validator->spyRank = $this->spyRankService->calculateSpyRank($validator, $totalStakeLamports);
+            
+            // Get latest version from validator scores using direct query
+            $latestScore = DB::table('data.validator_scores')
+                ->where('vote_pubkey', $validator->vote_pubkey)
+                ->orderBy('collected_at', 'desc')
+                ->first();
+            $validator->latestVersion = $latestScore ? $latestScore->version : null;
+            $validator->uptime = $latestScore ? $latestScore->uptime : null;
+
+            return $validator;
+        });
+        // Sort by spyRank when no sort column is specified or when sorting by ID or spy_rank
+        if (empty($sortColumn) || $sortColumn === 'id' || $sortColumn === 'spyRank' || $sortColumn === 'spy_rank') {
+            $results = $results->sortByDesc(function ($validator) {
+                return $validator->spyRank ?? 0;
+            })->values();
+        }
+        return [
+            'validatorsData' => $results,
+            'totalCount' => $filteredTotalCount,
+            'filteredTotalCount' => $filteredTotalCount,
+            'totalStakeLamports' => $totalStakeLamports,
+        ];
+    }
+
     public function fetchDataValidatorsOld($userId, string $filterType, int $offset, $totalStakeLamports, $sortColumn = 'spyRank', $searchTerm = '')
     {
         $query = DB::table('data.validators')
-            ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
-            
+            ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name')
+            ->leftJoin(DB::raw('(SELECT vote_pubkey, AVG(rank) as avg_rank FROM data.validator_scores GROUP BY vote_pubkey) as scores'), 'data.validators.vote_pubkey', '=', 'scores.vote_pubkey');
         // Only join favorites table if user is authenticated
         if ($userId) {
             $query->leftJoin('data.validators_favorite', function($join) use ($userId) {
@@ -213,24 +364,27 @@ class ValidatorDataService
                 'data.validators_favorite.id as is_favorite', 
                 'data.countries.iso as country_iso', 
                 'data.countries.iso3 as country_iso3', 
-                'data.countries.phone_code as country_phone_code')
-                ->groupBy(
-                    'data.validators.vote_pubkey', 
-                    'data.validators.id', 
-                    'data.validators_favorite.id',
-                    'data.countries.iso', 
-                    'data.countries.iso3', 
-                    'data.countries.phone_code'
-                );
+                'data.countries.phone_code as country_phone_code',
+                'scores.avg_rank as avg_rank')
+            ->groupBy(
+                'data.validators.vote_pubkey', 
+                'data.validators.id', 
+                'data.validators_favorite.id',
+                'data.countries.iso', 
+                'data.countries.iso3', 
+                'data.countries.phone_code',
+                'scores.avg_rank'
+            );
         } else {
-            $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code')
-                ->groupBy(
-                    'data.validators.vote_pubkey', 
-                    'data.validators.id', 
-                    'data.countries.iso', 
-                    'data.countries.iso3', 
-                    'data.countries.phone_code'
-                );
+            $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code', 'scores.avg_rank as avg_rank')
+            ->groupBy(
+                'data.validators.vote_pubkey', 
+                'data.validators.id', 
+                'data.countries.iso', 
+                'data.countries.iso3', 
+                'data.countries.phone_code',
+                'scores.avg_rank'
+            );
         }
         
         // Apply filter based on filterType
@@ -388,166 +542,6 @@ class ValidatorDataService
         });
 
         return $topValidatorsWithRanks;
-    }
-
-    public function timeoutData($sortColumn, $sortDirection, $totalStakeLamports, $userId = null, $filterType = 'all', $limit = 10, $offset = 0, $searchTerm = '')
-    { 
-        // For TVC Rank, we need to sort by activated_stake in descending order
-        // because higher activated_stake means better (lower) rank
-        $actualSortDirection = $sortDirection;
-        if ($sortColumn === 'tvc_rank' || $sortColumn === 'id') {
-            // Reverse the sort direction for TVC Rank
-            $actualSortDirection = strtoupper($sortDirection) === 'ASC' ? 'DESC' : 'ASC';
-        }
-
-        $query = DB::table('data.validators')
-            ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name');
-        // Only join favorites table if user is authenticated
-        if ($userId) {
-            $query->leftJoin('data.validators_favorite', function($join) use ($userId) {
-                $join->on('data.validators.id', '=', 'data.validators_favorite.validator_id')
-                     ->where('data.validators_favorite.user_id', '=', $userId);
-            })
-            ->select('data.validators.*', 
-                'data.validators_favorite.id as is_favorite', 
-                'data.countries.iso as country_iso', 
-                'data.countries.iso3 as country_iso3', 
-                'data.countries.phone_code as country_phone_code')
-            ->groupBy(
-                'data.validators.vote_pubkey', 
-                'data.validators.id', 
-                'data.validators_favorite.id',
-                'data.countries.iso', 
-                'data.countries.iso3', 
-                'data.countries.phone_code'
-            );
-        } else {
-            $query->select('data.validators.*', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code')
-            ->groupBy(
-                'data.validators.vote_pubkey', 
-                'data.validators.id', 
-                'data.countries.iso', 
-                'data.countries.iso3', 
-                'data.countries.phone_code'
-            );
-        }
-        // Apply search filter if provided
-        if (!empty($searchTerm)) {
-            $query = $query->where('data.validators.name', 'LIKE', '%' . $searchTerm . '%');
-        }
-        // Apply filter based on filterType
-        if ($filterType === 'highlight') {
-            $query = $query->where('data.validators.is_highlighted', true);
-        } elseif ($filterType === 'top') {
-            $query = $query->where('data.validators.is_top', true);
-        }
-        // Apply sorting
-        if ($sortColumn === 'uptime') {
-            $query->orderBy('data.validators.avg_uptime', $sortDirection);
-        } elseif ($sortColumn === 'tvc_score') {
-            $query->orderBy('data.validators.id', $sortDirection);
-        } elseif ($sortColumn === 'tvc_rank') {
-            $query->orderBy('data.validators.activated_stake', $actualSortDirection);
-        } elseif ($sortColumn === 'vote_credits') {
-            $query->orderByRaw("CASE WHEN data.validators.epoch_credits IS NULL THEN 1 ELSE 0 END, data.validators.epoch_credits " . $sortDirection);
-        } elseif ($sortColumn === 'active_stake') {
-            $query->orderBy('data.validators.activated_stake', $sortDirection);
-        } elseif ($sortColumn === 'vote_rate') {
-            $query->orderBy('data.validators.vote_distance_score', $sortDirection);
-        } elseif ($sortColumn === 'inflation_commission') {
-            $query->orderByRaw("CASE WHEN data.validators.jito_commission IS NULL THEN 1 ELSE 0 END, data.validators.jito_commission " . $sortDirection);
-        } elseif ($sortColumn === 'mev_commission') {
-            $query->orderByRaw("CASE WHEN data.validators.commission IS NULL THEN 1 ELSE 0 END, data.validators.commission " . $sortDirection);
-        } elseif ($sortColumn === 'client_version') {
-            $query->orderByRaw("CASE WHEN data.validators.version IS NULL THEN 1 ELSE 0 END, data.validators.version " . $sortDirection);
-        } elseif ($sortColumn === 'status_sfdp') {
-            $query->orderBy('data.validators.delinquent', $sortDirection);
-        } elseif ($sortColumn === 'location') {
-            $query->orderByRaw("CASE WHEN data.validators.country IS NULL THEN 1 ELSE 0 END, data.validators.country " . $sortDirection);
-        } elseif ($sortColumn === 'website') {
-            $query->orderByRaw("CASE WHEN data.validators.url IS NULL THEN 1 ELSE 0 END, data.validators.url " . $sortDirection);
-        } elseif ($sortColumn === 'city') {
-            $query->orderByRaw("CASE WHEN data.validators.city IS NULL THEN 1 ELSE 0 END, data.validators.city " . $sortDirection);
-        } elseif ($sortColumn === 'asn') {
-            $query->orderByRaw("CASE WHEN data.validators.autonomous_system_number IS NULL THEN 1 ELSE 0 END, data.validators.autonomous_system_number " . $sortDirection);
-        } elseif ($sortColumn === 'ip') {
-            $query->orderByRaw("CASE WHEN data.validators.ip IS NULL THEN 1 ELSE 0 END, data.validators.ip " . $sortDirection);
-        } elseif ($sortColumn === 'jito_score') {
-            $query->orderByRaw("CASE WHEN data.validators.jito_commission IS NULL THEN 1 ELSE 0 END, data.validators.jito_commission " . $sortDirection);
-        } else {
-            // Sort by tvc_rank with NULL values at the end
-            // For tvc_rank, higher values are better, so we respect the sortDirection parameter
-            // NULL values should still be at the end
-            // $query->orderByRaw('data.validators.tvc_rank IS NULL ASC, data.validators.tvc_rank ' . $sortDirection);
-            $query->orderByRaw('data.validators.tvc_rank IS NULL ASC, data.validators.tvc_rank DESC');
-            // $query->orderBy('id', 'asc');
-        }
-        // Add the hack to filter validators starting from ID 19566
-        // $query = $query->where('data.validators.id', '>=', '19566');
-        $validatorsData = $query
-            ->limit($limit)->offset($offset)->get();
-        // Calculate total count based on filter
-        $totalCountQuery = DB::table('data.validators');
-        
-        // Apply search filter if provided
-        if (!empty($searchTerm)) {
-            $totalCountQuery = $totalCountQuery->where('data.validators.name', 'ILIKE', '%' . $searchTerm . '%');
-        }
-            
-        // Apply same filter for count
-        if ($filterType === 'highlight') {
-            $totalCountQuery = $totalCountQuery->where('data.validators.is_highlighted', true);
-        } elseif ($filterType === 'top') {
-            $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
-        }
-        
-        // Add the hack to filter validators starting from ID 19566 for count as well
-        // $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
-        
-        $filteredTotalCount = $totalCountQuery->count();
-        
-        $validatorsAllData = DB::table('data.validators')
-            ->orderBy('activated_stake', 'DESC')->get();
-        $sortedValidators = $validatorsAllData->toArray();
-
-        // Рассчитываем tvcRank и spyRank для каждого валидатора из $validatorsData
-        $results = $validatorsData->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
-            // Добавляем tvcRank к объекту валидатора
-            // $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
-            $validator->spyRank = $validator->tvc_rank; // Если не найден, возвращаем 'Not found'
-            
-            // Calculate spyRank
-            // $validator->spyRank = $this->spyRankService->calculateSpyRank($validator, $totalStakeLamports);
-            
-            // Calculate average rank using direct query
-            // $averageRankData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
-            //     FROM data.validators 
-            //     LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
-            //     WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
-            // $validator->averageRank = !empty($averageRankData) && $averageRankData[0]->average_rank ? round($averageRankData[0]->average_rank, 2) : null;
-            
-            // Get latest version from validator scores using direct query
-            $latestScore = DB::table('data.validator_scores')
-                ->where('vote_pubkey', $validator->vote_pubkey)
-                ->orderBy('collected_at', 'desc')
-                ->first();
-            $validator->latestVersion = $latestScore ? $latestScore->version : null;
-            $validator->uptime = $latestScore ? $latestScore->uptime : null;
-
-            return $validator;
-        });
-        // Sort by spyRank when no sort column is specified or when sorting by ID or spy_rank
-        if (empty($sortColumn) || $sortColumn === 'id' || $sortColumn === 'spyRank' || $sortColumn === 'spy_rank') {
-            $results = $results->sortByDesc(function ($validator) {
-                return $validator->spyRank ?? 0;
-            })->values();
-        }
-        return [
-            'validatorsData' => $results,
-            'totalCount' => $filteredTotalCount,
-            'filteredTotalCount' => $filteredTotalCount,
-            'totalStakeLamports' => $totalStakeLamports,
-        ];
     }
 
     public function fetchDataFavoriteValidators($userId, string $filterType, int $offset, $totalStakeLamports, $favoriteIds = null)
@@ -1524,20 +1518,12 @@ class ValidatorDataService
         $sortedValidators = $validatorsAllData->toArray();  
 
         $results = $validatorsData->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
-            // Находим индекс валидатора в отсортированном массиве по vote_pubkey
-            $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
             // Добавляем tvcRank к объекту валидатора
-            $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
-            
-            // Calculate voteScore using direct query
-            $voteScoreData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
-                FROM data.validators 
-                LEFT JOIN data.validator_scores ON data.validators.vote_pubkey = data.validator_scores.vote_pubkey
-                WHERE data.validators.vote_pubkey = ?', [$validator->vote_pubkey]);
-            $validator->voteScore = !empty($voteScoreData) && $voteScoreData[0]->average_rank ? round($voteScoreData[0]->average_rank, 2) : 0;
+            // $validator->tvcRank = $tvcRank ?: 'Not found'; // Если не найден, возвращаем 'Not found'
+            $validator->spyRank = $validator->tvc_rank; // Если не найден, возвращаем 'Not found'
             
             // Calculate spyRank
-            $validator->spyRank = $this->spyRankService->calculateSpyRank($validator, $totalStakeLamports);
+            // $validator->spyRank = $this->spyRankService->calculateSpyRank($validator, $totalStakeLamports);
             
             // Calculate average rank using direct query
             $averageRankData = DB::select('SELECT AVG(data.validator_scores.rank) as average_rank 
@@ -1552,7 +1538,8 @@ class ValidatorDataService
                 ->orderBy('collected_at', 'desc')
                 ->first();
             $validator->latestVersion = $latestScore ? $latestScore->version : null;
-            
+            $validator->uptime = $latestScore ? $latestScore->uptime : null;
+
             return $validator;
         });
         
