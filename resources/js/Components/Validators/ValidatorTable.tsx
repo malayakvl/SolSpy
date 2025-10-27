@@ -83,7 +83,7 @@ const ValidatorTable: React.FC<ValidatorTableProps> = ({
                 </thead>
                 <tbody>
                     {data.map((validator, index) => (
-                        <tr key={validator.id} className={validator.is_highlighted ? 'bg-blue-100' : ''}>
+                        <tr key={validator.id} className={validator.is_highlighted ? 'bg-pink-100' : ''}>
                             <td className="text-left">
                                 <div className="pl-[10px]">
                                     <input 
