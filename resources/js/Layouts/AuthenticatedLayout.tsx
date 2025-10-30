@@ -26,7 +26,7 @@ export default function AuthenticatedLayout({ header, children, auth }) {
     setIsNavCollapsed(!isNavCollapsed);
   };
   return (
-    <div className="min-h-screen" style={{overflowY: showOverlay ? 'hidden' : 'auto'}}>
+    <div className="min-h-screen bg-black text-white" style={{overflowY: showOverlay ? 'hidden' : 'auto'}}>
       <Header auth={auth} />
       <main className="pt-[0px]">
         <div className="mx-auto w-full">
@@ -44,7 +44,7 @@ export default function AuthenticatedLayout({ header, children, auth }) {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="light"
+        theme="dark"
       />
     </div>
   );

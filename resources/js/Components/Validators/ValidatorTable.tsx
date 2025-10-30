@@ -94,9 +94,9 @@ const ValidatorTable: React.FC<ValidatorTableProps> = ({
                                     />
                                 </div>
                             </td>
-                            <th className="text-center">
+                            <td className="text-center">
                                 <ValidatorActions validator={validator} onBanToggle={handleBanToggle} />
-                            </th>
+                            </td>
                             {getOrderedVisibleColumns().map(column => renderColumnCellLocal(column.name, validator, index))}
                         </tr>
                     ))}
