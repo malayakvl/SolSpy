@@ -85,7 +85,7 @@ export default function SortTopDiscordNews({ topNews }: SortTopDiscordNewsProps)
                             <button
                                 onClick={saveOrder}
                                 disabled={isSaving}
-                                className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm disabled:opacity-50"
+                                className="inline-flex items-center px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px] text-sm disabled:opacity-50"
                             >
                                 <FontAwesomeIcon icon={faSave} className="mr-2" />
                                 {isSaving ? 'Saving...' : 'Save Order'}

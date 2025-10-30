@@ -10,13 +10,27 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faCheck,
     faStar,
-    faBan
+    faBan,
+    faEnvelope,
+    faHeart,
+    faMoneyBill,
+    faEye,
+    faScaleBalanced,
+    faScaleUnbalanced,
+    faBell,
+    faFrog,
+    faFire,
+    faHouse,
+    faCircleRadiation
 } from '@fortawesome/free-solid-svg-icons';
 import ValidatorCredits from "./Partials/ValidatorCredits";
 import ValidatorRate from "./Partials/ValidatorRate";
 import ValidatorActivatedStake from "./Partials/ValidatorActivatedStake";
 import ValidatorUptime from "./Partials/ValidatorUptime";
 import ValidatorSFDP from "./Partials/ValidatorSFDP";
+import ValidatorTVCScore from "./Partials/ValidatorTVCScore";
+import ValidatorWithdrawer from "./Partials/ValidatorWithdrawer";
+import ValidatorJiitoScore from "./Partials/ValidatorJiitoScore";
 import axios from 'axios';
 import MapLayer from './Map';
 import {
@@ -30,6 +44,7 @@ import {
   LineElement,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import CountryFlag from "../../Components/CountryFlag";
 
 ChartJS.register(
   CategoryScale,
@@ -119,6 +134,8 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
     const validatorIdentityPubkey = validatorData.node_pubkey;
     const [chartTab, setChartTab] = useState<string>('epoch_credits');
     const [isBlocked, setIsBlocked] = useState<boolean>(validatorData.blocked_id ? true : false);
+    const [isInComparison, setIsInComparison] = useState(false);
+    const [isInFavorites, setIsInFavorites] = useState(false);
 
     const formatSOL = (lamports) => {
         // Конвертация лампорта в SOL
@@ -363,56 +380,85 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
     return (
         <AuthenticatedLayout header={<Head />}>
             <Head title={msg.get('validators.viewTitle')} />
-            <div className="py-0 text-gray-900">
+            <div className="py-0">
                 <div className="p-4 sm:p-8 mb-8 content-data bg-content text-sm">
-                    <h2 className="text-2xl font-bold">{msg.get('validators.viewTitle')}&nbsp;</h2>
                     <div className="validator-details">
                         <div>
                             <div className="mb-4">
-                                <div className="flex items-center">
-                                    <h2 className="text-xl font-bold mb-0">{validatorData.name}</h2>
-                                    <button 
-                                        className="stake-button flex items-center ml-4"
-                                        onClick={() => {
-                                            // Stake functionality would go here
-                                        }}
-                                    >
-                                        <FontAwesomeIcon icon={faCheck} />
-                                        <span className="ml-2">Stake</span>
-                                    </button>
-                                    <button 
-                                        className={`ban-button flex items-center ml-4 ${isBlocked ? 'bg-red-300 hover:bg-red-500' : 'bg-blue-300 hover:bg-blue-500'}`}
-                                        onClick={() => {
-                                            // Stake functionality would go here
-                                            addToBlock();
-                                        }}
-                                    >
-                                        <FontAwesomeIcon icon={faBan} />
-                                        <span className="ml-2">{isBlocked ? 'Unblock' : 'Block'}</span>
-                                    </button>
+                                <div className="flex items-center w-full justify-between">
+                                    <div>
+                                        <h2 className="text-xl font-bold mb-0 mr-2 inline-block">{validatorData.name}</h2>
+                                        <div className="ml-2 inline-block">
+                                            <span className={`${validatorData.delinquent ? 'text-red-500 bg-red-100' : 'text-green-500 bg-green-100'} border rounded-lg px-2 py-1 text-[10px] font-semibold uppercase`}>
+                                                {validatorData.delinquent ? 'Offline' : 'Active'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span className="cursor-pointer" onClick={() => addToCompare(validator.id)}>
+                                            <FontAwesomeIcon 
+                                                icon={isInComparison ? faScaleUnbalanced : faScaleBalanced} 
+                                                className={`mr-2 ${isInComparison ? 'text-red-500' : ''}`}
+                                            />
+                                        </span>
+                                        <span className="cursor-pointer" onClick={() => addToFavorite(validator.id)}>
+                                            <FontAwesomeIcon 
+                                                icon={faHeart} 
+                                                className={`mr-2 ${isInFavorites ? 'text-red-500' : ''}`}
+                                            />
+                                        </span>
+                                        <span>
+                                            <FontAwesomeIcon icon={faEnvelope} className="mr-2" />
+                                        </span>
+                                        <span>
+                                            <FontAwesomeIcon icon={faMoneyBill} className="mr-2" />
+                                        </span>
+                                        <span>
+                                            <FontAwesomeIcon icon={faBell} className="mr-2" />
+                                        </span>
+                                        <button
+                                            className="stake-button flex items-center ml-4"
+                                            onClick={() => {
+                                                // Stake functionality would go here
+                                            }}
+                                        >
+                                            <span className="ml-2">Stake</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex w-full justify-between mb-4 items-center">
-                                <ul className="space-y-2">
+                                <ul className="space-y-2 w-full">
                                     <li className="flex items-start">
-                                        <span className="font-medium mr-2">Activated stake:</span>
-                                        <ValidatorActivatedStake validator={validatorData} epoch={epoch} />
+                                        <span className="font-medium mr-2 w-40 whitespace-nowrap">Activated stake:</span>
+                                        <span className="flex-1">
+                                            <ValidatorActivatedStake validator={validatorData} epoch={epoch} />
+                                        </span>
                                     </li>
                                     <li className="flex items-start">
-                                        <span className="font-medium mr-2">Identity:</span>
-                                        <span className="break-all">{validatorData.node_pubkey}</span>
+                                        <span className="font-medium mr-2 w-40 whitespace-nowrap">Identity:</span>
+                                        <span className="break-all flex-1">{validatorData.node_pubkey}</span>
                                     </li>
                                     <li className="flex items-start">
-                                        <span className="font-medium mr-2">Vote Key:</span>
-                                        <span className="break-all">{validatorData.vote_pubkey}</span>
+                                        <span className="font-medium mr-2 w-40 whitespace-nowrap">Vote Key:</span>
+                                        <span className="break-all flex-1">{validatorData.vote_pubkey}</span>
+                                    </li>
+                                    <li className="flex items-start">
+                                        <span className="font-medium mr-2 w-40 whitespace-nowrap">Withdrawer:</span>
+                                        <span className="break-all flex-1">
+                                            <ValidatorWithdrawer votePubkey={validatorData.vote_pubkey} nodePubkey={validatorData.node_pubkey} />
+                                        </span>
                                     </li>
                                 </ul>
-                                <div className="flex items-center star-block">
-                                    <FontAwesomeIcon className="text-3xl" icon={faStar} />
-                                    <FontAwesomeIcon className="text-3xl" icon={faStar} />
-                                    <FontAwesomeIcon className="text-3xl" icon={faStar} />
-                                    <FontAwesomeIcon className="text-3xl" icon={faStar} />
-                                    <FontAwesomeIcon className="text-3xl" icon={faStar} />
+                                <div className="flex flex-col items-end justify-center h-full">
+                                    <span className="text-[11px] block text-right">Solspy Awards</span>
+                                    <div className="flex items-center star-block">
+                                        <FontAwesomeIcon className="text-3xl active-star" icon={faStar} />
+                                        <FontAwesomeIcon className="text-3xl active-star" icon={faStar} />
+                                        <FontAwesomeIcon className="text-3xl active-star" icon={faStar} />
+                                        <FontAwesomeIcon className="text-3xl" icon={faStar} />
+                                        <FontAwesomeIcon className="text-3xl" icon={faStar} />
+                                    </div>
                                 </div>
                             </div>
                         </div> 
@@ -423,72 +469,117 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                             <div className="w-1/2 pr-4">
                                 <div className="flex items-start">
                                     <div className="w-1/2 pr-2">
-                                        {validatorData.has_screenshot ?   
-                                            <img src={`/storage/site-screenshots/${validatorData.id}.png`} alt="screenshot" className="w-full mt-3" />
+                                        {validatorData.avatar_file_url ?   
+                                            <img src={`${validatorData.avatar_file_url}`} alt="avatar" className="w-full" />
                                         : 
-                                            <div className="text-gray-500">No screenshot available</div>
+                                            <div className="w-full border-2 border-dashed border-gray-300 rounded-lg h-[230px] flex items-center justify-center">
+                                                <span className="text-gray-500">No avatar available</span>
+                                            </div>
                                         }
+                                        
                                     </div>
                                     <ul className="space-y-2 w-1/2 pl-2">
                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">Activated stake:</span>
-                                            <ValidatorActivatedStake validator={validatorData} epoch={epoch} />
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">Solspy Rank:</span>
+                                            <span className="flex-1">
+                                                {validatorData.spyRank}
+                                                {/* <ValidatorActivatedStake validator={validatorData} epoch={epoch} /> */}
+                                            </span>
                                         </li>
-                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">Uptime:</span>
-                                            <span className="break-all">
+                                        <li className="flex items-start">
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">TVC Score:</span>
+                                            <span className="break-all flex-1">
+                                                <ValidatorTVCScore validator={validatorData} />
+                                            </span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">Stake Pool:</span>
+                                            <span className="break-all flex-1">
+                                                <FontAwesomeIcon icon={faFrog} className="mr-[2px]" />
+                                                <FontAwesomeIcon icon={faFire} className="mr-[2px]" />
+                                                <FontAwesomeIcon icon={faHouse} className="mr-[2px]" />
+                                                <FontAwesomeIcon icon={faCircleRadiation} className="mr-[2px]" />
+                                            </span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">Inflation Commission:</span>
+                                            <span className="break-all flex-1">
+                                               {validatorData.jito_commission !== undefined ? `${(parseFloat(validatorData.jito_commission) / 100).toFixed(2)}%` : 'N/A'}
+                                            </span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">MEV Commission:</span>
+                                            <span className="break-all flex-1">
+                                               {validatorData.commission !== undefined ? `${parseFloat(validatorData.commission).toFixed(2)}%` : 'N/A'}
+                                            </span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">Uptime:</span>
+                                            <span className="break-all flex-1">
                                                 <ValidatorUptime epoch={epoch} validator={validatorData} />
                                             </span>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">Client:</span>
-                                            <span className="break-all">
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">Client:</span>
+                                            <span className="break-all flex-1">
                                                 {`${validatorData.version}  ${validatorData.software_client || ''}`}
                                             </span>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">SFDP Status:</span>
-                                            <span className="break-all">
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">SFDP Status:</span>
+                                            <span className="break-all flex-1">
                                                 <ValidatorSFDP validator={validatorData} epoch={epoch} />
                                             </span>
                                         </li>
+                                        {/* <li className="flex items-start">
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">Vote Credits:</span>
+                                            <span className="break-all flex-1">
+                                                <ValidatorCredits epoch={epoch} validator={validatorData} />
+                                            </span>
+                                        </li> */}
                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">Vote Credits:</span>
-                                            <span className="break-all"><ValidatorCredits epoch={epoch} validator={validatorData} /></span>
-                                        </li>
-                                        <li className="flex items-start">
-                                            <span className="font-medium mr-2">Vote Rate:</span>
-                                            <span className="break-all">
-                                                <ValidatorRate epoch={epoch} validator={validatorData} settingsData={settingsData} totalStakeData={totalStakeData}  />
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">Vote Rate:</span>
+                                            <span className="break-all flex-1">
+                                                {/* Debug logging */}
+                                                {console.log('ValidatorRate Props in View:', {
+                                                    validator: validatorData,
+                                                    epoch: epoch,
+                                                    settingsData: settingsData,
+                                                    totalStakeData: totalStakeData
+                                                })}
+                                                <ValidatorRate validator={validatorData} epoch={epoch} settingsData={settingsData} totalStakeData={totalStakeData} />
                                                 {/* {actualVotes/approxExpectedVotes} */}
                                             </span>
                                         </li>
                                        
-                                        <li className="flex items-start">
-                                            <span className="font-medium mr-2">TVCs Earned:</span>
-                                            <span className="break-all">{validatorData.earned_credits}</span>
+                                        {/* <li className="flex items-start">
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">TVCs Earned:</span>
+                                            <span className="break-all flex-1">{validatorData.earned_credits}</span>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">TVC Rank:</span>
-                                            <span className="break-all">{validatorData.tvc_rank}</span>
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">TVC Rank:</span>
+                                            <span className="break-all flex-1">{validatorData.tvc_rank}</span>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">Timely Vote Rate:</span>
-                                            <span className="break-all">{(validatorData.tvr * 100).toFixed(2)}%</span>
-                                        </li>
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">Timely Vote Rate:</span>
+                                            <span className="break-all flex-1">{(validatorData.tvr * 100).toFixed(2)}%</span>
+                                        </li> */}
 
-                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">Jiito Score:</span>
-                                            <span className="break-all">{validatorData.jiito_score}</span>
+                                        <li className="flex items-start">
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">Jito Score:</span>
+                                            <span className="break-all flex-1">
+                                                <ValidatorJiitoScore validator={validatorData} epoch={epoch} />
+
+                                            </span>
+                                        </li>
+                                        {/* <li className="flex items-start">
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">Jiito Score (Voter):</span>
+                                            <span className="break-all flex-1">{validatorData.jiito_score_voter}</span>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">Jiito Score (Voter):</span>
-                                            <span className="break-all">{validatorData.jiito_score_voter}</span>
-                                        </li>
-                                        <li className="flex items-start">
-                                            <span className="font-medium mr-2">Jiito Score (Validator):</span>
-                                            <span className="break-all">{validatorData.jiito_score_validator}</span>
-                                        </li>
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">Jiito Score (Validator):</span>
+                                            <span className="break-all flex-1">{validatorData.jiito_score_validator}</span>
+                                        </li> */}
                                     </ul>
                                 </div>
                             </div>
@@ -498,56 +589,82 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                                 <div className="flex items-start">
                                     <ul className="space-y-2 w-1/2 pr-2">
                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">MEV Commission:</span>
-                                            <span className="break-all">{validatorData.commission !== null && validatorData.commission !== undefined ? `${validatorData.commission}%` : 'N/A'}</span>
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">Website:</span>
+                                            <span className="break-all flex-1">{validatorData.url}</span>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">Inflation Commission:</span>
-                                            <span className="break-all">{validatorData.jito_commission !== null && validatorData.jito_commission !== undefined ? `${validatorData.jito_commission}%` : 'N/A'}</span>
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">Details:</span>
+                                            <span className="break-all flex-1">{validatorData.details}</span>
                                         </li>
-                                        <li>
-                                            <span className="font-medium mr-2">Inflation Commission:</span>
-                                            <span className="break-all">
-                                                <FontAwesomeIcon icon={faStar} className="text-xs" />
-                                                <FontAwesomeIcon icon={faStar} className="text-xs" />
-                                                <FontAwesomeIcon icon={faStar} className="text-xs" />
+                                        <li className="flex items-start">   
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">Country:</span>
+                                            <span className="break-all flex-1">
+                                                <CountryFlag 
+                                                    countryCode={validatorData.country_iso} 
+                                                    countryName={validatorData.country} 
+                                                    size="medium"
+                                                    rounded={true}
+                                                />
                                             </span>
                                         </li>
+                                       
+                                        
                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">Country:</span>
-                                            <span className="break-all">{validatorData.country_iso} {validatorData.country}</span>
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">City:</span>
+                                            <span className="break-all flex-1">{validatorData.city}</span>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">City:</span>
-                                            <span className="break-all">{validatorData.city}</span>
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">ASN:</span>
+                                            <span className="break-all flex-1">{validatorData.asn}</span>
                                         </li>
+                                        
                                         <li className="flex items-start">
-                                            <span className="font-medium mr-2">ASN:</span>
-                                            <span className="break-all">{validatorData.asn}</span>
-                                        </li>
-                                        <li className="flex items-start">
-                                            <span className="font-medium mr-2">Website:</span>
-                                            <span className="break-all">{validatorData.url}</span>
-                                        </li>
-                                        <li className="flex items-start">
-                                            <span className="font-medium mr-2">Details:</span>
-                                            <span className="break-all">{validatorData.details}</span>
-                                        </li>
-                                        <li className="flex items-start">
-                                            <span className="font-medium mr-2">IP:</span>
-                                            <span className="break-all">{validatorData.ip}</span>
+                                            <span className="font-medium mr-2 w-40 whitespace-nowrap">IP:</span>
+                                            <span className="break-all flex-1">{validatorData.ip}</span>
                                         </li>
                                     </ul>
                                     <div className="w-1/2 pl-2">
-                                        {validatorData.avatar_file_url ?   
-                                            <img src={`${validatorData.avatar_file_url}`} alt="avatar" className="w-full mt-3" />
+                                        {validatorData.has_screenshot ?   
+                                            <img src={`/storage/site-screenshots/${validatorData.id}.png`} alt="screenshot" className="w-full" />
                                         : 
-                                            <div className="text-gray-500">No avatar available</div>
+                                            <div className="w-full border-2 border-dashed border-gray-300 rounded-lg h-[230px] flex items-center justify-center">
+                                                <span className="text-gray-500">No screenshot available</span>
+                                            </div>
                                         }
                                     </div>
                                 </div>
                             </div>
                         </div>
+
+                        <div className="flex space-x-4 mt-4">
+                            <div className="bg-[#170e23] rounded-lg p-5 flex-1">
+                                <span className="text-xl font-bold mb-4 text-white mb-2 block">Account Assets</span>
+                                <table className="w-full border border-gray-300">
+                                    <thead>
+                                        <tr className="border-b border-gray-300 bg-gray-100">
+                                            <th className="text-left py-2 px-4">Identity</th>
+                                            <th className="text-left py-2 px-4">Vote</th>
+                                            <th className="text-left py-2 px-4">Withdrawer</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td className="py-2 px-4 border-b border-gray-200">identity_value_1</td>
+                                            <td className="py-2 px-4 border-b border-gray-200">vote_value_1</td>
+                                            <td className="py-2 px-4 border-b border-gray-200">withdrawer_value_1</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="bg-[#170e23] rounded-lg p-5 flex-1">
+                                <div>Block 2</div>
+                            </div>
+                        </div>
+
+
+
+
+
                         <div className="flex mt-6">
                             <div className="w-1/2 w-[650px] h-[500px] mr-2">
                                 <MapLayer validator={validatorData} />

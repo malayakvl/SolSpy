@@ -112,7 +112,7 @@ export default function CustomersAdminIndex({ users }: CustomersAdminIndexProps)
                                         href={route('admin.customers.index', { page })}
                                         className={`px-3 py-2 text-sm rounded ${
                                             page === users.current_page
-                                                ? 'bg-blue-500 text-white'
+                                                ? 'bg-[#703ea2] text-white'
                                                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                         }`}
                                     >

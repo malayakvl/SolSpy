@@ -78,13 +78,13 @@ export default function Header(auth) {
   const isCustomer = userRoleNames.includes('Customer');
 
   return (
-    <header className="bg-white">
-      <nav className="relative bg-blue-900">
+    <header className="bg-gray-900">
+      <nav className="relative bg-black">
         <div className="mx-auto max-w-8xl px-2 sm:px-6 lg:px-8">
           <div className="relative flex h-16 items-center justify-between">
             <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
               {/* <!-- Mobile menu button--> */}
-              <button type="button" className="relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-white/5 hover:text-white focus:outline-2 focus:-outline-offset-1 focus:outline-indigo-500">
+              <button type="button" className="relative inline-flex items-center justify-center rounded-md p-2 text-gray-300 hover:bg-gray-700 hover:text-white focus:outline-2 focus:-outline-offset-1 focus:outline-indigo-500">
                 <span className="absolute -inset-0.5"></span>
                 <span className="sr-only">Open main menu</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-6">
@@ -105,25 +105,25 @@ export default function Header(auth) {
                   {/* <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-white/5 hover:text-white" --> */}
                   {isAdmin ? (
                     <>
-                      <Link href={'/admin/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link">
+                      <Link href={'/admin/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
                         {msg.get('menu.validators')}
                       </Link>
-                      <Link href={'/admin/customers'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
+                      <Link href={'/admin/customers'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
                         {msg.get('menu.customers')}
                       </Link>
-                      <Link href={'/admin/discord-news'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
+                      <Link href={'/admin/discord-news'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
                         {msg.get('menu.discord-news')}
                       </Link>
-                      <Link href={'/admin/news'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
+                      <Link href={'/admin/news'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
                         {msg.get('menu.news')}
                       </Link>
-                      <Link href={'/admin/settings'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
+                      <Link href={'/admin/settings'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
                           {msg.get('menu.settings')}
                       </Link>
                     </>
                   ) : (
                     <> 
-                      <Link href={'/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link">
+                      <Link href={'/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
                         {msg.get('menu.validators')}
                       </Link>
                     </>
@@ -160,13 +160,13 @@ export default function Header(auth) {
                   <>
                   <Link
                         href="/login"
-                        className="rounded-md px-3 py-2 text-white text-sm"
+                        className="rounded-md px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-white text-sm"
                     >
                       {msg.get('menu.login')}
                     </Link>
                     <Link
                         href="/register"
-                        className="rounded-md px-3 py-2 text-white text-sm"
+                        className="rounded-md px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-white text-sm"
                     >
                       {msg.get('menu.register')}
                     </Link>

@@ -115,7 +115,7 @@ export default function CreateEdit({ settingsData, isEdit = true, languages = [
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="inline-flex items-center px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 text-sm"
+                                className="inline-flex items-center px-6 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 disabled:opacity-50 text-sm"
                             >
                                 <FontAwesomeIcon icon={faSave} className="mr-2" />
                                 {processing ? 'Saving...' : (msg.get('settings.save'))}
