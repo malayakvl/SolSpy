@@ -121,7 +121,7 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
                             <div className="flex gap-2">
                                 <Link
                                     href="/admin/news/create"
-                                    className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                    className="inline-flex items-center px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]"
                                 >
                                     <FontAwesomeIcon icon={faPlus} className="mr-2" />
                                     Create News
@@ -227,7 +227,7 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
                             </div>
                             <button
                                 type="submit"
-                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]"
                             >
                                 Search
                             </button>
@@ -360,7 +360,7 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
                                         href={route('news.index', { ...filters, page })}
                                         className={`px-3 py-2 text-sm rounded ${
                                             page === news.current_page
-                                                ? 'bg-blue-500 text-white'
+                                                ? 'bg-[#703ea2] text-white'
                                                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                         }`}
                                     >

@@ -92,7 +92,7 @@ export default function ValidatorGridCard({
                 return <ValidatorUptime validator={validator} />;
             case "Client/Version":
                 return (
-                    <span className="bg-blue-500 text-white px-2 py-1 rounded-lg text-xs">
+                    <span className="bg-[#703ea2] text-white px-2 py-1 rounded-lg text-xs">
                         {validator.version || validator.software_version || 'N/A'}
                     </span>
                 );

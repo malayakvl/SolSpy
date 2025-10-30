@@ -192,31 +192,33 @@ export default function ValidatorActions({validator, onBanToggle}) {
 
     return (
         <>
-            <Link href={`/validator/${validator.vote_pubkey}`}>
-                <FontAwesomeIcon icon={faEye} className="mr-2 text-indigo-600 hover:text-indigo-900" />
-            </Link>
-            {!isAdmin && (
-                <>
-                    <span className="cursor-pointer" onClick={() => addToCompare(validator.id)}>
-                        <FontAwesomeIcon 
-                            icon={isInComparison ? faScaleUnbalanced : faScaleBalanced} 
-                            className={`mr-2 ${isInComparison ? 'text-red-500' : ''}`}
-                        />
-                    </span>
-                    <span className="cursor-pointer" onClick={() => addToFavorite(validator.id)}>
-                        <FontAwesomeIcon 
-                            icon={faHeart} 
-                            className={`mr-2 ${isInFavorites ? 'text-red-500' : ''}`}
-                        />
-                    </span>
-                    <span>
-                        <FontAwesomeIcon icon={faEnvelope} className="mr-2" />
-                    </span>
-                    <span>
-                        <FontAwesomeIcon icon={faMoneyBill} className="mr-2" />
-                    </span>
-                </>
-            )}
+            <div className="flex items-center">
+                <Link href={`/validator/${validator.vote_pubkey}`}>
+                    <FontAwesomeIcon icon={faEye} className="mr-2" />
+                </Link>
+                {!isAdmin && (
+                    <>
+                        <span className="cursor-pointer" onClick={() => addToCompare(validator.id)}>
+                            <FontAwesomeIcon 
+                                icon={isInComparison ? faScaleUnbalanced : faScaleBalanced} 
+                                className={`mr-2 ${isInComparison ? 'text-red-500' : ''}`}
+                            />
+                        </span>
+                        <span className="cursor-pointer" onClick={() => addToFavorite(validator.id)}>
+                            <FontAwesomeIcon 
+                                icon={faHeart} 
+                                className={`mr-2 ${isInFavorites ? 'text-red-500' : ''}`}
+                            />
+                        </span>
+                        <span>
+                            <FontAwesomeIcon icon={faEnvelope} className="mr-2" />
+                        </span>
+                        <span>
+                            <FontAwesomeIcon icon={faMoneyBill} className="mr-2" />
+                        </span>
+                    </>
+                )}
+            </div>
         </>
     );
 }

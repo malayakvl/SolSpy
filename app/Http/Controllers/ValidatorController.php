@@ -246,36 +246,24 @@ class ValidatorController extends Controller
         $settingsData = Settings::first();
         $epoch = $settingsData->epoch ?? null;
         
-        $query = DB::table('data.validators')
-            ->leftJoin('data.countries', 'data.validators.country', '=', 'data.countries.name')
-            ->leftJoin('data.leader_schedule', function($join) use ($epoch) {
-                $join->on('data.leader_schedule.node_pubkey', '=', 'data.validators.node_pubkey')
-                     ->when($epoch, function($query, $epoch) {
-                         return $query->where('data.leader_schedule.epoch', '=', $epoch);
-                     });
-            })
-            // Adding join with validators_blocked table
-            ->leftJoin('data.validators_blocked', 'data.validators.id', '=', 'data.validators_blocked.validator_id');
-            
+        // Use the search_validators function to get validator data
         $userId = $request->user() ? $request->user()->id : null;
-            
-        // Only join favorites/blocked table if user is authenticated
-        if ($userId) {
-            $query->leftJoin('data.favorites', function($join) use ($userId) {
-                $join->on('data.validators.id', '=', 'data.favorites.validator_id')
-                     ->where('data.favorites.user_id', '=', $userId);
-            })
-            ->select('data.validators.*', 'data.leader_schedule.slots as slots', 'data.favorites.id as favorite_id', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code', 'data.validators_blocked.id as blocked_id');
-        } else {
-            $query->select('data.validators.*', 'data.leader_schedule.slots as slots', 'data.countries.iso as country_iso', 'data.countries.iso3 as country_iso3', 'data.countries.phone_code as country_phone_code', 'data.validators_blocked.id as blocked_id');
-        }
         
-        $validatorData = $query
-            ->where('data.validators.vote_pubkey', '=', $voteKey);
+        $validatorQuery = "SELECT * FROM data.search_validators(?, 'all', ?, 'spy_rank', 0, 1)";
+        $validatorData = DB::select($validatorQuery, [$voteKey, $userId]);
+        
+        // Get the first (and only) result
+        $validatorData = !empty($validatorData) ? $validatorData[0] : null;
+        
+        // Add slots data from leader_schedule table
+        if ($validatorData) {
+            $slotsQuery = "SELECT slots FROM data.leader_schedule WHERE node_pubkey = ? AND epoch = ?";
+            $slotsData = DB::select($slotsQuery, [$validatorData->node_pubkey, $epoch]);
+            $validatorData->slots = !empty($slotsData) ? $slotsData[0]->slots : 0;
             
-        $validatorData = $validatorData
-            ->orderBy('data.validators.id')
-            ->first();
+            // Set spyRank to tvc_rank (same as in ValidatorDataService)
+            $validatorData->spyRank = $validatorData->tvc_rank;
+        }
 
         $totalStakeQuery = "
             SELECT COALESCE(SUM(activated_stake) / 1000000000.0, 0) as total_network_stake_sol,

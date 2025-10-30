@@ -23,7 +23,7 @@ export default function TopContentCarousel({
   return (
     <div className="flex">
       {/* Top Validators Carousel */}
-      <div className="flex items-start mb-6 w-1/2 bg-white p-0 pr-2" style={{ height: '210px' }}>
+      <div className="flex items-start mb-6 w-1/2 p-0 pr-2" style={{ height: '210px' }}>
         <CarouselProvider
           naturalSlideWidth={100}
           naturalSlideHeight={75}
@@ -44,7 +44,7 @@ export default function TopContentCarousel({
             ))}
           </Slider>
           <div className="flex justify-between items-center mt-2">
-            <ButtonBack className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+            <ButtonBack className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]">
               Back
             </ButtonBack>
             <DotGroup 
@@ -52,12 +52,12 @@ export default function TopContentCarousel({
                 <button
                   onClick={onClick}
                   className={`w-3 h-3 rounded-full mx-1 ${
-                    isSelected ? 'bg-blue-500' : 'bg-gray-300'
+                    isSelected ? 'bg-[#703ea2]' : 'bg-gray-300'
                   }`}
                 />
               )}
             />
-            <ButtonNext className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+            <ButtonNext className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]">
               Next
             </ButtonNext>
           </div>
@@ -65,7 +65,7 @@ export default function TopContentCarousel({
       </div>
       
       {/* Top News Carousel */}
-      <div className="flex items-start mb-6 w-1/2 bg-white p-0 pl-2" style={{ height: '210px' }}>
+      <div className="flex items-start mb-6 w-1/2 p-0 pl-2" style={{ height: '210px' }}>
         <CarouselProvider
           naturalSlideWidth={100}
           naturalSlideHeight={75}
@@ -77,26 +77,26 @@ export default function TopContentCarousel({
               topNewsData.map((newsItem, index) => (
                 <Slide index={index} key={`${newsItem.type}-${newsItem.id}`}>
                   <div className="flex items-center justify-center h-[200px]">
-                    <div className="w-full bg-white border border-gray-200 rounded-lg shadow-sm p-3 h-full flex flex-col">
+                    <div className="w-full border border-gray-200 rounded-lg shadow-sm p-3 h-full flex flex-col">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
+                        <span className="text-white text-xs px-2 py-1 rounded bg-[#6d3ea2]">
                           #{index + 1}
                         </span>
-                        <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
+                        <span className="text-white text-xs px-2 py-1 rounded bg-[#6d3ea2]">
                           {newsItem.type === 'news' ? 'News' : 'Discord'}
                         </span>
                       </div>
-                      <h4 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">
+                      <h4 className="text-sm font-medium text-white mb-1 line-clamp-2">
                         <a href={newsItem.url} className="hover:text-blue-600">
                           {newsItem.title}
                         </a>
                       </h4>
                       {newsItem.description && (
-                        <p className="text-xs text-gray-600 mb-2 line-clamp-2 flex-grow">
+                        <p className="text-xs text-white mb-2 line-clamp-2 flex-grow">
                           {newsItem.description}
                         </p>
                       )}
-                      <div className="text-xs text-gray-500 mt-auto">
+                      <div className="text-xs text-white mt-auto">
                         {newsItem.source}
                       </div>
                     </div>
@@ -114,7 +114,7 @@ export default function TopContentCarousel({
             )}
           </Slider>
           <div className="flex justify-between items-center mt-2">
-            <ButtonBack className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+            <ButtonBack className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]">
               Back
             </ButtonBack>
             <DotGroup 
@@ -122,12 +122,12 @@ export default function TopContentCarousel({
                 <button
                   onClick={onClick}
                   className={`w-3 h-3 rounded-full mx-1 ${
-                    isSelected ? 'bg-blue-500' : 'bg-gray-300'
+                    isSelected ? 'bg-[#703ea2]' : 'bg-gray-300'
                   }`}
                 />
               )}
             />
-            <ButtonNext className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+            <ButtonNext className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]">
               Next
             </ButtonNext>
           </div>

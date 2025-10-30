@@ -75,7 +75,7 @@ export default function ValidatorPagination({
                             onClick={() => paginate(page as number)}
                             className={`px-4 py-2 rounded ${
                                 Number(currentPage) === page
-                                    ? 'bg-blue-500 text-white'
+                                    ? 'bg-[#703ea2] text-white'
                                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                             }`}
                         >
