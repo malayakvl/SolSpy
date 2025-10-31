@@ -603,8 +603,8 @@ const getMyNextLeaderSlots = async () => {
                                 {/* === NEXT SLOTS === */}
                                 <div>
                                     <div className="flex items-center space-x-2 w-full">
-                                        <span className="w-32 text-right text-gray-300">Next Slots</span>
-                                        <div className="flex-grow">
+                                        <span className="w-32 text-right text-gray-300 h-[120px]">Next Slots</span>
+                                        <div className="flex-grow h-[120px]">
                                             {loadingSlots ? (
                                                 <div className="text-xs text-gray-400 leading-tight flex items-center">
                                                     <span>Loading...</span>
