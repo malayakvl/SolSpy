@@ -603,16 +603,16 @@ const getMyNextLeaderSlots = async () => {
                                 {/* === NEXT SLOTS === */}
                                 <div>
                                     <div className="flex items-center space-x-2 w-full">
-                                        <span className="w-32 text-right text-gray-300 h-[120px]">Next Slots</span>
-                                        <div className="flex-grow h-[120px]">
+                                        <span className="w-32 text-right text-gray-300 h-[60px]">Next Slots</span>
+                                        <div className="flex-grow h-[60px]">
                                             {loadingSlots ? (
                                                 <div className="text-xs text-gray-400 leading-tight flex items-center">
                                                     <span>Loading...</span>
                                                 </div>
                                             ) : nextSlots[0]?.slot ? (
                                                 <div className="text-xs text-green-400 leading-tight">
-                                                    Next in <strong>{nextSlots[0].windowMinutes} min</strong><br/>
-                                                    at <strong>{nextSlots[0].dateWindow}</strong><br/>
+                                                    Next in <strong>{nextSlots[0].windowMinutes} min</strong>
+                                                    at <strong>{nextSlots[0].dateWindow}</strong>
                                                     (first slot ~{nextSlots[0].date})<br/>
                                                     Leader slot <strong>#{nextSlots[0].slot}</strong>
                                                 </div>
