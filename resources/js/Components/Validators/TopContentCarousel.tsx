@@ -65,7 +65,7 @@ export default function TopContentCarousel({
       </div>
       
       {/* Top News Carousel */}
-      <div className="flex items-start mb-6 w-1/2 p-0 pl-2" style={{ height: '210px' }}>
+      <div className="flex items-start mb-6 w-1/2 p-0 pl-2 bg-[#292035]" style={{ height: '210px' }}>
         <CarouselProvider
           naturalSlideWidth={100}
           naturalSlideHeight={75}

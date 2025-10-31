@@ -31,7 +31,7 @@ class FetchAllValidatorsLeaderSchedule extends Command
 
             // Отримання слотів для валідатора в епосі
             $slotRecord = DB::table('data.leader_schedule')
-                           ->where('validator_pubkey', $nodePubkey)
+                           ->where('node_pubkey', $nodePubkey)
                            ->where('epoch', $epoch)
                            ->first();
 

@@ -911,4 +911,6 @@ class ValidatorController extends Controller
             return response()->json(['error' => 'Failed to fetch average rank'], 500);
         }
     }
+
+    
 }
