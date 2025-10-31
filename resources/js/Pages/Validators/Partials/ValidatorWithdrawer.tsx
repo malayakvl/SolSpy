@@ -23,7 +23,7 @@ export function ValidatorWithdrawer({ votePubkey, nodePubkey }: {
       <div>
         {loading ? '⏳' : error ? '❌ RPC error' : withdrawer ? (
           <>
-            <span style={{ color: isHot ? '#703da7' : '#000' }}>
+            <span style={{ color: isHot ? '#703da7' : '#f1f1f1' }}>
               {withdrawer}
             </span>
             {isHot && (

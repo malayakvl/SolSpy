@@ -54,7 +54,7 @@ export default function ValidatorCard({validator, epoch, settingsData, totalStak
                 }}
             />
             <div className="flex flex-col justify-between p-2 leading-normal">
-                <h5 className="text-2xl font-bold tracking-tight text-white dark:text-white">
+                <h5 className="text-2xl font-bold tracking-tight text-white  dark:text-white">
                     <ValidatorName validator={validator} noTruncate={true} />
                 </h5>
                 <div className="grid grid-cols-[auto_auto_auto_auto_auto_auto_auto_auto] text-[14px] gap-4 rounded-lg">

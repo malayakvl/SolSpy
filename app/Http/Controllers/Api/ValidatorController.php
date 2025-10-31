@@ -32,6 +32,431 @@ class ValidatorController extends Controller
         $this->spyRankService = $spyRankService;
     }
 
+    private function rpcCall($url, $method, $params = [])
+    {
+        $data = [
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'method' => $method,
+            'params' => $params
+        ];
+        
+
+        $ch = curl_init('http://103.167.235.81:8899');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode !== 200) {
+            throw new \Exception("RPC error: HTTP $httpCode");
+        }
+
+        $json = json_decode($response, true);
+        if (isset($json['error'])) {
+            throw new \Exception($json['error']['message']);
+        }
+
+        return $json;
+    }
+
+public function getNextLeaderSlots(Request $request)
+{
+    // ✅ Default: твой валидатор Vladika
+    $votePubkey = $request->query('vote_pubkey', "53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR");
+    $rpcUrl = 'http://103.167.235.81:8899';
+
+    try {
+        // -------- GET IDENTITY KEY FROM VOTE KEY ---------------------
+        $voteInfo = $this->rpcCall($rpcUrl, 'getVoteAccounts')['result'];
+
+        $identityKey = null;
+
+        foreach (array_merge($voteInfo['current'], $voteInfo['delinquent']) as $acc) {
+            if ($acc['votePubkey'] === $votePubkey) {
+                $identityKey = $acc['nodePubkey'];
+                break;
+            }
+        }
+
+        if (!$identityKey) {
+            return response()->json(['error' => 'Vote pubkey not found'], 400);
+        }
+
+        // -------- GET CURRENT SLOT & EPOCH INFO ---------------------
+        $currentSlot = $this->rpcCall($rpcUrl, 'getSlot')['result'];
+        $epochInfo = $this->rpcCall($rpcUrl, 'getEpochInfo')['result'];
+
+        $epoch = $epochInfo['epoch'];
+        $epochAbsoluteStart = $epochInfo['absoluteSlot'];
+        $slotsInEpoch = $epochInfo['slotsInEpoch'];
+
+        // -------- GET LEADER SLOTS (in-epoch indexes) ----------------
+        $schedule = $this->rpcCall($rpcUrl, 'getLeaderSchedule', [null, ['identity' => $identityKey]]);
+        $mySlots = $schedule['result'][$identityKey] ?? [];
+
+        // Convert to absolute slots
+        $myAbsoluteSlots = array_map(
+            fn($s) => $epochAbsoluteStart + $s,
+            $mySlots
+        );
+
+        // Future only
+        $futureSlots = array_slice(
+            array_filter($myAbsoluteSlots, fn($s) => $s > $currentSlot),
+            0,
+            5
+        );
+
+        if (empty($futureSlots)) {
+            return response()->json([
+                'next_slots' => [],
+                'msg' => 'No upcoming leader slots left in this epoch'
+            ]);
+        }
+
+        // -------- FIND LAST BLOCK TIME TO ESTIMATE SLOT TIME --------
+        $refSlot = $currentSlot;
+        $refTime = null;
+
+        for ($i = 0; $i < 50; $i++) {
+            $testSlot = $currentSlot - $i * 100;
+            if ($testSlot < 0) break;
+
+            $time = $this->rpcCall($rpcUrl, 'getBlockTime', [$testSlot]);
+
+            if ($time['result'] !== null) {
+                $refSlot = $testSlot;
+                $refTime = $time['result'];
+                break;
+            }
+        }
+
+        if (!$refTime) $refTime = time();
+
+        // -------- FORMAT OUTPUT ---------------------------------------
+        $result = [];
+        foreach ($futureSlots as $slot) {
+            $diffSlots = $slot - $refSlot;
+            $etaSec = $diffSlots * 0.4; // baseline
+            $etaTs = $refTime + $etaSec;
+
+            $result[] = [
+                'absolute_slot' => $slot,
+                'slot_in_epoch' => $slot - $epochAbsoluteStart,
+                'epoch' => $epoch,
+                'eta_seconds' => round($etaSec, 1),
+                'eta_local' => date('Y-m-d H:i:s', $etaTs + 7200), // Kyiv
+                'in_minutes' => round($etaSec / 60, 1)
+            ];
+        }
+
+        return response()->json([
+            'validator_identity' => $identityKey,
+            'validator_vote' => $votePubkey,
+            'current_slot' => $currentSlot,
+            'epoch' => $epoch,
+            'next_slots' => $result
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
+public function getSkippedStats(Request $request)
+{
+    $identity = $request->query('identity');
+
+    if (!$identity) {
+        return response()->json(['error' => 'identity required'], 400);
+    }
+
+    $rpcUrl = 'http://103.167.235.81:8899';
+
+    // 1. Get leader schedule
+    $schedule = $this->rpcCall($rpcUrl, 'getLeaderSchedule', [null, ['identity' => $identity]]);
+    $slots = $schedule['result'][$identity] ?? [];
+
+    if (empty($slots)) {
+        return response()->json([
+            'identity' => $identity,
+            'checked' => 0,
+            'produced' => 0,
+            'skipped' => 0,
+            'skip_rate' => 0,
+            'history' => []
+        ]);
+    }
+
+    // 2. Epoch info
+    $epochInfo = $this->rpcCall($rpcUrl, 'getEpochInfo')['result'];
+    $currentEpoch = $epochInfo['epoch'];
+    $currentSlot = $epochInfo['absoluteSlot'];
+
+    // 3. Keep only current epoch slots
+    $slots = array_filter($slots, function($slot) use ($currentEpoch) {
+        return intdiv($slot, 432000) === $currentEpoch;
+    });
+
+    // 4. Filter only past + available slots
+    $firstAvailable = $this->rpcCall($rpcUrl, 'getFirstAvailableBlock')['result'] ?? 0;
+
+    $validSlots = array_filter($slots, function($s) use ($currentSlot, $firstAvailable) {
+        return $s <= $currentSlot && $s >= $firstAvailable;
+    });
+
+    // Fallback — if everything filtered out (purge / epoch start)
+    if (empty($validSlots)) {
+        $validSlots = array_slice($slots, -200);
+    }
+
+    // Analyze last 200 slots max
+    $recentSlots = array_slice($validSlots, -200);
+
+    $produced = 0;
+    $skipped = 0;
+    $history = [];
+
+    foreach ($recentSlots as $slot) {
+        $block = $this->rpcCall($rpcUrl, 'getBlock', [$slot]);
+
+        if (isset($block['error'])) {
+            $history[] = [
+                'slot' => $slot,
+                'ok' => null,
+                'reason' => $block['error']['message'] ?? 'unavailable'
+            ];
+            continue;
+        }
+
+        $ok = !empty($block['result']);
+        $history[] = ['slot' => $slot, 'ok' => $ok];
+
+        if ($ok) {
+            $produced++;
+        } else {
+            $skipped++;
+        }
+    }
+
+    $checked = $produced + $skipped;
+
+    return response()->json([
+        'identity' => $identity,
+        'checked' => $checked,
+        'produced' => $produced,
+        'skipped' => $skipped,
+        'skip_rate' => $checked > 0 ? round(($skipped / $checked) * 100, 2) : 0,
+        'epoch' => $currentEpoch,
+        'history' => $history
+    ]);
+}
+
+
+public function getLeaderSlots(Request $request)
+{
+    $identity = $request->query('node_pubkey');
+
+    if (!$identity) {
+        return response()->json(['error' => 'identity required'], 400);
+    }
+
+    $rpcUrl = 'http://103.167.235.81:8899';
+
+    // 1) Epoch info
+    $epochInfo = $this->rpcCall($rpcUrl, 'getEpochInfo');
+    $currentSlot = $epochInfo['result']['absoluteSlot'] ?? null;
+    $epoch = $epochInfo['result']['epoch'] ?? null;
+    $epochSlotIndex = $epochInfo['result']['slotIndex'] ?? null;
+    $slotsInEpoch = $epochInfo['result']['slotsInEpoch'] ?? null;
+
+    // 2) Leader schedule
+    $schedule = $this->rpcCall($rpcUrl, 'getLeaderSchedule', [null, ['identity' => $identity]]);
+    $slots = $schedule['result'][$identity] ?? [];
+
+    // ✅ stake валидатора и сети
+    $stakeInfo = $this->rpcCall($rpcUrl, 'getVoteAccounts');
+    $active = $stakeInfo['result']['current'] ?? [];
+    $found = collect($active)->firstWhere('nodePubkey', $identity);
+
+    $validatorStake = $found['activatedStake'] ?? 0;
+    $totalNetworkStake = array_sum(array_column($active, 'activatedStake'));
+
+    $stakeShare = $totalNetworkStake > 0 ? ($validatorStake / $totalNetworkStake) : 0;
+
+    // ✅ Ожидаемые слоты по stake
+    $expectedSlots = round($stakeShare * $slotsInEpoch);
+
+    if (!$slots || !$currentSlot) {
+        return response()->json([
+            'epoch' => $epoch,
+            'leader_slots' => 0,
+            'past_slots' => 0,
+            'produced_slots' => 0,
+            'skipped_slots' => 0,
+            'produced_rate' => 0,
+            'skip_rate' => 0,
+            'epoch_progress' => 0,
+            'history_checked' => 0,
+            'history' => []
+        ]);
+    }
+
+    // 3) First block available
+    $firstAvailable = $this->rpcCall($rpcUrl, 'getFirstAvailableBlock')['result'] ?? 0;
+
+    // Past slots only
+    $pastSlots = array_filter($slots, fn($s) => $s <= $currentSlot);
+    $pastCount = count($pastSlots);
+
+    $produced = 0;
+    $skipped = 0;
+    $history = [];
+
+    foreach ($pastSlots as $slot) {
+        if ($slot < $firstAvailable) {
+            $history[] = [
+                'slot' => $slot,
+                'ok' => null,
+                'reason' => 'pruned'
+            ];
+            continue;
+        }
+
+        $block = $this->rpcCall($rpcUrl, 'getBlock', [$slot]);
+
+        if (!empty($block['result'])) {
+            $produced++;
+            $history[] = ['slot' => $slot, 'ok' => true];
+        } else {
+            $skipped++;
+            $history[] = ['slot' => $slot, 'ok' => false];
+        }
+    }
+
+    $total = max(1, $produced + $skipped);
+
+    return response()->json([
+        'epoch' => $epoch,
+        'leader_slots' => count($slots),      // ВСЕ слоты в эпохе
+        'past_slots' => $pastCount,           // ПРОШЕДШИЕ слоты
+        'expected_slots' => $expectedSlots, // ✅ ЭТО ГЛАВНОЕ!
+        'produced_slots' => $produced,
+        'skipped_slots' => $skipped,
+        'produced_rate' => round(($produced / $total) * 100, 2),
+        'skip_rate' => round(($skipped / $total) * 100, 2),
+        'epoch_progress' => round(($epochSlotIndex / $slotsInEpoch) * 100, 2),
+        'history_checked' => $pastCount,
+        'history' => $history
+    ]);
+}
+
+
+
+
+
+
+
+
+
+  public function getSkippedSlots(Request $request)
+    {
+        $nodePubkey = $request->query('node_pubkey');
+        if (!$nodePubkey) {
+            return response()->json(['error' => 'node_pubkey required'], 400);
+        }
+
+        $rpcUrl = 'http://103.167.235.81';
+        $cacheKey = "skipped_slots_{$nodePubkey}";
+        $cacheTtl = 60;
+
+        return Cache::remember($cacheKey, $cacheTtl, function () use ($rpcUrl, $nodePubkey) {
+            try {
+                // 1. Текущий слот и эпоха
+                $currentSlot = $this->rpcCall($rpcUrl, 'getSlot')['result'];
+                $epochInfo = $this->rpcCall($rpcUrl, 'getEpochInfo')['result'];
+                $epoch = $epochInfo['epoch'];
+                $epochProgress = $epochInfo['slotIndex'] / $epochInfo['slotsInEpoch'];
+                $progressPercent = round($epochProgress * 100, 1);
+
+                // 2. Leader Slots
+                $schedule = $this->rpcCall($rpcUrl, 'getLeaderSchedule', [null, ['identity' => $nodePubkey]]);
+                $leaderSlots = $schedule['result'][$nodePubkey] ?? [];
+                $totalLeaderSlots = count($leaderSlots);
+
+                if ($totalLeaderSlots === 0) {
+                    return response()->json([
+                        'epoch' => $epoch,
+                        'leader_slots' => 0,
+                        'produced_slots' => 0,
+                        'skipped_slots' => 0,
+                        'skip_rate' => 0,
+                        'produced_rate' => 100,
+                        'epoch_progress' => $progressPercent,
+                        'message' => 'Нет слотов в текущей эпохе'
+                    ]);
+                }
+
+                // 3. Считаем только прошедшие слоты
+                $produced = 0;
+                $skipped = 0;
+                $pastSlots = 0;
+
+                foreach ($leaderSlots as $slot) {
+                    if ($slot > $currentSlot) {
+                        continue;
+                    }
+
+                    $pastSlots++;
+
+                    try {
+                        $block = $this->rpcCall($rpcUrl, 'getBlockHeight', [$slot, ['commitment' => 'confirmed']]);
+                        if (isset($block['result']) && $block['result'] !== null) {
+                            $produced++;
+                        } else {
+                            $skipped++;
+                        }
+                    } catch (\Exception $e) {
+                        $skipped++;
+                    }
+                }
+
+                // 4. Проценты
+                $skipRate = $pastSlots > 0 ? ($skipped / $pastSlots) * 100 : 0;
+                $producedRate = 100 - $skipRate;
+
+                return response()->json([
+                    'epoch' => $epoch,
+                    'epoch_progress' => $progressPercent,
+                    'leader_slots' => $totalLeaderSlots,
+                    'past_slots' => $pastSlots,
+                    'produced_slots' => $produced,
+                    'skipped_slots' => $skipped,
+                    'skip_rate' => round($skipRate, 2),
+                    'produced_rate' => round($producedRate, 2),
+                ]);
+
+            } catch (\Exception $e) {
+                \Log::error('SkippedSlots error', ['error' => $e->getMessage()]);
+                return response()->json([
+                    'epoch' => 0,
+                    'leader_slots' => 0,
+                    'produced_slots' => 0,
+                    'skipped_slots' => 0,
+                    'skip_rate' => 0,
+                    'produced_rate' => 100,
+                    'error' => 'RPC error'
+                ], 500);
+            }
+        });
+    }
+
     public function timeoutData(Request $request)
     {
         $page = max(1, (int) $request->input('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1

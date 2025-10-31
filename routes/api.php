@@ -20,6 +20,13 @@ Route::get('/fetch-favorite-validators-public', [ApiValidatorController::class, 
 Route::get('/fetch-comparison-validators-public', [ApiValidatorController::class, 'publicComparisonData'])->name('validators.publicComparisonData');
 Route::get('/fetch-score', [ApiValidatorController::class, 'getValidatorScore'])->name('validators.getValidatorScore');
 
+// === НОВЫЙ МАРШРУТ: Следующие слоты валидатора ===
+Route::get('/validator-next-slots', [ApiValidatorController::class, 'getNextLeaderSlots']);
+Route::get('/validator-skipped-slots', [ApiValidatorController::class, 'getSkippedSlots']);
+Route::get('/validator/skip-stats', [ApiValidatorController::class, 'getSkippedStats']);
+Route::get('/validator-leader-slots', [ApiValidatorController::class, 'getLeaderSlots']);
+// routes/api.php
+
 // Session-based authentication for SPA API calls (this is what you need for authenticated users)
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/settings/customer-columns', [SettingsController::class, 'getDataWithHeaderByUser'])->name('settingsUser.get');
