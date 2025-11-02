@@ -27,6 +27,18 @@ class FetchValidatorSkipRateServer extends Command
             }
         }
         
+        // Test the solana command first
+        $testCommand = "$solanaPath epoch-info";
+        $this->info("Testing solana command: $testCommand");
+        
+        $process = Process::fromShellCommandline($testCommand, null, null, null, 30);
+        $process->run();
+        
+        if (!$process->isSuccessful()) {
+            $this->error('Solana command test failed: ' . $process->getErrorOutput());
+            return 1;
+        }
+        
         $epoch = $this->getEpoch($solanaPath);
         $this->info("Current epoch: $epoch");
 
@@ -134,9 +146,24 @@ class FetchValidatorSkipRateServer extends Command
 
     private function getEpoch(string $solanaPath)
     {
-        $output = $this->executeSolanaCommand("$solanaPath epoch-info --output json", 30);
-        $data = json_decode($output, true);
-        return $data['epoch'] ?? 0;
+        $output = $this->executeSolanaCommand("$solanaPath epoch-info", 30);
+        if (empty($output)) {
+            return 0;
+        }
+        
+        // Parse the text output since --output json might not work consistently
+        $lines = explode("\n", trim($output));
+        foreach ($lines as $line) {
+            $parts = explode(':', $line, 2);
+            if (count($parts) == 2) {
+                $key = trim($parts[0]);
+                $value = trim($parts[1]);
+                if ($key === 'Epoch') {
+                    return (int)$value;
+                }
+            }
+        }
+        return 0;
     }
 
     private function getLeaderSlots($voteKey, $nodeKey, string $solanaPath)
