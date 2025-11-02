@@ -12,6 +12,7 @@ use App\Models\ValidatorOrder;
 use App\Services\ValidatorDataService;
 use App\Services\TotalStakeService;
 use App\Services\SpyRankService;
+use App\Services\ValidatorAveragesService;
 use Illuminate\Support\Facades\DB;
 
 class ValidatorController extends Controller
@@ -252,6 +253,8 @@ class ValidatorController extends Controller
         $validatorQuery = "SELECT * FROM data.search_validators(?, 'all', ?, 'spy_rank', 0, 1)";
         $validatorData = DB::select($validatorQuery, [$voteKey, $userId]);
         
+        $validatorScores = "SELECT * FROM data.search_validators(?, 'all', ?, 'spy_rank', 0, 1)";
+        $validatorScoresData = DB::select($validatorQuery, [$voteKey, $userId]);
         // Get the first (and only) result
         $validatorData = !empty($validatorData) ? $validatorData[0] : null;
         
@@ -263,8 +266,22 @@ class ValidatorController extends Controller
             
             // Set spyRank to tvc_rank (same as in ValidatorDataService)
             $validatorData->spyRank = $validatorData->tvc_rank;
+            
+            // Get validator averages for the last 10 epochs
+            try {
+                $validatorAveragesService = new ValidatorAveragesService();
+                $validatorData->epochAverages = $validatorAveragesService->getValidatorAverages($validatorData->vote_pubkey, 10);
+                $validatorData->overallAverages = $validatorAveragesService->getOverallValidatorAverages($validatorData->vote_pubkey, 10);
+            } catch (\Exception $e) {
+                // If there's an error fetching averages, set empty arrays
+                $validatorData->epochAverages = [];
+                $validatorData->overallAverages = [
+                    'overall_avg_uptime' => 0,
+                    'overall_avg_root_slot' => 0,
+                    'overall_avg_stake' => 0
+                ];
+            }
         }
-
         $totalStakeQuery = "
             SELECT COALESCE(SUM(activated_stake) / 1000000000.0, 0) as total_network_stake_sol,
                 COUNT(*) as validator_count,
