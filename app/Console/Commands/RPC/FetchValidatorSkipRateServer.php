@@ -141,15 +141,16 @@ class FetchValidatorSkipRateServer extends Command
 
     private function getLeaderSlots($voteKey, $nodeKey, string $solanaPath)
     {
-        // Получаем расписание лидеров в текстовом формате (без --output json)
-        $output = $this->executeSolanaCommand("$solanaPath leader-schedule --no-duplicates", 60);
+        // Получаем расписание лидеров в текстовом формате (без --no-duplicates)
+        $output = $this->executeSolanaCommand("$solanaPath leader-schedule", 60);
         
         if (empty($output)) {
             $this->info("Empty leader schedule response");
             return [];
         }
 
-        // Парсим текстовый вывод
+        // Парсим текстовый вывод в формате:
+        // slot_number       pubkey
         $lines = explode("\n", trim($output));
         $schedule = [];
         
@@ -157,17 +158,17 @@ class FetchValidatorSkipRateServer extends Command
             $line = trim($line);
             if (empty($line)) continue;
             
-            // Формат: pubkey1: slot1, slot2, slot3...
-            if (strpos($line, ':') !== false) {
-                list($pubkey, $slotsStr) = explode(':', $line, 2);
-                $pubkey = trim($pubkey);
-                $slotsStr = trim($slotsStr);
+            // Разбиваем строку по пробелам
+            $parts = preg_split('/\s+/', $line);
+            if (count($parts) >= 2) {
+                $slot = intval($parts[0]);
+                $pubkey = $parts[1];
                 
-                if (!empty($slotsStr)) {
-                    // Разбиваем слоты по запятым
-                    $slots = array_map('intval', array_filter(explode(',', $slotsStr)));
-                    $schedule[$pubkey] = $slots;
+                // Группируем слоты по pubkey
+                if (!isset($schedule[$pubkey])) {
+                    $schedule[$pubkey] = [];
                 }
+                $schedule[$pubkey][] = $slot;
             }
         }
 
