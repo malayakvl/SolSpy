@@ -111,7 +111,7 @@ class FetchValidatorSkipRateServer extends Command
             }
             
             // Проверяем, существует ли блок для этого слота
-            $block = $this->executeSolanaCommand("$solanaPath block $slot --output json", 30);
+            $block = $this->executeSolanaCommand("$solanaPath block $slot", 30);
 
             if (!empty($block)) {
                 $produced++;
