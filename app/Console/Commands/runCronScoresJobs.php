@@ -5,21 +5,21 @@ use Illuminate\Support\Facades\Artisan;
 
 use Illuminate\Console\Command;
 
-class runCronJobs extends Command
+class runCronScoresJobs extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:run-cron-jobs';
+    protected $signature = 'app:run-cron-scores-jobs';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Run cron jobs';
+    protected $description = 'Run cron scores jobs';
 
     /**
      * Execute the console command.
@@ -32,12 +32,7 @@ class runCronJobs extends Command
             $this->info('Cron every 1 sec...');
             // Например, вызов метода или сервиса
             // Вызов команды app:fetch-validators
-            // Artisan::call('app:update-epoch-max-credits'); //Need to start hourly
-            Artisan::call('app:fetch-validators');
-            Artisan::call('rpc:fetch-validators');
             Artisan::call('rpc:fetch-validator-scores');
-            // Artisan::call('validators:update-scores-auto');
-            Artisan::call('validators:update-spy-rank');
             
 
             // Вывод результата команды (опционально)

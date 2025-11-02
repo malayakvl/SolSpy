@@ -15,6 +15,7 @@ use Symfony\Component\Process\Exception\ProcessFailedException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use phpseclib3\Net\SSH2;
+use Illuminate\Support\Facades\Http;
 
 class ValidatorController extends Controller
 {
@@ -357,6 +358,230 @@ public function getLeaderSlots(Request $request)
     ]);
 }
 
+
+
+
+public function hardware(Request $request)
+{
+    // $ip = $request->query('ip');
+    // if (!$ip) {
+    //     return response()->json(['error' => 'IP required'], 400);
+    // }
+
+    // $ports = [9100, 9101, 9200, 8080];
+    // $metrics = null;
+
+    // foreach ($ports as $port) {
+    //     $url = "http://{$ip}:{$port}/metrics";
+
+    //     try {
+    //         $context = stream_context_create(['http' => ['timeout' => 2]]);
+    //         $metrics = @file_get_contents($url, false, $context);
+
+    //         if ($metrics !== false) {
+    //             break; // Метрики найдены — выходим из цикла
+    //         }
+    //     } catch (\Throwable $e) {
+    //         continue;
+    //     }
+    // }
+
+    // if (!$metrics) {
+    //     return response()->json(['error' => 'metrics_unavailable']);
+    // }
+
+    // // RAM
+    // preg_match('/node_memory_MemTotal_bytes\s+(\d+)/', $metrics, $ram);
+
+    // // CPU cores count
+    // preg_match_all('/node_cpu_seconds_total\{.*cpu="(\d+)"\}/', $metrics, $cpuMatches);
+    // $cpuCores = isset($cpuMatches[1]) ? count(array_unique($cpuMatches[1])) : null;
+
+    // // Disk
+    // preg_match('/node_filesystem_size_bytes\{[^}]*mountpoint="\/"[^}]*\}\s+(\d+)/', $metrics, $disk);
+
+    // return response()->json([
+    //     'source'       => $ip,
+    //     'ram_bytes'    => $ram[1] ?? null,
+    //     'cpu_cores'    => $cpuCores,
+    //     'disk_bytes'   => $disk[1] ?? null,
+    // ]);
+        $ip = '208.76.223.94';
+        $asn = '20473'; // optional: string or number or descriptive "Hetzner"
+        $vote = '53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR'; // optional, not used directly here
+
+        if (!$ip && !$vote) {
+            return response()->json(['error' => 'ip or vote is required'], 400);
+        }
+
+        // cache key per ip or vote
+        $cacheKey = 'hw_estimate:' . ($ip ?: 'vote_' . $vote);
+        $cached = Cache::get($cacheKey);
+        if ($cached) return response()->json($cached);
+
+        $result = [
+            'ip' => $ip,
+            'asn' => $asn,
+            'rdns' => null,
+            'http_server' => null,
+            'tls_cn' => null,
+            'estimate' => null,
+            'confidence' => 0,
+            'reasons' => [],
+            'fetched_at' => now()->toISOString()
+        ];
+
+        // 1) reverse DNS (best-effort)
+        try {
+            if ($ip) {
+                $rdns = @gethostbyaddr($ip);
+                if ($rdns && $rdns !== $ip) {
+                    $result['rdns'] = $rdns;
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        // 2) try HTTP HEAD on likely hosts (use http(s) as available)
+        $tryHosts = [];
+        if ($request->query('host')) {
+            $tryHosts[] = $request->query('host');
+        }
+        if (!empty($result['rdns'])) {
+            $tryHosts[] = 'https://' . $result['rdns'];
+            $tryHosts[] = 'http://' . $result['rdns'];
+        }
+        if ($ip) {
+            $tryHosts[] = 'https://' . $ip;
+            $tryHosts[] = 'http://' . $ip;
+        }
+
+        // try HEAD requests, short timeout
+        $tried = [];
+        foreach ($tryHosts as $u) {
+            if (in_array($u, $tried)) continue;
+            $tried[] = $u;
+            try {
+                $resp = Http::timeout(3)->withHeaders(['User-Agent' => 'ValidatorEstimator/1.0'])->head($u);
+                if ($resp->successful() || in_array($resp->status(), [200,301,302,403,401])) {
+                    $result['http_server'] = $resp->header('Server') ?? null;
+                    // if GET allowed and small body, fetch small JSON
+                    if ($resp->status() === 200 && strpos($resp->header('Content-Type',''), 'application/json') !== false) {
+                        $get = Http::timeout(3)->get($u);
+                        if ($get->successful()) {
+                            // optionally parse JSON if it looks like solana-hardware.json
+                        }
+                    }
+                    // try to get TLS cert CN if HTTPS
+                    if (stripos($u, 'https://') === 0) {
+                        try {
+                            $host = parse_url($u, PHP_URL_HOST);
+                            $port = parse_url($u, PHP_URL_PORT) ?: 443;
+                            $context = stream_context_create(["ssl" => ["capture_peer_cert" => true, "verify_peer" => false, "verify_peer_name" => false]]);
+                            $client = @stream_socket_client("ssl://{$host}:{$port}", $errno, $errstr, 3, STREAM_CLIENT_CONNECT, $context);
+                            if ($client) {
+                                $params = stream_context_get_options($client);
+                            }
+                            // simpler: use openssl to fetch cert
+                            $cert = @openssl_x509_parse(@stream_context_get_params($client)['options']['ssl']['peer_certificate'] ?? null);
+                            if (!empty($cert) && !empty($cert['subject'])) {
+                                $cn = $cert['subject']['CN'] ?? null;
+                                if ($cn) $result['tls_cn'] = $cn;
+                            }
+                        } catch (\Throwable $e) {
+                            // ignore
+                        }
+                    }
+                    // we got at least one valid host response — stop scanning more hosts
+                    break;
+                }
+            } catch (\Throwable $e) {
+                // ignore timeouts/errors
+            }
+        }
+
+        // 3) heuristics mapping provider/rdns/asn -> estimate ranges
+        $providerHints = $asn ? $asn : ($result['rdns'] ?? '');
+        $hintsLower = strtolower($providerHints . ' ' . ($result['rdns'] ?? '') . ' ' . ($result['http_server'] ?? '') . ' ' . ($result['tls_cn'] ?? ''));
+
+        // small provider -> estimated specs mapping (ranges)
+        $mappings = [
+            // dedicated hosting / colocation (likely strong machines)
+            'hetzner' => ['ram_gb' => [64,512], 'cpu_cores' => [8,64], 'disk' => 'NVMe', 'confidence' => 60],
+            'ovh' => ['ram_gb' => [32,256], 'cpu_cores' => [8,64], 'disk' => 'NVMe', 'confidence' => 55],
+            'ionos' => ['ram_gb' => [16,128], 'cpu_cores' => [4,32], 'disk' => 'SSD/NVMe', 'confidence' => 40],
+            'amazonaws' => ['ram_gb' => [4,256], 'cpu_cores' => [2,64], 'disk' => 'EBS (varies)', 'confidence' => 40],
+            'ec2' => ['ram_gb' => [4,256], 'cpu_cores' => [2,64], 'disk' => 'EBS', 'confidence' => 40],
+            'digitalocean' => ['ram_gb' => [2,64], 'cpu_cores' => [1,16], 'disk' => 'SSD', 'confidence' => 45],
+            'linode' => ['ram_gb' => [2,64], 'cpu_cores' => [1,16], 'disk' => 'SSD', 'confidence' => 40],
+            'google' => ['ram_gb' => [4,256], 'cpu_cores' => [2,64], 'disk' => 'Persistent Disk', 'confidence' => 40],
+            'azure' => ['ram_gb' => [4,256], 'cpu_cores' => [2,64], 'disk' => 'Managed Disk', 'confidence' => 40],
+            'vultr' => ['ram_gb' => [2,64], 'cpu_cores' => [1,32], 'disk' => 'NVMe/SSD', 'confidence' => 40],
+            'equinix' => ['ram_gb' => [32,512], 'cpu_cores' => [16,64], 'disk' => 'NVMe', 'confidence' => 60],
+            'jelastic' => ['ram_gb' => [2,32], 'cpu_cores' => [1,16], 'disk' => 'SSD', 'confidence' => 30]
+        ];
+
+        $matched = null;
+        foreach ($mappings as $k => $v) {
+            if (strpos($hintsLower, $k) !== false) {
+                $matched = $v;
+                $result['reasons'][] = "matched_provider:{$k}";
+                break;
+            }
+        }
+
+        // default fallback: if ASN contains only digits or 'AS' - small adjustment: cloud likely
+        if (!$matched) {
+            if ($asn && preg_match('/AS?\s*\d+/i', $asn)) {
+                $matched = ['ram_gb' => [8,128], 'cpu_cores' => [2,32], 'disk' => 'SSD', 'confidence' => 25];
+                $result['reasons'][] = 'asn_detected_generic';
+            } else {
+                // if reverse DNS looks like a personal domain -> small VM
+                if (!empty($result['rdns']) && preg_match('/home|user|client|dyn|pppoe/i', $result['rdns'])) {
+                    $matched = ['ram_gb' => [2,16], 'cpu_cores' => [1,8], 'disk' => 'SSD/HDD', 'confidence' => 20];
+                    $result['reasons'][] = 'rdns_home_generic';
+                } else {
+                    $matched = ['ram_gb' => [8,64], 'cpu_cores' => [2,24], 'disk' => 'SSD', 'confidence' => 15];
+                    $result['reasons'][] = 'fallback_generic';
+                }
+            }
+        }
+
+        // entropy: increase confidence if http_server contains "k8s" or "cloud" patterns
+        if (!empty($result['http_server'])) {
+            $hs = strtolower($result['http_server']);
+            if (strpos($hs, 'cloudflare') !== false) {
+                $result['reasons'][] = 'via_cloudflare';
+                $matched['confidence'] = min(90, ($matched['confidence'] ?? 10) + 10);
+            } elseif (strpos($hs, 'nginx') !== false) {
+                $result['reasons'][] = 'http_nginx';
+            }
+        }
+
+        // finalize estimate (choose median of range)
+        $ramRange = $matched['ram_gb'];
+        $cpuRange = $matched['cpu_cores'];
+        $ramMedian = (int) round(($ramRange[0] + $ramRange[1]) / 2);
+        $cpuMedian = (int) round(($cpuRange[0] + $cpuRange[1]) / 2);
+
+        $estimate = [
+            'ram_gb_range' => [$ramRange[0], $ramRange[1]],
+            'ram_gb_median' => $ramMedian,
+            'cpu_cores_range' => [$cpuRange[0], $cpuRange[1]],
+            'cpu_cores_median' => $cpuMedian,
+            'disk' => $matched['disk'] ?? 'unknown',
+            'confidence' => $matched['confidence'] ?? 10
+        ];
+
+        $result['estimate'] = $estimate;
+        $result['confidence'] = $estimate['confidence'];
+
+        // cache for 1 hour to avoid re-probing
+        Cache::put($cacheKey, $result, now()->addMinutes(60));
+
+        return response()->json($result);
+}
 
 
 

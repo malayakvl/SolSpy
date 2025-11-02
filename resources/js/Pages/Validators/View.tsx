@@ -22,7 +22,10 @@ import {
     faFrog,
     faFire,
     faHouse,
-    faCircleRadiation
+    faCircleRadiation,
+    faMemory,
+    faHardDrive,
+    faMicrochip
 } from '@fortawesome/free-solid-svg-icons';
 import { getWithdrawerFromMyValidator } from '../../utils/solana';
 import ValidatorCredits from "./Partials/ValidatorCredits";
@@ -95,7 +98,7 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
     const [historicalData, setHistoricalData] = useState<any>(null);
     const votePubkey = validatorData.vote_pubkey;
     const validatorIdentityPubkey = validatorData.node_pubkey;
-    const [chartTab, setChartTab] = useState<string>('epoch_credits');
+    const [chartTab, setChartTab] = useState<string>('active_stake');
     const [isBlocked, setIsBlocked] = useState<boolean>(validatorData.blocked_id ? true : false);
     const [isInComparison, setIsInComparison] = useState(false);
     const [isInFavorites, setIsInFavorites] = useState(false);
@@ -109,6 +112,8 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
     const [withdrawer, setWithdrawer] = useState<string | null>(null);
     const [loadingWithdrawer, setLoadingWithdrawer] = useState(true);
     const [errorWithdrawer, setErrorWithdrawer] = useState(false);
+    const [hardwareInfo, setHardwareInfo] = useState<any>(null);
+    const [hardwareInfoStatus, setHardwareInfoStatus] = useState<string>('loading'); // 'loading', 'success', 'error'
 
     const formatSOL = (lamports) => {
         const kSol = (lamports / 1e9) / 1e3;
@@ -238,61 +243,114 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
 
 
     // === НОВАЯ ФУНКЦИЯ: Получение следующих слотов ===
-const getMyNextLeaderSlots = async () => {
-    try {
-        setLoadingSlots(true);
+    const getMyNextLeaderSlots = async () => {
+        try {
+            setLoadingSlots(true);
 
-        const { data } = await axios.get('/api/validator-next-slots', {
-            params: { node_pubkey: validatorData.node_pubkey }
-        });
+            const { data } = await axios.get('/api/validator-next-slots', {
+                params: { node_pubkey: validatorData.node_pubkey }
+            });
 
-        const slots = data?.next_slots || [];
+            const slots = data?.next_slots || [];
 
-        // ❌ Нет слотов → показываем сообщение
-        if (!slots.length) {
+            // ❌ Нет слотов → показываем сообщение
+            if (!slots.length) {
+                setNextSlots([
+                    {
+                        slot: null,
+                        timeLeft: null,
+                        date: data?.message || 'Нет слотов'
+                    }
+                ]);
+            } else {
+                const s = slots[0];
+
+                // ✅ Нормализация данных в единый формат
+                const rawTime = s.timeLeft || s.eta || null;
+                setNextSlots([
+                    {
+                        slot: s.absolute_slot,
+                        windowMinutes: Math.max(0, Math.round((s.eta_seconds / 60) - 45)),
+                        dateWindow: new Date(new Date(s.eta_local) - 45 * 60 * 1000).toLocaleString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric'
+                        }),
+                        timeLeft: formatTimeLeft(s.eta_seconds),
+                        date: s.eta_local
+                    }
+                ]);
+                
+            }
+        } catch (err) {
+            console.error('Ошибка API:', err);
             setNextSlots([
                 {
                     slot: null,
                     timeLeft: null,
-                    date: data?.message || 'Нет слотов'
+                    date: 'Ошибка сервера'
                 }
             ]);
-        } else {
-            const s = slots[0];
-
-            // ✅ Нормализация данных в единый формат
-            const rawTime = s.timeLeft || s.eta || null;
-            setNextSlots([
-                {
-                    slot: s.absolute_slot,
-                    windowMinutes: Math.max(0, Math.round((s.eta_seconds / 60) - 45)),
-                    dateWindow: new Date(new Date(s.eta_local) - 45 * 60 * 1000).toLocaleString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric'
-                    }),
-                    timeLeft: formatTimeLeft(s.eta_seconds),
-                    date: s.eta_local
-                }
-            ]);
-            
+        } finally {
+            setLoadingSlots(false);
         }
-    } catch (err) {
-        console.error('Ошибка API:', err);
-        setNextSlots([
-            {
-                slot: null,
-                timeLeft: null,
-                date: 'Ошибка сервера'
-            }
-        ]);
-    } finally {
-        setLoadingSlots(false);
-    }
-};
+    };
 
+
+    async function fetchValidatorHardware(ip) {
+        if (!ip) return;
+
+        setHardwareInfoStatus('loading');
+        setHardwareInfo(null);
+
+        try {
+            const resp = await fetch(`/api/validator-hardware?ip=${ip}`);
+            const json = await resp.json();
+
+            // metrics missing
+            if (json.error || json.status === "metrics_unavailable") {
+                setHardwareInfoStatus('success');
+                setHardwareInfo({ type: 'unavailable' });
+                return;
+            }
+
+            // Real data
+            if (json.ram_bytes) {
+                const ram = (json.ram_bytes / 1024 / 1024 / 1024).toFixed(0);
+                const disk = json.disk_bytes 
+                    ? (json.disk_bytes / 1024 / 1024 / 1024 / 1024).toFixed(1)
+                    : "?";
+
+                setHardwareInfoStatus('success');
+                setHardwareInfo({
+                    type: 'real',
+                    ram,
+                    disk
+                });
+                return;
+            }
+
+            // Estimated hardware
+            if (json.estimate) {
+                setHardwareInfoStatus('success');
+                setHardwareInfo({
+                    type: 'estimate',
+                    estimate: json.estimate
+                });
+                return;
+            }
+
+            // Unknown fallback
+            setHardwareInfoStatus('success');
+            setHardwareInfo({ type: 'unknown' });
+
+        } catch (e) {
+            setHardwareInfoStatus('error');
+            setHardwareInfo(null);
+        }
+    }
 
     const formatTimeLeft = (seconds) => {
         if (!seconds) return '—';
@@ -317,13 +375,19 @@ const getMyNextLeaderSlots = async () => {
     }, [validatorData.node_pubkey]);
 
     useEffect(() => {
+        if (validatorData?.ip) {
+            fetchValidatorHardware(validatorData.ip)
+        }
+    }, [validatorData?.ip]);
+
+    useEffect(() => {
         const fetchSkipped = async () => {
             try {
                 setLoading(true);
                 const res = await axios.get('/api/validator-skipped-slots', {
                     params: { node_pubkey: validatorData.node_pubkey }
                 });
-                console.log(res)
+                // console.log(res)
                 
                 setSkippedData(res.data);
                 setSkipData(res.data); // ✅ Fix added here
@@ -611,7 +675,7 @@ const getMyNextLeaderSlots = async () => {
                                                 </div>
                                             ) : nextSlots[0]?.slot ? (
                                                 <div className="text-xs text-green-400 leading-tight">
-                                                    Next in <strong>{nextSlots[0].windowMinutes} min</strong>
+                                                    Next in <strong>{nextSlots[0].windowMinutes} min</strong>&nbsp;
                                                     at <strong>{nextSlots[0].dateWindow}</strong>
                                                     (first slot ~{nextSlots[0].date})<br/>
                                                     Leader slot <strong>#{nextSlots[0].slot}</strong>
@@ -658,11 +722,10 @@ const getMyNextLeaderSlots = async () => {
                         </div>
                         <div className="w-1/2 ml-2">
                             <ul className="flex flex-row w-full border-b border-gray-300">
-                                <li onClick={() => setChartTab('stake')} className={`px-4 py-2 font-medium text-md cursor-pointer text-gray-500 hover:text-gray-700`}>Stake</li>
-                                <li onClick={() => setChartTab('stake_accounts')} className="px-4 py-2 font-medium text-md cursor-pointer text-gray-500 hover:text-gray-700">Stake Accounts</li>
-                                <li onClick={() => setChartTab('success_rate')} className="px-4 py-2 font-medium text-md cursor-pointer text-gray-500 hover:text-gray-700">Success Rate</li>
-                                <li onClick={() => setChartTab('block_rewards')} className="px-4 py-2 font-medium text-md cursor-pointer text-gray-500 hover:text-gray-700">Block Rewards</li>
-                                <li onClick={() => setChartTab('epoch_credits')} className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'epoch_credits' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>Epoch Credits</li>
+                                <li onClick={() => setChartTab('uptime')} className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'uptime' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>Uptime</li>
+                                <li onClick={() => setChartTab('skip_rate')} className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'skip_rate' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>Skip Rate</li>
+                                <li onClick={() => setChartTab('active_stake')} className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'active_stake' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>Active Stake</li>
+                                <li onClick={() => setChartTab('comission_change')} className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'comission_change' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>Comission Change</li>
                             </ul>
                             <div className={`w-full ${chartTab === 'epoch_credits' ? 'block' : 'hidden'}`}>
                                 <ChartErrorBoundary><Line options={optionsLine} data={dataEpoch} /></ChartErrorBoundary>
@@ -674,6 +737,78 @@ const getMyNextLeaderSlots = async () => {
                             </div>
                         </div>
                     </div>
+                    
+                    {/* === HARDWARE INFO === */}
+                    <div className="flex items-start mt-6">
+                        <div id="hardware-info" className="flex flex-col gap-2 text-sm text-gray-300">
+                            {hardwareInfoStatus === 'loading' && (
+                                <div className="flex items-center gap-2 animate-pulse">
+                                    <span className="w-4 h-4 bg-gray-600 rounded" />
+                                    <span className="w-20 h-3 bg-gray-600 rounded" />
+                                    <span className="w-12 h-3 bg-gray-600 rounded" />
+                                </div>
+                            )}
+
+                            {hardwareInfoStatus === 'success' && hardwareInfo && (
+                                <div className="flex flex-col gap-1">
+                                    {hardwareInfo.type === 'unavailable' && (
+                                        <div className="text-gray-400">Unknown (no metrics exposed)</div>
+                                    )}
+
+                                    {hardwareInfo.type === 'real' && (
+                                        <>
+                                            <div className="flex items-center gap-2">
+                                                <FontAwesomeIcon icon={faMemory} className="text-purple-400" />
+                                                <span className="bg-purple-900/40 px-2 py-0.5 rounded text-purple-300 text-xs">RAM: {hardwareInfo.ram} GB</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <FontAwesomeIcon icon={faHardDrive} className="text-blue-400" />
+                                                <span className="bg-blue-900/40 px-2 py-0.5 rounded text-blue-300 text-xs">SSD: {hardwareInfo.disk} TB</span>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {hardwareInfo.type === 'estimate' && (
+                                        <>
+                                            <div className="flex items-center gap-2">
+                                                <FontAwesomeIcon icon={faMicrochip} className="text-green-400" />
+                                                <span className="bg-green-900/40 px-2 py-0.5 rounded text-green-300 text-xs">
+                                                    CPU: ~{hardwareInfo.estimate.cpu_cores_median}c ({hardwareInfo.estimate.cpu_cores_range[0]}–{hardwareInfo.estimate.cpu_cores_range[1]})
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <FontAwesomeIcon icon={faMemory} className="text-purple-400" />
+                                                <span className="bg-purple-900/40 px-2 py-0.5 rounded text-purple-300 text-xs">
+                                                    RAM: ~{hardwareInfo.estimate.ram_gb_median}GB ({hardwareInfo.estimate.ram_gb_range[0]}–{hardwareInfo.estimate.ram_gb_range[1]})
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <FontAwesomeIcon icon={faHardDrive} className="text-blue-400" />
+                                                <span className="bg-blue-900/40 px-2 py-0.5 rounded text-blue-300 text-xs">
+                                                    SSD: {hardwareInfo.estimate.disk}
+                                                </span>
+                                            </div>
+                                            <div className="text-xs text-gray-400 italic hidden">
+                                                <span className="bg-blue-900/40 px-2 py-0.5 rounded text-blue-300 text-xs">
+                                                    confidence {hardwareInfo.estimate.confidence}%
+                                                </span>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {hardwareInfo.type === 'unknown' && (
+                                        <span className="text-gray-500">Unknown</span>
+                                    )}
+                                </div>
+                            )}
+
+                            {hardwareInfoStatus === 'error' && (
+                                <span className="text-red-400">Hardware fetch error</span>
+                            )}
+                        </div>
+                    </div>
+
+                    
 
                     <div className="flex mt-6 bg-[#170e23] rounded-lg p-5 flex-1 flex flex-col space-y-4">
                         <span className="text-xl font-bold mb-4 text-white mb-2 block text-gray-300">Stake by Delegators</span>
