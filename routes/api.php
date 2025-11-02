@@ -25,6 +25,8 @@ Route::get('/validator-next-slots', [ApiValidatorController::class, 'getNextLead
 Route::get('/validator-skipped-slots', [ApiValidatorController::class, 'getSkippedSlots']);
 Route::get('/validator/skip-stats', [ApiValidatorController::class, 'getSkippedStats']);
 Route::get('/validator-leader-slots', [ApiValidatorController::class, 'getLeaderSlots']);
+Route::get('/validator-hardware', [ApiValidatorController::class, 'hardware']);
+
 // routes/api.php
 
 // Session-based authentication for SPA API calls (this is what you need for authenticated users)

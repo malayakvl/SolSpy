@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('data.validator_scores', function (Blueprint $table) {
+        Schema::create('data.validator_scores_history', function (Blueprint $table) {
             $table->id();
+            $table->integer('epoch');
             $table->integer('rank');
             $table->string('vote_pubkey', 44);
             $table->string('node_pubkey', 44);
@@ -24,6 +25,7 @@ return new class extends Migration
             $table->string('version', 20);
             $table->decimal('stake', 20, 9);
             $table->decimal('stake_percent', 5, 2);
+            $table->timestamp('collected_at');
             $table->timestamps();
             
             $table->index('vote_pubkey');
@@ -39,6 +41,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('data.validator_scores');
+        //
+        Schema::dropIfExists('data.validator_scores_history');
+
     }
 };

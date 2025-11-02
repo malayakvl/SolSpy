@@ -245,3 +245,6 @@ body {
     height: 100px;
     background: #4b5563; // Changed from red to gray for dark theme
 }
+.mapboxgl-ctrl.mapboxgl-ctrl-attrib, .mapboxgl-ctrl-logo {
+    display: none !important;
+}

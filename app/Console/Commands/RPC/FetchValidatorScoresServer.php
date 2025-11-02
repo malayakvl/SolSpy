@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Exception;
 
-class FetchValidatorsServer extends Command
+class FetchValidatorScoresServer extends Command
 {
     /**
      * The name and signature of the console command.
@@ -34,7 +34,6 @@ class FetchValidatorsServer extends Command
     {
         // Get collectLength from settings table
         $dbSettings = DB::table('data.settings')->first();
-        $epoch = $dbSettings->epoch ?? 0;
         $collectLength = $dbSettings->collect_score_retention ?? 10;
         
         $this->info("Updating validator scores (keeping last $collectLength collections)...");
@@ -116,16 +115,15 @@ class FetchValidatorsServer extends Command
             $this->info('Found ' . count($parsedValidators) . ' validators');
             
             // Insert parsed validator scores into database using PostgreSQL function
-            if (!empty($validatorScores)) {
-                $scoresJson = json_encode($validatorScores);
-                           
-                $insertedCount = DB::select("SELECT data.insert_validator_scores_history(?::jsonb, ?) as count", [$scoresJson, $epoch])[0]->count;
+            if (!empty($parsedValidators)) {
+                $scoresJson = json_encode($parsedValidators);
+                $insertedCount = DB::select("SELECT data.insert_validator_scores(?::jsonb) as count", [$scoresJson])[0]->count;
                 $this->info("Inserted $insertedCount validator scores into database using PostgreSQL function");
             }
             
             // Clean up old data (keep only the specified number of collections)
             
-            $this->cleanupOldData(50, $epoch);
+            $this->cleanupOldData($collectLength);
             
             $this->info('Validator scores updated successfully!');
             
@@ -140,58 +138,26 @@ class FetchValidatorsServer extends Command
     /**
      * Clean up old data, keeping only the specified number of collections
      */
-    private function cleanupOldData($collectLength, $epoch)
+    private function cleanupOldData($collectLength)
     {
-        // Get distinct vote_pubkey values
-        $validators = DB::table('data.validator_scores_history')
-            ->select('vote_pubkey')
-            ->groupBy('vote_pubkey')
-            ->pluck('vote_pubkey');
-
-        $totalDeleted = 0;
+        // Get the distinct collection times, ordered by newest first
+        $collections = DB::table('data.validator_scores')
+            ->select('collected_at')
+            ->groupBy('collected_at')
+            ->orderBy('collected_at', 'desc')
+            ->limit($collectLength)
+            ->pluck('collected_at');
         
-        // For each validator, keep only the latest records per epoch
-        foreach ($validators as $votePubkey) {
-            // Get distinct epochs for this validator
-            $epochs = DB::table('data.validator_scores_history')
-                ->where('vote_pubkey', $votePubkey)
-                ->select('epoch')
-                ->groupBy('epoch')
-                ->orderBy('epoch', 'desc')
-                ->pluck('epoch');
-            
-            // For each epoch of this validator, keep only the latest records
-            foreach ($epochs as $epochValue) {
-                // Get the count of records for this validator-epoch combination
-                $count = DB::table('data.validator_scores_history')
-                    ->where('vote_pubkey', $votePubkey)
-                    ->where('epoch', $epochValue)
-                    ->count();
+        // If we have more than the specified number of collections, delete the oldest ones
+        if ($collections->count() >= $collectLength) {
+            $oldestToKeep = $collections->last();
+            $deleted = DB::table('data.validator_scores')
+                ->where('collected_at', '<', $oldestToKeep)
+                ->delete();
                 
-                // If we have more than the specified number of records, delete the oldest ones
-                if ($count > $collectLength) {
-                    // Get the IDs of the records to keep (the newest ones based on collected_at)
-                    $recordsToKeep = DB::table('data.validator_scores_history')
-                        ->where('vote_pubkey', $votePubkey)
-                        ->where('epoch', $epochValue)
-                        ->orderBy('collected_at', 'desc')
-                        ->limit($collectLength)
-                        ->pluck('id');
-                    
-                    // Delete records that are not in the keep list
-                    $deleted = DB::table('data.validator_scores_history')
-                        ->where('vote_pubkey', $votePubkey)
-                        ->where('epoch', $epochValue)
-                        ->whereNotIn('id', $recordsToKeep)
-                        ->delete();
-                    
-                    $totalDeleted += $deleted;
-                }
+            if ($deleted > 0) {
+                $this->info("Cleaned up old data, deleted $deleted records. Keeping collections from " . $oldestToKeep);
             }
-        }
-        
-        if ($totalDeleted > 0) {
-            $this->info("Cleaned up old data, deleted $totalDeleted records.");
         }
     }
 }
