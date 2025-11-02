@@ -23,20 +23,18 @@ class FetchValidatorSkipRateServer extends Command
 
         // ✅ Получаем список vote аккаунтов из таблицы data.validators
         $validators = DB::table('data.validators')
-            ->pluck('vote_pubkey')
-            ->filter()
-            ->unique()
-            ->toArray();
+            ->select('vote_pubkey', 'node_pubkey')
+            ->get();
 
-        if (empty($validators)) {
+        if ($validators->isEmpty()) {
             $this->error("❌ No validators found in data.validators");
             return 0;
         }
 
         $this->info("Found " . count($validators) . " validators");
 
-        foreach ($validators as $voteKey) {
-            $this->processValidator($voteKey, $epoch);
+        foreach ($validators as $validator) {
+            $this->processValidator($validator, $epoch);
         }
 
         $this->cleanup();
@@ -45,16 +43,27 @@ class FetchValidatorSkipRateServer extends Command
         return 0;
     }
 
-    private function processValidator(string $voteKey, int $epoch)
+    private function processValidator($validator, int $epoch)
     {
-        $this->info("⏳ Processing validator: $voteKey");
+        $voteKey = $validator->vote_pubkey;
+        $nodeKey = $validator->node_pubkey ?? $voteKey;
+        
+        $this->info("⏳ Processing validator: $voteKey (node: $nodeKey)");
 
+        // Пробуем получить слоты сначала по vote pubkey, затем по node pubkey
         $leaderSlots = $this->getLeaderSlots($voteKey);
+        
+        if (empty($leaderSlots) && $nodeKey !== $voteKey) {
+            $this->info("Trying node pubkey: $nodeKey");
+            $leaderSlots = $this->getLeaderSlots($nodeKey);
+        }
 
         if (empty($leaderSlots)) {
             $this->warn("⚠️ No leader slots assigned for: $voteKey");
             return;
         }
+
+        $this->info("Found " . count($leaderSlots) . " leader slots");
 
         $produced = 0;
         $skipped = 0;
@@ -74,6 +83,7 @@ class FetchValidatorSkipRateServer extends Command
 
         DB::table('data.validator_skiprate')->insert([
             'vote_pubkey' => $voteKey,
+            'node_pubkey' => $nodeKey,
             'epoch'       => $epoch,
             'total_slots' => $total,
             'produced'    => $produced,
@@ -101,11 +111,21 @@ class FetchValidatorSkipRateServer extends Command
         return $out['epoch'] ?? 0;
     }
 
-    private function getLeaderSlots($voteKey)
+    private function getLeaderSlots($pubkey)
     {
+        // Используем конкретный pubkey для получения расписания
         $out = $this->executeCommand("{$this->solanaPath} leader-schedule --no-duplicates --output json");
+        
+        if (empty($out) || !is_array($out)) {
+            return [];
+        }
 
-        return isset($out[$voteKey]) ? $out[$voteKey] : [];
+        // Если pubkey есть в расписании, возвращаем его слоты
+        if (isset($out[$pubkey])) {
+            return $out[$pubkey];
+        }
+
+        return [];
     }
 
     private function executeCommand($cmd)
