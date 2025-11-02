@@ -13,20 +13,33 @@ class ValidatorAveragesService
      * @param int $epochsCount Number of epochs to look back
      * @return array
      */
-    public function getValidatorAverages(string $validatorKey, int $epochsCount): array
+    public function getValidatorAverages(string $validatorKey, int $epochsCount)
     {
         $results = DB::select('
             SELECT epoch, avg_uptime, avg_root_slot, avg_stake, avg_commission
             FROM data.calculate_validator_averages(?, ?)
         ', [$validatorKey, $epochsCount]);
 
-        return array_map(function ($row) {
+        // Get skip rate averages
+        $skipRateResults = DB::select('
+            SELECT epoch, avg_skip_rate
+            FROM data.calculate_validator_skiprate_averages(?, ?)
+        ', [$validatorKey, $epochsCount]);
+
+        // Create a map of skip rates by epoch for easy lookup
+        $skipRateMap = [];
+        foreach ($skipRateResults as $row) {
+            $skipRateMap[$row->epoch] = (float) $row->avg_skip_rate;
+        }
+
+        return array_map(function ($row) use ($skipRateMap) {
             return [
                 'epoch' => $row->epoch,
                 'avg_uptime' => (float) $row->avg_uptime,
                 'avg_root_slot' => (float) $row->avg_root_slot,
                 'avg_stake' => (float) $row->avg_stake,
-                'avg_commission' => (float) $row->avg_commission
+                'avg_commission' => (float) $row->avg_commission,
+                'avg_skip_rate' => $skipRateMap[$row->epoch] ?? 0.0
             ];
         }, $results);
     }
