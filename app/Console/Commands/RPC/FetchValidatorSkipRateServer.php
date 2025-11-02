@@ -12,13 +12,22 @@ class FetchValidatorSkipRateServer extends Command
     protected $signature = 'rpc:fetch-validator-skip-rate-server {validator? : Specific validator vote pubkey to process} {--limit=100 : Maximum slots to check per validator}';
     protected $description = 'Fetch skip rate for all validators from data.validators using Solana CLI';
 
-    protected $solanaPath = '/usr/local/bin/solana';
-
     public function handle()
     {
-        $this->detectSolanaBinary();
-
-        $epoch = $this->getEpoch();
+        // Use the symbolic link path which should be accessible
+        $solanaPath = "/usr/local/bin/solana";
+        
+        // Check if the solana binary exists and is executable
+        if (!file_exists($solanaPath) || !is_executable($solanaPath)) {
+            // Fallback to direct path
+            $solanaPath = "/root/.local/share/solana/install/active_release/bin/solana";
+            if (!file_exists($solanaPath) || !is_executable($solanaPath)) {
+                $this->error('Solana binary not found or not executable');
+                return 1;
+            }
+        }
+        
+        $epoch = $this->getEpoch($solanaPath);
         $this->info("Current epoch: $epoch");
 
         $specificValidator = $this->argument('validator');
@@ -36,7 +45,7 @@ class FetchValidatorSkipRateServer extends Command
             }
             
             $this->info("Processing specific validator: $specificValidator");
-            $this->processValidator($validator, $epoch);
+            $this->processValidator($validator, $epoch, $solanaPath);
         } else {
             // Обрабатываем всех валидаторов
             $validators = DB::table('data.validators')
@@ -51,7 +60,7 @@ class FetchValidatorSkipRateServer extends Command
             $this->info("Found " . count($validators) . " validators");
 
             foreach ($validators as $validator) {
-                $this->processValidator($validator, $epoch);
+                $this->processValidator($validator, $epoch, $solanaPath);
             }
         }
 
@@ -61,7 +70,7 @@ class FetchValidatorSkipRateServer extends Command
         return 0;
     }
 
-    private function processValidator($validator, int $epoch)
+    private function processValidator($validator, int $epoch, string $solanaPath)
     {
         $voteKey = $validator->vote_pubkey;
         $nodeKey = $validator->node_pubkey ?? $voteKey;
@@ -69,7 +78,7 @@ class FetchValidatorSkipRateServer extends Command
         $this->info("⏳ Processing validator: $voteKey (node: $nodeKey)");
 
         // Пробуем получить слоты сначала по vote pubkey, затем по node pubkey
-        $leaderSlots = $this->getLeaderSlots($voteKey, $nodeKey);
+        $leaderSlots = $this->getLeaderSlots($voteKey, $nodeKey, $solanaPath);
         
         if (empty($leaderSlots)) {
             $this->warn("⚠️ No leader slots assigned for: $voteKey");
@@ -89,7 +98,8 @@ class FetchValidatorSkipRateServer extends Command
                 break;
             }
             
-            $block = $this->executeCommand("{$this->solanaPath} block $slot --output json");
+            // Проверяем, существует ли блок для этого слота
+            $block = $this->executeSolanaCommand("$solanaPath block $slot --output json", 30);
 
             if (!empty($block)) {
                 $produced++;
@@ -122,29 +132,29 @@ class FetchValidatorSkipRateServer extends Command
         $this->info("✅ $voteKey — Skip Rate: $skipRate% | Slots: $total | Produced: $produced | Skipped: $skipped");
     }
 
-    private function detectSolanaBinary()
+    private function getEpoch(string $solanaPath)
     {
-        if (!file_exists($this->solanaPath) || !is_executable($this->solanaPath)) {
-            $this->solanaPath = "/root/.local/share/solana/install/active_release/bin/solana";
-        }
-        if (!file_exists($this->solanaPath) || !is_executable($this->solanaPath)) {
-            throw new \Exception("❌ Solana binary not found");
-        }
+        $output = $this->executeSolanaCommand("$solanaPath epoch-info --output json", 30);
+        $data = json_decode($output, true);
+        return $data['epoch'] ?? 0;
     }
 
-    private function getEpoch()
-    {
-        $out = $this->executeCommand("{$this->solanaPath} epoch-info --output json");
-        return $out['epoch'] ?? 0;
-    }
-
-    private function getLeaderSlots($voteKey, $nodeKey)
+    private function getLeaderSlots($voteKey, $nodeKey, string $solanaPath)
     {
         // Получаем полное расписание лидеров
-        $schedule = $this->executeCommand("{$this->solanaPath} leader-schedule --no-duplicates --output json");
+        $output = $this->executeSolanaCommand("$solanaPath leader-schedule --no-duplicates --output json", 60);
+        
+        if (empty($output)) {
+            $this->info("Empty leader schedule response");
+            return [];
+        }
+
+        $schedule = json_decode($output, true);
         
         if (empty($schedule) || !is_array($schedule)) {
-            $this->info("Empty or invalid leader schedule response");
+            $this->info("Invalid leader schedule response");
+            // Покажем начало вывода для отладки
+            $this->info("First 500 chars of output: " . substr($output, 0, 500));
             return [];
         }
 
@@ -174,33 +184,24 @@ class FetchValidatorSkipRateServer extends Command
         return [];
     }
 
-    private function executeCommand($cmd)
+    private function executeSolanaCommand($command, $timeout)
     {
-        $this->info("Executing: $cmd");
-        $process = Process::fromShellCommandline($cmd, null, null, null, 60);
+        $this->info("Executing: $command");
+        
+        $process = Process::fromShellCommandline($command, null, null, null, $timeout);
         $process->run();
 
         if (!$process->isSuccessful()) {
             $this->info("Command failed with exit code: " . $process->getExitCode());
+            // Покажем ошибку для отладки
+            $this->info("Error output: " . $process->getErrorOutput());
             return null;
         }
 
         $output = $process->getOutput();
         $this->info("Command output length: " . strlen($output));
         
-        // Для команды leader-schedule покажем дополнительную информацию
-        if (strpos($cmd, 'leader-schedule') !== false) {
-            $data = json_decode($output, true);
-            if ($data && is_array($data)) {
-                $this->info("Leader schedule parsed successfully, contains " . count($data) . " entries");
-            } else {
-                $this->info("Failed to parse leader schedule JSON");
-                // Покажем начало вывода для отладки
-                $this->info("First 500 chars of output: " . substr($output, 0, 500));
-            }
-        }
-        
-        return json_decode($output, true);
+        return $output;
     }
 
     private function cleanup()
