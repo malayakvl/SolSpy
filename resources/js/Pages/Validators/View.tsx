@@ -93,7 +93,7 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
     const scheduleSlots = JSON.parse(validatorData.slots);
     const dbData = JSON.parse(validatorData.epoch_credits_history);
     const labelEpoch = dbData.map(item => item[0]);
-
+console.log(validatorData.epochAverages);
     const [data, setData] = useState<any>(validatorData);
     const [historicalData, setHistoricalData] = useState<any>(null);
     const votePubkey = validatorData.vote_pubkey;
@@ -137,19 +137,116 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
 
     const optionsLine = {
         responsive: true,
-        plugins: { legend: { position: 'top' as const }, title: { display: true, text: 'Epoch Credits History' } },
-        scales: { y: { beginAtZero: true } },
-        elements: { point: { radius: 3, hoverRadius: 6 }, line: { tension: 0.4 } }
+        plugins: { 
+            legend: { 
+                position: 'top' as const,
+                labels: {
+                    color: '#c6c9d0'
+                }
+            }, 
+            title: { 
+                display: true, 
+                text: 'Epoch Credits History',
+                color: '#c6c9d0'
+            } 
+        },
+        scales: { 
+            y: { 
+                beginAtZero: true,
+                ticks: {
+                    color: '#c6c9d0'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                border: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            },
+            x: {
+                ticks: {
+                    color: '#c6c9d0'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                border: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            }
+        },
+        elements: { 
+            point: { 
+                radius: 3, 
+                hoverRadius: 6 
+            }, 
+            line: { 
+                tension: 0.4 
+            } 
+        }
     };
 
     const optionsSelfStake = {
         responsive: true,
-        plugins: { legend: { position: 'top' as const }, title: { display: true, text: 'Self-Stake History (Epochs 750-849)' } },
-        scales: {
-            y: { beginAtZero: false, title: { display: true, text: 'Self-Stake (SOL)' } },
-            x: { title: { display: true, text: 'Epoch' }, ticks: { autoSkip: true, maxTicksLimit: 20 } }
+        plugins: { 
+            legend: { 
+                position: 'top' as const,
+                labels: {
+                    color: '#c6c9d0'
+                }
+            }, 
+            title: { 
+                display: true, 
+                text: 'Self-Stake History (Epochs 750-849)',
+                color: '#c6c9d0'
+            } 
         },
-        elements: { point: { radius: 2, hoverRadius: 6 }, line: { tension: 0.4 } }
+        scales: {
+            y: { 
+                beginAtZero: false, 
+                title: { 
+                    display: true, 
+                    text: 'Self-Stake (SOL)',
+                    color: '#c6c9d0'
+                },
+                ticks: {
+                    color: '#c6c9d0'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                border: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            },
+            x: { 
+                title: { 
+                    display: true, 
+                    text: 'Epoch',
+                    color: '#c6c9d0'
+                }, 
+                ticks: { 
+                    color: '#c6c9d0',
+                    autoSkip: true, 
+                    maxTicksLimit: 20 
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                border: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            }
+        },
+        elements: { 
+            point: { 
+                radius: 2, 
+                hoverRadius: 6 
+            }, 
+            line: { 
+                tension: 0.4 
+            } 
+        }
     };
 
     const addToBlock = async () => {
@@ -241,6 +338,263 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
         return { labels: epochs, datasets: [{ label: 'Self-Stake (SOL)', data: stakeValues, fill: false, borderColor: 'rgb(75, 192, 192)', tension: 0.1 }] };
     };
 
+    // === НОВАЯ ФУНКЦИЯ: Подготовка данных для графика avg_stake ===
+    const avgStakeChartData = () => {
+        // Проверяем, есть ли данные epochAverages
+        if (!validatorData?.epochAverages || validatorData.epochAverages.length === 0) {
+            return null;
+        }
+        
+        // Извлекаем эпохи и значения avg_stake
+        const epochs = validatorData.epochAverages.map(item => item.epoch);
+        const avgStakeValues = validatorData.epochAverages.map(item => item.avg_stake);
+        
+        return {
+            labels: epochs,
+            datasets: [
+                {
+                    label: 'Avg Stake (SOL)',
+                    data: avgStakeValues,
+                    fill: false,
+                    borderColor: 'rgb(153, 102, 255)',
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    tension: 0.1
+                }
+            ]
+        };
+    };
+
+    // === НОВАЯ ФУНКЦИЯ: Опции для графика avg_stake ===
+    const optionsAvgStake = {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top' as const,
+                labels: {
+                    color: '#c6c9d0'
+                }
+            },
+            title: {
+                display: true,
+                text: 'Average Stake by Epoch',
+                color: '#c6c9d0'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: false,
+                title: {
+                    display: true,
+                    text: 'Stake (SOL)',
+                    color: '#c6c9d0'
+                },
+                ticks: {
+                    color: '#c6c9d0'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: 'Epoch',
+                    color: '#c6c9d0'
+                },
+                ticks: {
+                    color: '#c6c9d0',
+                    autoSkip: true,
+                    maxTicksLimit: 20
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            }
+        },
+        elements: {
+            point: {
+                radius: 2,
+                hoverRadius: 6
+            },
+            line: {
+                tension: 0.4
+            }
+        }
+    };
+
+    // === НОВАЯ ФУНКЦИЯ: Подготовка данных для графика avg_uptime ===
+    const avgUptimeChartData = () => {
+        // Проверяем, есть ли данные epochAverages
+        if (!validatorData?.epochAverages || validatorData.epochAverages.length === 0) {
+            return null;
+        }
+        
+        // Извлекаем эпохи и значения avg_uptime
+        const epochs = validatorData.epochAverages.map(item => item.epoch);
+        const avgUptimeValues = validatorData.epochAverages.map(item => item.avg_uptime);
+        
+        return {
+            labels: epochs,
+            datasets: [
+                {
+                    label: 'Avg Uptime (%)',
+                    data: avgUptimeValues,
+                    fill: false,
+                    borderColor: 'rgb(54, 162, 235)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    tension: 0.1
+                }
+            ]
+        };
+    };
+
+    // === НОВАЯ ФУНКЦИЯ: Опции для графика avg_uptime ===
+    const optionsAvgUptime = {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top' as const,
+                labels: {
+                    color: '#c6c9d0'
+                }
+            },
+            title: {
+                display: true,
+                text: 'Average Uptime by Epoch',
+                color: '#c6c9d0'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: false,
+                title: {
+                    display: true,
+                    text: 'Uptime (%)',
+                    color: '#c6c9d0'
+                },
+                ticks: {
+                    color: '#c6c9d0'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: 'Epoch',
+                    color: '#c6c9d0'
+                },
+                ticks: {
+                    color: '#c6c9d0',
+                    autoSkip: true,
+                    maxTicksLimit: 20
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            }
+        },
+        elements: {
+            point: {
+                radius: 2,
+                hoverRadius: 6
+            },
+            line: {
+                tension: 0.4
+            }
+        }
+    };
+
+    // === НОВАЯ ФУНКЦИЯ: Подготовка данных для графика avg_commission ===
+    const avgCommissionChartData = () => {
+        // Проверяем, есть ли данные epochAverages
+        if (!validatorData?.epochAverages || validatorData.epochAverages.length === 0) {
+            return null;
+        }
+        
+        // Извлекаем эпохи и значения avg_commission
+        const epochs = validatorData.epochAverages.map(item => item.epoch);
+        const avgCommissionValues = validatorData.epochAverages.map(item => item.avg_commission);
+        
+        return {
+            labels: epochs,
+            datasets: [
+                {
+                    label: 'Avg Commission (%)',
+                    data: avgCommissionValues,
+                    fill: false,
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    tension: 0.1
+                }
+            ]
+        };
+    };
+
+    // === НОВАЯ ФУНКЦИЯ: Опции для графика avg_commission ===
+    const optionsAvgCommission = {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top' as const,
+                labels: {
+                    color: '#c6c9d0'
+                }
+            },
+            title: {
+                display: true,
+                text: 'Average Commission by Epoch',
+                color: '#c6c9d0'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: false,
+                title: {
+                    display: true,
+                    text: 'Commission (%)',
+                    color: '#c6c9d0'
+                },
+                ticks: {
+                    color: '#c6c9d0'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                border: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: 'Epoch',
+                    color: '#c6c9d0'
+                },
+                ticks: {
+                    color: '#c6c9d0',
+                    autoSkip: true,
+                    maxTicksLimit: 20
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                border: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            }
+        },
+        elements: {
+            point: {
+                radius: 2,
+                hoverRadius: 6
+            },
+            line: {
+                tension: 0.4
+            }
+        }
+    };
 
     // === НОВАЯ ФУНКЦИЯ: Получение следующих слотов ===
     const getMyNextLeaderSlots = async () => {
@@ -595,7 +949,7 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                                 {/* === SKIPPED SLOTS === */}
                                 <div>
                                     <div className="flex items-center space-x-2 w-full">
-                                        <span className="w-32 text-right text-gray-300">Skipped Slots</span>
+                                        <span className="w-32 text-right text-gray-3300">Skipped Slots</span>
             
                                         <div className="flex-grow relative bg-gray-700 rounded-full h-2.5 overflow-hidden">
                                             {/* Produced (зелёный) */}
@@ -722,19 +1076,50 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                         </div>
                         <div className="w-1/2 ml-2">
                             <ul className="flex flex-row w-full border-b border-gray-300">
-                                <li onClick={() => setChartTab('uptime')} className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'uptime' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>Uptime</li>
-                                <li onClick={() => setChartTab('skip_rate')} className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'skip_rate' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>Skip Rate</li>
-                                <li onClick={() => setChartTab('active_stake')} className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'active_stake' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>Active Stake</li>
-                                <li onClick={() => setChartTab('comission_change')} className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'comission_change' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>Comission Change</li>
+                                <li onClick={() => setChartTab('uptime')} className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'uptime' ? 'bg-[#703da7] text-white' : 'text-[#c6c9d0] hover:text-[#703da7]'}`}>Uptime</li>
+                                <li onClick={() => setChartTab('skip_rate')} className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'skip_rate' ? 'bg-[#703da7] text-white' : 'text-[#c6c9d0] hover:text-[#703da7]'}`}>Skip Rate</li>
+                                <li onClick={() => setChartTab('active_stake')} className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'active_stake' ? 'bg-[#703da7] text-white' : 'text-[#c6c9d0] hover:text-[#703da7]'}`}>Active Stake</li>
+                                <li onClick={() => setChartTab('commission')} className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'commission' ? 'bg-[#703da7] text-white' : 'text-[#c6c9d0] hover:text-[#703da7]'}`}>Commission</li>
                             </ul>
-                            <div className={`w-full ${chartTab === 'epoch_credits' ? 'block' : 'hidden'}`}>
-                                <ChartErrorBoundary><Line options={optionsLine} data={dataEpoch} /></ChartErrorBoundary>
+                            <div className={`w-full ${chartTab === 'uptime' ? 'block' : 'hidden'}`}>
+                                <ChartErrorBoundary>
+                                    {avgUptimeChartData() ? (
+                                        <Line options={optionsAvgUptime} data={avgUptimeChartData()} />
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full">
+                                            <div className="text-center">Loading average uptime data...</div>
+                                        </div>
+                                    )}
+                                </ChartErrorBoundary>
+                            </div>
+                            <div className={`w-full ${chartTab === 'commission' ? 'block' : 'hidden'}`}>
+                                <ChartErrorBoundary>
+                                    {avgCommissionChartData() ? (
+                                        <Line options={optionsAvgCommission} data={avgCommissionChartData()} />
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full">
+                                            <div className="text-center">Loading average commission data...</div>
+                                        </div>
+                                    )}
+                                </ChartErrorBoundary>
                             </div>
                             <div className={`w-full ${chartTab === 'stake_accounts' ? 'block' : 'hidden'}`}>
                                 <ChartErrorBoundary>
                                     {selfStakeChartData() ? <Line options={optionsSelfStake} data={selfStakeChartData()} /> : <div className="flex items-center justify-center h-full"><div className="text-center">Loading historical self-stake data...</div></div>}
                                 </ChartErrorBoundary>
                             </div>
+                            <div className={`w-full ${chartTab === 'active_stake' ? 'block' : 'hidden'}`}>
+                                <ChartErrorBoundary>
+                                    {avgStakeChartData() ? (
+                                        <Line options={optionsAvgStake} data={avgStakeChartData()} />
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full">
+                                            <div className="text-center">Loading average stake data...</div>
+                                        </div>
+                                    )}
+                                </ChartErrorBoundary>
+                            </div>
+
                         </div>
                     </div>
                     
