@@ -40,7 +40,8 @@ class RunCronDailyJobs extends Command
             Artisan::call('app:fetch-settings');
             
             // Update validator scores
-            Artisan::call('validators:update-scores-auto');
+            // Artisan::call('validators:update-scores-auto');
+            Artisan::call('rpc:fetch-skip-rate');
             
             // Output results (optional)
             $output = Artisan::output();
