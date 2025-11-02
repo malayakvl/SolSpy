@@ -141,18 +141,38 @@ class FetchValidatorSkipRateServer extends Command
 
     private function getLeaderSlots($voteKey, $nodeKey, string $solanaPath)
     {
-        // Получаем полное расписание лидеров
-        $output = $this->executeSolanaCommand("$solanaPath leader-schedule --no-duplicates --output json", 60);
+        // Получаем расписание лидеров в текстовом формате (без --output json)
+        $output = $this->executeSolanaCommand("$solanaPath leader-schedule --no-duplicates", 60);
         
         if (empty($output)) {
             $this->info("Empty leader schedule response");
             return [];
         }
 
-        $schedule = json_decode($output, true);
+        // Парсим текстовый вывод
+        $lines = explode("\n", trim($output));
+        $schedule = [];
         
-        if (empty($schedule) || !is_array($schedule)) {
-            $this->info("Invalid leader schedule response");
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+            
+            // Формат: pubkey1: slot1, slot2, slot3...
+            if (strpos($line, ':') !== false) {
+                list($pubkey, $slotsStr) = explode(':', $line, 2);
+                $pubkey = trim($pubkey);
+                $slotsStr = trim($slotsStr);
+                
+                if (!empty($slotsStr)) {
+                    // Разбиваем слоты по запятым
+                    $slots = array_map('intval', array_filter(explode(',', $slotsStr)));
+                    $schedule[$pubkey] = $slots;
+                }
+            }
+        }
+
+        if (empty($schedule)) {
+            $this->info("Failed to parse leader schedule");
             // Покажем начало вывода для отладки
             $this->info("First 500 chars of output: " . substr($output, 0, 500));
             return [];
