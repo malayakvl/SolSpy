@@ -102,11 +102,18 @@ class FetchSettingsServer extends Command
                                 $slotsInEpoch = (int)$matches[2];
                             }
                             break;
+                        case 'Remaining time':
+                            $epochRemainingTime = $value;
+                            // Remove seconds from the time format (e.g., "1day 13h 20m 29s" becomes "1day 13h 20m")
+                            $epochRemainingTime = preg_replace('/\s+\d+s$/', '', $epochRemainingTime);
+                            break;
                         case 'Epoch Completed Time':
                             if (preg_match('/^(.*?)\/(.*?)\s*\((.*?)\s+remaining\)$/', $value, $timeMatches)) {
                                 $epochCompletedTime = $timeMatches[1];
                                 $epochTotalTime = $timeMatches[2];
                                 $epochRemainingTime = $timeMatches[3];
+                                // Remove seconds from the time format (e.g., "1day 13h 20m 29s" becomes "1day 13h 20m")
+                                $epochRemainingTime = preg_replace('/\s+\d+s$/', '', $epochRemainingTime);
                             }
                             break;
                     }
