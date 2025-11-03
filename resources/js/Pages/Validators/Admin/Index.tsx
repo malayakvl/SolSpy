@@ -521,7 +521,7 @@ export default function AdminIndex(validatorsData) {
                 <div className="p-4 sm:p-8 mb-8 content-data bg-content">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold">{msg.get('validators.title')}&nbsp;</h2>
-                        <Link href={route('admin.validators.top')} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        <Link href={route('admin.validators.top')} className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]">
                             {msg.get('validators.btnSort')}
                         </Link>
                     </div>
@@ -575,7 +575,7 @@ export default function AdminIndex(validatorsData) {
                                     </button>
                                     <button
                                         onClick={() => handleBulkAction('unban')}
-                                        className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                                        className="px-3 py-1 text-xs bg-[#703ea2] text-white rounded hover:bg-blue-600"
                                     >
                                         Unban
                                     </button>
@@ -630,9 +630,9 @@ export default function AdminIndex(validatorsData) {
                                                 />
                                             </div>
                                         </td>
-                                        <th className="text-center">
+                                        <td className="text-center">
                                             <ValidatorActions validator={validator} onBanToggle={handleBanToggle} />
-                                        </th>
+                                        </td>
                                         {getOrderedVisibleColumns().map(column => renderColumnCellLocal(column.name, validator, index))}
                                     </tr>
                                 ))}

@@ -4,7 +4,7 @@
 }
 
 .validator-details h2 {
-    color: #111827;
+    color: #FFF;
     margin: 0;
 }
 
@@ -13,7 +13,7 @@
 }
 
 .validator-details .stake-button {
-    background-color: #3b82f6;
+    background-color: #703da7;
     color: white;
     border-radius: 0.375rem;
     padding: 0.5rem 1rem;
@@ -49,6 +49,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    
+    .active-star {
+        color:#eaa734;
+    }
 }
 
 .star-block svg {

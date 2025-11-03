@@ -50,12 +50,11 @@ export default function Index(validatorsData) {
     const [isLoading, setIsLoading] = useState(false); // Add loading state
     // Track if the current data fetch is due to pagination or sorting
     const [isPaginationOrSorting, setIsPaginationOrSorting] = useState(false);
-
     const msg = new Lang({
         messages: lngVaidators,
         locale: appLang,
     });
-
+console.log(555)
     const epoch = useSelector(appEpochSelector);
     const user = usePage().props.auth.user;
     const [dataFetched, setDataFetched] = useState(false);
@@ -232,9 +231,9 @@ export default function Index(validatorsData) {
     }, []);
     
     // Fetch data when currentPage changes
-    useEffect(() => {
-        fetchData();
-    }, [currentPage]);
+    // useEffect(() => {
+    //     fetchData();
+    // }, [currentPage]);
     
     // Listen for URL changes to trigger data refresh
     useEffect(() => {

@@ -83,8 +83,8 @@ const ValidatorTable: React.FC<ValidatorTableProps> = ({
                 </thead>
                 <tbody>
                     {data.map((validator, index) => (
-                        <tr key={validator.id} className={validator.is_highlighted ? 'bg-blue-100' : ''}>
-                            <td className="text-left">
+                        <tr key={validator.id} className={validator.is_highlighted ? 'bg-selected' : ''}>
+                            <td className="text-left text-white">
                                 <div className="pl-[10px]">
                                     <input 
                                         type="checkbox" 
@@ -94,9 +94,9 @@ const ValidatorTable: React.FC<ValidatorTableProps> = ({
                                     />
                                 </div>
                             </td>
-                            <th className="text-center">
+                            <td className="text-center text-white">
                                 <ValidatorActions validator={validator} onBanToggle={handleBanToggle} />
-                            </th>
+                            </td>
                             {getOrderedVisibleColumns().map(column => renderColumnCellLocal(column.name, validator, index))}
                         </tr>
                     ))}

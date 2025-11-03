@@ -15,6 +15,7 @@ use Symfony\Component\Process\Exception\ProcessFailedException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use phpseclib3\Net\SSH2;
+use Illuminate\Support\Facades\Http;
 
 class ValidatorController extends Controller
 {
@@ -30,6 +31,655 @@ class ValidatorController extends Controller
         $this->validatorDataService = $validatorDataService;
         $this->totalStakeService = $totalStakeService;
         $this->spyRankService = $spyRankService;
+    }
+
+    private function rpcCall($url, $method, $params = [])
+    {
+        $data = [
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'method' => $method,
+            'params' => $params
+        ];
+        
+
+        $ch = curl_init('http://103.167.235.81:8899');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode !== 200) {
+            throw new \Exception("RPC error: HTTP $httpCode");
+        }
+
+        $json = json_decode($response, true);
+        if (isset($json['error'])) {
+            throw new \Exception($json['error']['message']);
+        }
+
+        return $json;
+    }
+
+public function getNextLeaderSlots(Request $request)
+{
+    // ✅ Default: твой валидатор Vladika
+    $votePubkey = $request->query('vote_pubkey', "53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR");
+    $rpcUrl = 'http://103.167.235.81:8899';
+
+    try {
+        // -------- GET IDENTITY KEY FROM VOTE KEY ---------------------
+        $voteInfo = $this->rpcCall($rpcUrl, 'getVoteAccounts')['result'];
+
+        $identityKey = null;
+
+        foreach (array_merge($voteInfo['current'], $voteInfo['delinquent']) as $acc) {
+            if ($acc['votePubkey'] === $votePubkey) {
+                $identityKey = $acc['nodePubkey'];
+                break;
+            }
+        }
+
+        if (!$identityKey) {
+            return response()->json(['error' => 'Vote pubkey not found'], 400);
+        }
+
+        // -------- GET CURRENT SLOT & EPOCH INFO ---------------------
+        $currentSlot = $this->rpcCall($rpcUrl, 'getSlot')['result'];
+        $epochInfo = $this->rpcCall($rpcUrl, 'getEpochInfo')['result'];
+
+        $epoch = $epochInfo['epoch'];
+        $epochAbsoluteStart = $epochInfo['absoluteSlot'];
+        $slotsInEpoch = $epochInfo['slotsInEpoch'];
+
+        // -------- GET LEADER SLOTS (in-epoch indexes) ----------------
+        $schedule = $this->rpcCall($rpcUrl, 'getLeaderSchedule', [null, ['identity' => $identityKey]]);
+        $mySlots = $schedule['result'][$identityKey] ?? [];
+
+        // Convert to absolute slots
+        $myAbsoluteSlots = array_map(
+            fn($s) => $epochAbsoluteStart + $s,
+            $mySlots
+        );
+
+        // Future only
+        $futureSlots = array_slice(
+            array_filter($myAbsoluteSlots, fn($s) => $s > $currentSlot),
+            0,
+            5
+        );
+
+        if (empty($futureSlots)) {
+            return response()->json([
+                'next_slots' => [],
+                'msg' => 'No upcoming leader slots left in this epoch'
+            ]);
+        }
+
+        // -------- FIND LAST BLOCK TIME TO ESTIMATE SLOT TIME --------
+        $refSlot = $currentSlot;
+        $refTime = null;
+
+        for ($i = 0; $i < 50; $i++) {
+            $testSlot = $currentSlot - $i * 100;
+            if ($testSlot < 0) break;
+
+            $time = $this->rpcCall($rpcUrl, 'getBlockTime', [$testSlot]);
+
+            if ($time['result'] !== null) {
+                $refSlot = $testSlot;
+                $refTime = $time['result'];
+                break;
+            }
+        }
+
+        if (!$refTime) $refTime = time();
+
+        // -------- FORMAT OUTPUT ---------------------------------------
+        $result = [];
+        foreach ($futureSlots as $slot) {
+            $diffSlots = $slot - $refSlot;
+            $etaSec = $diffSlots * 0.4; // baseline
+            $etaTs = $refTime + $etaSec;
+
+            $result[] = [
+                'absolute_slot' => $slot,
+                'slot_in_epoch' => $slot - $epochAbsoluteStart,
+                'epoch' => $epoch,
+                'eta_seconds' => round($etaSec, 1),
+                'eta_local' => date('Y-m-d H:i:s', $etaTs + 7200), // Kyiv
+                'in_minutes' => round($etaSec / 60, 1)
+            ];
+        }
+
+        return response()->json([
+            'validator_identity' => $identityKey,
+            'validator_vote' => $votePubkey,
+            'current_slot' => $currentSlot,
+            'epoch' => $epoch,
+            'next_slots' => $result
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
+public function getSkippedStats(Request $request)
+{
+    $identity = $request->query('identity');
+
+    if (!$identity) {
+        return response()->json(['error' => 'identity required'], 400);
+    }
+
+    $rpcUrl = 'http://103.167.235.81:8899';
+
+    // 1. Get leader schedule
+    $schedule = $this->rpcCall($rpcUrl, 'getLeaderSchedule', [null, ['identity' => $identity]]);
+    $slots = $schedule['result'][$identity] ?? [];
+
+    if (empty($slots)) {
+        return response()->json([
+            'identity' => $identity,
+            'checked' => 0,
+            'produced' => 0,
+            'skipped' => 0,
+            'skip_rate' => 0,
+            'history' => []
+        ]);
+    }
+
+    // 2. Epoch info
+    $epochInfo = $this->rpcCall($rpcUrl, 'getEpochInfo')['result'];
+    $currentEpoch = $epochInfo['epoch'];
+    $currentSlot = $epochInfo['absoluteSlot'];
+
+    // 3. Keep only current epoch slots
+    $slots = array_filter($slots, function($slot) use ($currentEpoch) {
+        return intdiv($slot, 432000) === $currentEpoch;
+    });
+
+    // 4. Filter only past + available slots
+    $firstAvailable = $this->rpcCall($rpcUrl, 'getFirstAvailableBlock')['result'] ?? 0;
+
+    $validSlots = array_filter($slots, function($s) use ($currentSlot, $firstAvailable) {
+        return $s <= $currentSlot && $s >= $firstAvailable;
+    });
+
+    // Fallback — if everything filtered out (purge / epoch start)
+    if (empty($validSlots)) {
+        $validSlots = array_slice($slots, -200);
+    }
+
+    // Analyze last 200 slots max
+    $recentSlots = array_slice($validSlots, -200);
+
+    $produced = 0;
+    $skipped = 0;
+    $history = [];
+
+    foreach ($recentSlots as $slot) {
+        $block = $this->rpcCall($rpcUrl, 'getBlock', [$slot]);
+
+        if (isset($block['error'])) {
+            $history[] = [
+                'slot' => $slot,
+                'ok' => null,
+                'reason' => $block['error']['message'] ?? 'unavailable'
+            ];
+            continue;
+        }
+
+        $ok = !empty($block['result']);
+        $history[] = ['slot' => $slot, 'ok' => $ok];
+
+        if ($ok) {
+            $produced++;
+        } else {
+            $skipped++;
+        }
+    }
+
+    $checked = $produced + $skipped;
+
+    return response()->json([
+        'identity' => $identity,
+        'checked' => $checked,
+        'produced' => $produced,
+        'skipped' => $skipped,
+        'skip_rate' => $checked > 0 ? round(($skipped / $checked) * 100, 2) : 0,
+        'epoch' => $currentEpoch,
+        'history' => $history
+    ]);
+}
+
+
+public function getLeaderSlots(Request $request)
+{
+    $identity = $request->query('node_pubkey');
+
+    if (!$identity) {
+        return response()->json(['error' => 'identity required'], 400);
+    }
+
+    $rpcUrl = 'http://103.167.235.81:8899';
+
+    // 1) Epoch info
+    $epochInfo = $this->rpcCall($rpcUrl, 'getEpochInfo');
+    $currentSlot = $epochInfo['result']['absoluteSlot'] ?? null;
+    $epoch = $epochInfo['result']['epoch'] ?? null;
+    $epochSlotIndex = $epochInfo['result']['slotIndex'] ?? null;
+    $slotsInEpoch = $epochInfo['result']['slotsInEpoch'] ?? null;
+
+    // 2) Leader schedule
+    $schedule = $this->rpcCall($rpcUrl, 'getLeaderSchedule', [null, ['identity' => $identity]]);
+    $slots = $schedule['result'][$identity] ?? [];
+
+    // ✅ stake валидатора и сети
+    $stakeInfo = $this->rpcCall($rpcUrl, 'getVoteAccounts');
+    $active = $stakeInfo['result']['current'] ?? [];
+    $found = collect($active)->firstWhere('nodePubkey', $identity);
+
+    $validatorStake = $found['activatedStake'] ?? 0;
+    $totalNetworkStake = array_sum(array_column($active, 'activatedStake'));
+
+    $stakeShare = $totalNetworkStake > 0 ? ($validatorStake / $totalNetworkStake) : 0;
+
+    // ✅ Ожидаемые слоты по stake
+    $expectedSlots = round($stakeShare * $slotsInEpoch);
+
+    if (!$slots || !$currentSlot) {
+        return response()->json([
+            'epoch' => $epoch,
+            'leader_slots' => 0,
+            'past_slots' => 0,
+            'produced_slots' => 0,
+            'skipped_slots' => 0,
+            'produced_rate' => 0,
+            'skip_rate' => 0,
+            'epoch_progress' => 0,
+            'history_checked' => 0,
+            'history' => []
+        ]);
+    }
+
+    // 3) First block available
+    $firstAvailable = $this->rpcCall($rpcUrl, 'getFirstAvailableBlock')['result'] ?? 0;
+
+    // Past slots only
+    $pastSlots = array_filter($slots, fn($s) => $s <= $currentSlot);
+    $pastCount = count($pastSlots);
+
+    $produced = 0;
+    $skipped = 0;
+    $history = [];
+
+    foreach ($pastSlots as $slot) {
+        if ($slot < $firstAvailable) {
+            $history[] = [
+                'slot' => $slot,
+                'ok' => null,
+                'reason' => 'pruned'
+            ];
+            continue;
+        }
+
+        $block = $this->rpcCall($rpcUrl, 'getBlock', [$slot]);
+
+        if (!empty($block['result'])) {
+            $produced++;
+            $history[] = ['slot' => $slot, 'ok' => true];
+        } else {
+            $skipped++;
+            $history[] = ['slot' => $slot, 'ok' => false];
+        }
+    }
+
+    $total = max(1, $produced + $skipped);
+
+    return response()->json([
+        'epoch' => $epoch,
+        'leader_slots' => count($slots),      // ВСЕ слоты в эпохе
+        'past_slots' => $pastCount,           // ПРОШЕДШИЕ слоты
+        'expected_slots' => $expectedSlots, // ✅ ЭТО ГЛАВНОЕ!
+        'produced_slots' => $produced,
+        'skipped_slots' => $skipped,
+        'produced_rate' => round(($produced / $total) * 100, 2),
+        'skip_rate' => round(($skipped / $total) * 100, 2),
+        'epoch_progress' => round(($epochSlotIndex / $slotsInEpoch) * 100, 2),
+        'history_checked' => $pastCount,
+        'history' => $history
+    ]);
+}
+
+
+
+
+public function hardware(Request $request)
+{
+    // $ip = $request->query('ip');
+    // if (!$ip) {
+    //     return response()->json(['error' => 'IP required'], 400);
+    // }
+
+    // $ports = [9100, 9101, 9200, 8080];
+    // $metrics = null;
+
+    // foreach ($ports as $port) {
+    //     $url = "http://{$ip}:{$port}/metrics";
+
+    //     try {
+    //         $context = stream_context_create(['http' => ['timeout' => 2]]);
+    //         $metrics = @file_get_contents($url, false, $context);
+
+    //         if ($metrics !== false) {
+    //             break; // Метрики найдены — выходим из цикла
+    //         }
+    //     } catch (\Throwable $e) {
+    //         continue;
+    //     }
+    // }
+
+    // if (!$metrics) {
+    //     return response()->json(['error' => 'metrics_unavailable']);
+    // }
+
+    // // RAM
+    // preg_match('/node_memory_MemTotal_bytes\s+(\d+)/', $metrics, $ram);
+
+    // // CPU cores count
+    // preg_match_all('/node_cpu_seconds_total\{.*cpu="(\d+)"\}/', $metrics, $cpuMatches);
+    // $cpuCores = isset($cpuMatches[1]) ? count(array_unique($cpuMatches[1])) : null;
+
+    // // Disk
+    // preg_match('/node_filesystem_size_bytes\{[^}]*mountpoint="\/"[^}]*\}\s+(\d+)/', $metrics, $disk);
+
+    // return response()->json([
+    //     'source'       => $ip,
+    //     'ram_bytes'    => $ram[1] ?? null,
+    //     'cpu_cores'    => $cpuCores,
+    //     'disk_bytes'   => $disk[1] ?? null,
+    // ]);
+        $ip = '208.76.223.94';
+        $asn = '20473'; // optional: string or number or descriptive "Hetzner"
+        $vote = '53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR'; // optional, not used directly here
+
+        if (!$ip && !$vote) {
+            return response()->json(['error' => 'ip or vote is required'], 400);
+        }
+
+        // cache key per ip or vote
+        $cacheKey = 'hw_estimate:' . ($ip ?: 'vote_' . $vote);
+        $cached = Cache::get($cacheKey);
+        if ($cached) return response()->json($cached);
+
+        $result = [
+            'ip' => $ip,
+            'asn' => $asn,
+            'rdns' => null,
+            'http_server' => null,
+            'tls_cn' => null,
+            'estimate' => null,
+            'confidence' => 0,
+            'reasons' => [],
+            'fetched_at' => now()->toISOString()
+        ];
+
+        // 1) reverse DNS (best-effort)
+        try {
+            if ($ip) {
+                $rdns = @gethostbyaddr($ip);
+                if ($rdns && $rdns !== $ip) {
+                    $result['rdns'] = $rdns;
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        // 2) try HTTP HEAD on likely hosts (use http(s) as available)
+        $tryHosts = [];
+        if ($request->query('host')) {
+            $tryHosts[] = $request->query('host');
+        }
+        if (!empty($result['rdns'])) {
+            $tryHosts[] = 'https://' . $result['rdns'];
+            $tryHosts[] = 'http://' . $result['rdns'];
+        }
+        if ($ip) {
+            $tryHosts[] = 'https://' . $ip;
+            $tryHosts[] = 'http://' . $ip;
+        }
+
+        // try HEAD requests, short timeout
+        $tried = [];
+        foreach ($tryHosts as $u) {
+            if (in_array($u, $tried)) continue;
+            $tried[] = $u;
+            try {
+                $resp = Http::timeout(3)->withHeaders(['User-Agent' => 'ValidatorEstimator/1.0'])->head($u);
+                if ($resp->successful() || in_array($resp->status(), [200,301,302,403,401])) {
+                    $result['http_server'] = $resp->header('Server') ?? null;
+                    // if GET allowed and small body, fetch small JSON
+                    if ($resp->status() === 200 && strpos($resp->header('Content-Type',''), 'application/json') !== false) {
+                        $get = Http::timeout(3)->get($u);
+                        if ($get->successful()) {
+                            // optionally parse JSON if it looks like solana-hardware.json
+                        }
+                    }
+                    // try to get TLS cert CN if HTTPS
+                    if (stripos($u, 'https://') === 0) {
+                        try {
+                            $host = parse_url($u, PHP_URL_HOST);
+                            $port = parse_url($u, PHP_URL_PORT) ?: 443;
+                            $context = stream_context_create(["ssl" => ["capture_peer_cert" => true, "verify_peer" => false, "verify_peer_name" => false]]);
+                            $client = @stream_socket_client("ssl://{$host}:{$port}", $errno, $errstr, 3, STREAM_CLIENT_CONNECT, $context);
+                            if ($client) {
+                                $params = stream_context_get_options($client);
+                            }
+                            // simpler: use openssl to fetch cert
+                            $cert = @openssl_x509_parse(@stream_context_get_params($client)['options']['ssl']['peer_certificate'] ?? null);
+                            if (!empty($cert) && !empty($cert['subject'])) {
+                                $cn = $cert['subject']['CN'] ?? null;
+                                if ($cn) $result['tls_cn'] = $cn;
+                            }
+                        } catch (\Throwable $e) {
+                            // ignore
+                        }
+                    }
+                    // we got at least one valid host response — stop scanning more hosts
+                    break;
+                }
+            } catch (\Throwable $e) {
+                // ignore timeouts/errors
+            }
+        }
+
+        // 3) heuristics mapping provider/rdns/asn -> estimate ranges
+        $providerHints = $asn ? $asn : ($result['rdns'] ?? '');
+        $hintsLower = strtolower($providerHints . ' ' . ($result['rdns'] ?? '') . ' ' . ($result['http_server'] ?? '') . ' ' . ($result['tls_cn'] ?? ''));
+
+        // small provider -> estimated specs mapping (ranges)
+        $mappings = [
+            // dedicated hosting / colocation (likely strong machines)
+            'hetzner' => ['ram_gb' => [64,512], 'cpu_cores' => [8,64], 'disk' => 'NVMe', 'confidence' => 60],
+            'ovh' => ['ram_gb' => [32,256], 'cpu_cores' => [8,64], 'disk' => 'NVMe', 'confidence' => 55],
+            'ionos' => ['ram_gb' => [16,128], 'cpu_cores' => [4,32], 'disk' => 'SSD/NVMe', 'confidence' => 40],
+            'amazonaws' => ['ram_gb' => [4,256], 'cpu_cores' => [2,64], 'disk' => 'EBS (varies)', 'confidence' => 40],
+            'ec2' => ['ram_gb' => [4,256], 'cpu_cores' => [2,64], 'disk' => 'EBS', 'confidence' => 40],
+            'digitalocean' => ['ram_gb' => [2,64], 'cpu_cores' => [1,16], 'disk' => 'SSD', 'confidence' => 45],
+            'linode' => ['ram_gb' => [2,64], 'cpu_cores' => [1,16], 'disk' => 'SSD', 'confidence' => 40],
+            'google' => ['ram_gb' => [4,256], 'cpu_cores' => [2,64], 'disk' => 'Persistent Disk', 'confidence' => 40],
+            'azure' => ['ram_gb' => [4,256], 'cpu_cores' => [2,64], 'disk' => 'Managed Disk', 'confidence' => 40],
+            'vultr' => ['ram_gb' => [2,64], 'cpu_cores' => [1,32], 'disk' => 'NVMe/SSD', 'confidence' => 40],
+            'equinix' => ['ram_gb' => [32,512], 'cpu_cores' => [16,64], 'disk' => 'NVMe', 'confidence' => 60],
+            'jelastic' => ['ram_gb' => [2,32], 'cpu_cores' => [1,16], 'disk' => 'SSD', 'confidence' => 30]
+        ];
+
+        $matched = null;
+        foreach ($mappings as $k => $v) {
+            if (strpos($hintsLower, $k) !== false) {
+                $matched = $v;
+                $result['reasons'][] = "matched_provider:{$k}";
+                break;
+            }
+        }
+
+        // default fallback: if ASN contains only digits or 'AS' - small adjustment: cloud likely
+        if (!$matched) {
+            if ($asn && preg_match('/AS?\s*\d+/i', $asn)) {
+                $matched = ['ram_gb' => [8,128], 'cpu_cores' => [2,32], 'disk' => 'SSD', 'confidence' => 25];
+                $result['reasons'][] = 'asn_detected_generic';
+            } else {
+                // if reverse DNS looks like a personal domain -> small VM
+                if (!empty($result['rdns']) && preg_match('/home|user|client|dyn|pppoe/i', $result['rdns'])) {
+                    $matched = ['ram_gb' => [2,16], 'cpu_cores' => [1,8], 'disk' => 'SSD/HDD', 'confidence' => 20];
+                    $result['reasons'][] = 'rdns_home_generic';
+                } else {
+                    $matched = ['ram_gb' => [8,64], 'cpu_cores' => [2,24], 'disk' => 'SSD', 'confidence' => 15];
+                    $result['reasons'][] = 'fallback_generic';
+                }
+            }
+        }
+
+        // entropy: increase confidence if http_server contains "k8s" or "cloud" patterns
+        if (!empty($result['http_server'])) {
+            $hs = strtolower($result['http_server']);
+            if (strpos($hs, 'cloudflare') !== false) {
+                $result['reasons'][] = 'via_cloudflare';
+                $matched['confidence'] = min(90, ($matched['confidence'] ?? 10) + 10);
+            } elseif (strpos($hs, 'nginx') !== false) {
+                $result['reasons'][] = 'http_nginx';
+            }
+        }
+
+        // finalize estimate (choose median of range)
+        $ramRange = $matched['ram_gb'];
+        $cpuRange = $matched['cpu_cores'];
+        $ramMedian = (int) round(($ramRange[0] + $ramRange[1]) / 2);
+        $cpuMedian = (int) round(($cpuRange[0] + $cpuRange[1]) / 2);
+
+        $estimate = [
+            'ram_gb_range' => [$ramRange[0], $ramRange[1]],
+            'ram_gb_median' => $ramMedian,
+            'cpu_cores_range' => [$cpuRange[0], $cpuRange[1]],
+            'cpu_cores_median' => $cpuMedian,
+            'disk' => $matched['disk'] ?? 'unknown',
+            'confidence' => $matched['confidence'] ?? 10
+        ];
+
+        $result['estimate'] = $estimate;
+        $result['confidence'] = $estimate['confidence'];
+
+        // cache for 1 hour to avoid re-probing
+        Cache::put($cacheKey, $result, now()->addMinutes(60));
+
+        return response()->json($result);
+}
+
+
+
+
+
+
+
+
+  public function getSkippedSlots(Request $request)
+    {
+        $nodePubkey = $request->query('node_pubkey');
+        if (!$nodePubkey) {
+            return response()->json(['error' => 'node_pubkey required'], 400);
+        }
+
+        $rpcUrl = 'http://103.167.235.81';
+        $cacheKey = "skipped_slots_{$nodePubkey}";
+        $cacheTtl = 60;
+
+        return Cache::remember($cacheKey, $cacheTtl, function () use ($rpcUrl, $nodePubkey) {
+            try {
+                // 1. Текущий слот и эпоха
+                $currentSlot = $this->rpcCall($rpcUrl, 'getSlot')['result'];
+                $epochInfo = $this->rpcCall($rpcUrl, 'getEpochInfo')['result'];
+                $epoch = $epochInfo['epoch'];
+                $epochProgress = $epochInfo['slotIndex'] / $epochInfo['slotsInEpoch'];
+                $progressPercent = round($epochProgress * 100, 1);
+
+                // 2. Leader Slots
+                $schedule = $this->rpcCall($rpcUrl, 'getLeaderSchedule', [null, ['identity' => $nodePubkey]]);
+                $leaderSlots = $schedule['result'][$nodePubkey] ?? [];
+                $totalLeaderSlots = count($leaderSlots);
+
+                if ($totalLeaderSlots === 0) {
+                    return response()->json([
+                        'epoch' => $epoch,
+                        'leader_slots' => 0,
+                        'produced_slots' => 0,
+                        'skipped_slots' => 0,
+                        'skip_rate' => 0,
+                        'produced_rate' => 100,
+                        'epoch_progress' => $progressPercent,
+                        'message' => 'Нет слотов в текущей эпохе'
+                    ]);
+                }
+
+                // 3. Считаем только прошедшие слоты
+                $produced = 0;
+                $skipped = 0;
+                $pastSlots = 0;
+
+                foreach ($leaderSlots as $slot) {
+                    if ($slot > $currentSlot) {
+                        continue;
+                    }
+
+                    $pastSlots++;
+
+                    try {
+                        $block = $this->rpcCall($rpcUrl, 'getBlockHeight', [$slot, ['commitment' => 'confirmed']]);
+                        if (isset($block['result']) && $block['result'] !== null) {
+                            $produced++;
+                        } else {
+                            $skipped++;
+                        }
+                    } catch (\Exception $e) {
+                        $skipped++;
+                    }
+                }
+
+                // 4. Проценты
+                $skipRate = $pastSlots > 0 ? ($skipped / $pastSlots) * 100 : 0;
+                $producedRate = 100 - $skipRate;
+
+                return response()->json([
+                    'epoch' => $epoch,
+                    'epoch_progress' => $progressPercent,
+                    'leader_slots' => $totalLeaderSlots,
+                    'past_slots' => $pastSlots,
+                    'produced_slots' => $produced,
+                    'skipped_slots' => $skipped,
+                    'skip_rate' => round($skipRate, 2),
+                    'produced_rate' => round($producedRate, 2),
+                ]);
+
+            } catch (\Exception $e) {
+                \Log::error('SkippedSlots error', ['error' => $e->getMessage()]);
+                return response()->json([
+                    'epoch' => 0,
+                    'leader_slots' => 0,
+                    'produced_slots' => 0,
+                    'skipped_slots' => 0,
+                    'skip_rate' => 0,
+                    'produced_rate' => 100,
+                    'error' => 'RPC error'
+                ], 500);
+            }
+        });
     }
 
     public function timeoutData(Request $request)
@@ -680,6 +1330,25 @@ class ValidatorController extends Controller
         ]);
     }
 
+    public function getComparisonCount(Request $request) {
+        $user = $request->user();
+        if ($user && $user->id) {
+            // For registered users, count comparisons from database
+            $count = DB::table('data.validators_comparison')
+                ->where('user_id', $user->id)
+                ->count();
+                
+            return response()->json([
+                'count' => $count
+            ]);
+        }
+        
+        // For unregistered users, return 0 or handle appropriately
+        return response()->json([
+            'count' => 0
+        ]);
+    }
+
     public function addFavorite(Request $request) {
         $user = $request->user();
         if ($user->id) {
@@ -687,9 +1356,32 @@ class ValidatorController extends Controller
             DB::statement('SELECT data.toggle_favorite(' .$user->id. ', ' .$validatorId. ')');
         }
         
+        // Dispatch event for frontend to update favorite count
+        // This would typically be done with Laravel's event broadcasting
+        // For now, we'll just return a success response
+        
         return response()->json([
             'success' => true,
             'message' => 'Favorites list updated'
+        ]);
+    }
+
+    public function getFavoriteCount(Request $request) {
+        $user = $request->user();
+        if ($user && $user->id) {
+            // For registered users, count favorites from database
+            $count = DB::table('data.favorites')
+                ->where('user_id', $user->id)
+                ->count();
+                
+            return response()->json([
+                'count' => $count
+            ]);
+        }
+        
+        // For unregistered users, return 0 or handle appropriately
+        return response()->json([
+            'count' => 0
         ]);
     }
 

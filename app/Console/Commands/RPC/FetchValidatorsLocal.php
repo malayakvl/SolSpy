@@ -34,8 +34,8 @@ class FetchValidatorsLocal extends Command
         $dbSettings = DB::table('data.settings')->first();
         $collectLength = $dbSettings->collect_score_retention ?? 10;
         
-        Log::info('Command rpc:fetch-tvc-scores executed at ' . now());
-        $this->info("Start fetching tvc scores info (keeping last $collectLength collections)!");
+        Log::info('Command rpc:fetch-rpc-scores executed at ' . now());
+        $this->info("Start fetching rpc validator scores info (keeping last $collectLength collections)!");
 
         $this->info("Connecting to RPC: {$this->rpcUrl}");
 

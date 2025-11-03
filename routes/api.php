@@ -10,6 +10,7 @@ use App\Http\Controllers\DiscordNewsController;
 use App\Http\Controllers\NewsController;
 
 Route::get('/fetch-settings', [SettingsController::class, 'getDataWithHeader'])->name('settings.get');
+Route::get('/fetch-settings-data', [SettingsController::class, 'getDataWithHeaderNew'])->name('settings.getNew');
 Route::get('/fetch-by-id-validators/{page?}', [ApiValidatorController::class, 'fetchByIds'])->name('validators.fetchByIds');
 
 // Public API routes - accessible to everyone
@@ -18,6 +19,15 @@ Route::get('/fetch-validators', [ApiValidatorController::class, 'timeoutData'])-
 Route::get('/fetch-favorite-validators-public', [ApiValidatorController::class, 'publicFavoriteData'])->name('validators.publicFavoriteData');
 Route::get('/fetch-comparison-validators-public', [ApiValidatorController::class, 'publicComparisonData'])->name('validators.publicComparisonData');
 Route::get('/fetch-score', [ApiValidatorController::class, 'getValidatorScore'])->name('validators.getValidatorScore');
+
+// === НОВЫЙ МАРШРУТ: Следующие слоты валидатора ===
+Route::get('/validator-next-slots', [ApiValidatorController::class, 'getNextLeaderSlots']);
+Route::get('/validator-skipped-slots', [ApiValidatorController::class, 'getSkippedSlots']);
+Route::get('/validator/skip-stats', [ApiValidatorController::class, 'getSkippedStats']);
+Route::get('/validator-leader-slots', [ApiValidatorController::class, 'getLeaderSlots']);
+Route::get('/validator-hardware', [ApiValidatorController::class, 'hardware']);
+
+// routes/api.php
 
 // Session-based authentication for SPA API calls (this is what you need for authenticated users)
 Route::middleware(['web', 'auth'])->group(function () {
@@ -31,8 +41,12 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/remove-comparison-validators', [ApiValidatorController::class, 'removeComparisons'])->name('validators.removeComparisons');
     Route::get('/validator-metrics', [ApiValidatorController::class, 'getValidatorMetrics'])->name('validators.metrics');
     Route::get('/historical-metrics', [ApiValidatorController::class, 'getHistoricalMetrics'])->name('validators.historicalMetrics');
+
+    Route::get('/comparison-count', [ApiValidatorController::class, 'getComparisonCount'])->name('api.validators.getComparisonCount');
     Route::post('/add-compare', [ApiValidatorController::class, 'addCompare'])->name('api.validators.addCompare');
+    Route::get('/favorite-count', [ApiValidatorController::class, 'getFavoriteCount'])->name('api.validators.getFavoriteCount');
     Route::post('/add-favorite', [ApiValidatorController::class, 'addFavorite'])->name('api.validators.addFavorite');
+
     Route::post('/ban-validator', [ApiValidatorController::class, 'banValidator'])->name('api.validators.banValidator');
     Route::post('/mark-validators', [ApiValidatorController::class, 'markValidators'])->name('api.validators.markValidator');
     Route::post('/settings/update', [SettingsController::class, 'update'])->name('settings.update');

@@ -6,117 +6,181 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Exception;
 
 class FetchSettingsServer extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'rpc:fetch-settings-server';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Update validator settings from Solana CLI';
 
-    /**
-     * Execute the console command.
-     *
-     * @return int
-     */
     public function handle()
     {
-        // Get collectLength from settings table
-        $dbSettings = DB::table('data.settings')->first();
-        $collectLength = $dbSettings->collect_score_retention ?? 10;
-        
         $this->info("Updating settings");
+        Log::channel('cron-settings')->info('Starting rpc:fetch-settings-server', [
+            'user' => get_current_user(),
+            'pid' => getmypid()
+        ]);
         
         try {
-            // Use the symbolic link path which should be accessible
             $solanaPath = "/usr/local/bin/solana";
             
-            // Check if the solana binary exists and is executable
-            if (!file_exists($solanaPath) || !is_executable($solanaPath)) {
-                // Fallback to direct path
-                $solanaPath = "/root/.local/share/solana/install/active_release/bin/solana";
-                if (!file_exists($solanaPath) || !is_executable($solanaPath)) {
-                    $this->error('Solana binary not found or not executable');
-                    return 1;
-                }
+            // Check if the solana binary exists
+            if (!file_exists($solanaPath)) {
+                Log::channel('cron-settings')->error('Solana binary not found', ['path' => $solanaPath]);
+                $this->error('Solana binary not found at ' . $solanaPath);
+                return 1;
             }
             
-            // Execute the command to get all validators
-            $command = "$solanaPath solana epoch-info";
+            Log::channel('cron-settings')->debug('Using Solana binary', ['path' => $solanaPath]);
             
+            // Execute the command to get epoch info
+            $command = "$solanaPath epoch-info";
+            Log::channel('cron-settings')->debug('Executing command', ['command' => $command]);
             $process = Process::fromShellCommandline($command, null, null, null, 120);
             $process->run();
             
             if (!$process->isSuccessful()) {
+                Log::channel('cron-settings')->error('Command failed', [
+                    'command' => $command,
+                    'error' => $process->getErrorOutput(),
+                    'exit_code' => $process->getExitCode()
+                ]);
                 $this->error('Command failed: ' . $process->getErrorOutput());
                 return 1;
             }
             
             $output = $process->getOutput();
+            Log::channel('cron-settings')->debug('Command output', ['output' => $output]);
             
             if (empty($output)) {
+                Log::channel('cron-settings')->error('Command returned empty output');
                 $this->error('Command returned empty output');
                 return 1;
             }
             
             // Parse the output
             $lines = explode("\n", trim($output));
-            // $query = ('UPDATE data.settings SET 
-            //         absolute_slot=' .$_result->result->absoluteSlot.', 
-            //         block_height=' .$_result->result->blockHeight.', 
-            //         epoch=' .$_result->result->epoch.', 
-            //         slot_index=' .$_result->result->slotIndex.', 
-            //         slot_in_epoch=' .$_result->result->slotsInEpoch.', 
-            //         transaction_count=' .$_result->result->transactionCount.'
-            //     ');
-            //     DB::statement($query);
-            // Parse the output and insert into database using PostgreSQL function
+            Log::channel('cron-settings')->debug('Parsed lines', ['lines' => $lines]);
             
+            $absoluteSlot = null;
+            $blockHeight = null;
+            $epoch = null;
+            $slotIndex = null;
+            $slotsInEpoch = null;
+            $transactionCount = null;
+            $epochCompletedPercent = null;
+            $epochCompletedTime = '';
+            $epochTotalTime = '';
+            $epochRemainingTime = '';
             
-            $this->info('Validator settings update successfully!');
+            foreach ($lines as $line) {
+                $parts = explode(':', $line, 2);
+                if (count($parts) == 2) {
+                    $key = trim($parts[0]);
+                    $value = trim($parts[1]);
+                    $value = str_replace(',', '', $value);
+                    
+                    switch ($key) {
+                        case 'Slot':
+                            $absoluteSlot = (int)$value;
+                            break;
+                        case 'Epoch':
+                            $epoch = (int)$value;
+                            break;
+                        case 'Transaction Count':
+                            $transactionCount = (int)$value;
+                            break;
+                        case 'Epoch Completed Percent':
+                            $epochCompletedPercent = floatval($value);
+                            break;
+                        case 'Block height':
+                            $blockHeight = (int)$value;
+                            break;
+                        case 'Epoch Completed Slots':
+                            if (preg_match('/(\d+)\/(\d+)/', $value, $matches)) {
+                                $slotIndex = (int)$matches[1];
+                                $slotsInEpoch = (int)$matches[2];
+                            }
+                            break;
+                        case 'Epoch Completed Time':
+                            if (preg_match('/^(.*?)\/(.*?)\s*\((.*?)\s+remaining\)$/', $value, $timeMatches)) {
+                                $epochCompletedTime = $timeMatches[1];
+                                $epochTotalTime = $timeMatches[2];
+                                $epochRemainingTime = $timeMatches[3];
+                            }
+                            break;
+                    }
+                }
+            }
+            
+            Log::channel('cron-settings')->debug('Parsed values', [
+                'absoluteSlot' => $absoluteSlot,
+                'blockHeight' => $blockHeight,
+                'epoch' => $epoch,
+                'slotIndex' => $slotIndex,
+                'slotsInEpoch' => $slotsInEpoch,
+                'transactionCount' => $transactionCount,
+                'epochCompletedPercent' => $epochCompletedPercent
+            ]);
+            
+            if ($epochCompletedPercent === null && $slotsInEpoch !== null && $slotsInEpoch > 0 && $slotIndex !== null) {
+                $epochCompletedPercent = ($slotIndex / $slotsInEpoch) * 100;
+            }
+            
+            if ($absoluteSlot !== null && $blockHeight !== null && $epoch !== null && 
+                $slotIndex !== null && $slotsInEpoch !== null && $transactionCount !== null) {
+                
+                Log::channel('cron-settings')->debug('Updating database');
+                $test = DB::select("SELECT absolute_slot FROM data.settings LIMIT 1");
+                Log::channel('cron-settings')->debug('Current database value', ['test' => $test]);
+                
+                DB::statement("
+                    UPDATE data.settings 
+                    SET 
+                        absolute_slot = :absolute_slot,
+                        block_height = :block_height,
+                        epoch = :epoch,
+                        slot_index = :slot_index,
+                        slot_in_epoch = :slot_in_epoch,
+                        transaction_count = :transaction_count,
+                        epoch_completed_percent = :epoch_completed_percent,
+                        epoch_completed_time = :epoch_completed_time,
+                        epoch_total_time = :epoch_total_time,
+                        epoch_remaining_time = :epoch_remaining_time,
+                        updated_at = NOW()
+                ", [
+                    'absolute_slot' => $absoluteSlot,
+                    'block_height' => $blockHeight,
+                    'epoch' => $epoch,
+                    'slot_index' => $slotIndex,
+                    'slot_in_epoch' => $slotsInEpoch,
+                    'transaction_count' => $transactionCount,
+                    'epoch_completed_percent' => $epochCompletedPercent,
+                    'epoch_completed_time' => $epochCompletedTime,
+                    'epoch_total_time' => $epochTotalTime,
+                    'epoch_remaining_time' => $epochRemainingTime,
+                ]);
+                
+                Log::channel('cron-settings')->info('Settings updated successfully in database');
+                $this->info('Settings updated successfully!');
+                $this->info("Epoch completed: " . number_format($epochCompletedPercent, 2) . "%");
+                $this->info("Completed time: " . $epochCompletedTime);
+                $this->info("Total time: " . $epochTotalTime);
+                $this->info("Remaining time: " . $epochRemainingTime);
+            } else {
+                Log::channel('cron-settings')->error('Failed to parse all required values from epoch-info output', ['output' => $output]);
+                $this->error('Failed to parse all required values from epoch-info output');
+                return 1;
+            }
             
             return 0;
         } catch (\Exception $e) {
+            Log::channel('cron-settings')->error('Error updating validator settings', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             $this->error('Error updating validator settings: ' . $e->getMessage());
-            Log::error('Error updating validator settings: ' . $e->getMessage(), ['exception' => $e]);
             return 1;
-        }
-    }
-    
-    /**
-     * Clean up old data, keeping only the specified number of collections
-     */
-    private function cleanupOldData($collectLength)
-    {
-        // Get the distinct collection times, ordered by newest first
-        $collections = DB::table('data.validator_scores')
-            ->select('collected_at')
-            ->groupBy('collected_at')
-            ->orderBy('collected_at', 'desc')
-            ->limit($collectLength)
-            ->pluck('collected_at');
-        
-        // If we have more than the specified number of collections, delete the oldest ones
-        if ($collections->count() >= $collectLength) {
-            $oldestToKeep = $collections->last();
-            $deleted = DB::table('data.validator_scores')
-                ->where('collected_at', '<', $oldestToKeep)
-                ->delete();
-                
-            if ($deleted > 0) {
-                $this->info("Cleaned up old data, deleted $deleted records. Keeping collections from " . $oldestToKeep);
-            }
         }
     }
 }

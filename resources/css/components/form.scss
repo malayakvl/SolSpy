@@ -2,10 +2,22 @@
     min-height: 40px;
     @apply rounded-sm border-gray-300 shadow-sm w-full py-1
         focus:border-indigo-500 focus:ring-indigo-500 text-[13px];
+    background-color: #000;
+    color: #fff;
+}
+
+.input-text::placeholder {
+    color: #fffddd;
 }
 
 .input-text:active,.input-text:focus {
     outline: none !important;
+    background-color: #000;
+    color: #fff;
+}
+input[type="text"], input[type="number"], input[type="email"], input[type="password"]  {
+    background: #000;
+    color: #fff;
 }
 .input-text-noborder {
     border-radius: 0;
@@ -15,6 +27,11 @@
     border-bottom: solid 1px;
     border-color: #6248A1FF;
     padding-left: 0 !important;
+    background-color: #000;
+    color: #fff;
+}
+.input-text-noborder::placeholder {
+    color: #fffddd;
 }
 .input-text-noborder:active, .input-text-noborder:hover, .input-text-noborder:focus {
     outline: 0;
@@ -26,12 +43,19 @@
     outline: 0;
     padding-left: 0;
     outline:none !important;
-    --tw-ring-color: none !important
+    --tw-ring-color: none !important;
+    background-color: #000;
+    color: #fff;
 }
 .input-textarea {
     @apply rounded-md border-gray-300 shadow-sm w-full py-1
     focus:border-indigo-500 focus:ring-indigo-500 text-[13px];
     height: 70px;
+    background-color: #000;
+    color: #fff;
+}
+.input-textarea::placeholder {
+    color: #fffddd;
 }
 .form-error {
     @apply text-[11px] text-red-500 absolute;
@@ -155,25 +179,6 @@
 .color-control {
     padding-left: 30px;
 }
-// .color-palette {
-//     background-image: url(../../images/action-icons/color-palette.svg);
-//     background-repeat: no-repeat;
-//     width: 17px;
-//     height: 16px;
-//     position: absolute;
-//     top: 12px;
-//     right: 12px;
-//     z-index: 999;
-//     cursor: pointer;
-// }
-// .color-picker-icon {
-//     z-index: 999;
-//     width: 17px;
-//     height: 16px;
-//     position: absolute;
-//     left: 10px;
-//     top: 12px;
-// }
 .dropzone p {
     margin-top: 0 !important
 }
@@ -284,6 +289,23 @@ label.float-label {
     font-size: 19px;
     color: black;
 }
+
+input[type="checkbox"] {
+    background-color: #000;
+    border: 1px solid #fff;
+    border-radius: 3px;
+}
+
+input[type="checkbox"]:checked {
+    background-color: #000;
+    border: 1px solid #fff;
+    border-radius: 3px;
+}
+
+input[type="checkbox"]:focus {
+    outline: none;
+    box-shadow: none;
+}
 .discount-select {
     border: none;
     font-size: 12px;
@@ -303,8 +325,6 @@ label.float-label {
     width: 200px;
 }
 .login-form {
-    // border: solid 1px;
-    // border-color: rgb(147, 146, 146);
--webkit-box-shadow: -10px 0px 13px -7px #10023c, 10px 0px 13px -7px #260daf, 5px 5px 15px 5px rgba(45, 10, 121, 0); 
-box-shadow: -10px 0px 13px -7px #130469, 10px 0px 13px -7px #000000, 5px 5px 15px 5px rgba(17, 3, 108, 0);
+    border: solid 1px;
+    border-color: #4f4957;
 }

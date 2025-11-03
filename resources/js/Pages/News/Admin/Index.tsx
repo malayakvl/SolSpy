@@ -201,7 +201,7 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                             </button>
                             <Link
                                 href={route('admin.news.create')}
-                                className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                                className="inline-flex items-center px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px] text-sm"
                             >
                                 <FontAwesomeIcon icon={faPlus} className="mr-2" />
                                 Create News
@@ -293,7 +293,7 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                             </div>
                             <button
                                 type="submit"
-                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                                className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px] text-sm"
                             >
                                 Search
                             </button>
@@ -471,7 +471,7 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                                             href={route('admin.news.index', pageParams)}
                                             className={`px-3 py-2 text-sm rounded ${
                                                 page === news.current_page
-                                                    ? 'bg-blue-500 text-white'
+                                                    ? 'bg-[#703ea2] text-white'
                                                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                             }`}
                                         >
@@ -489,7 +489,7 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                             <p className="text-gray-500 mb-4">No news articles found.</p>
                             <Link
                                 href={route('admin.news.create')}
-                                className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                className="inline-flex items-center px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]"
                             >
                                 <FontAwesomeIcon icon={faPlus} className="mr-2" />
                                 Create your first news article

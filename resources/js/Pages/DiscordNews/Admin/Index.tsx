@@ -293,7 +293,7 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
                                             href={route('admin.discord.news', { ...filters, page: 1 })}
                                             className={`px-3 py-2 text-sm rounded ${
                                                 parseInt(news.current_page) === 1
-                                                    ? 'bg-blue-500 text-white'
+                                                    ? 'bg-[#703ea2] text-white'
                                                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                             }`}
                                         >
@@ -327,7 +327,7 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
                                             href={route('admin.discord.news', { ...filters, page })}
                                             className={`px-3 py-2 text-sm rounded ${
                                                 pageNumber === currentPage
-                                                    ? 'bg-blue-500 text-white'
+                                                    ? 'bg-[#703ea2] text-white'
                                                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                             }`}
                                         >
@@ -346,7 +346,7 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
                                             href={route('admin.discord.news', { ...filters, page: news.last_page })}
                                             className={`px-3 py-2 text-sm rounded ${
                                                 parseInt(news.current_page) === parseInt(news.last_page)
-                                                    ? 'bg-blue-500 text-white'
+                                                    ? 'bg-[#703ea2] text-white'
                                                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                             }`}
                                         >

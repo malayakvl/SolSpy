@@ -11,7 +11,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('app:run-cron-daily-jobs')->daily();
         $schedule->command('app:fetch-signatures')->everyTenMinutes();
-        $schedule->command('app:validators:update-tvc-jito')->daily();
+        // $schedule->command('app:validators:update-tvc-jito')->daily();
         // Test command to verify cron is working
         // $schedule->command('app:log-cron-job-execution "cron-test" --success --output="Cron job executed successfully"')->everyMinute();
         // $schedule->command('app:log-cron-job-execution "cron-test" --success --output="Cron job executed successfully"')->everyMinute();

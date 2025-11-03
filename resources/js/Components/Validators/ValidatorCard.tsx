@@ -27,7 +27,7 @@ export default function ValidatorCard({validator, epoch, settingsData, totalStak
 
   return (
       <div className={`flex flex-col v-card ${isSelected ? 'ring-2 ring-blue-500' : ''}`}>
-        <div className="flex items-center p-2 bg-gray-50">
+        {/* <div className="flex items-center p-2 bg-gray-50">
             <input 
                 type="checkbox" 
                 id={`card-${validator.id}`} 
@@ -38,8 +38,8 @@ export default function ValidatorCard({validator, epoch, settingsData, totalStak
             <label htmlFor={`card-${validator.id}`} className="text-sm font-medium text-gray-700">
                 Select
             </label>
-        </div>
-        <div className="flex flex-col h-[200px] items-center bg-white border md:flex-row hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
+        </div> */}
+        <div className="flex flex-col h-[200px] items-center bg-[#292035] rounded-[5px] border md:flex-row dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
             <img 
                 src={validator.avatar_url || validator.avatar_file_url} 
                 alt={`${validator.name} avatar`} 
@@ -54,7 +54,7 @@ export default function ValidatorCard({validator, epoch, settingsData, totalStak
                 }}
             />
             <div className="flex flex-col justify-between p-2 leading-normal">
-                <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+                <h5 className="text-2xl font-bold tracking-tight text-white  dark:text-white">
                     <ValidatorName validator={validator} noTruncate={true} />
                 </h5>
                 <div className="grid grid-cols-[auto_auto_auto_auto_auto_auto_auto_auto] text-[14px] gap-4 rounded-lg">
@@ -83,7 +83,7 @@ export default function ValidatorCard({validator, epoch, settingsData, totalStak
                     </div>
                     <div className="text-center"><ValidatorUptime validator={validator} /></div>
                     <div className="text-center ">
-                        <span className="bg-blue-500 text-white px-1 px-2 rounded-lg inline-block text-[12px]">
+                        <span className="bg-[#703ea2] text-white px-1 px-2 rounded-lg inline-block text-[12px]">
                             {validator.version || validator.software_version || 'N/A'}
                         </span>
                     </div>

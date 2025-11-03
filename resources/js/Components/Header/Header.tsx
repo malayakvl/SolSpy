@@ -11,7 +11,7 @@ import ProfileMenu from "./ProfileMenu";
 import axios from 'axios';
 import {useEffect, useState} from "react";
 import ProgressBar from "./ProgressBar";
-import { setEpochAction } from "../../Redux/Layout";
+import { setEpochAction, setSettingsAction } from "../../Redux/Layout";
 
 export default function Header(auth) {
   const dispatch = useDispatch();
@@ -23,6 +23,7 @@ export default function Header(auth) {
   const [settingsFetched, setSettingsFetched] = useState(false)
   const [barProgress, setBarProgress] = useState(null);
   const [barProgressCaption, setBarProgressCaption] = useState('');
+  const [completedPersent, setCompletedPersent] = useState(100);
 
 
   const msg = new Lang({
@@ -34,25 +35,14 @@ export default function Header(auth) {
   const fetchData = async () => {
     try {
       const response = await axios.get('/api/fetch-settings');
-
       setSolRate(response.data.data.sol_rate)
       setSettingsData(response.data.data);
       dispatch(setEpochAction(response.data.data.epoch));
+      dispatch(setSettingsAction(response.data.data));
+      setEpochPersent(response.data.data.epoch_completed_percent);
+      setCompletedPersent(response.data.data.epoch_completed_percent);
 
-      const progressPercent = (response.data.data.slot_index / response.data.data.slot_in_epoch) * 100;
-      setEpochPersent(progressPercent.toFixed(2));
-      // console.log(`Прогрес епохи: ${progressPercent.toFixed(2)}%`);
-
-      const progress = response.data.data.slot_index / response.data.data.slot_in_epoch;
-      setBarProgress(progress); // надо уточнить
-      const slotsLeft = response.data.data.slot_in_epoch - response.data.data.slot_index;
-      const timeLeftSeconds = slotsLeft * 0.4; // час до кінця епохи в секундах
-
-      const days = Math.floor(timeLeftSeconds / (24 * 3600));
-      const hours = Math.floor((timeLeftSeconds % (24 * 3600)) / 3600);
-      const minutes = Math.floor((timeLeftSeconds % 3600) / 60);
-      const seconds = Math.floor(timeLeftSeconds % 60);
-      setBarProgressCaption(`${days} d, ${hours} h, ${minutes} m`);
+      setBarProgressCaption(response.data.data.epoch_remaining_time);
 
 
       // console.log(`Залишилось: ${days} дн, ${hours} год, ${minutes} хв, ${seconds} сек`);
@@ -61,12 +51,14 @@ export default function Header(auth) {
     }
   };
 
+  
+
   useEffect(() => {
     if (!settingsFetched) {
       fetchData();
       setSettingsFetched(true);
     }
-    const intervalId = setInterval(fetchData, 50000);
+    const intervalId = setInterval(fetchData, 60000);
     return () => clearInterval(intervalId);
   }, [settingsFetched])
 
@@ -76,13 +68,13 @@ export default function Header(auth) {
   const isCustomer = userRoleNames.includes('Customer');
 
   return (
-    <header className="bg-white">
-      <nav className="relative bg-blue-900">
+    <header className="bg-gray-900">
+      <nav className="relative bg-black">
         <div className="mx-auto max-w-8xl px-2 sm:px-6 lg:px-8">
           <div className="relative flex h-16 items-center justify-between">
             <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
               {/* <!-- Mobile menu button--> */}
-              <button type="button" className="relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-white/5 hover:text-white focus:outline-2 focus:-outline-offset-1 focus:outline-indigo-500">
+              <button type="button" className="relative inline-flex items-center justify-center rounded-md p-2 text-gray-300 hover:bg-gray-700 hover:text-white focus:outline-2 focus:-outline-offset-1 focus:outline-indigo-500">
                 <span className="absolute -inset-0.5"></span>
                 <span className="sr-only">Open main menu</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-6">
@@ -103,30 +95,27 @@ export default function Header(auth) {
                   {/* <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-white/5 hover:text-white" --> */}
                   {isAdmin ? (
                     <>
-                      <Link href={'/admin/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link">
+                      <Link href={'/admin/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
                         {msg.get('menu.validators')}
                       </Link>
-                      <Link href={'/admin/customers'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
+                      <Link href={'/admin/customers'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
                         {msg.get('menu.customers')}
                       </Link>
-                      <Link href={'/admin/discord-news'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
+                      <Link href={'/admin/discord-news'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
                         {msg.get('menu.discord-news')}
                       </Link>
-                      <Link href={'/admin/news'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
+                      <Link href={'/admin/news'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
                         {msg.get('menu.news')}
                       </Link>
-                      <Link href={'/admin/settings'}  className="inline-flex items-center menu-main-btn text-sm nav-link">
+                      <Link href={'/admin/settings'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
                           {msg.get('menu.settings')}
                       </Link>
                     </>
                   ) : (
                     <> 
-                     {/* <Link href={'/dashboard'} className="inline-flex items-center menu-main-btn text-sm nav-link">
-                        {msg.get('menu.dashboard')}
-                      </Link> */}
-                      <Link href={'/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link">
+                      {/* <Link href={'/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
                         {msg.get('menu.validators')}
-                      </Link>
+                      </Link> */}
                     </>
                   )}
 
@@ -135,17 +124,18 @@ export default function Header(auth) {
               </div>
             </div>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 nav-link">
-              <div className="flex whitespace-nowrap text-[#fff] ml-[0px] mt-[0px]">
-                 <ProgressBar progress={barProgress*100} caption={`${msg.get('menu.left')} ${barProgressCaption}`} />
+              <div className="progress-block">
+                 <ProgressBar progress={100 - completedPersent} caption={`${barProgressCaption} ${msg.get('menu.left')}`} />
+                 <div className="text-sm epoch-data">
+                    {msg.get('menu.epoch')}  {settingsData?.epoch} ({100 - epochPersent}%)
+                  </div>
               </div>
             </div>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 nav-link">
               <div className="flex whitespace-nowrap text-[#fff] ml-[0px]  mt-[0px]">
-                  <div className="md:space-x-4 md:flex md:pr-[30px] inline align-middle text-[14px] whitespace-nowrap w-[150px]">
-                    {msg.get('menu.epoch')}  {settingsData?.epoch} ({epochPersent}%)
-                  </div>
-                  <div className="md:space-x-4 md:flex md:pr-[30px] inline align-middle text-[14px] whitespace-nowrap">
-                    1 SOL = {settingsData?.sol_rate}$
+                  
+                  <div className="sol-block">
+                    1 SOL {settingsData?.sol_rate}$
                   </div>
                 </div>
             </div>
@@ -161,13 +151,13 @@ export default function Header(auth) {
                   <>
                   <Link
                         href="/login"
-                        className="rounded-md px-3 py-2 text-white text-sm"
+                        className="rounded-md px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-white text-sm"
                     >
                       {msg.get('menu.login')}
                     </Link>
                     <Link
                         href="/register"
-                        className="rounded-md px-3 py-2 text-white text-sm"
+                        className="rounded-md px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-white text-sm"
                     >
                       {msg.get('menu.register')}
                     </Link>

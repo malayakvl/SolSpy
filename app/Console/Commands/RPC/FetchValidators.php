@@ -40,7 +40,7 @@ class FetchValidators extends Command
         if ($useSSH) {
             return Artisan::call('rpc:fetch-validators-local', [], $this->getOutput());
         } else {
-            return Artisan::call('rpc:fetchvalidators-server', [], $this->getOutput());
+            return Artisan::call('rpc:fetch-validators-server', [], $this->getOutput());
         }
     }
 }

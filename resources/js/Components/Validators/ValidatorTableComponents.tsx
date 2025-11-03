@@ -15,7 +15,7 @@ import ValidatorSFDP from '../../Pages/Validators/Partials/ValidatorSFDP';
 import ValidatorStatus from '../../Pages/Validators/Partials/ValidatorStatus';
 import ValidatorJiitoScore from '../../Pages/Validators/Partials/ValidatorJiitoScore';
 import ValidatorTVCScore from '../../Pages/Validators/Partials/ValidatorTVCScore';
-
+console.log(1111)
 // Shared function to render column headers
 export const renderColumnHeader = (columnName, sortClickState, setSortClickState, setCurrentPage, isLoading = false, setIsPaginationOrSorting = null) => {
     // Map column names to sort keys
@@ -748,6 +748,7 @@ export const renderColumnCell = (columnName, validator, epoch, settingsData, tot
                     <ValidatorJiitoScore validator={validator} epoch={epoch} />
                 </td>
             );
+        case "Active": return <td>{!validator.delinquent ? 'Active' : 'Offline'}</td>;
         case "Inflation Commission": return <td>{validator.jito_commission !== undefined ? `${(parseFloat(validator.jito_commission) / 100).toFixed(2)}%` : 'N/A'}</td>;
         case "MEV Commission": return <td>{validator.commission !== undefined ? `${parseFloat(validator.commission).toFixed(2)}%` : 'N/A'}</td>;
         case "Jito Score": return <td>{validator.jito_commission !== undefined ? parseFloat(validator.jito_commission).toFixed(4) : 'N/A'}</td>;
