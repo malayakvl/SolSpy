@@ -14,7 +14,7 @@ class FetchValidatorScoresLocal extends Command
      *
      * @var string
      */
-    protected $signature = 'rpc:fetch-validator-scores-server';
+    protected $signature = 'rpc:fetch-validator-scores-local';
 
     /**
      * The console command description.
