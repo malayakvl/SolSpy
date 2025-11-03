@@ -9,13 +9,13 @@ const ProgressBarWithCaption = ({ progress, caption }) => {
             <div
                 style={{
                     width: `${100 - progress}%`,
-                    backgroundColor: '#72bbf1',
-                    height: '20px',
+                    backgroundColor: '#968989',
+                    opacity: 0.3,
+                    height: '44px',
                     transition: 'width 0.5s ease-in-out',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: 'black',
                     fontWeight: 'bold',
                     marginTop: '1px',
                     fontSize: '12px',

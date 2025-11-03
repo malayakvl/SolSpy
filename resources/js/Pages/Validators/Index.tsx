@@ -54,7 +54,7 @@ export default function Index(validatorsData) {
         messages: lngVaidators,
         locale: appLang,
     });
-
+console.log(555)
     const epoch = useSelector(appEpochSelector);
     const user = usePage().props.auth.user;
     const [dataFetched, setDataFetched] = useState(false);

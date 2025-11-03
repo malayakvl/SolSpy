@@ -41,8 +41,12 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/remove-comparison-validators', [ApiValidatorController::class, 'removeComparisons'])->name('validators.removeComparisons');
     Route::get('/validator-metrics', [ApiValidatorController::class, 'getValidatorMetrics'])->name('validators.metrics');
     Route::get('/historical-metrics', [ApiValidatorController::class, 'getHistoricalMetrics'])->name('validators.historicalMetrics');
+
+    Route::get('/comparison-count', [ApiValidatorController::class, 'getComparisonCount'])->name('api.validators.getComparisonCount');
     Route::post('/add-compare', [ApiValidatorController::class, 'addCompare'])->name('api.validators.addCompare');
+    Route::get('/favorite-count', [ApiValidatorController::class, 'getFavoriteCount'])->name('api.validators.getFavoriteCount');
     Route::post('/add-favorite', [ApiValidatorController::class, 'addFavorite'])->name('api.validators.addFavorite');
+
     Route::post('/ban-validator', [ApiValidatorController::class, 'banValidator'])->name('api.validators.banValidator');
     Route::post('/mark-validators', [ApiValidatorController::class, 'markValidators'])->name('api.validators.markValidator');
     Route::post('/settings/update', [SettingsController::class, 'update'])->name('settings.update');

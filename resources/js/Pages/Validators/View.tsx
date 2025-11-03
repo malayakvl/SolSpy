@@ -31,6 +31,7 @@ import { getWithdrawerFromMyValidator } from '../../utils/solana';
 import ValidatorCredits from "./Partials/ValidatorCredits";
 import ValidatorRate from "./Partials/ValidatorRate";
 import ValidatorActivatedStake from "./Partials/ValidatorActivatedStake";
+import ValidatorActions from './Partials/ValidatorActions';
 import ValidatorUptime from "./Partials/ValidatorUptime";
 import ValidatorSFDP from "./Partials/ValidatorSFDP";
 import ValidatorTVCScore from "./Partials/ValidatorTVCScore";
@@ -93,7 +94,6 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
     const scheduleSlots = JSON.parse(validatorData.slots);
     const dbData = JSON.parse(validatorData.epoch_credits_history);
     const labelEpoch = dbData.map(item => item[0]);
-console.log(validatorData.epochAverages);
     const [data, setData] = useState<any>(validatorData);
     const [historicalData, setHistoricalData] = useState<any>(null);
     const votePubkey = validatorData.vote_pubkey;
@@ -742,6 +742,17 @@ console.log(validatorData.epochAverages);
         }
     };
 
+    // Handle ban toggle from child component
+    const handleBanToggle = (validatorId: number, isBanned: boolean) => {
+        if (isBanned) {
+            // Add to banned list
+            setBannedValidators(prev => [...prev, validatorId]);
+        } else {
+            // Remove from banned list
+            setBannedValidators(prev => prev.filter(id => id !== validatorId));
+        }
+    };
+
 
     async function fetchValidatorHardware(ip) {
         if (!ip) return;
@@ -847,6 +858,75 @@ console.log(validatorData.epochAverages);
         return () => clearInterval(interval);
     }, [validatorData.node_pubkey]);
 
+    const fetchData = async () => {
+        // Show loading indicator only for pagination and sorting operations
+        if (isPaginationOrSorting) {
+            setIsLoading(true);
+        }
+        // Get filter value and other parameters from current URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const validatorId = validatorData.id;
+        const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
+        try {
+            // Build URL with all parameters
+            // Use authenticated endpoint if user is logged in, otherwise use public endpoint
+            let url = user ? 
+                `/api/fetch-validators-auth?page=1&validatorId=${validatorId}` :
+                `/api/fetch-validators?page=1&validatorId=${validatorId}`;
+                
+            if (searchParam) {
+                url += `&search=${encodeURIComponent(searchParam)}`;
+            }
+console.log(url);
+            alert(1);            
+            const response = await axios.get(url);
+            // console.log('Fetched data:', response.data); // Add this line to debug
+            // setData(response.data.validatorsData);
+            // setTotalRecords(response.data.totalCount);
+            
+            // Mark that we've fetched data at least once
+            if (!dataFetched) {
+                setDataFetched(true);
+            }
+            
+            // Reset sort click state after data is fetched
+            setSortClickState(null);
+        } catch (error) {
+            console.error('Error:', error);
+            // Reset sort click state even if there's an error
+            setSortClickState(null);
+        } finally {
+            // Hide loading indicator after pagination and sorting operations
+            if (isPaginationOrSorting) {
+                setIsLoading(false);
+                // Reset the flag
+                setIsPaginationOrSorting(false);
+            }
+        }
+    };
+
+
+    // useEffect(() => {
+    //     console.log(validatorData)
+    //     // Set up interval for periodic data fetching
+    //     const intervalId = setInterval(() => {
+    //         fetchData();
+    //     }, parseInt(validatorsData.settingsData.update_interval) * 1000);
+        
+    //     // Listen for filter changes
+    //     const handleFilterChange = () => {
+    //         // Reset to first page when filter changes
+    //         setCurrentPage(1);
+    //     };
+        
+    //     window.addEventListener('filterChanged', handleFilterChange);
+        
+    //     return () => {
+    //         clearInterval(intervalId);
+    //         window.removeEventListener('filterChanged', handleFilterChange);
+    //     };
+    // }, []);
+
     return (
         <AuthenticatedLayout header={<Head />}>
             <Head title={msg.get('validators.viewTitle')} />
@@ -855,6 +935,7 @@ console.log(validatorData.epochAverages);
                     <div className="validator-details">
                         <div>
                             <div className="mb-4">
+                                
                                 <div className="flex items-center w-full justify-between">
                                     <div>
                                         <h2 className="text-xl font-bold mb-0 mr-2 inline-block">{validatorData.name}</h2>
@@ -864,19 +945,8 @@ console.log(validatorData.epochAverages);
                                             </span>
                                         </div>
                                     </div>
-                                    <div>
-                                        <span className="cursor-pointer" onClick={() => addToBlock()}>
-                                            <FontAwesomeIcon icon={isBlocked ? faBan : faCheck} className={`mr-2 ${isBlocked ? 'text-red-500' : ''}`} />
-                                        </span>
-                                        <span className="cursor-pointer" onClick={() => setIsInComparison(!isInComparison)}>
-                                            <FontAwesomeIcon icon={isInComparison ? faScaleUnbalanced : faScaleBalanced} className={`mr-2 ${isInComparison ? 'text-red-500' : ''}`} />
-                                        </span>
-                                        <span className="cursor-pointer" onClick={() => setIsInFavorites(!isInFavorites)}>
-                                            <FontAwesomeIcon icon={faHeart} className={`mr-2 ${isInFavorites ? 'text-red-500' : ''}`} />
-                                        </span>
-                                        <span><FontAwesomeIcon icon={faEnvelope} className="mr-2" /></span>
-                                        <span><FontAwesomeIcon icon={faMoneyBill} className="mr-2" /></span>
-                                        <span><FontAwesomeIcon icon={faBell} className="mr-2" /></span>
+                                    <div className="flex">
+                                        <ValidatorActions validator={validatorData} onBanToggle={handleBanToggle} showViewBtn={false} />
                                         <button className="stake-button flex items-center ml-4">
                                             <span className="ml-2">Stake</span>
                                         </button>
@@ -933,7 +1003,12 @@ console.log(validatorData.epochAverages);
                                 </div>
                                 <ul className="space-y-2 w-1/2 pl-2">
                                     <li className="flex items-start"><span className="font-medium mr-2 w-40 whitespace-nowrap">Solspy Rank:</span><span className="flex-1">{validatorData.spyRank}</span></li>
-                                    <li className="flex items-start"><span className="font-medium mr-2 w-40 whitespace-nowrap">TVC Score:</span><span className="break-all flex-1"><ValidatorTVCScore validator={validatorData} /></span></li>
+                                    <li className="flex items-start">
+                                        <span className="font-medium mr-2 w-40 whitespace-nowrap">TVC Score:</span>
+                                        <span className="break-all flex-1">
+                                            <ValidatorTVCScore validator={validatorData} />
+                                        </span>
+                                    </li>
                                     <li className="flex items-start"><span className="font-medium mr-2 w-40 whitespace-nowrap">Stake Pool:</span><span className="break-all flex-1"><FontAwesomeIcon icon={faFrog} className="mr-[2px]" /><FontAwesomeIcon icon={faFire} className="mr-[2px]" /><FontAwesomeIcon icon={faHouse} className="mr-[2px]" /><FontAwesomeIcon icon={faCircleRadiation} className="mr-[2px]" /></span></li>
                                     <li className="flex items-start"><span className="font-medium mr-2 w-40 whitespace-nowrap">Inflation Commission:</span><span className="break-all flex-1">{validatorData.jito_commission !== undefined ? `${(parseFloat(validatorData.jito_commission) / 100).toFixed(2)}%` : 'N/A'}</span></li>
                                     <li className="flex items-start"><span className="font-medium mr-2 w-40 whitespace-nowrap">MEV Commission:</span><span className="break-all flex-1">{validatorData.commission !== undefined ? `${parseFloat(validatorData.commission).toFixed(2)}%` : 'N/A'}</span></li>
