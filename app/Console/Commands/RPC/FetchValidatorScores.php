@@ -40,7 +40,7 @@ class FetchValidatorScores extends Command
         if ($useSSH) {
             return Artisan::call('rpc:fetch-validator-scores-local', [], $this->getOutput());
         } else {
-            return Artisan::call('rpc:fetch-validator-scores-server', [], $this->getOutput());
+            return Artisan::call('rpc:fetch-validators-scores-server', [], $this->getOutput());
         }
     }
 }
