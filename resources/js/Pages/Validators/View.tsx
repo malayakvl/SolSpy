@@ -859,10 +859,6 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
     }, [validatorData.node_pubkey]);
 
     const fetchData = async () => {
-        // Show loading indicator only for pagination and sorting operations
-        if (isPaginationOrSorting) {
-            setIsLoading(true);
-        }
         // Get filter value and other parameters from current URL
         const urlParams = new URLSearchParams(window.location.search);
         const validatorId = validatorData.id;
@@ -874,58 +870,28 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                 `/api/fetch-validators-auth?page=1&validatorId=${validatorId}` :
                 `/api/fetch-validators?page=1&validatorId=${validatorId}`;
                 
-            if (searchParam) {
-                url += `&search=${encodeURIComponent(searchParam)}`;
-            }
-console.log(url);
-            alert(1);            
             const response = await axios.get(url);
-            // console.log('Fetched data:', response.data); // Add this line to debug
-            // setData(response.data.validatorsData);
-            // setTotalRecords(response.data.totalCount);
             
-            // Mark that we've fetched data at least once
-            if (!dataFetched) {
-                setDataFetched(true);
-            }
-            
-            // Reset sort click state after data is fetched
-            setSortClickState(null);
         } catch (error) {
             console.error('Error:', error);
             // Reset sort click state even if there's an error
             setSortClickState(null);
-        } finally {
-            // Hide loading indicator after pagination and sorting operations
-            if (isPaginationOrSorting) {
-                setIsLoading(false);
-                // Reset the flag
-                setIsPaginationOrSorting(false);
-            }
-        }
+        } 
     };
 
 
-    // useEffect(() => {
-    //     console.log(validatorData)
-    //     // Set up interval for periodic data fetching
-    //     const intervalId = setInterval(() => {
-    //         fetchData();
-    //     }, parseInt(validatorsData.settingsData.update_interval) * 1000);
+    useEffect(() => {
+        // Set up interval for periodic data fetching
+        const intervalId = setInterval(() => {
+            fetchData();
+        }, parseInt(settingsData.update_interval) * 1000);
         
-    //     // Listen for filter changes
-    //     const handleFilterChange = () => {
-    //         // Reset to first page when filter changes
-    //         setCurrentPage(1);
-    //     };
-        
-    //     window.addEventListener('filterChanged', handleFilterChange);
-        
-    //     return () => {
-    //         clearInterval(intervalId);
-    //         window.removeEventListener('filterChanged', handleFilterChange);
-    //     };
-    // }, []);
+        // Listen for filter changes
+        return () => {
+            clearInterval(intervalId);
+            window.removeEventListener('filterChanged', handleFilterChange);
+        };
+    }, []);
 
     return (
         <AuthenticatedLayout header={<Head />}>
