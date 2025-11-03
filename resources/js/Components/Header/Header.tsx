@@ -42,16 +42,6 @@ export default function Header(auth) {
       setEpochPersent(response.data.data.epoch_completed_percent);
       setCompletedPersent(response.data.data.epoch_completed_percent);
 
-      // const progress = response.data.data.slot_index / response.data.data.slot_in_epoch;
-      // setBarProgress(response.data.data.epoch_completed_percent); // надо уточнить
-      // const slotsLeft = response.data.data.slot_in_epoch - response.data.data.slot_index;
-      // const timeLeftSeconds = slotsLeft * 0.4; // час до кінця епохи в секундах
-
-      // const days = Math.floor(timeLeftSeconds / (24 * 3600));
-      // const hours = Math.floor((timeLeftSeconds % (24 * 3600)) / 3600);
-      // const minutes = Math.floor((timeLeftSeconds % 3600) / 60);
-      // const seconds = Math.floor(timeLeftSeconds % 60);
-      // setBarProgressCaption(`${days} d, ${hours} h, ${minutes} m`);
       setBarProgressCaption(response.data.data.epoch_remaining_time);
 
 
@@ -123,9 +113,9 @@ export default function Header(auth) {
                     </>
                   ) : (
                     <> 
-                      <Link href={'/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
+                      {/* <Link href={'/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
                         {msg.get('menu.validators')}
-                      </Link>
+                      </Link> */}
                     </>
                   )}
 
@@ -134,17 +124,18 @@ export default function Header(auth) {
               </div>
             </div>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 nav-link">
-              <div className="flex whitespace-nowrap text-[#fff] ml-[0px] mt-[0px]">
-                 <ProgressBar progress={100 - completedPersent} caption={`${msg.get('menu.left')} ${barProgressCaption}`} />
+              <div className="progress-block">
+                 <ProgressBar progress={100 - completedPersent} caption={`${barProgressCaption} ${msg.get('menu.left')}`} />
+                 <div className="text-sm epoch-data">
+                    {msg.get('menu.epoch')}  {settingsData?.epoch} ({100 - epochPersent}%)
+                  </div>
               </div>
             </div>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 nav-link">
               <div className="flex whitespace-nowrap text-[#fff] ml-[0px]  mt-[0px]">
-                  <div className="md:space-x-4 md:flex md:pr-[30px] inline align-middle text-[14px] whitespace-nowrap w-[150px]">
-                    {msg.get('menu.epoch')}  {settingsData?.epoch} ({100 - epochPersent}%)
-                  </div>
-                  <div className="md:space-x-4 md:flex md:pr-[30px] inline align-middle text-[14px] whitespace-nowrap">
-                    1 SOL = {settingsData?.sol_rate}$
+                  
+                  <div className="sol-block">
+                    1 SOL {settingsData?.sol_rate}$
                   </div>
                 </div>
             </div>

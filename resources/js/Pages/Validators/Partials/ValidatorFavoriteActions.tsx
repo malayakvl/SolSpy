@@ -53,6 +53,8 @@ export default function ValidatorFavoriteActions({validator, onBanToggle}) {
                     pauseOnHover: true,
                     draggable: true,
                 });
+                // Dispatch event for registered users
+                window.dispatchEvent(new CustomEvent('comparisonCountChanged'));
             } catch (error) {
                 console.error('Error:', error);
                 toast.error('Failed to update comparison list', {
@@ -81,6 +83,8 @@ export default function ValidatorFavoriteActions({validator, onBanToggle}) {
                     pauseOnHover: true,
                     draggable: true,
                 });
+                // Dispatch event when removing
+                window.dispatchEvent(new CustomEvent('comparisonCountChanged'));
             } else {
                 // Add to comparison
                 if (compareList.length >= 2) {
@@ -105,6 +109,8 @@ export default function ValidatorFavoriteActions({validator, onBanToggle}) {
                     pauseOnHover: true,
                     draggable: true,
                 });
+                // Dispatch event when adding
+                window.dispatchEvent(new CustomEvent('comparisonCountChanged'));
             }
         }
     }
@@ -130,6 +136,8 @@ export default function ValidatorFavoriteActions({validator, onBanToggle}) {
                     pauseOnHover: true,
                     draggable: true,
                 });
+                // Dispatch event for registered users
+                window.dispatchEvent(new CustomEvent('favoriteCountChanged'));
             } catch (error) {
                 console.error('Error:', error);
                 toast.error('Failed to update favorites list', {
@@ -158,6 +166,8 @@ export default function ValidatorFavoriteActions({validator, onBanToggle}) {
                     pauseOnHover: true,
                     draggable: true,
                 });
+                // Dispatch event when removing
+                window.dispatchEvent(new CustomEvent('favoriteCountChanged'));
             } else {
                 // Add to favorites
                 if (favoritesList.length >= 5) {
@@ -183,6 +193,8 @@ export default function ValidatorFavoriteActions({validator, onBanToggle}) {
                     pauseOnHover: true,
                     draggable: true,
                 });
+                // Dispatch event when adding
+                window.dispatchEvent(new CustomEvent('favoriteCountChanged'));
             }
         }
     }

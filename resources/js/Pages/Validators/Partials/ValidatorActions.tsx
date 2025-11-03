@@ -12,7 +12,7 @@ import { Link, usePage } from "@inertiajs/react";
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
-export default function ValidatorActions({validator, onBanToggle}) {
+export default function ValidatorActions({validator, onBanToggle, showViewBtn = true}) {
     const user = usePage().props.auth.user;
     const [isInComparison, setIsInComparison] = useState(false);
     const [isInFavorites, setIsInFavorites] = useState(false);
@@ -56,6 +56,8 @@ export default function ValidatorActions({validator, onBanToggle}) {
                     pauseOnHover: true,
                     draggable: true,
                 });
+                // Dispatch event for registered users
+                window.dispatchEvent(new CustomEvent('comparisonCountChanged'));
             } catch (error) {
                 console.error('Error:', error);
                 toast.error('Failed to update comparison list', {
@@ -84,6 +86,8 @@ export default function ValidatorActions({validator, onBanToggle}) {
                     pauseOnHover: true,
                     draggable: true,
                 });
+                // Dispatch event when removing
+                window.dispatchEvent(new CustomEvent('comparisonCountChanged'));
             } else {
                 // Add to comparison
                 if (compareList.length >= 2) {
@@ -108,6 +112,8 @@ export default function ValidatorActions({validator, onBanToggle}) {
                     pauseOnHover: true,
                     draggable: true,
                 });
+                // Dispatch event when adding
+                window.dispatchEvent(new CustomEvent('comparisonCountChanged'));
             }
         }
     }
@@ -133,6 +139,8 @@ export default function ValidatorActions({validator, onBanToggle}) {
                     pauseOnHover: true,
                     draggable: true,
                 });
+                // Dispatch event for registered users
+                window.dispatchEvent(new CustomEvent('favoriteCountChanged'));
             } catch (error) {
                 console.error('Error:', error);
                 toast.error('Failed to update favorites list', {
@@ -161,6 +169,8 @@ export default function ValidatorActions({validator, onBanToggle}) {
                     pauseOnHover: true,
                     draggable: true,
                 });
+                // Dispatch event when removing
+                window.dispatchEvent(new CustomEvent('favoriteCountChanged'));
             } else {
                 // Add to favorites
                 if (favoritesList.length >= 5) {
@@ -186,6 +196,8 @@ export default function ValidatorActions({validator, onBanToggle}) {
                     pauseOnHover: true,
                     draggable: true,
                 });
+                // Dispatch event when adding
+                window.dispatchEvent(new CustomEvent('favoriteCountChanged'));
             }
         }
     }
@@ -193,9 +205,11 @@ export default function ValidatorActions({validator, onBanToggle}) {
     return (
         <>
             <div className="flex items-center">
-                <Link href={`/validator/${validator.vote_pubkey}`}>
-                    <FontAwesomeIcon icon={faEye} className="mr-2" />
-                </Link>
+                {showViewBtn && (
+                    <Link href={`/validator/${validator.vote_pubkey}`}>
+                        <FontAwesomeIcon icon={faEye} className="mr-2" />
+                    </Link>
+                )}
                 {!isAdmin && (
                     <>
                         <span className="cursor-pointer" onClick={() => addToCompare(validator.id)}>

@@ -10,7 +10,8 @@ import {
     faHeart,
     faBell, faUser, faScaleBalanced
 } from '@fortawesome/free-solid-svg-icons';
-import React from "react";
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
 export default function ActionsMenu(props) {
     const appLang = useSelector(appLangSelector);
@@ -20,14 +21,85 @@ export default function ActionsMenu(props) {
     });
     const user = usePage().props.auth.user;
     const permissions = usePage().props.auth.can;
+    const [favLength, setFavLength] = useState(0);
+    const [compareLength, setCompareLength] = useState(0);
+
+    // Function to update favorite count
+    const updateFavoriteCount = async () => {
+        if (!user) {
+            // For unregistered users, get count from localStorage
+            const favoritesList = JSON.parse(localStorage.getItem('validatorFavorites') || '[]');
+            setFavLength(favoritesList.length);
+        } else {
+            // For registered users, fetch count from server
+            try {
+                const response = await axios.get('/api/favorite-count', {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                setFavLength(response.data.count || 0);
+            } catch (error) {
+                console.error('Error fetching favorite count:', error);
+                // Fallback to localStorage if API fails
+                const favoritesList = JSON.parse(localStorage.getItem('validatorFavorites') || '[]');
+                setFavLength(favoritesList.length);
+            }
+        }
+    };
+
+    // Function to update comparison count
+    const updateComparisonCount = async () => {
+        if (!user) {
+            // For unregistered users, get count from localStorage
+            const compareList = JSON.parse(localStorage.getItem('validatorCompare') || '[]');
+            setCompareLength(compareList.length);
+        } else {
+            // For registered users, fetch count from server
+            try {
+                const response = await axios.get('/api/comparison-count', {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                setCompareLength(response.data.count || 0);
+            } catch (error) {
+                console.error('Error fetching comparison count:', error);
+                // Fallback to localStorage if API fails
+                const compareList = JSON.parse(localStorage.getItem('validatorCompare') || '[]');
+                setCompareLength(compareList.length);
+            }
+        }
+    };
+
+    useEffect(() => {
+        // Initial counts
+        updateFavoriteCount();
+        updateComparisonCount();
+        
+        // Listen for favorite count changes
+        window.addEventListener('favoriteCountChanged', updateFavoriteCount);
+        // Listen for comparison count changes
+        window.addEventListener('comparisonCountChanged', updateComparisonCount);
+        
+        // Cleanup listeners
+        return () => {
+            window.removeEventListener('favoriteCountChanged', updateFavoriteCount);
+            window.removeEventListener('comparisonCountChanged', updateComparisonCount);
+        };
+    }, [user]);
 
     return (
         <>
             <div className="md:space-x-4 md:flex md:pr-[30px]">
-                <Link href={'/comparisons'} className="inline-flex items-center menu-main-btn text-sm">
+                <Link href={'/comparisons'} className="inline-flex items-center menu-main-btn text-sm relative">
+                    <span className="absolute top-[-10px] right-[-10px] bg-[#703da7] font-bold rounded-full w-[16px] h-[16px] px-[4px] py-0 text-xs text-white">{compareLength}</span>
                     <FontAwesomeIcon icon={faScaleBalanced} className="w-[16px] h-[16px] text-white" />
                 </Link>
-                <Link href={'/favorites'} className="inline-flex items-center menu-main-btn text-sm">
+                <Link href={'/favorites'} className="inline-flex items-center menu-main-btn text-sm relative">
+                    <span className="absolute top-[-10px] right-[-10px] bg-[#703da7] font-bold rounded-full w-[16px] h-[16px] px-[4px] py-0 text-xs text-white">{favLength}</span>
                     <FontAwesomeIcon icon={faHeart} className="w-[16px] h-[16px] text-white" />
                 </Link>
                 <Link href={'/blocked'} className="inline-flex items-center menu-main-btn text-sm">
