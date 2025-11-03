@@ -1330,6 +1330,25 @@ public function hardware(Request $request)
         ]);
     }
 
+    public function getComparisonCount(Request $request) {
+        $user = $request->user();
+        if ($user && $user->id) {
+            // For registered users, count comparisons from database
+            $count = DB::table('data.validators_comparison')
+                ->where('user_id', $user->id)
+                ->count();
+                
+            return response()->json([
+                'count' => $count
+            ]);
+        }
+        
+        // For unregistered users, return 0 or handle appropriately
+        return response()->json([
+            'count' => 0
+        ]);
+    }
+
     public function addFavorite(Request $request) {
         $user = $request->user();
         if ($user->id) {
@@ -1337,9 +1356,32 @@ public function hardware(Request $request)
             DB::statement('SELECT data.toggle_favorite(' .$user->id. ', ' .$validatorId. ')');
         }
         
+        // Dispatch event for frontend to update favorite count
+        // This would typically be done with Laravel's event broadcasting
+        // For now, we'll just return a success response
+        
         return response()->json([
             'success' => true,
             'message' => 'Favorites list updated'
+        ]);
+    }
+
+    public function getFavoriteCount(Request $request) {
+        $user = $request->user();
+        if ($user && $user->id) {
+            // For registered users, count favorites from database
+            $count = DB::table('data.favorites')
+                ->where('user_id', $user->id)
+                ->count();
+                
+            return response()->json([
+                'count' => $count
+            ]);
+        }
+        
+        // For unregistered users, return 0 or handle appropriately
+        return response()->json([
+            'count' => 0
         ]);
     }
 

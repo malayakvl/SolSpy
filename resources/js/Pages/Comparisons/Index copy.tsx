@@ -105,7 +105,6 @@ export default function Index(validatorsData) {
             }
         }
     };
-console.log('Data fetched', data)
 
     const removeFromComparison = async (validatorId: number) => {
         try {

@@ -15,7 +15,7 @@ import ValidatorSFDP from '../../Pages/Validators/Partials/ValidatorSFDP';
 import ValidatorStatus from '../../Pages/Validators/Partials/ValidatorStatus';
 import ValidatorJiitoScore from '../../Pages/Validators/Partials/ValidatorJiitoScore';
 import ValidatorTVCScore from '../../Pages/Validators/Partials/ValidatorTVCScore';
-
+console.log(1111)
 // Shared function to render column headers
 export const renderColumnHeader = (columnName, sortClickState, setSortClickState, setCurrentPage, isLoading = false, setIsPaginationOrSorting = null) => {
     // Map column names to sort keys

@@ -324,7 +324,6 @@ export default function Index(validatorsData) {
             }
         }
     };
-console.log('Data fetched', data)
 
     return (
         <AuthenticatedLayout header={<Head />}>
@@ -367,7 +366,7 @@ console.log('Data fetched', data)
                                     </thead>
                                     <tbody>
                                     {data.map((validator, index) => (
-                                        <tr key={validator.id} className={validator.is_highlighted ? 'bg-blue-100' : ''}>
+                                        <tr key={validator.id} className={validator.is_highlighted ? 'bg-selected' : ''}>
                                             <td className="text-left">
                                                 <div className="pl-[10px]">
                                                     <input 
@@ -378,9 +377,9 @@ console.log('Data fetched', data)
                                                     />
                                                 </div>
                                             </td>
-                                            <th className="text-center">
+                                            <td className="text-center whitespace-nowrap">
                                                 <ValidatorFavoriteActions validator={validator} />
-                                            </th>
+                                            </td>
                                             {getOrderedVisibleColumns().map(column => renderColumnCellLocal(column.name, validator, index))}
                                         </tr>
                                     ))}

@@ -157,9 +157,9 @@ class FetchSettingsLocal extends Command
         if ($minutes > 0) {
             $parts[] = $minutes . 'm';
         }
-        if ($seconds > 0) {
-            $parts[] = $seconds . 's';
-        }
+        // if ($seconds > 0) {
+        //     $parts[] = $seconds . 's';
+        // }
         
         return !empty($parts) ? implode(' ', $parts) : '0s';
     }
