@@ -532,6 +532,32 @@ console.log(validatorData.epochAverages);
         };
     };
 
+    // === НОВАЯ ФУНКЦИЯ: Подготовка данных для графика avg_skip_rate ===
+    const avgSkipRateChartData = () => {
+        // Проверяем, есть ли данные epochAverages
+        if (!validatorData?.epochAverages || validatorData.epochAverages.length === 0) {
+            return null;
+        }
+        
+        // Извлекаем эпохи и значения avg_skip_rate
+        const epochs = validatorData.epochAverages.map(item => item.epoch);
+        const avgSkipRateValues = validatorData.epochAverages.map(item => item.avg_skip_rate);
+        
+        return {
+            labels: epochs,
+            datasets: [
+                {
+                    label: 'Avg Skip Rate (%)',
+                    data: avgSkipRateValues,
+                    fill: false,
+                    borderColor: 'rgb(54, 162, 235)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    tension: 0.1
+                }
+            ]
+        };
+    };
+
     // === НОВАЯ ФУНКЦИЯ: Опции для графика avg_commission ===
     const optionsAvgCommission = {
         responsive: true,
@@ -554,6 +580,70 @@ console.log(validatorData.epochAverages);
                 title: {
                     display: true,
                     text: 'Commission (%)',
+                    color: '#c6c9d0'
+                },
+                ticks: {
+                    color: '#c6c9d0'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                border: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: 'Epoch',
+                    color: '#c6c9d0'
+                },
+                ticks: {
+                    color: '#c6c9d0',
+                    autoSkip: true,
+                    maxTicksLimit: 20
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                border: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            }
+        },
+        elements: {
+            point: {
+                radius: 2,
+                hoverRadius: 6
+            },
+            line: {
+                tension: 0.4
+            }
+        }
+    };
+
+    // === НОВАЯ ФУНКЦИЯ: Опции для графика avg_skip_rate ===
+    const optionsAvgSkipRate = {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top' as const,
+                labels: {
+                    color: '#c6c9d0'
+                }
+            },
+            title: {
+                display: true,
+                text: 'Average Skip Rate by Epoch',
+                color: '#c6c9d0'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: false,
+                title: {
+                    display: true,
+                    text: 'Skip Rate (%)',
                     color: '#c6c9d0'
                 },
                 ticks: {
@@ -1099,6 +1189,17 @@ console.log(validatorData.epochAverages);
                                     ) : (
                                         <div className="flex items-center justify-center h-full">
                                             <div className="text-center">Loading average commission data...</div>
+                                        </div>
+                                    )}
+                                </ChartErrorBoundary>
+                            </div>
+                            <div className={`w-full ${chartTab === 'skip_rate' ? 'block' : 'hidden'}`}>
+                                <ChartErrorBoundary>
+                                    {avgSkipRateChartData() ? (
+                                        <Line options={optionsAvgSkipRate} data={avgSkipRateChartData()} />
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full">
+                                            <div className="text-center">Loading average skip rate data...</div>
                                         </div>
                                     )}
                                 </ChartErrorBoundary>
