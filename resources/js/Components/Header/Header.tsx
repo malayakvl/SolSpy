@@ -127,7 +127,7 @@ export default function Header(auth) {
               <div className="progress-block">
                  <ProgressBar progress={100 - completedPersent} caption={`${barProgressCaption} ${msg.get('menu.left')}`} />
                  <div className="text-sm epoch-data">
-                    {msg.get('menu.epoch')}  {settingsData?.epoch} ({100 - epochPersent}%)
+                    {msg.get('menu.epoch')}  {settingsData?.epoch} ({(100 - epochPersent).toFixed(2)}%)
                   </div>
               </div>
             </div>
