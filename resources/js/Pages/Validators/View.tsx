@@ -1399,7 +1399,7 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                             </table>
                         </div>
                     </div>
-                    <div className="flex justify-center">
+                    <div className="flex justify-center mt-3">
                         <button className="btn btn-pink">Add Validator to Black List</button>
                     </div>
                 </div>
