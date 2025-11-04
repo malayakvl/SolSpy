@@ -199,9 +199,15 @@ class ValidatorDataService
             $actualSortDirection = strtoupper($sortDirection) === 'ASC' ? 'DESC' : 'ASC';
         }
         if ($userId)
-            $queryNew = "SELECT * FROM data.search_validators_timeout('" .$searchTerm. "', '" .$filterType. "', $userId, '" .$sortColumn. "', $offset, $limit, $validatorId);";
+            if ($validatorId)
+                $queryNew = "SELECT * FROM data.search_validators_timeout('" .$searchTerm. "', '" .$filterType. "', $userId, '" .$sortColumn. "', $offset, $limit, $validatorId);";
+            else
+                $queryNew = "SELECT * FROM data.search_validators_timeout('" .$searchTerm. "', '" .$filterType. "', $userId, '" .$sortColumn. "', $offset, $limit);";
         else
-            $queryNew = "SELECT * FROM data.search_validators_timeout('" .$searchTerm. "', '" .$filterType. "', null, '" .$sortColumn. "', $offset, $limit, $validatorId);";
+            if ($validatorId)
+                $queryNew = "SELECT * FROM data.search_validators_timeout('" .$searchTerm. "', '" .$filterType. "', null, '" .$sortColumn. "', $offset, $limit, $validatorId);";
+            else
+                $queryNew = "SELECT * FROM data.search_validators_timeout('" .$searchTerm. "', '" .$filterType. "', null, '" .$sortColumn. "', $offset, $limit);";
         $validatorsData = DB::select($queryNew);
         
         // Calculate total count based on filter
@@ -605,6 +611,18 @@ class ValidatorDataService
             // Reverse the sort direction for TVC Rank
             $actualSortDirection = strtoupper($sortDirection) === 'ASC' ? 'DESC' : 'ASC';
         }
+        
+        // Use a single query that properly handles null validatorId
+        $actualSortDirection = strtoupper($sortDirection) === 'ASC' ? 'DESC' : 'ASC';
+        
+        // For favorite data, we don't use validatorId filter
+        if ($userId) {
+            $queryNew = "SELECT * FROM data.search_validators_timeout('" . $searchTerm . "', '" . $filterType . "', $userId, '" . $sortColumn . "', $offset, $limit, null);";
+        } else {
+            $queryNew = "SELECT * FROM data.search_validators_timeout('" . $searchTerm . "', '" . $filterType . "', null, '" . $sortColumn . "', $offset, $limit, null);";
+        }
+        
+        $validatorsData = DB::select($queryNew);
         
         // For authenticated users, use the favorites table
         if ($userId) {

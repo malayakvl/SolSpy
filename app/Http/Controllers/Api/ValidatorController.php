@@ -707,8 +707,7 @@ public function hardware(Request $request)
             $filterType, 
             $limit, 
             $offset, 
-            $searchTerm,
-            $validatorId
+            $searchTerm
         );
         return response()->json([
             'validatorsData' => $data['validatorsData'],
