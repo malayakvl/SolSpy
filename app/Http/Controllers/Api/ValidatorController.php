@@ -723,12 +723,11 @@ public function hardware(Request $request)
         // For unauthenticated users, get favorite validator IDs from request parameter
         $favoriteIds = null;
         if (!$userId) {
-            $favoriteIds = $request->input('validatorFavorites', []); // Get from localStorage parameter
+            $favoriteIds = $request->input('ids', []); // Get from localStorage parameter
             if (is_string($favoriteIds)) {
                 $favoriteIds = json_decode($favoriteIds, true) ?: [];
             }
         }
-        
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
