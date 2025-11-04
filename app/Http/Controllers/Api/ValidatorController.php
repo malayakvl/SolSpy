@@ -690,10 +690,9 @@ public function hardware(Request $request)
         $filterType = $request->input('filterType', 'all'); // Get filter type
         $searchTerm = $request->input('search', ''); // Get search term
         $sortColumn = $request->input('sortColumn', 'id'); // Get sort column
-        $validatorId = $request->input('validatorId', 'id'); // Get sort column
+        $validatorId = $request->input('validatorId'); // Get sort column
         $sortDirection = $request->input('sortDirection', 'ASC'); // Get sort direction
         $userId = $request->user() ? $request->user()->id : null;
-        
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
@@ -707,7 +706,8 @@ public function hardware(Request $request)
             $filterType, 
             $limit, 
             $offset, 
-            $searchTerm
+            $searchTerm,
+            $validatorId
         );
         return response()->json([
             'validatorsData' => $data['validatorsData'],
