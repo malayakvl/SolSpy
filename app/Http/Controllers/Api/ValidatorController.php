@@ -68,27 +68,11 @@ class ValidatorController extends Controller
 
 public function getNextLeaderSlots(Request $request)
 {
-    // ✅ Default: твой валидатор Vladika
-    $votePubkey = $request->query('vote_pubkey', "53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR");
+    // ✅ Get node_pubkey from request, fallback to default Vladika validator
+    $nodePubkey = $request->query('node_pubkey', "DwDtUqBZJtbT64Vh4hLtX7x3epoXsoRLY5bGQ87wWnSe");
     $rpcUrl = 'http://103.167.235.81:8899';
 
     try {
-        // -------- GET IDENTITY KEY FROM VOTE KEY ---------------------
-        $voteInfo = $this->rpcCall($rpcUrl, 'getVoteAccounts')['result'];
-
-        $identityKey = null;
-
-        foreach (array_merge($voteInfo['current'], $voteInfo['delinquent']) as $acc) {
-            if ($acc['votePubkey'] === $votePubkey) {
-                $identityKey = $acc['nodePubkey'];
-                break;
-            }
-        }
-
-        if (!$identityKey) {
-            return response()->json(['error' => 'Vote pubkey not found'], 400);
-        }
-
         // -------- GET CURRENT SLOT & EPOCH INFO ---------------------
         $currentSlot = $this->rpcCall($rpcUrl, 'getSlot')['result'];
         $epochInfo = $this->rpcCall($rpcUrl, 'getEpochInfo')['result'];
@@ -98,8 +82,8 @@ public function getNextLeaderSlots(Request $request)
         $slotsInEpoch = $epochInfo['slotsInEpoch'];
 
         // -------- GET LEADER SLOTS (in-epoch indexes) ----------------
-        $schedule = $this->rpcCall($rpcUrl, 'getLeaderSchedule', [null, ['identity' => $identityKey]]);
-        $mySlots = $schedule['result'][$identityKey] ?? [];
+        $schedule = $this->rpcCall($rpcUrl, 'getLeaderSchedule', [null, ['identity' => $nodePubkey]]);
+        $mySlots = $schedule['result'][$nodePubkey] ?? [];
 
         // Convert to absolute slots
         $myAbsoluteSlots = array_map(
@@ -121,30 +105,37 @@ public function getNextLeaderSlots(Request $request)
             ]);
         }
 
-        // -------- FIND LAST BLOCK TIME TO ESTIMATE SLOT TIME --------
+        // -------- GET MORE ACCURATE TIME ESTIMATION --------
+        // Get current time and a recent block time for better estimation
+        $currentTime = time();
         $refSlot = $currentSlot;
-        $refTime = null;
+        $refTime = $currentTime;
 
-        for ($i = 0; $i < 50; $i++) {
-            $testSlot = $currentSlot - $i * 100;
+        // Try to get a more recent block time for better accuracy
+        for ($i = 0; $i < 10; $i++) {
+            $testSlot = $currentSlot - $i * 50;
             if ($testSlot < 0) break;
 
-            $time = $this->rpcCall($rpcUrl, 'getBlockTime', [$testSlot]);
+            $timeResult = $this->rpcCall($rpcUrl, 'getBlockTime', [$testSlot]);
 
-            if ($time['result'] !== null) {
+            if (isset($timeResult['result']) && $timeResult['result'] !== null) {
                 $refSlot = $testSlot;
-                $refTime = $time['result'];
+                $refTime = $timeResult['result'];
                 break;
             }
         }
 
-        if (!$refTime) $refTime = time();
+        // Calculate average slot time based on recent data
+        $slotTimeAverage = 0.4; // Default to 0.4 seconds per slot
+        if ($currentSlot > $refSlot && $currentTime > $refTime) {
+            $slotTimeAverage = ($currentTime - $refTime) / ($currentSlot - $refSlot);
+        }
 
         // -------- FORMAT OUTPUT ---------------------------------------
         $result = [];
         foreach ($futureSlots as $slot) {
             $diffSlots = $slot - $refSlot;
-            $etaSec = $diffSlots * 0.4; // baseline
+            $etaSec = $diffSlots * $slotTimeAverage;
             $etaTs = $refTime + $etaSec;
 
             $result[] = [
@@ -152,14 +143,13 @@ public function getNextLeaderSlots(Request $request)
                 'slot_in_epoch' => $slot - $epochAbsoluteStart,
                 'epoch' => $epoch,
                 'eta_seconds' => round($etaSec, 1),
-                'eta_local' => date('Y-m-d H:i:s', $etaTs + 7200), // Kyiv
+                'eta_local' => date('Y-m-d H:i:s', $etaTs), // UTC time
                 'in_minutes' => round($etaSec / 60, 1)
             ];
         }
 
         return response()->json([
-            'validator_identity' => $identityKey,
-            'validator_vote' => $votePubkey,
+            'validator_identity' => $nodePubkey,
             'current_slot' => $currentSlot,
             'epoch' => $epoch,
             'next_slots' => $result
