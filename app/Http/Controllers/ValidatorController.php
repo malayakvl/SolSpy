@@ -137,7 +137,6 @@ class ValidatorController extends Controller
         $offset = ($page - 1) * $limit;
         $filterType = $request->get('filterType', 'all');
         $userId = $request->user() ? $request->user()->id : null;
-        
         $searchTerm = $request->get('search', '');
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
@@ -146,7 +145,6 @@ class ValidatorController extends Controller
         $validators = $this->validatorDataService->fetchDataValidators($userId ?? null, $filterType, $offset, $totalStakeLamports, 'spy_rank', $searchTerm);
         $sortedValidators = $validators['validatorsAllData']->toArray();
         $filteredTotalCount = $validators['totalFilteredValidators'];
-
         // Get top validators
         $topValidatorsWithRanks = $this->validatorDataService->fetchDataTopValidators($sortedValidators, $totalStakeLamports);
 
