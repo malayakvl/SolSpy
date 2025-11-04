@@ -732,23 +732,26 @@ class ValidatorController extends Controller
         $limit = 10;
         $page = max(1, (int) $request->get('page', 1));
         $offset = ($page - 1) * $limit;
-        $filterType = $request->get('filterType', 'all');
+        $filterType = $request->get('filterType', 'compare');
         $userId = $request->user() ? $request->user()->id : null;
-        
         // For unauthenticated users, get favorite validator IDs from request parameter
-        $favoriteIds = null;
+        $comparisonIds = null;
         if (!$userId) {
-            $favoriteIds = $request->get('validatorFavorites', []); // Get from localStorage parameter
-            if (is_string($favoriteIds)) {
-                $favoriteIds = json_decode($favoriteIds, true) ?: [];
+            $comparisonIds = $request->get('ids', $request->input('ids', []));
+            if (empty($comparisonIds)) {
+                // Try to get from query parameters
+                $comparisonIds = $request->query('ids', []);
+            }
+            if (is_string($comparisonIds)) {
+                $comparisonIds = json_decode($comparisonIds, true) ?: [];
             }
         }
-
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
         // Fetch validators data using service
-        $validators = $this->validatorDataService->fetchDataFavoriteValidators($userId, $filterType, $offset, $totalStakeLamports, $favoriteIds);
+        // $validators = $this->validatorDataService->fetchDataComparisonsValidators($userId, $filterType, $offset, $totalStakeLamports, $comparisonIds);
+        $validators = $this->validatorDataService->fetchDataComparisonsValidators($userId, $filterType, $offset, $totalStakeLamports, $comparisonIds);
         $filteredTotalCount = $validators['totalFilteredValidators'];
 
         return Inertia::render('Comparisons/Index', [
@@ -771,23 +774,34 @@ class ValidatorController extends Controller
         // For unauthenticated users, get favorite validator IDs from request parameter
         $favoriteIds = null;
         if (!$userId) {
-            $favoriteIds = $request->get('validatorFavorites', []); // Get from localStorage parameter
+            // Try to get favorite IDs from different sources
+            $favoriteIds = $request->get('ids', $request->input('ids', $request->query('ids', [])));
             if (is_string($favoriteIds)) {
                 $favoriteIds = json_decode($favoriteIds, true) ?: [];
             }
+            
+            // If we still don't have favorite IDs, try to get them from localStorage
+            // This is a fallback for cases where the frontend didn't pass them correctly
+            if (empty($favoriteIds)) {
+                // We can't directly access localStorage from PHP, but we can check if the request
+                // contains a special header or cookie that might have been set by JavaScript
+                // For now, we'll just leave it as an empty array
+                $favoriteIds = [];
+            }
+        } else {
+            $favoriteIds = DB::table('data.validators2users')
+                ->where('user_id', $userId)
+                ->where('type', 'favorite')
+                ->pluck('validator_id')
+                ->toArray();
         }
-
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
         // Fetch validators data using service
         $validators = $this->validatorDataService->fetchDataFavoriteValidators($userId, $filterType, $offset, $totalStakeLamports, $favoriteIds);
         // dd($validators['results']);exit;
-        $sortedValidators = $validators['validatorsAllData']->toArray();
         $filteredTotalCount = $validators['totalFilteredValidators'];
-
-        // Get top validators
-        $topValidatorsWithRanks = $this->validatorDataService->fetchDataTopValidators($sortedValidators, $totalStakeLamports);
 
         return Inertia::render('Favorites/Index', [
             'validatorsData' => $validators['results'],
@@ -796,7 +810,6 @@ class ValidatorController extends Controller
             'currentPage' => $page,
             'filterType' => $filterType,
             'totalStakeData' => $stakeData[0],
-            'topValidatorsData' => $topValidatorsWithRanks
         ]);
     }
 
