@@ -690,6 +690,7 @@ public function hardware(Request $request)
         $filterType = $request->input('filterType', 'all'); // Get filter type
         $searchTerm = $request->input('search', ''); // Get search term
         $sortColumn = $request->input('sortColumn', 'id'); // Get sort column
+        $validatorId = $request->input('validatorId', 'id'); // Get sort column
         $sortDirection = $request->input('sortDirection', 'ASC'); // Get sort direction
         $userId = $request->user() ? $request->user()->id : null;
         
