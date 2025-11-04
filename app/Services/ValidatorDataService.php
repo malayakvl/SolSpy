@@ -26,16 +26,15 @@ class ValidatorDataService
         if (!$userId || empty($comparisonIds)) {
             return;
         }
-
-        // Get existing comparison records for this user
+        // Get existing favorite records for this user
         $existingComparisons = DB::table('data.validators2users')
             ->where('user_id', $userId)
+            ->where('type', 'compare')
             ->pluck('validator_id')
             ->toArray();
 
         // Filter out comparison IDs that already exist in the database
         $newComparisonIds = array_diff($comparisonIds, $existingComparisons);
-
         // Insert new comparison records
         $insertData = [];
         foreach ($newComparisonIds as $validatorId) {
@@ -47,7 +46,6 @@ class ValidatorDataService
                 'updated_at' => now()
             ];
         }
-
         if (!empty($insertData)) {
             DB::table('data.validators2users')->insert($insertData);
         }
@@ -61,6 +59,7 @@ class ValidatorDataService
         if (!$userId || empty($favoriteIds)) {
             return;
         }
+
 
         // Get existing favorite records for this user
         $existingFavorites = DB::table('data.validators2users')
@@ -82,7 +81,6 @@ class ValidatorDataService
                 'updated_at' => now()
             ];
         }
-
         if (!empty($insertData)) {
             DB::table('data.validators2users')->insert($insertData);
         }
@@ -97,18 +95,19 @@ class ValidatorDataService
             return;
         }
 
-        // Get existing favorite records for this user
-        $existingFavorites = DB::table('data.validators2users')
+        // Get existing blocked records for this user
+        $existingBlocked = DB::table('data.validators2users')
             ->where('user_id', $userId)
+            ->where('type', 'blocked')
             ->pluck('validator_id')
             ->toArray();
 
-        // Filter out favorite IDs that already exist in the database
-        $newFavoriteIds = array_diff($blockedIds, $existingFavorites);
+        // Filter out blocked IDs that already exist in the database
+        $newBlockedIds = array_diff($blockedIds, $existingBlocked);
 
-        // Insert new favorite records
+        // Insert new blocked records
         $insertData = [];
-        foreach ($newFavoriteIds as $validatorId) {
+        foreach ($newBlockedIds as $validatorId) {
             $insertData[] = [
                 'user_id' => $userId,
                 'validator_id' => $validatorId,

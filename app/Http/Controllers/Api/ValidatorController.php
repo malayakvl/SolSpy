@@ -1325,7 +1325,9 @@ public function hardware(Request $request)
         $user = $request->user();
         if ($user && $user->id) {
             // For registered users, count comparisons from database
-            $count = DB::table('data.validators_comparison')
+            $count = DB::table('data.validators2users')
+                ->where('user_id', $user->id)
+                ->where('type', 'compare')
                 ->where('user_id', $user->id)
                 ->count();
                 
@@ -1361,8 +1363,9 @@ public function hardware(Request $request)
         $user = $request->user();
         if ($user && $user->id) {
             // For registered users, count favorites from database
-            $count = DB::table('data.favorites')
+            $count = DB::table('data.validators2users')
                 ->where('user_id', $user->id)
+                ->where('type', 'favorite')
                 ->count();
                 
             return response()->json([
