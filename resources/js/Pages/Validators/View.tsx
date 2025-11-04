@@ -715,8 +715,8 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                 setNextSlots([
                     {
                         slot: s.absolute_slot,
-                        windowMinutes: Math.max(0, Math.round((s.eta_seconds / 60) - 45)),
-                        dateWindow: new Date(new Date(s.eta_local) - 45 * 60 * 1000).toLocaleString('en-US', {
+                        windowMinutes: Math.max(0, Math.round(s.eta_seconds / 60)),
+                        dateWindow: new Date(s.eta_local).toLocaleString('en-US', {
                             hour: '2-digit',
                             minute: '2-digit',
                             weekday: 'short',
@@ -1398,6 +1398,9 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                    <div className="flex justify-center">
+                        <button className="btn btn-pink">Add Validator to Black List</button>
                     </div>
                 </div>
             </div>
