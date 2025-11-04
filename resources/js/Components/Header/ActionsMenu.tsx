@@ -33,6 +33,7 @@ export default function ActionsMenu(props) {
         } else {
             // For registered users, fetch count from server
             try {
+                console.log('here')
                 const response = await axios.get('/api/favorite-count', {
                     headers: {
                         'Content-Type': 'application/json',
