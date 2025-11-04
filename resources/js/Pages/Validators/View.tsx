@@ -715,8 +715,8 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                 setNextSlots([
                     {
                         slot: s.absolute_slot,
-                        windowMinutes: Math.max(0, Math.round((s.eta_seconds / 60) - 45)),
-                        dateWindow: new Date(new Date(s.eta_local) - 45 * 60 * 1000).toLocaleString('en-US', {
+                        windowMinutes: Math.max(0, Math.round(s.eta_seconds / 60)),
+                        dateWindow: new Date(s.eta_local).toLocaleString('en-US', {
                             hour: '2-digit',
                             minute: '2-digit',
                             weekday: 'short',
@@ -855,15 +855,13 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
             }
         };
         fetchSkipped();
-        const interval = setInterval(fetchSkipped, 30_000); // каждые 30 сек
+        const interval = setInterval(fetchSkipped, 3000); // каждые 30 сек
         return () => clearInterval(interval);
     }, [validatorData.node_pubkey]);
+    
 
     const fetchData = async () => {
         // Show loading indicator only for pagination and sorting operations
-        if (isPaginationOrSorting) {
-            setIsLoading(true);
-        }
         // Get filter value and other parameters from current URL
         const urlParams = new URLSearchParams(window.location.search);
         const validatorId = validatorData.id;
@@ -875,57 +873,49 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                 `/api/fetch-validators-auth?page=1&validatorId=${validatorId}` :
                 `/api/fetch-validators?page=1&validatorId=${validatorId}`;
                 
-            if (searchParam) {
-                url += `&search=${encodeURIComponent(searchParam)}`;
-            }
-            console.log(url);
             const response = await axios.get(url);
+            // console.log('Response', response.data.validatorsData[0]);
 
             // console.log('Fetched data:', response.data); // Add this line to debug
-            setData(response.data.validatorsData);
+            setData(response.data.validatorsData[0]);
             // setTotalRecords(response.data.totalCount);
             
             // Mark that we've fetched data at least once
-            if (!dataFetched) {
-                setDataFetched(true);
-            }
+            // if (!dataFetched) {
+            //     setDataFetched(true);
+            // }
             
             // Reset sort click state after data is fetched
-            setSortClickState(null);
+            // setSortClickState(null);
         } catch (error) {
             console.error('Error:', error);
             // Reset sort click state even if there's an error
-            setSortClickState(null);
+            // setSortClickState(null);
         } finally {
             // Hide loading indicator after pagination and sorting operations
-            if (isPaginationOrSorting) {
-                setIsLoading(false);
-                // Reset the flag
-                setIsPaginationOrSorting(false);
-            }
         }
     };
 
-    // useEffect(() => {
-    //     console.log(validatorData)
-    //     // Set up interval for periodic data fetching
-    //     const intervalId = setInterval(() => {
-    //         fetchData();
-    //     }, parseInt(validatorsData.settingsData.update_interval) * 1000);
+    useEffect(() => {
+        console.log(settingsData)
+        // Set up interval for periodic data fetching
+        const intervalId = setInterval(() => {
+            fetchData();
+        }, parseInt(settingsData.update_interval) * 1000);
         
-    //     // Listen for filter changes
-    //     const handleFilterChange = () => {
-    //         // Reset to first page when filter changes
-    //         setCurrentPage(1);
-    //     };
+        // Listen for filter changes
+        const handleFilterChange = () => {
+            // Reset to first page when filter changes
+            setCurrentPage(1);
+        };
         
-    //     window.addEventListener('filterChanged', handleFilterChange);
+        window.addEventListener('filterChanged', handleFilterChange);
         
-    //     return () => {
-    //         clearInterval(intervalId);
-    //         window.removeEventListener('filterChanged', handleFilterChange);
-    //     };
-    // }, []);
+        return () => {
+            clearInterval(intervalId);
+            window.removeEventListener('filterChanged', handleFilterChange);
+        };
+    }, []);
 
     return (
         <AuthenticatedLayout header={<Head />}>
@@ -1008,17 +998,17 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                                     <li className="flex items-start">
                                         <span className="font-medium mr-2 w-40 whitespace-nowrap">TVC Score:</span>
                                         <span className="break-all flex-1">
-                                            <ValidatorTVCScore validator={validatorData} />
+                                            <ValidatorTVCScore validator={data} />
                                         </span>
                                     </li>
                                     <li className="flex items-start"><span className="font-medium mr-2 w-40 whitespace-nowrap">Stake Pool:</span><span className="break-all flex-1"><FontAwesomeIcon icon={faFrog} className="mr-[2px]" /><FontAwesomeIcon icon={faFire} className="mr-[2px]" /><FontAwesomeIcon icon={faHouse} className="mr-[2px]" /><FontAwesomeIcon icon={faCircleRadiation} className="mr-[2px]" /></span></li>
                                     <li className="flex items-start"><span className="font-medium mr-2 w-40 whitespace-nowrap">Inflation Commission:</span><span className="break-all flex-1">{validatorData.jito_commission !== undefined ? `${(parseFloat(validatorData.jito_commission) / 100).toFixed(2)}%` : 'N/A'}</span></li>
                                     <li className="flex items-start"><span className="font-medium mr-2 w-40 whitespace-nowrap">MEV Commission:</span><span className="break-all flex-1">{validatorData.commission !== undefined ? `${parseFloat(validatorData.commission).toFixed(2)}%` : 'N/A'}</span></li>
-                                    <li className="flex items-start"><span className="font-medium mr-2 w-40 whitespace-nowrap">Uptime:</span><span className="break-all flex-1"><ValidatorUptime epoch={epoch} validator={validatorData} /></span></li>
+                                    <li className="flex items-start"><span className="font-medium mr-2 w-40 whitespace-nowrap">Uptime:</span><span className="break-all flex-1"><ValidatorUptime epoch={epoch} validator={data} /></span></li>
                                     <li className="flex items-start"><span className="font-medium mr-2 w-40 whitespace-nowrap">Client:</span><span className="break-all flex-1">{`${validatorData.version} ${validatorData.software_client || ''}`}</span></li>
                                     <li className="flex items-start"><span className="font-medium mr-2 w-40 whitespace-nowrap">SFDP Status:</span><span className="break-all flex-1"><ValidatorSFDP validator={validatorData} epoch={epoch} /></span></li>
-                                    <li className="flex items-start"><span className="font-medium mr-2 w-40 whitespace-nowrap">Vote Rate:</span><span className="break-all flex-1"><ValidatorRate validator={validatorData} epoch={epoch} settingsData={settingsData} totalStakeData={totalStakeData} /></span></li>
-                                    <li className="flex items-start"><span className="font-medium mr-2 w-40 whitespace-nowrap">Jito Score:</span><span className="break-all flex-1"><ValidatorJiitoScore validator={validatorData} epoch={epoch} /></span></li>
+                                    <li className="flex items-start"><span className="font-medium mr-2 w-40 whitespace-nowrap">Vote Rate:</span><span className="break-all flex-1"><ValidatorRate validator={data} epoch={epoch} settingsData={settingsData} totalStakeData={totalStakeData} /></span></li>
+                                    <li className="flex items-start"><span className="font-medium mr-2 w-40 whitespace-nowrap">Jito Score:</span><span className="break-all flex-1"><ValidatorJiitoScore validator={data} epoch={epoch} /></span></li>
                                 </ul>
                             </div>
                         </div>
@@ -1408,6 +1398,9 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                    <div className="flex justify-center mt-3">
+                        <button className="btn btn-pink">Add Validator to Black List</button>
                     </div>
                 </div>
             </div>

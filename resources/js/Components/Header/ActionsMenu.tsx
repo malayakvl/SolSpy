@@ -33,6 +33,7 @@ export default function ActionsMenu(props) {
         } else {
             // For registered users, fetch count from server
             try {
+                console.log('here')
                 const response = await axios.get('/api/favorite-count', {
                     headers: {
                         'Content-Type': 'application/json',
@@ -94,14 +95,20 @@ export default function ActionsMenu(props) {
     return (
         <>
             <div className="md:space-x-4 md:flex md:pr-[30px]">
-                <Link href={'/comparisons'} className="inline-flex items-center menu-main-btn text-sm relative">
+                <a 
+                    href={user ? '/comparisons' : `/comparisons?ids=${encodeURIComponent(localStorage.getItem('validatorCompare') || '[]')}`}
+                    className="inline-flex items-center menu-main-btn text-sm relative"
+                >
                     <span className="absolute top-[-10px] right-[-10px] bg-[#703da7] font-bold rounded-full w-[16px] h-[16px] px-[4px] py-0 text-xs text-white">{compareLength}</span>
                     <FontAwesomeIcon icon={faScaleBalanced} className="w-[16px] h-[16px] text-white" />
-                </Link>
-                <Link href={'/favorites'} className="inline-flex items-center menu-main-btn text-sm relative">
+                </a>
+                <a 
+                    href={user ? '/favorites' : `/favorites?ids=${encodeURIComponent(localStorage.getItem('validatorFavorites') || '[]')}`}
+                    className="inline-flex items-center menu-main-btn text-sm relative"
+                >
                     <span className="absolute top-[-10px] right-[-10px] bg-[#703da7] font-bold rounded-full w-[16px] h-[16px] px-[4px] py-0 text-xs text-white">{favLength}</span>
                     <FontAwesomeIcon icon={faHeart} className="w-[16px] h-[16px] text-white" />
-                </Link>
+                </a>
                 <Link href={'/blocked'} className="inline-flex items-center menu-main-btn text-sm">
                     <FontAwesomeIcon icon={faBell} className="w-[16px] h-[16px] text-white" />
                 </Link>

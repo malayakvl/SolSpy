@@ -54,7 +54,7 @@ export default function Index(validatorsData) {
         messages: lngVaidators,
         locale: appLang,
     });
-console.log(555)
+
     const epoch = useSelector(appEpochSelector);
     const user = usePage().props.auth.user;
     const [dataFetched, setDataFetched] = useState(false);
@@ -309,7 +309,7 @@ console.log(555)
         const urlParams = new URLSearchParams(window.location.search);
         const currentFilterType = urlParams.get('filterType') || 'all';
         const searchParam = urlParams.get('search') || '';
-        const sortColumn = urlParams.get('sortColumn') || 'id';
+        const sortColumn = urlParams.get('sortColumn') || 'spy_rank';
         const sortDirection = urlParams.get('sortDirection') || 'ASC';
         const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
         try {
