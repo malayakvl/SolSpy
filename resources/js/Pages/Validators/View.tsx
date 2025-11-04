@@ -87,6 +87,7 @@ class ChartErrorBoundary extends React.Component<{children: any}, {hasError: boo
 
 export default function Index({ validatorData, settingsData, totalStakeData }) {
     const appLang = useSelector(appLangSelector);
+    
     const user = usePage().props.auth.user;
     const msg = new Lang({ messages: lngVaidators, locale: appLang });
     const epoch = useSelector(appEpochSelector);
@@ -877,11 +878,11 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
             if (searchParam) {
                 url += `&search=${encodeURIComponent(searchParam)}`;
             }
-console.log(url);
-            alert(1);            
+            console.log(url);
             const response = await axios.get(url);
+
             // console.log('Fetched data:', response.data); // Add this line to debug
-            // setData(response.data.validatorsData);
+            setData(response.data.validatorsData);
             // setTotalRecords(response.data.totalCount);
             
             // Mark that we've fetched data at least once
@@ -904,7 +905,6 @@ console.log(url);
             }
         }
     };
-
 
     // useEffect(() => {
     //     console.log(validatorData)
@@ -958,7 +958,9 @@ console.log(url);
                                 <ul className="space-y-2 w-full">
                                     <li className="flex items-start">
                                         <span className="font-medium mr-2 w-40 whitespace-nowrap">Activated stake:</span>
-                                        <span className="flex-1"><ValidatorActivatedStake validator={validatorData} epoch={epoch} /></span>
+                                        <span className="flex-1">
+                                            <ValidatorActivatedStake validator={data} epoch={epoch} />
+                                        </span>
                                     </li>
                                     <li className="flex items-start">
                                         <span className="font-medium mr-2 w-40 whitespace-nowrap">Identity:</span>

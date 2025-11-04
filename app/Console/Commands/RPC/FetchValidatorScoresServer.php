@@ -16,7 +16,7 @@ class FetchValidatorScoresServer extends Command
      *
      * @var string
      */
-    protected $signature = 'rpc:fetch-validators-server';
+    protected $signature = 'rpc:fetch-validators-scores-server';
 
     /**
      * The console command description.
