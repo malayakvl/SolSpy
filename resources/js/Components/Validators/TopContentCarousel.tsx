@@ -47,16 +47,7 @@ export default function TopContentCarousel({
             <ButtonBack className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]">
               Back
             </ButtonBack>
-            <DotGroup 
-              dotComponent={({ isSelected, onClick }) => (
-                <button
-                  onClick={onClick}
-                  className={`w-3 h-3 rounded-full mx-1 ${
-                    isSelected ? 'bg-[#703ea2]' : 'bg-gray-300'
-                  }`}
-                />
-              )}
-            />
+            <DotGroup />
             <ButtonNext className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]">
               Next
             </ButtonNext>
@@ -117,16 +108,7 @@ export default function TopContentCarousel({
             <ButtonBack className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]">
               Back
             </ButtonBack>
-            <DotGroup 
-              dotComponent={({ isSelected, onClick }) => (
-                <button
-                  onClick={onClick}
-                  className={`w-3 h-3 rounded-full mx-1 ${
-                    isSelected ? 'bg-[#703ea2]' : 'bg-gray-300'
-                  }`}
-                />
-              )}
-            />
+            <DotGroup />
             <ButtonNext className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]">
               Next
             </ButtonNext>

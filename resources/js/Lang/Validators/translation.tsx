@@ -9,7 +9,8 @@ const lngValidators = {
     topTitle: 'Top Validators',
     btnBack: 'Back to All Validators',
     btnApplyChanges: 'Apply Changes',
-    welcome: 'Welcome'
+    welcome: 'Welcome',
+    'notice-settings': 'Notice Settings'
   },
   'uk.validators': {
     title: 'Валідатори',
@@ -21,7 +22,8 @@ const lngValidators = {
     topTitle: 'Top валідатори',
     btnBack: 'Повернутися до усіх валідаторів',
     btnApplyChanges: 'Pовернути зміни',
-    welcome: 'З поверненням'
+    welcome: 'З поверненням',
+    'notice-settings': 'Налаштування сповіщень'
   },
 };
 export default lngValidators;
