@@ -8,16 +8,21 @@ import { appEpochSelector, appLangSelector } from '../../Redux/Layout/selectors'
 import { setFilterAction } from '../../Redux/Validators';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faTimes
+    faTimes,
+    faTrash
 } from '@fortawesome/free-solid-svg-icons';
 import ValidatorCredits from "./../Validators/Partials/ValidatorCredits";
 import ValidatorRate from "./../Validators/Partials/ValidatorRate";
 import ValidatorActivatedStake from "../Validators/Partials/ValidatorActivatedStake";
 import ValidatorUptime from "../Validators/Partials/ValidatorUptime";
 import ValidatorScore from "../Validators/Partials/ValidatorScore";
+import ValidatorSpyRank from '../Validators/Partials/ValidatorSpyRank';
 import ValidatorSFDP from '../Validators/Partials/ValidatorSFDP';
-
+import ValidatorStatus from '../Validators/Partials/ValidatorStatus';
+import ValidatorJiitoScore from '../Validators/Partials/ValidatorJiitoScore';
+import ValidatorTVCScore from '../Validators/Partials/ValidatorTVCScore';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 import { perPageSelector, filterTypeSelector } from '../../Redux/Validators/selectors';
 import 'pure-react-carousel/dist/react-carousel.es.css';
 import { renderColumnHeader, renderColumnCell } from '../../Components/Validators/ValidatorTableComponents';
@@ -100,37 +105,63 @@ export default function Index(validatorsData) {
         { name: "Jiito Score", show: true }
     ]);
     
-    // Function to remove validator from comparison
-    const removeFromComparison = async (validatorId: number) => {
-        try {
-            if (user?.id) {
-                router.get(route('validators.removeComparisons'), {validatorId: validatorId}, {
-                    preserveState: true,
-                    preserveScroll: true
+
+    const addToCompare = async (validatorId) => {
+        if (user?.id) {
+            // Registered user - use API
+            try {
+                await axios.post('/api/add-compare', {
+                    validatorId: validatorId
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
                 });
+                toast.success('Comparison list updated', {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+                // Dispatch event for registered users
+                window.dispatchEvent(new CustomEvent('comparisonCountChanged'));
                 fetchData();
-            } else {
-                localStorage.setItem('validatorCompare', JSON.stringify(updatedList));
+            } catch (error) {
+                console.error('Error:', error);
+                toast.error('Failed to update comparison list', {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
             }
-            // // Get current comparison list from localStorage
-            // const currentCompareList = JSON.parse(localStorage.getItem('validatorCompare') || '[]');
+        } else {
+            // Unregistered user - use localStorage with max 2 items
+            const compareList = JSON.parse(localStorage.getItem('validatorCompare') || '[]');
             
-            // // Remove the validator ID from the list
-            // const updatedList = currentCompareList.filter(id => id !== validatorId);
-            
-            // // Update localStorage
-            // localStorage.setItem('validatorCompare', JSON.stringify(updatedList));
-            
-            // // Update the component state to remove the validator
-            // setData(prevData => prevData.filter(validator => validator.id !== validatorId));
-            
-            // Show success message
-            // alert('Validator removed from comparison');
-        } catch (error) {
-            console.error('Error removing validator from comparison:', error);
-            alert('Error removing validator from comparison');
+            if (compareList.includes(validatorId)) {
+                // Remove from comparison
+                const updatedList = compareList.filter(id => id !== validatorId);
+                localStorage.setItem('validatorCompare', JSON.stringify(updatedList));
+                toast.info('Validator removed from comparison', {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+                // Dispatch event when removing
+                window.dispatchEvent(new CustomEvent('comparisonCountChanged'));
+                fetchData();
+            } 
         }
-    };
+    }
 
     // Get role names as array of strings
     const userRoleNames = user?.roles?.map(role => role.name) || [];
@@ -204,8 +235,6 @@ export default function Index(validatorsData) {
             }
         }
     };
-console.log('Data fetched', data)
-
     return (
         <AuthenticatedLayout header={<Head />}>
             <Head title={msg.get('validators.title')} />
@@ -229,10 +258,10 @@ console.log('Data fetched', data)
                     {data.length > 0 ? (
                         <div className="mt-6">
                             <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200 validator-table">
+                                <table className="min-w-full validator-table compare-table">
                                     <thead>
                                         <tr>
-                                            <th className="px-4 py-2 text-left font-semibold">Metrics</th>
+                                            <th className="text-left font-semibold">Metrics</th>
                                             {data.map((validator) => (
                                                 <th key={validator.id} className="px-4 py-2 text-center font-semibold">
                                                     <div className="flex flex-col items-center">
@@ -245,116 +274,114 @@ console.log('Data fetched', data)
                                     <tbody>
                                     {/* Remove Row */}
                                     <tr className="bg-[#595163]">
-                                        <td className="px-4 py-3 font-medium text-white">Remove</td>
+                                        <td className="font-medium text-white">&nbsp;</td>
                                         {data.map((validator) => (
-                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                            <td key={validator.id} className="text-center">
                                                 <button 
-                                                    onClick={() => removeFromComparison(validator.id)}
+                                                    onClick={() => addToCompare(validator.id)}
                                                     className="text-red-500 hover:text-red-700 cursor-pointer"
                                                     title="Remove from comparison"
                                                 >
-                                                    <FontAwesomeIcon icon={faTimes} />
+                                                    <FontAwesomeIcon icon={faTrash} scale={1.5} color="#ff6347" />
                                                 </button>
                                             </td>
                                         ))}
                                     </tr>
                                     {/* Spy Rank Row */}
                                     <tr className="bg-[#281f32]">
-                                        <td className="px-4 py-3 font-medium text-wihte">Spy Rank</td>
+                                        <td className="font-medium text-wihte">Spy Rank</td>
                                         {data.map((validator) => (
-                                            <td key={validator.id} className="px-4 py-3 text-center">
-                                                {validator.spyRank}
+                                            <td key={validator.id} className="text-center">
+                                                <ValidatorSpyRank validator={validator} />
                                             </td>
                                         ))}
                                     </tr>
                                     {/* Status Row */}
                                     <tr className="bg-[#595163]">
-                                        <td className="px-4 py-3 font-medium text-white">Status</td>
+                                        <td className="font-medium text-white">Status</td>
                                         {data.map((validator) => (
-                                            <td key={validator.id} className="px-4 py-3 text-center">
-                                                {validator.delinquent ? 'Delinquent' : 'Active'}
+                                            <td key={validator.id} className="text-center">
+                                                <ValidatorStatus validator={validator} />
                                             </td>
                                         ))}
                                     </tr>
                                     {/* TVC Score Row */}
                                     <tr className="bg-[#281f32]">
-                                        <td className="px-4 py-3 font-medium text-white">TVC Score</td>
+                                        <td className="font-medium text-white">TVC Score</td>
                                         {data.map((validator) => (
-                                            <td key={validator.id} className="px-4 py-3 text-center">
-                                                <ValidatorScore validator={validator} />
+                                            <td key={validator.id} className="text-center">
+                                                <ValidatorTVCScore validator={validator} />
                                             </td>
                                         ))}
                                     </tr>
                                     {/* Vote Credits Row */}
                                     <tr className="bg-[#595163]">
-                                        <td className="px-4 py-3 font-medium text-white">Vote Credits</td>
+                                        <td className="font-medium text-white">Vote Credits</td>
                                         {data.map((validator) => (
-                                            <td key={validator.id} className="px-4 py-3 text-center">
-                                                <ValidatorCredits epoch={epoch} validator={validator} />
+                                            <td key={validator.id} className="text-center">
+                                                <ValidatorCredits validator={validator} epoch={epoch} />
                                             </td>
                                         ))}
                                     </tr>
                                     {/* Active Stake Row */}
                                     <tr className="bg-[#281f32]">
-                                        <td className="px-4 py-3 font-medium text-white">Active Stake</td>
+                                        <td className="font-medium text-white">Active Stake</td>
                                         {data.map((validator) => (
-                                            <td key={validator.id} className="px-4 py-3 text-center">
-                                                <ValidatorActivatedStake epoch={epoch} validator={validator} />
+                                            <td key={validator.id} className="text-center">
+                                                <ValidatorActivatedStake validator={validator} epoch={epoch} />
                                             </td>
                                         ))}
                                     </tr>
                                     {/* Vote Rate Row */}
                                     <tr className="bg-[#595163]">
-                                        <td className="px-4 py-3 font-medium text-white">Vote Rate</td>
+                                        <td className="font-medium text-white">Vote Rate</td>
                                         {data.map((validator) => (
-                                            <td key={validator.id} className="px-4 py-3 text-center">
-                                                {/* <ValidatorRate epoch={epoch} validator={validator} /> */}
-                                                <ValidatorRate validator={validator} epoch={validatorsData.settingsData.epoch} settingsData={validatorsData.settingsData} totalStakeData={validatorsData.totalStakeData} />
-
+                                            <td key={validator.id} className="text-center">
+                                                <ValidatorRate validator={validator} epoch={epoch} settingsData={validatorsData.settingsData} totalStakeData={validatorsData.totalStakeData} />
                                             </td>
                                         ))}
                                     </tr>
                                     {/* Inflation Commission Row */}
                                     <tr className="bg-[#281f32]">
-                                        <td className="px-4 py-3 font-medium text-white">Inflation Commission</td>
+                                        <td className="font-medium text-white">Inflation Commission</td>
                                         {data.map((validator) => (
-                                            <td key={validator.id} className="px-4 py-3 text-center">
-                                                {validator.commission}%
+                                            <td key={validator.id} className="text-center">
+                                                {validator.jito_commission !== undefined ? `${(parseFloat(validator.jito_commission) / 100).toFixed(2)}%` : 'N/A'}
                                             </td>
                                         ))}
                                     </tr>
                                     {/* MEV Commission Row */}
                                     <tr className="bg-[#595163]">
-                                        <td className="px-4 py-3 font-medium text-white">MEV Commission</td>
+                                        <td className="font-medium text-white">MEV Commission</td>
                                         {data.map((validator) => (
-                                            <td key={validator.id} className="px-4 py-3 text-center">
-                                                {validator.commission !== null && validator.commission !== undefined ? `${validator.commission}%` : 'N/A'}
+                                            <td key={validator.id} className="text-center">
+                                                {validator.commission !== undefined ? `${parseFloat(validator.commission).toFixed(2)}%` : 'N/A'}
                                             </td>
                                         ))}
                                     </tr>
                                     {/* Uptime Row */}
                                     <tr className="bg-[#281f32]">
-                                        <td className="px-4 py-3 font-medium text-white">Uptime</td>
+                                        <td className="font-medium text-white">Uptime</td>
                                         {data.map((validator) => (
-                                            <td key={validator.id} className="px-4 py-3 text-center">
-                                                <ValidatorUptime epoch={epoch} validator={validator} />
+                                            <td key={validator.id} className="text-center">
+                                                {validator.uptime}
                                             </td>
                                         ))}
                                     </tr>
                                     {/* Client/Version Row */}
                                     <tr className="bg-[#595163]">
-                                        <td className="px-4 py-3 font-medium text-white">Client/Version</td>
+                                        <td className="font-medium text-white">Client/Version</td>
                                         {data.map((validator) => (
-                                            <td key={validator.id} className="px-4 py-3 text-center">
-                                                {`${validator.version} ${validator.software_client || ''}`}
+                                            <td key={validator.id} className="text-center">
+                                                {validator.latestVersion || validator.version || validator.software_version || 'N/A'}
                                             </td>
                                         ))}
                                     </tr>
                                     {/* Status SFDP Row */}
                                     <tr className="bg-[#281f32]">
-                                        <td className="px-4 py-3 font-medium text-white">Status SFDP</td>
+                                        <td className="font-medium text-white">Status SFDP</td>
                                         {data.map((validator) => (
-                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                            <td key={validator.id} className="text-center">
                                                 <ValidatorSFDP validator={validator} epoch={epoch} />
                                             </td>
                                         ))}
@@ -362,31 +389,31 @@ console.log('Data fetched', data)
                                     
                                     {/* Location Row */}
                                     <tr className="bg-[#595163]">
-                                        <td className="px-4 py-3 font-medium text-white">Location</td>
+                                        <td className="font-medium text-white">Location</td>
                                         {data.map((validator) => (
-                                            <td key={validator.id} className="px-4 py-3 text-center">
-                                                {validator.country}
+                                            <td key={validator.id} className="text-center">
+                                                {validator.country || validator.ip_country || 'N/A'}
                                             </td>
                                         ))}
                                     </tr>
                                     
                                     {/* Awards Row */}
                                     <tr className="bg-[#281f32]">
-                                        <td className="px-4 py-3 font-medium text-white">Awards</td>
+                                        <td className="font-medium text-white">Awards</td>
                                         {data.map((validator) => (
-                                            <td key={validator.id} className="px-4 py-3 text-center">
-                                                Awards
+                                            <td key={validator.id} className="text-center">
+                                                {validator.awards || 'N/A'}
                                             </td>
                                         ))}
                                     </tr>
                                     
                                     {/* Website Row */}
                                     <tr className="bg-[#595163]">
-                                        <td className="px-4 py-3 font-medium text-white">Website</td>
+                                        <td className="font-medium text-white">Website</td>
                                         {data.map((validator) => (
-                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                            <td key={validator.id} className="text-center">
                                                 {validator.url ?
-                                                    <a href={validator.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                                                    <a href={validator.url} target="_blank" rel="noopener noreferrer" className="text-white hover:text-gray-200">
                                                         {validator.url.slice(0, 4)}...{validator.url.slice(-4)}
                                                     </a>
                                                 : '-'}
@@ -396,37 +423,37 @@ console.log('Data fetched', data)
                                     
                                     {/* City Row */}
                                     <tr className="bg-[#281f32]">
-                                        <td className="px-4 py-3 font-medium text-white">City</td>
+                                        <td className="font-medium text-white">City</td>
                                         {data.map((validator) => (
-                                            <td key={validator.id} className="px-4 py-3 text-center">
-                                                {validator.city || '-'}
+                                            <td key={validator.id} className="text-center">
+                                                {validator.city || validator.ip_city || 'N/A'}
                                             </td>
                                         ))}
                                     </tr>
                                     {/* ASN Row */}
                                     <tr className="bg-[#595163]">
-                                        <td className="px-4 py-3 font-medium text-white">ASN</td>
+                                        <td className="font-medium text-white">ASN</td>
                                         {data.map((validator) => (
-                                            <td key={validator.id} className="px-4 py-3 text-center">
-                                                {validator.asn || '-'}
+                                            <td key={validator.id} className="text-center">
+                                                {validator.autonomous_system_number || validator.ip_asn || 'N/A'}
                                             </td>
                                         ))}
                                     </tr>
                                     
                                     {/* IP Row */}
                                     <tr className="bg-[#281f32]">
-                                        <td className="px-4 py-3 font-medium text-white">IP</td>
+                                        <td className="font-medium text-white">IP</td>
                                         {data.map((validator) => (
-                                            <td key={validator.id} className="px-4 py-3 text-center">
-                                                {validator.ip || '-'}
+                                            <td key={validator.id} className="text-center">
+                                                {validator.ip || 'N/A'}
                                             </td>
                                         ))}
                                     </tr>
                                     {/* Jiito Score Row */}
                                     <tr className="bg-[#595163]">
-                                        <td className="px-4 py-3 font-medium text-white">Jiito Score</td>
+                                        <td className="font-medium text-white">Jito Score</td>
                                         {data.map((validator) => (
-                                            <td key={validator.id} className="px-4 py-3 text-center">
+                                            <td key={validator.id} className="text-center">
                                                 {validator.jito_commission !== undefined ? parseFloat(validator.jito_commission).toFixed(4) : 'N/A'}
                                             </td>
                                         ))}
