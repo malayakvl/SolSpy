@@ -1,7 +1,7 @@
 import React from 'react';
 
 const ProgressBarWithCaption = ({ progress, caption }) => {
-console.log(progress)
+
     return (
         <div
             className="progress-bar"
