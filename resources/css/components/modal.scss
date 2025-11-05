@@ -1,5 +1,5 @@
 .modal-overlay-columns {
-    background-color: rgb(255, 255, 255);
+    background-color: #281f32;
     padding: 35px;
     position: absolute;
     top: 25%;
@@ -24,10 +24,10 @@
 .draggable-item {
     cursor: move;
     padding: 6px;
-    background: #fff;
+    background: #000;
     border: solid 1px #e5e7eb;
     margin-bottom: 5px ;
-    color: #000;
+    color: #fff;
     font-size: 13px;
     border-radius: 3px;
     min-width: 200px;
@@ -36,9 +36,9 @@
 .switch-container {
     height: 20px !important;
     width: 40px !important;
-    background-color: rgb(30, 58, 138) !important;
-    border: 1px solid rgb(30, 58, 138) !important;
-    box-shadow: rgb(30, 58, 138) 0px 0px 0px 20px inset !important;
+    background-color: #703ea2 !important;
+    border: 1px solid #703ea2 !important;
+    box-shadow: rgb(100, 30, 138) 0px 0px 0px 20px inset !important;
 }
 .switch-container span {
     width: 17px !important;

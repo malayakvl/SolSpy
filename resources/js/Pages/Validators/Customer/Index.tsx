@@ -537,7 +537,7 @@ export default function CustomerIndex(validatorsData) {
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                         <div className="bg-white p-6 rounded-lg shadow-lg">
                             <div className="flex flex-col items-center">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 mb-4"></div>
                                 <p className="text-gray-700">Завантаження даних...</p>
                             </div>
                         </div>
@@ -547,16 +547,16 @@ export default function CustomerIndex(validatorsData) {
                 <div className="p-4 sm:p-8 mb-8 content-data bg-content">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold">{msg.get('validators.welcome')}&nbsp;{user.name}</h2>
-                        <Link href={route('admin.validators.top')} className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]">
+                        <Link href={route('admin.validators.top')} className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px]">
                             {msgProfile.get('profile.view.profile')}
                         </Link>
                     </div>
                     <hr/>
                     <div className="flex justify-end mt-4">
-                        <Link href={route('admin.validators.top')} className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]">
+                        <Link href={route('admin.validators.top')} className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px]">
                             {msgProfile.get('profile.setup.notice')}
                         </Link>
-                        <Link href={route('admin.validators.top')} className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px] ml-3">
+                        <Link href={route('admin.validators.top')} className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px] ml-3">
                             {msgProfile.get('profile.export')}
                         </Link>
                     </div>
@@ -575,7 +575,7 @@ export default function CustomerIndex(validatorsData) {
                                 <div>Display</div>
                                 <div className="relative flex-shrink-0" ref={displayDropdownRef}>
                                     <div 
-                                        className="border rounded px-4 py-2 bg-white cursor-pointer flex items-center justify-between w-40"
+                                        className="border rounded px-4 py-2 bg-transparent cursor-pointer flex items-center justify-between w-40"
                                         onClick={() => setIsDisplayDropdownOpen(!isDisplayDropdownOpen)}
                                     >
                                         <span>
@@ -590,7 +590,7 @@ export default function CustomerIndex(validatorsData) {
                                         </svg>
                                     </div>
                                     {isDisplayDropdownOpen && (
-                                        <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg text-sm">
+                                        <div className="absolute z-10 mt-1 w-full bg-[#000000] border rounded shadow-lg text-sm">
                                             <div className="p-2">
                                                 <label className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
                                                     <input
@@ -601,7 +601,7 @@ export default function CustomerIndex(validatorsData) {
                                                     />
                                                     <span>All</span>
                                                 </label>
-                                                <label className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
+                                                <label className="flex items-center text-sm space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
@@ -677,7 +677,7 @@ export default function CustomerIndex(validatorsData) {
                                         </div>
                                     )}
                                 </div>
-                                <button href={route('admin.validators.top')} onClick={toggleModal} className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px] ml-3 flex-shrink-0">
+                                <button href={route('admin.validators.top')} onClick={toggleModal} className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px] ml-3 flex-shrink-0">
                                     <div className="flex items-center" >
                                         <FontAwesomeIcon icon={faGear} className="w-5 h-5 mr-2" />
                                         <span>Columns</span>
@@ -685,7 +685,7 @@ export default function CustomerIndex(validatorsData) {
                                 </button>
                                 <button 
                                     onClick={() => setViewMode(viewMode === 'table' ? 'grid' : 'table')}
-                                    className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px] ml-3 flex-shrink-0 w-[150px]"
+                                    className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px] ml-3 flex-shrink-0 w-[150px]"
                                 >
                                     <div className="flex items-center justify-center">
                                         <FontAwesomeIcon 
