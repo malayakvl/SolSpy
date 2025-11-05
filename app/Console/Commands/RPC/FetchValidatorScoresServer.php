@@ -35,7 +35,7 @@ class FetchValidatorScoresServer extends Command
         // Get collectLength from settings table
         $dbSettings = DB::table('data.settings')->first();
         $collectLength = $dbSettings->collect_score_retention ?? 10;
-        
+        $epoch = $dbSettings->epoch ?? 0;
         $this->info("Updating validator scores (keeping last $collectLength collections)...");
         
         try {
@@ -117,7 +117,9 @@ class FetchValidatorScoresServer extends Command
             // Insert parsed validator scores into database using PostgreSQL function
             if (!empty($parsedValidators)) {
                 $scoresJson = json_encode($parsedValidators);
-                $insertedCount = DB::select("SELECT data.insert_validator_scores(?::jsonb) as count", [$scoresJson])[0]->count;
+                dd($scoresJson);exit;
+                // $insertedCount = DB::select("SELECT data.insert_validator_scores(?::jsonb) as count", [$scoresJson])[0]->count;
+                $insertedCount = DB::select("SELECT data.insert_validator_scores_history(?::jsonb, ?) as count", [$scoresJson, $epoch])[0]->count;
                 $this->info("Inserted $insertedCount validator scores into database using PostgreSQL function");
             }
             
