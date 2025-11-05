@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use phpseclib3\Net\SSH2;
 use Illuminate\Support\Facades\Http;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ValidatorExport;
 
 class ValidatorController extends Controller
 {
@@ -1667,6 +1669,36 @@ public function hardware(Request $request)
             Log::error('Exception in getValidatorScoreLocally: ' . $e->getMessage(), ['exception' => $e]);
             return ['error' => 'Exception occurred: ' . $e->getMessage()];
         }
+    }
+
+    public function export(Request $request)
+    {
+        // Get all validators data for export
+        $validators = DB::table('data.validators')
+            ->select([
+                'id',
+                'vote_pubkey',
+                'node_pubkey',
+                'name',
+                'activated_stake',
+                'commission'
+            ])
+            ->get()
+            ->toArray();
+
+        // Convert to array format expected by ValidatorExport
+        $data = array_map(function ($validator) {
+            return [
+                $validator->id,
+                $validator->vote_pubkey,
+                $validator->node_pubkey,
+                $validator->name,
+                $validator->activated_stake,
+                $validator->commission
+            ];
+        }, $validators);
+
+        return Excel::download(new ValidatorExport($data), 'validators_export.xlsx');
     }
 
 

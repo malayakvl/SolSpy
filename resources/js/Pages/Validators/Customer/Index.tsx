@@ -472,40 +472,11 @@ export default function CustomerIndex(validatorsData) {
     //     };
     // }, []);
 
-    
+    const handleExport = () => {
+        // Make API call to export endpoint
+        window.location.href = '/api/export-data';
+    };
 
-    // Listen for URL changes to trigger data refresh
-    // useEffect(() => {
-    //     const handleUrlChange = () => {
-    //         // Get parameters from URL
-    //         const urlParams = new URLSearchParams(window.location.search);
-    //         const pageParam = parseInt(urlParams.get('page')) || 1;
-    //         const filterParam = urlParams.get('filterType') || 'all';
-            
-    //         // Update state if page has changed
-    //         if (pageParam !== currentPage) {
-    //             setCurrentPage(pageParam);
-    //         }
-            
-    //         // Update filter if it has changed
-    //         if (filterParam !== filterTypeDataSelector) {
-    //             dispatch(setFilterAction(filterParam));
-    //         }
-            
-    //         // Fetch data
-    //         // fetchData();
-    //     };
-        
-    //     // Listen for popstate events (back/forward navigation)
-    //     window.addEventListener('popstate', handleUrlChange);
-        
-    //     // Check if URL has changed on component mount
-    //     handleUrlChange();
-        
-    //     return () => {
-    //         window.removeEventListener('popstate', handleUrlChange);
-    //     };
-    // }, []);
 
     return (
         <AuthenticatedLayout header={<Head />}>
@@ -535,7 +506,7 @@ export default function CustomerIndex(validatorsData) {
                         <Link href={route('admin.validators.top')} className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px]">
                             {msgProfile.get('profile.setup.notice')}
                         </Link>
-                        <Link href={route('admin.validators.top')} className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px] ml-3">
+                        <Link onClick={handleExport} className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px] ml-3">
                             {msgProfile.get('profile.export')}
                         </Link>
                     </div>
@@ -571,7 +542,7 @@ export default function CustomerIndex(validatorsData) {
                                     {isDisplayDropdownOpen && (
                                         <div className="absolute z-10 mt-1 w-full bg-[#000000] border rounded shadow-lg text-sm">
                                             <div className="p-2">
-                                                <label className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
+                                                <label className="customer-filter-label">
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
@@ -580,7 +551,7 @@ export default function CustomerIndex(validatorsData) {
                                                     />
                                                     <span>All</span>
                                                 </label>
-                                                <label className="flex items-center text-sm space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
+                                                <label className="customer-filter-label">
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
@@ -589,7 +560,7 @@ export default function CustomerIndex(validatorsData) {
                                                     />
                                                     <span>Favorite</span>
                                                 </label>
-                                                <label className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
+                                                <label className="customer-filter-label">
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
@@ -598,7 +569,7 @@ export default function CustomerIndex(validatorsData) {
                                                     />
                                                     <span>Comparisons</span>
                                                 </label>
-                                                <label className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
+                                                <label className="customer-filter-label">
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
@@ -607,7 +578,7 @@ export default function CustomerIndex(validatorsData) {
                                                     />
                                                     <span>Blocked</span>
                                                 </label>
-                                                <label className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
+                                                <label className="customer-filter-label">
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
@@ -616,7 +587,7 @@ export default function CustomerIndex(validatorsData) {
                                                     />
                                                     <span>Not Russian</span>
                                                 </label>
-                                                <label className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
+                                                <label className="customer-filter-label">
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
@@ -625,7 +596,7 @@ export default function CustomerIndex(validatorsData) {
                                                     />
                                                     <span>Only With Name</span>
                                                 </label>
-                                                <label className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
+                                                <label className="customer-filter-label">
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
@@ -634,7 +605,7 @@ export default function CustomerIndex(validatorsData) {
                                                     />
                                                     <span>Only With Website</span>
                                                 </label>
-                                                <label className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
+                                                <label className="customer-filter-label">
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
@@ -643,7 +614,7 @@ export default function CustomerIndex(validatorsData) {
                                                     />
                                                     <span>Only Validated</span>
                                                 </label>
-                                                <label className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
+                                                <label className="customer-filter-label">
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
