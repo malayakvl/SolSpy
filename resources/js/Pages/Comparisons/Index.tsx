@@ -244,7 +244,7 @@ console.log('Data fetched', data)
                                     </thead>
                                     <tbody>
                                     {/* Remove Row */}
-                                    <tr className="border-b">
+                                    <tr className="bg-[#595163]">
                                         <td className="px-4 py-3 font-medium text-white">Remove</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
@@ -259,7 +259,7 @@ console.log('Data fetched', data)
                                         ))}
                                     </tr>
                                     {/* Spy Rank Row */}
-                                    <tr className="border-b">
+                                    <tr className="bg-[#281f32]">
                                         <td className="px-4 py-3 font-medium text-wihte">Spy Rank</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
@@ -268,7 +268,7 @@ console.log('Data fetched', data)
                                         ))}
                                     </tr>
                                     {/* Status Row */}
-                                    <tr className="border-b">
+                                    <tr className="bg-[#595163]">
                                         <td className="px-4 py-3 font-medium text-white">Status</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
@@ -277,7 +277,7 @@ console.log('Data fetched', data)
                                         ))}
                                     </tr>
                                     {/* TVC Score Row */}
-                                    <tr className="border-b">
+                                    <tr className="bg-[#281f32]">
                                         <td className="px-4 py-3 font-medium text-white">TVC Score</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
@@ -286,7 +286,7 @@ console.log('Data fetched', data)
                                         ))}
                                     </tr>
                                     {/* Vote Credits Row */}
-                                    <tr className="border-b">
+                                    <tr className="bg-[#595163]">
                                         <td className="px-4 py-3 font-medium text-white">Vote Credits</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
@@ -295,7 +295,7 @@ console.log('Data fetched', data)
                                         ))}
                                     </tr>
                                     {/* Active Stake Row */}
-                                    <tr className="border-b">
+                                    <tr className="bg-[#281f32]">
                                         <td className="px-4 py-3 font-medium text-white">Active Stake</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
@@ -304,7 +304,7 @@ console.log('Data fetched', data)
                                         ))}
                                     </tr>
                                     {/* Vote Rate Row */}
-                                    <tr className="border-b">
+                                    <tr className="bg-[#595163]">
                                         <td className="px-4 py-3 font-medium text-white">Vote Rate</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
@@ -315,7 +315,7 @@ console.log('Data fetched', data)
                                         ))}
                                     </tr>
                                     {/* Inflation Commission Row */}
-                                    <tr className="border-b">
+                                    <tr className="bg-[#281f32]">
                                         <td className="px-4 py-3 font-medium text-white">Inflation Commission</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
@@ -324,7 +324,7 @@ console.log('Data fetched', data)
                                         ))}
                                     </tr>
                                     {/* MEV Commission Row */}
-                                    <tr className="border-b">
+                                    <tr className="bg-[#595163]">
                                         <td className="px-4 py-3 font-medium text-white">MEV Commission</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
@@ -333,7 +333,7 @@ console.log('Data fetched', data)
                                         ))}
                                     </tr>
                                     {/* Uptime Row */}
-                                    <tr className="border-b ">
+                                    <tr className="bg-[#281f32]">
                                         <td className="px-4 py-3 font-medium text-white">Uptime</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
@@ -342,7 +342,7 @@ console.log('Data fetched', data)
                                         ))}
                                     </tr>
                                     {/* Client/Version Row */}
-                                    <tr className="border-b">
+                                    <tr className="bg-[#595163]">
                                         <td className="px-4 py-3 font-medium text-white">Client/Version</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
@@ -351,7 +351,7 @@ console.log('Data fetched', data)
                                         ))}
                                     </tr>
                                     {/* Status SFDP Row */}
-                                    <tr className="border-b ">
+                                    <tr className="bg-[#281f32]">
                                         <td className="px-4 py-3 font-medium text-white">Status SFDP</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
@@ -361,7 +361,7 @@ console.log('Data fetched', data)
                                     </tr>
                                     
                                     {/* Location Row */}
-                                    <tr className="border-b">
+                                    <tr className="bg-[#595163]">
                                         <td className="px-4 py-3 font-medium text-white">Location</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
@@ -371,7 +371,7 @@ console.log('Data fetched', data)
                                     </tr>
                                     
                                     {/* Awards Row */}
-                                    <tr className="border-b ">
+                                    <tr className="bg-[#281f32]">
                                         <td className="px-4 py-3 font-medium text-white">Awards</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
@@ -381,7 +381,7 @@ console.log('Data fetched', data)
                                     </tr>
                                     
                                     {/* Website Row */}
-                                    <tr className="border-b">
+                                    <tr className="bg-[#595163]">
                                         <td className="px-4 py-3 font-medium text-white">Website</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
@@ -395,7 +395,7 @@ console.log('Data fetched', data)
                                     </tr>
                                     
                                     {/* City Row */}
-                                    <tr className="border-b ">
+                                    <tr className="bg-[#281f32]">
                                         <td className="px-4 py-3 font-medium text-white">City</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
@@ -404,7 +404,7 @@ console.log('Data fetched', data)
                                         ))}
                                     </tr>
                                     {/* ASN Row */}
-                                    <tr className="border-b">
+                                    <tr className="bg-[#595163]">
                                         <td className="px-4 py-3 font-medium text-white">ASN</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
@@ -414,7 +414,7 @@ console.log('Data fetched', data)
                                     </tr>
                                     
                                     {/* IP Row */}
-                                    <tr className="border-b ">
+                                    <tr className="bg-[#281f32]">
                                         <td className="px-4 py-3 font-medium text-white">IP</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
@@ -423,7 +423,7 @@ console.log('Data fetched', data)
                                         ))}
                                     </tr>
                                     {/* Jiito Score Row */}
-                                    <tr className="border-b">
+                                    <tr className="bg-[#595163]">
                                         <td className="px-4 py-3 font-medium text-white">Jiito Score</td>
                                         {data.map((validator) => (
                                             <td key={validator.id} className="px-4 py-3 text-center">
