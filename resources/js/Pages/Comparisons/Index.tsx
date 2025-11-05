@@ -21,9 +21,8 @@ import ValidatorSFDP from '../Validators/Partials/ValidatorSFDP';
 import ValidatorStatus from '../Validators/Partials/ValidatorStatus';
 import ValidatorJiitoScore from '../Validators/Partials/ValidatorJiitoScore';
 import ValidatorTVCScore from '../Validators/Partials/ValidatorTVCScore';
-
-
 import axios from 'axios';
+import { toast } from 'react-toastify';
 import { perPageSelector, filterTypeSelector } from '../../Redux/Validators/selectors';
 import 'pure-react-carousel/dist/react-carousel.es.css';
 import { renderColumnHeader, renderColumnCell } from '../../Components/Validators/ValidatorTableComponents';
@@ -106,37 +105,63 @@ export default function Index(validatorsData) {
         { name: "Jiito Score", show: true }
     ]);
     
-    // Function to remove validator from comparison
-    const removeFromComparison = async (validatorId: number) => {
-        try {
-            if (user?.id) {
-                router.get(route('validators.removeComparisons'), {validatorId: validatorId}, {
-                    preserveState: true,
-                    preserveScroll: true
+
+    const addToCompare = async (validatorId) => {
+        if (user?.id) {
+            // Registered user - use API
+            try {
+                await axios.post('/api/add-compare', {
+                    validatorId: validatorId
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
                 });
+                toast.success('Comparison list updated', {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+                // Dispatch event for registered users
+                window.dispatchEvent(new CustomEvent('comparisonCountChanged'));
                 fetchData();
-            } else {
-                localStorage.setItem('validatorCompare', JSON.stringify(updatedList));
+            } catch (error) {
+                console.error('Error:', error);
+                toast.error('Failed to update comparison list', {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
             }
-            // // Get current comparison list from localStorage
-            // const currentCompareList = JSON.parse(localStorage.getItem('validatorCompare') || '[]');
+        } else {
+            // Unregistered user - use localStorage with max 2 items
+            const compareList = JSON.parse(localStorage.getItem('validatorCompare') || '[]');
             
-            // // Remove the validator ID from the list
-            // const updatedList = currentCompareList.filter(id => id !== validatorId);
-            
-            // // Update localStorage
-            // localStorage.setItem('validatorCompare', JSON.stringify(updatedList));
-            
-            // // Update the component state to remove the validator
-            // setData(prevData => prevData.filter(validator => validator.id !== validatorId));
-            
-            // Show success message
-            // alert('Validator removed from comparison');
-        } catch (error) {
-            console.error('Error removing validator from comparison:', error);
-            alert('Error removing validator from comparison');
+            if (compareList.includes(validatorId)) {
+                // Remove from comparison
+                const updatedList = compareList.filter(id => id !== validatorId);
+                localStorage.setItem('validatorCompare', JSON.stringify(updatedList));
+                toast.info('Validator removed from comparison', {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+                // Dispatch event when removing
+                window.dispatchEvent(new CustomEvent('comparisonCountChanged'));
+                fetchData();
+            } 
         }
-    };
+    }
 
     // Get role names as array of strings
     const userRoleNames = user?.roles?.map(role => role.name) || [];
@@ -253,7 +278,7 @@ export default function Index(validatorsData) {
                                         {data.map((validator) => (
                                             <td key={validator.id} className="text-center">
                                                 <button 
-                                                    onClick={() => removeFromComparison(validator.id)}
+                                                    onClick={() => addToCompare(validator.id)}
                                                     className="text-red-500 hover:text-red-700 cursor-pointer"
                                                     title="Remove from comparison"
                                                 >
