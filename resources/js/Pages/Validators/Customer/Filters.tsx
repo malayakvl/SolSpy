@@ -13,12 +13,14 @@ interface FiltersProps {
     onFilterChange: (newFilter: string) => void;
     isAdmin: boolean;
     onGearClick: () => void;
+    searchTerm: string;
+    onSearchChange: (searchTerm: string) => void;
 }
 
-export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, onGearClick }: FiltersProps) {
+export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, onGearClick, searchTerm, onSearchChange }: FiltersProps) {
     const appLang = useSelector(appLangSelector);
     const [currentFilter, setCurrentFilter] = useState(filterType || 'all');
-    const [searchTerm, setSearchTerm] = useState('');
+    const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm || '');
     const dispatch = useDispatch();
 
     const msg = new Lang({
@@ -30,6 +32,11 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
     useEffect(() => {
         setCurrentFilter(filterType || 'all');
     }, [filterType]);
+    
+    // Update local search term when prop changes
+    useEffect(() => {
+        setLocalSearchTerm(searchTerm || '');
+    }, [searchTerm]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -38,14 +45,35 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
         const params: any = {};
         
         // Add search term if it exists
-        if (searchTerm) {
-            params.search = searchTerm;
+        if (localSearchTerm) {
+            params.search = localSearchTerm;
         }
         
         // Add filterType if it's not 'all' (default)
         if (currentFilter !== 'all') {
             params.filterType = currentFilter;
         }
+        
+        // Update the browser URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (localSearchTerm) {
+            urlParams.set('search', localSearchTerm);
+        } else {
+            urlParams.delete('search');
+        }
+        
+        if (currentFilter !== 'all') {
+            urlParams.set('filterType', currentFilter);
+        } else {
+            urlParams.delete('filterType');
+        }
+        
+        // Get current page from URL or default to 1
+        const currentPage = parseInt(urlParams.get('page')) || 1;
+        urlParams.set('page', currentPage.toString());
+        
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, '', newUrl);
         
         router.get('/validators', params, {
             preserveState: true,
@@ -67,14 +95,33 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
         const params: any = {};
         
         // Add search term if it exists
-        if (searchTerm) {
-            params.search = searchTerm;
+        if (localSearchTerm) {
+            params.search = localSearchTerm;
         }
         
         // Only add filterType if it's not 'all' (default)
         if (newFilterValue !== 'all') {
             params.filterType = newFilterValue;
         }
+        
+        // Update the browser URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (localSearchTerm) {
+            urlParams.set('search', localSearchTerm);
+        }
+        
+        if (newFilterValue !== 'all') {
+            urlParams.set('filterType', newFilterValue);
+        } else {
+            urlParams.delete('filterType');
+        }
+        
+        // Get current page from URL or default to 1
+        const currentPage = parseInt(urlParams.get('page')) || 1;
+        urlParams.set('page', currentPage.toString());
+        
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, '', newUrl);
         
         router.get('/admin/validators', params, {
             preserveState: true,
@@ -94,11 +141,23 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
 
     const handleClearFilters = () => {
         // Reset local state
-        setSearchTerm('');
+        setLocalSearchTerm('');
         setCurrentFilter('all');
         onFilterChange('all');
+        onSearchChange('');
         
         // Clear URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.delete('search');
+        urlParams.delete('filterType');
+        
+        // Get current page from URL or default to 1
+        const currentPage = parseInt(urlParams.get('page')) || 1;
+        urlParams.set('page', currentPage.toString());
+        
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+        
         router.get('/admin/validators', {}, {
             preserveState: true,
             preserveScroll: true,
@@ -117,8 +176,31 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
                 className="flex-1 p-2 border border-gray-300 rounded text-sm"
                 type="text" 
                 placeholder="Search by name..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={localSearchTerm}
+                onChange={(e) => {
+                    const newValue = e.target.value;
+                    setLocalSearchTerm(newValue);
+                    onSearchChange(newValue);
+                    
+                    // Update URL in real-time as user types
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (newValue) {
+                        urlParams.set('search', newValue);
+                    } else {
+                        urlParams.delete('search');
+                    }
+                    
+                    // Keep current page and filter
+                    const currentPage = parseInt(urlParams.get('page')) || 1;
+                    urlParams.set('page', currentPage.toString());
+                    
+                    if (currentFilter !== 'all') {
+                        urlParams.set('filterType', currentFilter);
+                    }
+                    
+                    const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+                    window.history.replaceState({}, '', newUrl);
+                }}
             />
             <button 
                 type="submit"
