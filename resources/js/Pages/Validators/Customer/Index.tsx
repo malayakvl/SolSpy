@@ -122,7 +122,7 @@ export default function CustomerIndex(validatorsData) {
         highlight: false
     });
     // View mode state - table or grid
-    const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+    const [viewMode, setViewMode] = useState<'table' | 'grid'>(validatorsData.settingsData.view_mode || 'table');
     
     const displayDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -270,27 +270,6 @@ export default function CustomerIndex(validatorsData) {
         }
     };
 
-    // Add useEffect to fetch data when currentPage changes
-    // useEffect(() => {
-    //     fetchData();
-    // }, [currentPage]);
-    
-    // Add useEffect to fetch data when sort parameters change
-    // useEffect(() => {
-    //     const handleUrlChange = () => {
-    //         fetchData();
-    //     };
-        
-    //     // Listen for URL changes
-    //     window.addEventListener('popstate', handleUrlChange);
-        
-    //     // Check if URL has changed on component mount
-    //     handleUrlChange();
-        
-    //     return () => {
-    //         window.removeEventListener('popstate', handleUrlChange);
-    //     };
-    // }, []);
 
     // Helper function to get ordered visible columns
     const getOrderedVisibleColumns = () => {
@@ -684,7 +663,20 @@ export default function CustomerIndex(validatorsData) {
                                     </div>
                                 </button>
                                 <button 
-                                    onClick={() => setViewMode(viewMode === 'table' ? 'grid' : 'table')}
+                                    onClick={() => {
+                                        setViewMode(viewMode === 'table' ? 'grid' : 'table');
+                                        if (user?.id) {
+                                            axios.post('/api/update-view-mode', {
+                                                viewMode: viewMode === 'table' ? 'grid' : 'table'
+                                            }).then(response => {
+                                                console.log(response.data);
+                                            }).catch(error => {
+                                                console.error(error);
+                                            });
+                                        } else {
+                                            localStorage.setItem('viewMode', viewMode === 'table' ? 'grid' : 'table');
+                                        }
+                                    }}
                                     className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px] ml-3 flex-shrink-0 w-[150px]"
                                 >
                                     <div className="flex items-center justify-center">
