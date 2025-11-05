@@ -147,3 +147,7 @@ a-table thead {
     // background-blend-mode: color-burn;
     background-color: rgba(165, 84, 227, 0.5); 
 }
+.customer-filter-label {
+    @apply flex items-center space-x-2 p-2 hover:bg-[#281f32] cursor-pointer text-sm;
+    font-size: 12px;
+}

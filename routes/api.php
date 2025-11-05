@@ -56,7 +56,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/validator-order/{listType?}', [ValidatorOrderController::class, 'getOrder'])->name('validator-order.get');
 
     Route::post('/update-view-mode', [SettingsController::class, 'updateViewMode'])->name('api.customer.updateViewMode');
-
+    Route::get('/export-data', [ApiValidatorController::class, 'export']);
     // Discord news routes
     Route::get('/discord-news', [DiscordNewsController::class, 'index'])->name('discord-news.index');
     Route::post('/discord-news', [DiscordNewsController::class, 'store'])->name('discord-news.store');
