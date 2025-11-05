@@ -34,6 +34,8 @@ import { perPageSelector, filterTypeSelector } from '../../../Redux/Validators/s
 import { Link } from "@inertiajs/react";
 import { userSelector } from '../../../Redux/Users/selectors';
 import Modal from '../Partials/ColumnsModal';
+import ModalNotice from '../Partials/NoticeModal';
+
 import ValidatorFilters from './Filters';
 import ValidatorPagination from './Pagination';
 import ValidatorAdminActions from './Actions';
@@ -42,6 +44,7 @@ import { renderBlock } from '../../../Components/Validators/ValidatorGridCompone
 import ValidatorCard from '../../../Components/Validators/ValidatorCard'; 
 import ValidatorGridCard from '../../../Components/Validators/ValidatorGridCard';
 import TopContentCarousel from '../../../Components/Validators/TopContentCarousel';
+import ActionButtons from '../../../Components/Validators/ActionButtons';
 
 export default function CustomerIndex(validatorsData) {
     const dispatch = useDispatch();
@@ -80,6 +83,30 @@ export default function CustomerIndex(validatorsData) {
     const [checkedIds, setCheckedIds] = useState<(string | number)[]>([]);
     const [totalRecords, setTotalRecords] = useState(validatorsData.totalCount);
     const [showModal, setShowModal] = useState(false);
+    const [showNotificationModal, setShowNotificationModal] = useState(false);
+    
+    // Use refs to track modal states that persist across re-renders
+    const showModalRef = useRef(showModal);
+    const showNotificationModalRef = useRef(showNotificationModal);
+    
+    // Update refs when states change
+    useEffect(() => {
+        showModalRef.current = showModal;
+    }, [showModal]);
+    
+    useEffect(() => {
+        showNotificationModalRef.current = showNotificationModal;
+    }, [showNotificationModal]);
+    
+    // Add effect to log when showModal changes
+    useEffect(() => {
+        console.log('showModal changed to:', showModal);
+    }, [showModal]);
+    
+    // Add effect to log when showNotificationModal changes
+    useEffect(() => {
+        console.log('showNotificationModal changed to:', showNotificationModal);
+    }, [showNotificationModal]);
     const [columnSettings, setColumnSettings] = useState(null);
     const [columnsConfig, setColumnsConfig] = useState(() => {
         if (validatorsData.settingsData?.table_fields) {
@@ -121,9 +148,11 @@ export default function CustomerIndex(validatorsData) {
         top: false,
         highlight: false
     });
+    // Search term state
+    const [searchTerm, setSearchTerm] = useState('');
     // View mode state - table or grid
-    const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
-    
+    const [viewMode, setViewMode] = useState<'table' | 'grid'>(validatorsData.settingsData.view_mode || 'table');
+    const [showNoticePopup, setShowNoticePopup] = useState(false);
     const displayDropdownRef = useRef<HTMLDivElement>(null);
 
     // Get role names as array of strings
@@ -270,27 +299,6 @@ export default function CustomerIndex(validatorsData) {
         }
     };
 
-    // Add useEffect to fetch data when currentPage changes
-    // useEffect(() => {
-    //     fetchData();
-    // }, [currentPage]);
-    
-    // Add useEffect to fetch data when sort parameters change
-    // useEffect(() => {
-    //     const handleUrlChange = () => {
-    //         fetchData();
-    //     };
-        
-    //     // Listen for URL changes
-    //     window.addEventListener('popstate', handleUrlChange);
-        
-    //     // Check if URL has changed on component mount
-    //     handleUrlChange();
-        
-    //     return () => {
-    //         window.removeEventListener('popstate', handleUrlChange);
-    //     };
-    // }, []);
 
     // Helper function to get ordered visible columns
     const getOrderedVisibleColumns = () => {
@@ -321,15 +329,17 @@ export default function CustomerIndex(validatorsData) {
 
     const fetchColumnSettings = async () => {
         try {
-            const response = await axios.get('/api/settings/customer-columns');
-            if (response.data && response.data.table_fields) {
-                const freshColumns = JSON.parse(response.data.table_fields);
-                // Fix any instances of "MEV Comission" to "MEV Commission"
-                const normalizedColumns = freshColumns.map(field => 
-                    field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
-                );
-                setColumnsConfig(normalizedColumns);
-            }
+            const response = await axios.get('/api/user/column-settings');
+            const settings = response.data.settings || defaultColumnSettings;
+            
+            // Ensure all default columns are present in the settings
+            const mergedSettings = defaultColumnSettings.map(defaultCol => {
+                const savedCol = settings.find(col => col.name === defaultCol.name);
+                return savedCol ? { ...defaultCol, ...savedCol } : defaultCol;
+            });
+            
+            setColumnSettings(mergedSettings);
+            setColumnsConfig(mergedSettings);
         } catch (error) {
             console.error('Error fetching column settings:', error);
         }
@@ -343,8 +353,18 @@ export default function CustomerIndex(validatorsData) {
         setShowModal(!showModal); // Toggles the state
     };
 
+    const toggleNotificationModal = async () => {
+        if (!showNotificationModal) {
+            // Fetch fresh data before opening modal
+            await fetchColumnSettings();
+        }
+        setShowNotificationModal(!showNotificationModal); // Toggles the state
+    };
+    
     const openModal = () => setShowModal(true);
     const closeModal = () => setShowModal(false);
+    const openNoticeModal = () => setShowNotificationModal(true);
+    const closeNotificationModal = () => setShowNotificationModal(false);
     
     const handleColumnSettingsSave = async (columns) => {
         // Fix any instances of "MEV Comission" back to the correct spelling before saving
@@ -359,7 +379,7 @@ export default function CustomerIndex(validatorsData) {
             }, {
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
                 }
             });
             setShowModal(false);
@@ -396,28 +416,27 @@ export default function CustomerIndex(validatorsData) {
         setCurrentPage(savedPage);
     };
 
-    const fetchData = async () => {
-        // Show loading indicator only for pagination and sorting operations
-        if (isPaginationOrSorting) {
-            setIsLoading(true);
-        }
-        
-        // Get filter value and other parameters from current URL
+    const fetchData = async (page: number = 1) => {
+        setIsLoading(true);
         const urlParams = new URLSearchParams(window.location.search);
         const currentFilterType = urlParams.get('filterType') || 'all';
         const searchParam = urlParams.get('search') || '';
         const sortColumn = urlParams.get('sortColumn') || 'spy_rank';
         const sortDirection = urlParams.get('sortDirection') || 'ASC';
         const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
-        
         try {
             // Build URL with all parameters
-            let url = `/api/fetch-validators-auth?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`;
+            // Use authenticated endpoint if user is logged in, otherwise use public endpoint
+            let url = user ? 
+                `/api/fetch-validators-auth?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}` :
+                `/api/fetch-validators?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`;
+                
             if (searchParam) {
                 url += `&search=${encodeURIComponent(searchParam)}`;
             }
             
             const response = await axios.get(url);
+            // console.log('Fetched data:', response.data); // Add this line to debug
             setData(response.data.validatorsData);
             setTotalRecords(response.data.totalCount);
             
@@ -433,31 +452,44 @@ export default function CustomerIndex(validatorsData) {
             // Reset sort click state even if there's an error
             setSortClickState(null);
         } finally {
-            // Hide loading indicator after pagination or sorting operations
+            // Hide loading indicator after pagination and sorting operations
             if (isPaginationOrSorting) {
                 setIsLoading(false);
                 // Reset the flag
                 setIsPaginationOrSorting(false);
             }
         }
+        // try {
+        //     const params = new URLSearchParams();
+        //     const urlParams = new URLSearchParams(window.location.search);
+        //     const currentFilterType = urlParams.get('filterType') || 'all';
+        //     const searchParam = urlParams.get('search') || '';
+        //     const sortColumn = urlParams.get('sortColumn') || 'spy_rank';
+        //     const sortDirection = urlParams.get('sortDirection') || 'ASC';
+        //     const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
+            
+        //     // params.set('sortDirection', sortConfig.direction);
+            
+        //     // const response = await axios.get(`/api/fetch-validators?${params.toString()}`);
+        //     let url = user ? 
+        //         `/api/fetch-validators-auth?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}` :
+        //         `/api/fetch-validators?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`;
+                
+        //     if (searchParam) {
+        //         url += `&search=${encodeURIComponent(searchParam)}`;
+        //     }
+        //     setData(response.data.validatorsData);
+        //     setTotalRecords(response.data.totalCount);
+        // } catch (error) {
+        //     console.error('Error fetching data:', error);
+        // } finally {
+        //     setIsLoading(false);
+        // }
     };
 
-    // useEffect(() => {
-    //     const handleClickOutside = (event) => {
-    //         if (displayDropdownRef.current && !displayDropdownRef.current.contains(event.target)) {
-    //             setIsDisplayDropdownOpen(false);
-    //         }
-    //     };
-
-    //     document.addEventListener('mousedown', handleClickOutside);
-    //     return () => {
-    //         document.removeEventListener('mousedown', handleClickOutside);
-    //     };
-    // }, []);
 
     useEffect(() => {
-        // const intervalId = setInterval(fetchData(currentPage), 15000);
-        
+        console.log('Setting up interval for fetchData');
         const intervalId = setInterval(() => {
             // Get current page from URL to ensure we're using the latest page
             const urlParams = new URLSearchParams(window.location.search);
@@ -471,69 +503,21 @@ export default function CustomerIndex(validatorsData) {
         };
     }, []);
     
-    // Add useEffect to fetch data when currentPage changes
-    // useEffect(() => {
-    //     fetchData();
-    // }, [currentPage]);
-    
-    // Add useEffect to fetch data when sort parameters change
-    // useEffect(() => {
-    //     const handleUrlChange = () => {
-    //         // fetchData();
-    //     };
-        
-    //     // Listen for URL changes
-    //     window.addEventListener('popstate', handleUrlChange);
-        
-    //     // Check if URL has changed on component mount
-    //     handleUrlChange();
-        
-    //     return () => {
-    //         window.removeEventListener('popstate', handleUrlChange);
-    //     };
-    // }, []);
+    const showNotificationsSettingsPopup = () => {
+        setShowNoticePopup(true);
+    };
 
-    
-
-    // Listen for URL changes to trigger data refresh
-    // useEffect(() => {
-    //     const handleUrlChange = () => {
-    //         // Get parameters from URL
-    //         const urlParams = new URLSearchParams(window.location.search);
-    //         const pageParam = parseInt(urlParams.get('page')) || 1;
-    //         const filterParam = urlParams.get('filterType') || 'all';
-            
-    //         // Update state if page has changed
-    //         if (pageParam !== currentPage) {
-    //             setCurrentPage(pageParam);
-    //         }
-            
-    //         // Update filter if it has changed
-    //         if (filterParam !== filterTypeDataSelector) {
-    //             dispatch(setFilterAction(filterParam));
-    //         }
-            
-    //         // Fetch data
-    //         // fetchData();
-    //     };
-        
-    //     // Listen for popstate events (back/forward navigation)
-    //     window.addEventListener('popstate', handleUrlChange);
-        
-    //     // Check if URL has changed on component mount
-    //     handleUrlChange();
-        
-    //     return () => {
-    //         window.removeEventListener('popstate', handleUrlChange);
-    //     };
-    // }, []);
+    const handleExport = () => {
+        // Make API call to export endpoint
+        window.location.href = '/api/export-data';
+    };
 
     return (
         <AuthenticatedLayout header={<Head />}>
             <Head title={msg.get('welcome')} />
             <div className="py-0">
                 {/* Loading overlay - only shown during pagination and sorting */}
-                {isLoading && (
+                {/* {isLoading && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                         <div className="bg-white p-6 rounded-lg shadow-lg">
                             <div className="flex flex-col items-center">
@@ -542,24 +526,25 @@ export default function CustomerIndex(validatorsData) {
                             </div>
                         </div>
                     </div>
-                )}
+                )} */}
                 
                 <div className="p-4 sm:p-8 mb-8 content-data bg-content">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold">{msg.get('validators.welcome')}&nbsp;{user.name}</h2>
-                        <Link href={route('admin.validators.top')} className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px]">
+                        {/* <Link href={route('admin.validators.top')} className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px]">
                             {msgProfile.get('profile.view.profile')}
-                        </Link>
+                        </Link> */}
                     </div>
                     <hr/>
-                    <div className="flex justify-end mt-4">
-                        <Link href={route('admin.validators.top')} className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px]">
-                            {msgProfile.get('profile.setup.notice')}
-                        </Link>
-                        <Link href={route('admin.validators.top')} className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px] ml-3">
-                            {msgProfile.get('profile.export')}
-                        </Link>
-                    </div>
+                    <ActionButtons 
+                        user={user}
+                        viewMode={viewMode}
+                        setViewMode={setViewMode}
+                        toggleModal={toggleModal}
+                        toggleNotificationModal={toggleNotificationModal}
+                        handleExport={handleExport}
+                        msgProfile={msgProfile}
+                    />
                         
                     <div className="flex justify-between items-start mt-10">
                         <div className="flex-1">
@@ -570,6 +555,8 @@ export default function CustomerIndex(validatorsData) {
                                         onFilterChange={handleFilterChange}
                                         isAdmin={false}
                                         onGearClick={null}
+                                        searchTerm={searchTerm}
+                                        onSearchChange={setSearchTerm}
                                     />
                                 </div>
                                 <div>Display</div>
@@ -592,7 +579,7 @@ export default function CustomerIndex(validatorsData) {
                                     {isDisplayDropdownOpen && (
                                         <div className="absolute z-10 mt-1 w-full bg-[#000000] border rounded shadow-lg text-sm">
                                             <div className="p-2">
-                                                <label className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
+                                                <label className="customer-filter-label">
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
@@ -601,34 +588,8 @@ export default function CustomerIndex(validatorsData) {
                                                     />
                                                     <span>All</span>
                                                 </label>
-                                                <label className="flex items-center text-sm space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="form-checkbox"
-                                                        checked={displayOptions.top}
-                                                        onChange={() => setDisplayOptions({...displayOptions, top: !displayOptions.top})}
-                                                    />
-                                                    <span>Favorite</span>
-                                                </label>
-                                                <label className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="form-checkbox"
-                                                        checked={displayOptions.highlight}
-                                                        onChange={() => setDisplayOptions({...displayOptions, highlight: !displayOptions.highlight})}
-                                                    />
-                                                    <span>Comparisons</span>
-                                                </label>
-                                                <label className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="form-checkbox"
-                                                        checked={displayOptions.highlight}
-                                                        onChange={() => setDisplayOptions({...displayOptions, highlight: !displayOptions.highlight})}
-                                                    />
-                                                    <span>Blocked</span>
-                                                </label>
-                                                <label className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
+                                                
+                                                <label className="customer-filter-label">
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
@@ -637,7 +598,7 @@ export default function CustomerIndex(validatorsData) {
                                                     />
                                                     <span>Not Russian</span>
                                                 </label>
-                                                <label className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
+                                                <label className="customer-filter-label">
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
@@ -646,7 +607,7 @@ export default function CustomerIndex(validatorsData) {
                                                     />
                                                     <span>Only With Name</span>
                                                 </label>
-                                                <label className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
+                                                <label className="customer-filter-label">
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
@@ -655,7 +616,7 @@ export default function CustomerIndex(validatorsData) {
                                                     />
                                                     <span>Only With Website</span>
                                                 </label>
-                                                <label className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
+                                                <label className="customer-filter-label">
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
@@ -664,7 +625,7 @@ export default function CustomerIndex(validatorsData) {
                                                     />
                                                     <span>Only Validated</span>
                                                 </label>
-                                                <label className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
+                                                <label className="customer-filter-label">
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
@@ -684,7 +645,20 @@ export default function CustomerIndex(validatorsData) {
                                     </div>
                                 </button>
                                 <button 
-                                    onClick={() => setViewMode(viewMode === 'table' ? 'grid' : 'table')}
+                                    onClick={() => {
+                                        setViewMode(viewMode === 'table' ? 'grid' : 'table');
+                                        if (user?.id) {
+                                            axios.post('/api/update-view-mode', {
+                                                viewMode: viewMode === 'table' ? 'grid' : 'table'
+                                            }).then(response => {
+                                                console.log(response.data);
+                                            }).catch(error => {
+                                                console.error(error);
+                                            });
+                                        } else {
+                                            localStorage.setItem('viewMode', viewMode === 'table' ? 'grid' : 'table');
+                                        }
+                                    }}
                                     className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px] ml-3 flex-shrink-0 w-[150px]"
                                 >
                                     <div className="flex items-center justify-center">
@@ -815,9 +789,22 @@ export default function CustomerIndex(validatorsData) {
                                 {/* Modal Content */}
                             </Modal>
                         )}
+                        {(showNotificationModal) && (
+                            <ModalNotice 
+                                onClose={closeNotificationModal} 
+                                onSave={() => {
+                                    // Normalize column names before saving
+                                    
+                                    handleColumnSettingsSave(normalizedColumns);
+                                }}
+                            >
+                                {/* Modal Content */}
+                            </ModalNotice>
+                        )}
                     </div>
                 </div>
             </div>
+            
         </AuthenticatedLayout>
     );
 }

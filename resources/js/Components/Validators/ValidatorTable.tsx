@@ -1,6 +1,18 @@
 import React from 'react';
-import { renderColumnHeader, renderColumnCell } from './ValidatorTableComponents';
+import { renderColumnHeader } from './ValidatorTableComponents';
 import ValidatorActions from '../../Pages/Validators/Partials/ValidatorActions';
+// Import the validator partial components
+import ValidatorActivatedStake from '../../Pages/Validators/Partials/ValidatorActivatedStake';
+import ValidatorCredits from '../../Pages/Validators/Partials/ValidatorCredits';
+import ValidatorRate from '../../Pages/Validators/Partials/ValidatorRate';
+import ValidatorSpyRank from '../../Pages/Validators/Partials/ValidatorSpyRank';
+import ValidatorUptime from '../../Pages/Validators/Partials/ValidatorUptime';
+import ValidatorName from '../../Pages/Validators/Partials/ValidatorName';
+import ValidatorScore from '../../Pages/Validators/Partials/ValidatorScore';
+import ValidatorSFDP from '../../Pages/Validators/Partials/ValidatorSFDP';
+import ValidatorStatus from '../../Pages/Validators/Partials/ValidatorStatus';
+import ValidatorJiitoScore from '../../Pages/Validators/Partials/ValidatorJiitoScore';
+import ValidatorTVCScore from '../../Pages/Validators/Partials/ValidatorTVCScore';
 
 interface ValidatorTableProps {
     data: any[];
@@ -53,14 +65,77 @@ const ValidatorTable: React.FC<ValidatorTableProps> = ({
 
     // Helper function to render column cell by name
     const renderColumnCellLocal = (columnName: string, validator: any, index: number) => {
-        return renderColumnCell(
-            columnName, 
-            validator, 
-            epoch, 
-            settingsData, 
-            totalStakeData, 
-            data
-        );
+        // Render cell content without wrapping in <td>
+        switch(columnName) {
+            case "Spy Rank": 
+                return <ValidatorSpyRank validator={validator} />;
+            case "Avatar": 
+                return validator.avatar_url || validator.avatar_file_url ? (
+                    <img 
+                        src={validator.avatar_url || validator.avatar_file_url} 
+                        alt={`${validator.name} avatar`} 
+                        className="w-8 h-8 rounded-full"
+                        onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            // Create a fallback element
+                            const fallback = document.createElement('div');
+                            fallback.className = 'w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500';
+                            fallback.textContent = 'SP';
+                            e.currentTarget.parentNode.appendChild(fallback);
+                        }}
+                    />
+                ) : (
+                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                        <span className="text-xs text-gray-500 font-medium">SP</span>
+                    </div>
+                );
+            case "Name": 
+                return <ValidatorName validator={validator} />;
+            case "Status": 
+                return <ValidatorStatus validator={validator} />;
+            case "TVC Score": 
+                return <ValidatorTVCScore validator={validator} />;
+            case "TVC Rank": 
+                return validator.tvcRank || 'N/A';
+            case "Vote Credits": 
+                return <ValidatorCredits validator={validator} epoch={epoch} />;
+            case "Active Stake": 
+                return <ValidatorActivatedStake validator={validator} epoch={epoch} />;
+            case "Vote Rate": 
+                return <ValidatorRate validator={validator} epoch={epoch} settingsData={settingsData} totalStakeData={totalStakeData} />;
+            case "Jiito Score": 
+                return <ValidatorJiitoScore validator={validator} epoch={epoch} />;
+            case "Active": 
+                return !validator.delinquent ? 'Active' : 'Offline';
+            case "Inflation Commission": 
+                return validator.jito_commission !== undefined ? `${(parseFloat(validator.jito_commission) / 100).toFixed(2)}%` : 'N/A';
+            case "MEV Commission": 
+                return validator.commission !== undefined ? `${parseFloat(validator.commission).toFixed(2)}%` : 'N/A';
+            case "Jito Score": 
+                return validator.jito_commission !== undefined ? parseFloat(validator.jito_commission).toFixed(4) : 'N/A';
+            case "Uptime": 
+                return validator.uptime;
+            case "Client/Version": 
+                // Use the latest version from validator scores if available, fallback to existing fields
+                const version = validator.latestVersion || validator.version || validator.software_version || 'N/A';
+                return version;
+            case "Status SFDP": 
+                return <ValidatorSFDP validator={validator} epoch={epoch} />;
+            case "Location": 
+                return validator.country || validator.ip_country || 'N/A';
+            case "Awards": 
+                return validator.awards || 'N/A';
+            case "Website": 
+                return validator.url || validator.www_url || 'N/A';
+            case "City": 
+                return validator.city || validator.ip_city || 'N/A';
+            case "ASN": 
+                return validator.autonomous_system_number || validator.ip_asn || 'N/A';
+            case "IP": 
+                return validator.ip || 'N/A';
+            default: 
+                return null;
+        }
     };
 
     return (
@@ -87,6 +162,7 @@ const ValidatorTable: React.FC<ValidatorTableProps> = ({
                             <td className="text-left text-white">
                                 <div className="pl-[10px]">
                                     <input 
+                                        key={`checkbox-${validator.id}`}
                                         type="checkbox" 
                                         id={validator.id} 
                                         checked={checkedIds.includes(validator.id)}
@@ -95,9 +171,13 @@ const ValidatorTable: React.FC<ValidatorTableProps> = ({
                                 </div>
                             </td>
                             <td className="text-center text-white">
-                                <ValidatorActions validator={validator} onBanToggle={handleBanToggle} />
+                                <ValidatorActions key={`actions-${validator.id}`} validator={validator} onBanToggle={handleBanToggle} />
                             </td>
-                            {getOrderedVisibleColumns().map(column => renderColumnCellLocal(column.name, validator, index))}
+                            {getOrderedVisibleColumns().map((column, colIndex) => (
+                                <td key={`${validator.id}-${colIndex}`} className="text-white">
+                                    {renderColumnCellLocal(column.name, validator, index)}
+                                </td>
+                            ))}
                         </tr>
                     ))}
                 </tbody>

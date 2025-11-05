@@ -87,6 +87,20 @@ class SettingsController extends Controller
         ]);
     }
 
+    public function updateViewMode(Request $request) {
+        $user = $request->user();
+        $settings2User = Settings2User::where('user_id', $user->id)->first();
+        if ($settings2User) {
+            $settings2User->view_mode = $request->get('viewMode');
+            $settings2User->save();
+        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Success',
+        ]);
+    }
+
+
     public function adminIndex(Request $request)
     {
         $setting = Settings::first();
