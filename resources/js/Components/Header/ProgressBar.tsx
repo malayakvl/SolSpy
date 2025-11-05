@@ -1,15 +1,15 @@
 import React from 'react';
 
 const ProgressBarWithCaption = ({ progress, caption }) => {
-
+console.log(progress)
     return (
         <div
             className="progress-bar"
         >
             <div
                 style={{
-                    width: `${100 - progress}%`,
-                    backgroundColor: '#968989',
+                    width: `${progress}%`,
+                    backgroundColor: '#d2cdcd',
                     opacity: 0.3,
                     height: '44px',
                     transition: 'width 0.5s ease-in-out',
