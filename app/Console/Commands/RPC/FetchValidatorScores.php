@@ -37,10 +37,11 @@ class FetchValidatorScores extends Command
         // Check if we should use SSH (for local development) or direct execution (for server)
         $useSSH = env('VALIDATOR_USE_SSH', false);
         $this->info('use SSH', $useSSH);
-        if ($useSSH) {
-            return Artisan::call('rpc:fetch-validator-scores-local', [], $this->getOutput());
-        } else {
-            return Artisan::call('rpc:fetch-validators-scores-server', [], $this->getOutput());
-        }
+        return Artisan::call('rpc:fetch-validator-scores-local', [], $this->getOutput());
+        // if ($useSSH) {
+        //     return Artisan::call('rpc:fetch-validator-scores-local', [], $this->getOutput());
+        // } else {
+        //     return Artisan::call('rpc:fetch-validators-scores-server', [], $this->getOutput());
+        // }
     }
 }
