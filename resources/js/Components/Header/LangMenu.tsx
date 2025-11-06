@@ -21,7 +21,8 @@ export default function LangMenu() {
             <button
               type="button"
               className="inline-flex items-center
-                                bg-white px-2 text-sm lng-menu
+                                px-2 text-sm lng-menu
+                                bg-transparent
                                 font-medium leading-4 text-gray-500
                                 transition duration-150
                                 ease-in-out hover:text-gray-700 focus:outline-none"
