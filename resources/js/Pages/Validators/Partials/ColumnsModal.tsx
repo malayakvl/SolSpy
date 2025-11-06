@@ -88,7 +88,7 @@ const Modal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, childr
                             onClose();
                         }}
                     >
-                       Cancel
+                       {msg.get('validators.btnCancel')}
                     </button>
                     <button 
                         className="btn-submit"
@@ -99,7 +99,7 @@ const Modal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, childr
                             onClose();
                         }}
                     >
-                        Apply Changes
+                        {msg.get('validators.btnApplyChanges')}
                     </button>
                 </div>
             </div>
