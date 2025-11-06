@@ -31,7 +31,31 @@ const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, 
                 </svg>
             </div>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
-                Notification Popup Coming Here
+                <div className="grid grid-cols-2 gap-4">
+                    {list.map((item, index) => (
+                        <div key={index} className="flex py-1">
+                            <Switch
+                                className={'switch-container'}
+                                checked={item.show}
+                                onChange={(checked) => {
+                                    const updatedList = list.map((listItem, listIndex) => {
+                                        if (listIndex === index) {
+                                            return { ...listItem, show: checked };
+                                        }
+                                        return listItem;
+                                    });
+                                    setList(updatedList);
+                                    
+                                    // Call the callback to notify parent component
+                                    if (onColumnChange) {
+                                        onColumnChange(item.name, checked, index, updatedList);
+                                    }
+                                }}
+                            />
+                            <span className="ml-2">{item.name}</span>
+                        </div>
+                    ))}
+                </div>
                 
                 <div className="flex justify-end mt-4">
                      <button 
@@ -41,7 +65,7 @@ const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, 
                             onClose();
                         }}
                     >
-                       Cancel
+                       {msg.get('validators.btnCancel')}
                     </button>
                     <button 
                         className="btn-submit"
@@ -52,7 +76,7 @@ const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, 
                             onClose();
                         }}
                     >
-                        Apply Changes
+                        {msg.get('validators.btnApplyChanges')}
                     </button>
                 </div>
             </div>
