@@ -249,7 +249,7 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                                             replace: true
                                         });
                                     }}
-                                    className="p-2 border border-gray-300 rounded text-sm w-[220px]"
+                                    className="admin-select w-[220px]"
                                 >
                                     <option value="all">All Status</option>
                                     <option value="published">Published</option>
@@ -285,7 +285,7 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                                             replace: true
                                         });
                                     }}
-                                    className="p-2 border border-gray-300 rounded text-sm w-[220px]"
+                                    className="admin-select w-[220px]"
                                 >
                                     <option value="all">All Articles</option>
                                     <option value="featured">Featured Only</option>
@@ -345,10 +345,10 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
 
                     {/* News Table */}
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
+                        <table className="min-w-full divide-y divide-gray-200 admin-table">
+                            <thead>
                                 <tr>
-                                    <th className="px-6 py-3 text-left">
+                                    <th>
                                         <input
                                             type="checkbox"
                                             checked={selectedItems.length === news.data.length && news.data.length > 0}
@@ -356,27 +356,27 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                                             className="rounded"
                                         />
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th>
                                         Article
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th>
                                         Status
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th>
                                         Views
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th>
                                         Created
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th>
                                         Actions
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody>
                                 {news.data.map((article) => (
                                     <tr key={article.id} className={selectedItems.includes(article.id) ? 'bg-blue-50' : ''}>
-                                        <td className="px-6 py-4">
+                                        <td>
                                             <input
                                                 type="checkbox"
                                                 checked={selectedItems.includes(article.id)}
@@ -384,7 +384,7 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                                                 className="rounded"
                                             />
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td>
                                             <div className="flex items-center">
                                                 {article.image_url && (
                                                     <img
@@ -394,10 +394,10 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                                                     />
                                                 )}
                                                 <div>
-                                                    <div className="text-sm font-medium text-gray-900">
+                                                    <div className="text-sm font-medium">
                                                         {getArticleTitle(article)}
                                                     </div>
-                                                    <div className="text-sm text-gray-500">
+                                                    <div className="text-sm">
                                                         {article.slug}
                                                     </div>
                                                     {article.is_featured && (
@@ -406,22 +406,22 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td>
                                             {getStatusBadge(article.status)}
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-gray-900">
+                                        <td>
                                             <FontAwesomeIcon icon={faEye} className="mr-1" />
                                             {article.views_count.toLocaleString()}
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">
+                                        <td>
                                             <FontAwesomeIcon icon={faCalendar} className="mr-1" />
                                             {formatDate(article.created_at)}
                                         </td>
-                                        <td className="px-6 py-4 text-sm font-medium">
+                                        <td>
                                             <div className="flex items-center gap-2">
                                                 <Link
                                                     href={route('news.show', article.slug)}
-                                                    className="text-blue-600 hover:text-blue-900"
+                                                    className="text-purple-300 hover:text-purple-800"
                                                     target="_blank"
                                                 >
                                                     <FontAwesomeIcon icon={faEye} />

@@ -151,3 +151,77 @@ a-table thead {
     @apply flex items-center space-x-2 p-2 hover:bg-[#281f32] cursor-pointer text-sm;
     font-size: 12px;
 }
+/* Admin table styling */
+.admin-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.admin-table tbody {
+    @apply divide-y divide-gray-200 text-white;
+}
+
+.admin-table th {
+    @apply px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider;
+    font-size: 14px;
+    border-bottom: solid 1px white;
+}
+
+/* Target tbody rows specifically to avoid conflicts */
+.admin-table tbody tr:nth-child(odd) {
+    background-color: rgba(98, 72, 161, 0.05); /* bg-purple-500/5 */
+}
+
+.admin-table tbody tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.1); /* bg-white/10 */
+}
+
+.admin-table tbody tr:hover {
+    background-color: #281f32;
+    cursor: pointer;
+}
+
+.admin-table td {
+    @apply px-6 py-4 whitespace-nowrap text-sm py-2;
+    padding: 7px 10px;
+    color: white;
+}
+
+.admin-table thead th:first-child {
+    border-top-left-radius: 0.5rem;
+}
+
+.admin-table thead th:last-child {
+    border-top-right-radius: 0.5rem;
+}
+
+.admin-table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 0.5rem;
+}
+
+.admin-table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 0.5rem;
+}
+.admin-select {
+    @apply p-2 border border-gray-300 rounded text-sm;
+    background: transparent;
+}
+.admin-form-content {
+    @apply p-6 rounded-lg shadow;
+    background-color: #281f32;
+}
+.admin-form-content label {
+    @apply text-sm font-medium text-white mb-2;
+}
+.admin-form-content .input-text {
+    background-color: transparent;
+    color: #fff;
+}
+.admin-form-content h3 {
+    @apply text-lg font-semibold mb-4;
+    text-align: left;
+}
+.admin-form-content .ql-toolbar.ql-snow,
+.admin-form-content .ql-toolbar .ql-snow {
+    background-color: #fff;
+}

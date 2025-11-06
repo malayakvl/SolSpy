@@ -76,16 +76,16 @@ export default function CreateEdit({ settingsData, isEdit = true, languages = [
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* General Settings */}
-                        <div className="bg-white p-6 rounded-lg shadow">
+                        <div className="admin-form-content ">
                             <div className="grid grid-cols-1 md:grid-cols-1 gap-4 md:max-w-2xl">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-sm font-medium text-white mb-2">
                                         {msg.get('settings.update_interval')}
                                     </label>
                                     <select
                                         value={data.update_interval}
                                         onChange={(e) => setData('update_interval', e.target.value)}
-                                        className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                        className="admin-select w-[220px]"
                                     >
                                         <option value="2">2</option>
                                         <option value="5">5</option>
@@ -93,13 +93,13 @@ export default function CreateEdit({ settingsData, isEdit = true, languages = [
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-sm font-medium text-white mb-2">
                                         {msg.get('settings.collect_score_retention')}
                                     </label>
                                     <select
                                         value={data.collect_score_retention}
                                         onChange={(e) => setData('collect_score_retention', e.target.value)}
-                                        className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                        className="admin-select w-[220px]"
                                     >
                                         <option value="10">10</option>
                                         <option value="20">20</option>

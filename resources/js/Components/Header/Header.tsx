@@ -95,19 +95,19 @@ export default function Header(auth) {
                   {/* <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-white/5 hover:text-white" --> */}
                   {isAdmin ? (
                     <>
-                      <Link href={'/admin/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
+                      <Link href={'/admin/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300  hover:text-[#703ea2]">
                         {msg.get('menu.validators')}
                       </Link>
-                      <Link href={'/admin/customers'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
+                      <Link href={'/admin/customers'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300  hover:text-[#703ea2]">
                         {msg.get('menu.customers')}
                       </Link>
-                      <Link href={'/admin/discord-news'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
+                      <Link href={'/admin/discord-news'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300  hover:text-[#703ea2]">
                         {msg.get('menu.discord-news')}
                       </Link>
-                      <Link href={'/admin/news'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
+                      <Link href={'/admin/news'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300  hover:text-[#703ea2]">
                         {msg.get('menu.news')}
                       </Link>
-                      <Link href={'/admin/settings'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
+                      <Link href={'/admin/settings'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300  hover:text-[#703ea2]">
                           {msg.get('menu.settings')}
                       </Link>
                     </>
