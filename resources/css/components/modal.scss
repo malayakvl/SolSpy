@@ -10,7 +10,7 @@
     border: solid 1px #ccc;
     -webkit-box-shadow: 5px 5px 15px 5px #8877f1; 
     box-shadow: 5px 5px 15px 5px #8877f1;
-    opacity: 0.9;
+    opacity: 1;
 }
 
 .modal-overlay-columns .columns {
@@ -43,4 +43,9 @@
 .switch-container span {
     width: 17px !important;
     height: 17px !important;
+}
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
 }

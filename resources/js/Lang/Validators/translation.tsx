@@ -13,7 +13,8 @@ const lngValidators = {
     welcome: 'Welcome',
     'notice-settings': 'Notice Settings',
     telegram: 'Telegram',
-    email: 'Email'
+    email: 'Email',
+    'connect-telegram': "Connect Telegram"
   },
   'uk.validators': {
     title: 'Валідатори',
@@ -29,7 +30,9 @@ const lngValidators = {
     welcome: 'З поверненням',
     'notice-settings': 'Налаштування сповіщень',
     telegram: 'Telegram',
-    email: 'Email'
+    email: 'Email',
+    'connect-telegram': "Connect Telegram"
+
   },
 };
 export default lngValidators;
