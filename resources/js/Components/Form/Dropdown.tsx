@@ -57,7 +57,7 @@ const Content = ({
   if (width === '48') {
     widthClasses = 'w-48';
   }
-console.log(contentClasses)
+
   return (
     <>
       <Transition

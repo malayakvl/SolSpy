@@ -15,6 +15,7 @@ const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, 
         locale: appLang,
     });
     const [list, setList] = useState(initialColumns || []);
+    const [activeTab, setActiveTab] = useState('telegram');
     // Store the original initial state to revert to on Cancel
     const originalColumnsRef = useRef(JSON.parse(JSON.stringify(initialColumns || [])));
     
@@ -31,7 +32,70 @@ const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, 
                 </svg>
             </div>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
-                Notification Popup Coming Here
+                {/* Tabs navigation */}
+                <div className="border-b border-gray-200">
+                    <nav className="flex space-x-8">
+                        <button
+                            onClick={() => setActiveTab('telegram')}
+                            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                                activeTab === 'telegram'
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                        >
+                            {msg.get('validators.telegram')}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('email')}
+                            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                                activeTab === 'email'
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                        >
+                            {msg.get('validators.email')}
+                        </button>
+                    </nav>
+                </div>
+                            
+                {/* Tab content */}
+                {/* Tab content */}
+                <div className="mt-4">
+                    {activeTab === 'telegram' && (
+                        <div id="telegram">
+                            <div className="grid grid-cols-2 gap-4">
+                                {list.map((item, index) => (
+                                    <div key={index} className="flex py-1">
+                                        <Switch
+                                            className={'switch-container'}
+                                            checked={item.show}
+                                            onChange={(checked) => {
+                                                const updatedList = list.map((listItem, listIndex) => {
+                                                    if (listIndex === index) {
+                                                        return { ...listItem, show: checked };
+                                                    }
+                                                    return listItem;
+                                                });
+                                                setList(updatedList);
+                                                
+                                                // Call the callback to notify parent component
+                                                if (onColumnChange) {
+                                                    onColumnChange(item.name, checked, index, updatedList);
+                                                }
+                                            }}
+                                        />
+                                        <span className="ml-2">{item.name}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    {activeTab === 'email' && (
+                        <div id="email">
+                        </div>
+                    )}
+                </div>
+                
                 
                 <div className="flex justify-end mt-4">
                      <button 
@@ -41,7 +105,7 @@ const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, 
                             onClose();
                         }}
                     >
-                       Cancel
+                       {msg.get('validators.btnCancel')}
                     </button>
                     <button 
                         className="btn-submit"
@@ -52,7 +116,7 @@ const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, 
                             onClose();
                         }}
                     >
-                        Apply Changes
+                        {msg.get('validators.btnApplyChanges')}
                     </button>
                 </div>
             </div>
