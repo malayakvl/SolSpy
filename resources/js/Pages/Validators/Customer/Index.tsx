@@ -98,16 +98,21 @@ export default function CustomerIndex(validatorsData) {
         showNotificationModalRef.current = showNotificationModal;
     }, [showNotificationModal]);
     
-    // Add effect to log when showModal changes
-    useEffect(() => {
-        console.log('showModal changed to:', showModal);
-    }, [showModal]);
-    
     // Add effect to log when showNotificationModal changes
-    useEffect(() => {
-        console.log('showNotificationModal changed to:', showNotificationModal);
-    }, [showNotificationModal]);
     const [columnSettings, setColumnSettings] = useState(null);
+    const initialNoticeColumns = [
+        { name: "Status", show: false },
+        { name: "Jito Score", show: false },
+        { name: "Vote Rate", show: false },
+        { name: "Stake Pool", show: false },
+        { name: "Inflation Comission", show: false },
+        { name: "Mev (Jito) Comission", show: false },
+        { name: "Jito Score", show: false },
+        { name: "SFDP Status", show: false },
+        { name: "Location", show: false },
+        { name: "Ip", show: false },
+        { name: "Client", show: false }
+    ];
     const [columnsConfig, setColumnsConfig] = useState(() => {
         if (validatorsData.settingsData?.table_fields) {
             const parsedFields = (validatorsData.settingsData.table_fields);
@@ -489,7 +494,6 @@ export default function CustomerIndex(validatorsData) {
 
 
     useEffect(() => {
-        console.log('Setting up interval for fetchData');
         const intervalId = setInterval(() => {
             // Get current page from URL to ensure we're using the latest page
             const urlParams = new URLSearchParams(window.location.search);
@@ -792,6 +796,7 @@ export default function CustomerIndex(validatorsData) {
                         {(showNotificationModal) && (
                             <ModalNotice 
                                 onClose={closeNotificationModal} 
+                                initialColumns={initialNoticeColumns}
                                 onSave={() => {
                                     // Normalize column names before saving
                                     

@@ -20,7 +20,6 @@ export default function Dashboard({auth}) {
 
     // Extract role name from user roles array
     const userRole = user.roles && user.roles.length > 0 ? user.roles[0].name : null;
-    console.log('User role:', userRole);
 
     // Show tabs interface only for users without roles (guests) or with specific role handling
     return (
