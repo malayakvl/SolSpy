@@ -12,7 +12,8 @@ const lngValidators = {
     btnApplyChanges: 'Apply Changes',
     welcome: 'Welcome',
     'notice-settings': 'Notice Settings',
-    
+    telegram: 'Telegram',
+    email: 'Email'
   },
   'uk.validators': {
     title: 'Валідатори',
@@ -26,7 +27,9 @@ const lngValidators = {
     btnApplyChanges: 'Pовернути зміни',
     btnCancel: 'Відмінити',
     welcome: 'З поверненням',
-    'notice-settings': 'Налаштування сповіщень'
+    'notice-settings': 'Налаштування сповіщень',
+    telegram: 'Telegram',
+    email: 'Email'
   },
 };
 export default lngValidators;
