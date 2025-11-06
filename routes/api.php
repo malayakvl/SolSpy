@@ -8,6 +8,9 @@ use App\Http\Controllers\Api\ValidatorController as ApiValidatorController;
 use App\Http\Controllers\ValidatorOrderController;
 use App\Http\Controllers\DiscordNewsController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\TelegramConnectController;
+use App\Http\Controllers\TelegramWebhookController;
+
 
 Route::get('/fetch-settings', [SettingsController::class, 'getDataWithHeader'])->name('settings.get');
 Route::get('/fetch-settings-data', [SettingsController::class, 'getDataWithHeaderNew'])->name('settings.getNew');
@@ -27,10 +30,15 @@ Route::get('/validator/skip-stats', [ApiValidatorController::class, 'getSkippedS
 Route::get('/validator-leader-slots', [ApiValidatorController::class, 'getLeaderSlots']);
 Route::get('/validator-hardware', [ApiValidatorController::class, 'hardware']);
 
+
+
+Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle']);
+
 // routes/api.php
 
 // Session-based authentication for SPA API calls (this is what you need for authenticated users)
 Route::middleware(['web', 'auth'])->group(function () {
+    Route::post('/telegram/connect-link', [TelegramConnectController::class, 'generateLink']);
     Route::get('/settings/customer-columns', [SettingsController::class, 'getDataWithHeaderByUser'])->name('settingsUser.get');
     Route::post('/settings/customer-columns/update', [SettingsController::class, 'updateCustomerSettings'])->name('settingsUser.update');
     Route::get('/fetch-validators-auth', [ApiValidatorController::class, 'timeoutData'])->name('validators.timeoutDataAuth');
