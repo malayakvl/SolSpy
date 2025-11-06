@@ -176,32 +176,32 @@ export default function CreateEdit({ article, isEdit = false, languages = [
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* General Settings */}
-                        <div className="bg-white p-6 rounded-lg shadow">
-                            <h3 className="text-lg font-semibold mb-4">General Settings</h3>
+                        <div className="admin-form-content">
+                            <h3>General Settings</h3>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label>
                                         Slug *
                                     </label>
                                     <input
                                         type="text"
                                         value={data.slug}
                                         onChange={(e) => setData('slug', e.target.value)}
-                                        className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                        className="input-text"
                                         required
                                     />
                                     {errors.slug && <p className="text-red-500 text-xs mt-1">{errors.slug}</p>}
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label>
                                         Status
                                     </label>
                                     <select
                                         value={data.status}
                                         onChange={(e) => setData('status', e.target.value)}
-                                        className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                        className="input-text"
                                     >
                                         <option value="draft">Draft</option>
                                         <option value="published">Published</option>
@@ -210,14 +210,14 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label>
                                         Featured Image URL
                                     </label>
                                     <input
                                         type="url"
                                         value={data.image_url}
                                         onChange={(e) => setData('image_url', e.target.value)}
-                                        className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                        className="input-text"
                                         placeholder="https://example.com/image.jpg"
                                     />
                                     {errors.image_url && <p className="text-red-500 text-xs mt-1">{errors.image_url}</p>}
@@ -231,7 +231,7 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                                         onChange={(e) => setData('is_featured', e.target.checked)}
                                         className="rounded"
                                     />
-                                    <label htmlFor="is_featured" className="ml-2 text-sm font-medium text-gray-700">
+                                    <label>
                                         Featured Article
                                     </label>
                                 </div>
@@ -240,7 +240,7 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                             {/* Image preview */}
                             {data.image_url && (
                                 <div className="mt-4">
-                                    <p className="text-sm font-medium text-gray-700 mb-2">Image Preview:</p>
+                                    <p className="text-sm font-medium text-white mb-2">Image Preview:</p>
                                     <img
                                         src={data.image_url}
                                         alt="Preview"
@@ -254,8 +254,8 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                         </div>
 
                         {/* Language Tabs */}
-                        <div className="bg-white rounded-lg shadow">
-                            <div className="border-b">
+                        <div className="admin-form-content">
+                            <div>
                                 <nav className="flex space-x-8 px-6">
                                     {languages.map((language) => (
                                         <button
@@ -264,7 +264,7 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                                             onClick={() => setActiveTab(language.code)}
                                             className={`py-4 px-1 border-b-2 font-medium text-sm ${
                                                 activeTab === language.code
-                                                    ? 'border-blue-500 text-blue-600'
+                                                    ? 'border-purple-500 text-white-600'
                                                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                             }`}
                                         >
@@ -293,7 +293,7 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                                                     type="text"
                                                     value={data.translations[language.code]?.title || ''}
                                                     onChange={(e) => handleTitleChange(language.code, e.target.value)}
-                                                    className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                                    className="input-text"
                                                     required={language.code === 'en'}
                                                 />
                                                 {errors[`translations.${language.code}.title`] && (
@@ -304,7 +304,7 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                                             </div>
 
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                <label>
                                                     Excerpt
                                                 </label>
                                                 <textarea
@@ -317,7 +317,7 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                                                         }
                                                     })}
                                                     rows={3}
-                                                    className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                                    className="input-text"
                                                     placeholder="Brief description of the article..."
                                                 />
                                             </div>
