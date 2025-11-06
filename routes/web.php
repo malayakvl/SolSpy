@@ -14,14 +14,24 @@ use App\Http\Controllers\DashboardController;
 
 use Inertia\Inertia;
 
-// Route::get('/', function () {
-//     return Inertia::render('Welcome', [
-//         'canLogin' => Route::has('login'),
-//         'canRegister' => Route::has('register'),
-//         'laravelVersion' => Application::VERSION,
-//         'phpVersion' => PHP_VERSION,
-//     ]);
-// });
+use Illuminate\Support\Facades\Http;
+use App\Models\TelegramLink;
+
+Route::get('/test-telegram', function () {
+    $token = env('TELEGRAM_BOT_TOKEN');
+
+    $links = TelegramLink::whereNotNull('chat_id')->get();
+
+    foreach ($links as $link) {
+        Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+            'chat_id' => $link->chat_id,
+            'text' => "💋🌹Test message from SolSpy! Everything works!"
+        ]);
+    }
+
+    return "OK";
+});
+
 
 // Dashboard route - redirect based on user role
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
