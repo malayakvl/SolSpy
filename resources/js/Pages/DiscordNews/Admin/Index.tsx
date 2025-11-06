@@ -200,10 +200,10 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
                     {/* Regular News Grid */}
                     {/* Replace the grid with a table */}
                     <div className="overflow-x-auto">
-                        <table className="min-w-full bg-white rounded-lg overflow-hidden">
-                            <thead className="bg-gray-50">
+                        <table className="min-w-full rounded-lg overflow-hidden admin-table">
+                            <thead>
                                 <tr>
-                                    <th className="px-6 py-3 text-left">
+                                    <th>
                                         <input
                                             type="checkbox"
                                             checked={news.data.length > 0 && news.data.every(item => selectedItemIds.includes(item.id))}
@@ -211,16 +211,16 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
                                             className="rounded"
                                         />
                                     </th>
-                                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title & Description</th>
-                                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Published Date</th>
-                                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
-                                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Top</th>
+                                    <th>Title & Description</th>
+                                    <th>Published Date</th>
+                                    <th>Source</th>
+                                    <th>Top</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 {news.data && news.data.map((article) => (
                                     <tr key={article.id} className={selectedItemIds.includes(article.id) ? 'bg-blue-50' : ''}>
-                                        <td className="px-6 py-4">
+                                        <td>
                                             <input
                                                 type="checkbox"
                                                 checked={selectedItemIds.includes(article.id)}
@@ -228,42 +228,42 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
                                                 className="rounded"
                                             />
                                         </td>
-                                        <td className="py-3 px-4">
+                                        <td>
                                             <a
                                                 href={article.url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="text-gray-900 hover:text-blue-600 font-medium"
+                                                className="text-purple-300 hover:text-purple-800 font-medium"
                                             >
                                                 {article.title}
                                             </a>
-                                            <div className="text-sm text-gray-500 mt-1">
+                                            <div className="text-sm  mt-1">
                                                 {truncateText(article.description || '')}
                                             </div>
                                         </td>
-                                        <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td>
                                             <FontAwesomeIcon icon={faCalendar} className="mr-1" />
                                             {formatDate(article.published_at)}
                                         </td>
-                                        <td className="py-3 px-4">
+                                        <td>
                                             {article.source}<br/>
                                             {article.url && (
                                                 <a 
                                                     href={article.url} 
                                                     target="_blank" 
                                                     rel="noopener noreferrer"
-                                                    className="text-blue-600 hover:text-blue-800 underline text-sm flex items-center"
+                                                    className="text-purple-300 hover:text-purple-800 underline text-sm flex items-center"
                                                 >
                                                     {article.url.length > 30 ? `${article.url.substring(0, 30)}...` : article.url}
                                                     <FontAwesomeIcon icon={faEye} className="ml-1 text-xs" />
                                                 </a>
                                             )}
                                         </td>
-                                        <td className="py-3 px-4 whitespace-nowrap">
+                                        <td>
                                             {article.is_top ? (
                                                 <FontAwesomeIcon icon={faStar} className="text-yellow-500" />
                                             ) : (
-                                                <span className="text-gray-500 text-sm">No</span>
+                                                <span className="ttext-sm">No</span>
                                             )}
                                         </td>
                                     </tr>
