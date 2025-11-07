@@ -62,9 +62,6 @@ export default function ProfileMenu() {
               >
                 {lng.get('menu.logout')}
             </Dropdown.Link>
-            {/* <span className="dropdown-span">
-              Logout
-            </span> */}
           </Dropdown.Content>
         </Dropdown>
       </div>

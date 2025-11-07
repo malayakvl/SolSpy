@@ -29,11 +29,18 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        
+        // If user is authenticated, load the telegram links relationship
+        if ($user) {
+            $user->load('telegramLinks');
+        }
+        
         return array_merge(parent::share($request), [
             'auth' => [
-                'user' => $request->user(),
-                'role' => $request->user()?->getRoleNames(),
-                'can' => $request->user()?->getAllPermissions()->mapWithKeys(function ($permission) {
+                'user' => $user,
+                'role' => $user?->getRoleNames(),
+                'can' => $user?->getAllPermissions()->mapWithKeys(function ($permission) {
                     return [$permission->name => true];
                 })->all()
             ]

@@ -49,6 +49,7 @@ const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, 
             <div className="modal-header">
                 <div className="modal-title mt-3">
                     <span className="mt-2 inline-block">{msg.get('validators.notice-settings')}</span>
+                    
                     <span className="float-right">
                         <button
                             onClick={connectTelegram}

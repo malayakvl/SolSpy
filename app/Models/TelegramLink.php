@@ -12,6 +12,7 @@ class TelegramLink extends Model
     protected $fillable = [
         'user_id',
         'token',
+        'chat_id',
     ];
 
     protected $table = 'data.telegram_links';
