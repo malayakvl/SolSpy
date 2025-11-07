@@ -80,7 +80,7 @@ class AuthenticatedSessionController extends Controller
     /**
      * Destroy an authenticated session.
      */
-    public function destroy(Request $request)
+    public function destroy(Request $request) // Removed RedirectResponse type hint to avoid conflict with Inertia::location
     {
         Auth::guard('web')->logout();
 

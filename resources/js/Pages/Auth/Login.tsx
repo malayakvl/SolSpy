@@ -2,7 +2,7 @@ import Checkbox from '../../Components/Form/Checkbox';
 import PrimaryButton from '../../Components/Form/PrimaryButton';
 import GuestLayout from '../../Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import React from 'react';
+import React, { useState } from 'react';
 import InputText from '../../Components/Form/InputText';
 import { useDispatch, useSelector } from 'react-redux';
 import { appLangSelector } from '../../Redux/Layout/selectors';
@@ -10,11 +10,13 @@ import Lang from 'lang.js';
 import lngAuth from '../../Lang/Auth/translation';
 
 export default function Login({ status, canResetPassword }) {
-  const { data, setData, post, processing, errors } = useForm({
+  const { data, setData, post, processing, errors, reset } = useForm({
     email: '',
     password: '',
     remember: '',
   });
+  
+  const [isLoading, setIsLoading] = useState(false);
   
   const dispatch  = useDispatch();
   const appLang = useSelector(appLangSelector);
@@ -68,6 +70,8 @@ export default function Login({ status, canResetPassword }) {
   const submit = (e) => {
     e.preventDefault();
     
+    setIsLoading(true);
+    
     post('/login', {
       data: {
         ...data,
@@ -81,13 +85,20 @@ export default function Login({ status, canResetPassword }) {
         localStorage.removeItem('validatorFavorites');
         localStorage.removeItem('validatorBlocked');
         
-        // Update CSRF token after successful login
-        if (typeof window.updateCSRFToken === 'function') {
-          window.updateCSRFToken();
-        }
+        // Show loading state during page reload
+        setIsLoading(true);
+        
+        // Force a full page refresh to ensure CSRF token is synchronized
+        window.location.reload();
       },
       onError: (errors) => {
         console.error('Login error:', errors);
+        setIsLoading(false);
+      },
+      onFinish: () => {
+        // Reset form after submission
+        reset('password');
+        setIsLoading(false);
       }
     });
   };
@@ -136,8 +147,18 @@ export default function Login({ status, canResetPassword }) {
             </Link>
           )}
 
-          <PrimaryButton className="ms-4" disabled={processing}>
-            {msg.get('auth.login')}
+          <PrimaryButton className="ms-4" disabled={processing || isLoading}>
+            {isLoading ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {msg.get('auth.logging_in')}
+              </span>
+            ) : (
+              msg.get('auth.login')
+            )}
           </PrimaryButton>
         </div>
         <div className="flex mx-auto">
