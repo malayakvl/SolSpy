@@ -27,9 +27,6 @@ class ProfileController extends Controller
         // dd($request->user()->hasRole('Admin'));
     }
 
-
-
-
     /**
      * Display the Users's profile form.
      */
@@ -85,7 +82,7 @@ class ProfileController extends Controller
     /**
      * Delete the Users's account.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request)
     {
         $request->validate([
             'password' => ['required', 'current_password'],
@@ -100,6 +97,8 @@ class ProfileController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return Redirect::to('/');
+        // Use Inertia::location to force a full page refresh
+        // This ensures the CSRF token is refreshed
+        return Inertia::location(url('/'));
     }
 }

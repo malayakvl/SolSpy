@@ -1,37 +1,34 @@
 import Checkbox from '../../Components/Form/Checkbox';
 import PrimaryButton from '../../Components/Form/PrimaryButton';
 import GuestLayout from '../../Layouts/GuestLayout';
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import React, { useState } from 'react';
 import InputText from '../../Components/Form/InputText';
 import { useDispatch, useSelector } from 'react-redux';
 import { appLangSelector } from '../../Redux/Layout/selectors';
 import Lang from 'lang.js';
 import lngAuth from '../../Lang/Auth/translation';
-import axios from 'axios';
-import { setUserAction } from "../../Redux/Users";
 
 export default function Login({ status, canResetPassword }) {
-  const { processing } = useForm({});
-  const dispatch  = useDispatch();
-  const [values, setValues] = useState({
-    name: '',
+  const { data, setData, post, processing, errors, reset } = useForm({
+    email: '',
     password: '',
     remember: '',
   });
+  
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const dispatch  = useDispatch();
   const appLang = useSelector(appLangSelector);
   const msg = new Lang({
     messages: lngAuth,
     locale: appLang,
   });
 
-  const handleChange = e => {
+  const handleChange = (e) => {
     const key = e.target.id;
     const value = e.target.value;
-    setValues(values => ({
-      ...values,
-      [key]: value,
-    }));
+    setData(key, value);
   };
 
   // Function to handle Google login with localStorage data
@@ -70,34 +67,40 @@ export default function Login({ status, canResetPassword }) {
     window.location.href = redirectUrl;
   };
 
-  const submit = e => {
+  const submit = (e) => {
     e.preventDefault();
     
-    // Get localStorage data
-    const validatorCompare = JSON.parse(localStorage.getItem('validatorCompare') || '[]');
-    const validatorFavorites = JSON.parse(localStorage.getItem('validatorFavorites') || '[]');
+    setIsLoading(true);
     
-    // Add localStorage data to the login request
-    const loginData = {
-      ...values,
-      validatorCompare: validatorCompare,
-      validatorFavorites: validatorFavorites
-    };
-    
-    // post(route('password.confirm'), () => reset('password'),
-    // );
-    axios
-      .post('/login', loginData)
-      .then(response => {
-        dispatch(setUserAction(response.config.data))
+    post('/login', {
+      data: {
+        ...data,
+        validatorCompare: JSON.parse(localStorage.getItem('validatorCompare') || '[]'),
+        validatorFavorites: JSON.parse(localStorage.getItem('validatorFavorites') || '[]'),
+        validatorBlocked: JSON.parse(localStorage.getItem('validatorBlocked') || '[]'),
+      },
+      onSuccess: () => {
         // Clear localStorage after successful login
         localStorage.removeItem('validatorCompare');
         localStorage.removeItem('validatorFavorites');
-        location.href = '/validators';
-      })
-      .catch(error => {
-        console.error('ERROR:: ', error.response.data);
-      });
+        localStorage.removeItem('validatorBlocked');
+        
+        // Show loading state during page reload
+        setIsLoading(true);
+        
+        // Force a full page refresh to ensure CSRF token is synchronized
+        window.location.reload();
+      },
+      onError: (errors) => {
+        console.error('Login error:', errors);
+        setIsLoading(false);
+      },
+      onFinish: () => {
+        // Reset form after submission
+        reset('password');
+        setIsLoading(false);
+      }
+    });
   };
 
   return (
@@ -114,44 +117,29 @@ export default function Login({ status, canResetPassword }) {
             <InputText
               name={'email'}
               type="email"
-              values={values}
+              values={data}
               onChange={handleChange}
               label={msg.get('auth.email')}
               required
             />
+            {errors.email && <div className="text-red-500 text-sm mt-1">{errors.email}</div>}
           </div>
           <div className="pb-4">
             <InputText
               name={'password'}
               type="password"
-              values={values}
+              values={data}
               onChange={handleChange}
               required
               label={msg.get('auth.password')}
             />
+            {errors.password && <div className="text-red-500 text-sm mt-1">{errors.password}</div>}
           </div>
         </div>
-
-        {/* <div className="mt-4 block hidden">
-          <label className="flex items-center">
-            <Checkbox
-              name="remember"
-              checked={values.remember}
-              onChange={
-                e => handleChange(e)
-                // setData('remember', e.target.checked)
-              }
-            />
-            <span className="ms-2 text-sm text-gray-600">
-              {msg.get('auth.remember')}
-            </span>
-          </label>
-        </div> */}
 
         <div className="mt-4 flex items-center justify-end">
           {canResetPassword && (
             <Link
-              // href={route('password.request')}
               href={'/reset'}
               className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
@@ -159,8 +147,18 @@ export default function Login({ status, canResetPassword }) {
             </Link>
           )}
 
-          <PrimaryButton className="ms-4" disabled={processing}>
-            {msg.get('auth.login')}
+          <PrimaryButton className="ms-4" disabled={processing || isLoading}>
+            {isLoading ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {msg.get('auth.logging_in')}
+              </span>
+            ) : (
+              msg.get('auth.login')
+            )}
           </PrimaryButton>
         </div>
         <div className="flex mx-auto">

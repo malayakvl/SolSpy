@@ -25,7 +25,7 @@ Route::get('/test-telegram', function () {
     foreach ($links as $link) {
         Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
             'chat_id' => $link->chat_id,
-            'text' => "💋🌹Test message from SolSpy! Everything works!"
+            'text' => "💋🌹Congratulate, you are connected to our channel SolSpy!"
         ]);
     }
 

@@ -49,6 +49,7 @@ const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, 
             <div className="modal-header">
                 <div className="modal-title mt-3">
                     <span className="mt-2 inline-block">{msg.get('validators.notice-settings')}</span>
+                    
                     <span className="float-right">
                         <button
                             onClick={connectTelegram}
@@ -78,10 +79,10 @@ const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, 
                     </svg>
                 </div>
             </div>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-content mt-6" onClick={e => e.stopPropagation()}>
                 {/* Tabs navigation */}
                 <div className="border-b border-gray-200">
-                    <nav className="flex space-x-8">
+                    {/* <nav className="flex space-x-8">
                         <button
                             onClick={() => setActiveTab('telegram')}
                             className={`py-4 px-1 border-b-2 font-medium text-sm ${
@@ -102,10 +103,9 @@ const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, 
                         >
                             {msg.get('validators.email')}
                         </button>
-                    </nav>
+                    </nav> */}
                 </div>
                             
-                {/* Tab content */}
                 {/* Tab content */}
                 <div className="mt-4">
                     {activeTab === 'telegram' && (
@@ -135,10 +135,6 @@ const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, 
                                     </div>
                                 ))}
                             </div>
-                        </div>
-                    )}
-                    {activeTab === 'email' && (
-                        <div id="email">
                         </div>
                     )}
                 </div>
