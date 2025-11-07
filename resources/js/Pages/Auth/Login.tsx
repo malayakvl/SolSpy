@@ -1,37 +1,32 @@
 import Checkbox from '../../Components/Form/Checkbox';
 import PrimaryButton from '../../Components/Form/PrimaryButton';
 import GuestLayout from '../../Layouts/GuestLayout';
-import { Head, Link, useForm, router } from '@inertiajs/react';
-import React, { useState } from 'react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import React from 'react';
 import InputText from '../../Components/Form/InputText';
 import { useDispatch, useSelector } from 'react-redux';
 import { appLangSelector } from '../../Redux/Layout/selectors';
 import Lang from 'lang.js';
 import lngAuth from '../../Lang/Auth/translation';
-import axios from 'axios';
-import { setUserAction } from "../../Redux/Users";
 
 export default function Login({ status, canResetPassword }) {
-  const { processing } = useForm({});
-  const dispatch  = useDispatch();
-  const [values, setValues] = useState({
-    name: '',
+  const { data, setData, post, processing, errors } = useForm({
+    email: '',
     password: '',
     remember: '',
   });
+  
+  const dispatch  = useDispatch();
   const appLang = useSelector(appLangSelector);
   const msg = new Lang({
     messages: lngAuth,
     locale: appLang,
   });
 
-  const handleChange = e => {
+  const handleChange = (e) => {
     const key = e.target.id;
     const value = e.target.value;
-    setValues(values => ({
-      ...values,
-      [key]: value,
-    }));
+    setData(key, value);
   };
 
   // Function to handle Google login with localStorage data
@@ -70,34 +65,31 @@ export default function Login({ status, canResetPassword }) {
     window.location.href = redirectUrl;
   };
 
-  const submit = e => {
+  const submit = (e) => {
     e.preventDefault();
     
-    // Get localStorage data
-    const validatorCompare = JSON.parse(localStorage.getItem('validatorCompare') || '[]');
-    const validatorFavorites = JSON.parse(localStorage.getItem('validatorFavorites') || '[]');
-    
-    // Add localStorage data to the login request
-    const loginData = {
-      ...values,
-      validatorCompare: validatorCompare,
-      validatorFavorites: validatorFavorites
-    };
-    
-    // post(route('password.confirm'), () => reset('password'),
-    // );
-    axios
-      .post('/login', loginData)
-      .then(response => {
-        dispatch(setUserAction(response.config.data))
+    post('/login', {
+      data: {
+        ...data,
+        validatorCompare: JSON.parse(localStorage.getItem('validatorCompare') || '[]'),
+        validatorFavorites: JSON.parse(localStorage.getItem('validatorFavorites') || '[]'),
+        validatorBlocked: JSON.parse(localStorage.getItem('validatorBlocked') || '[]'),
+      },
+      onSuccess: () => {
         // Clear localStorage after successful login
         localStorage.removeItem('validatorCompare');
         localStorage.removeItem('validatorFavorites');
-        location.href = '/validators';
-      })
-      .catch(error => {
-        console.error('ERROR:: ', error.response.data);
-      });
+        localStorage.removeItem('validatorBlocked');
+        
+        // Update CSRF token after successful login
+        if (typeof window.updateCSRFToken === 'function') {
+          window.updateCSRFToken();
+        }
+      },
+      onError: (errors) => {
+        console.error('Login error:', errors);
+      }
+    });
   };
 
   return (
@@ -114,44 +106,29 @@ export default function Login({ status, canResetPassword }) {
             <InputText
               name={'email'}
               type="email"
-              values={values}
+              values={data}
               onChange={handleChange}
               label={msg.get('auth.email')}
               required
             />
+            {errors.email && <div className="text-red-500 text-sm mt-1">{errors.email}</div>}
           </div>
           <div className="pb-4">
             <InputText
               name={'password'}
               type="password"
-              values={values}
+              values={data}
               onChange={handleChange}
               required
               label={msg.get('auth.password')}
             />
+            {errors.password && <div className="text-red-500 text-sm mt-1">{errors.password}</div>}
           </div>
         </div>
-
-        {/* <div className="mt-4 block hidden">
-          <label className="flex items-center">
-            <Checkbox
-              name="remember"
-              checked={values.remember}
-              onChange={
-                e => handleChange(e)
-                // setData('remember', e.target.checked)
-              }
-            />
-            <span className="ms-2 text-sm text-gray-600">
-              {msg.get('auth.remember')}
-            </span>
-          </label>
-        </div> */}
 
         <div className="mt-4 flex items-center justify-end">
           {canResetPassword && (
             <Link
-              // href={route('password.request')}
               href={'/reset'}
               className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
