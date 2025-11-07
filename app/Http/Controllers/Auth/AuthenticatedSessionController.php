@@ -43,6 +43,13 @@ class AuthenticatedSessionController extends Controller
 
         $userId = Auth::id();
 
+        // Load telegram links for the authenticated user
+        $user = Auth::user();
+        $user->load('telegramLinks');
+        
+        // Also load roles and permissions to ensure they're available
+        $user->load('roles.permissions');
+
         // Migrate localStorage data to database
         // Get comparison data from request
         $comparisonIds = $request->input('validatorCompare', []);
@@ -63,7 +70,6 @@ class AuthenticatedSessionController extends Controller
         }
 
         // Check if the user has the Customer role and redirect accordingly
-        $user = Auth::user();
         if ($user && $user->hasRole('Customer')) {
             return redirect()->intended(route('validators.view', absolute: false));
         }
@@ -74,7 +80,7 @@ class AuthenticatedSessionController extends Controller
     /**
      * Destroy an authenticated session.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request) // Removed RedirectResponse type hint to avoid conflict with Inertia::location
     {
         Auth::guard('web')->logout();
 
@@ -82,6 +88,8 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        // Use Inertia::location to force a full page refresh
+        // This ensures the CSRF token is refreshed
+        return Inertia::location(route('login'));
     }
 }

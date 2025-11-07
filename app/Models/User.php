@@ -46,4 +46,12 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Get the telegram links for the user.
+     */
+    public function telegramLinks()
+    {
+        return $this->hasMany(TelegramLink::class, 'user_id');
+    }
 }

@@ -66,7 +66,6 @@ export default function CustomerIndex(validatorsData) {
         messages: lngProfile,
         locale: appLang,
     });
-
     const epoch = useSelector(appEpochSelector);
     const user = usePage().props.auth.user;
     const [dataFetched, setDataFetched] = useState(false);
@@ -77,6 +76,7 @@ export default function CustomerIndex(validatorsData) {
         highlight: 1
     }); // Remember last page for each filter type
     const [sortClickState, setSortClickState] = useState<{column: string, direction: string} | null>(null); // Track sort click state
+console.log(user);
 
     const [itemsPerPage] = useState(perPage); // Number of items per page
     const [selectAll, setSelectAll] = useState(false);

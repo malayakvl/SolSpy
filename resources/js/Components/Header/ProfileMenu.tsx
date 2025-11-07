@@ -3,7 +3,7 @@ import { appLangSelector } from '../../Redux/Layout/selectors';
 import Lang from 'lang.js';
 import lngHeader from '../../Lang/Header/translation';
 import Dropdown from '../../Components/Form/Dropdown';
-import { usePage } from '@inertiajs/react';
+import { usePage, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function ProfileMenu() {
@@ -22,6 +22,30 @@ export default function ProfileMenu() {
     array[0] +
     ' ' +
     (array[1] ? array[1][0] : '');
+
+  // Function to handle logout with proper CSRF handling
+  const handleLogout = (e) => {
+    e.preventDefault();
+    
+    // Clear localStorage
+    localStorage.removeItem('filialName');
+    
+    // Update CSRF token before logout as per the memory specification
+    if (typeof window.updateCSRFToken === 'function') {
+      window.updateCSRFToken();
+    }
+    
+    // Use Inertia's post method for logout as per the memory specification
+    router.post('/logout', {}, {
+      onError: (errors) => {
+        console.error('Logout error:', errors);
+        // If there's a CSRF error, force a full page refresh
+        if (errors && errors.message && errors.message.includes('CSRF')) {
+          window.location.href = '/login';
+        }
+      }
+    });
+  };
 
   return (
     <div>
@@ -52,19 +76,12 @@ export default function ProfileMenu() {
               >
               {lng.get('menu.profile')}
             </Dropdown.Link>
-            <Dropdown.Link
-                href={'/logout'}
-                method="post"
-                as="button"
-                onClick={() => {
-                  localStorage.removeItem('filialName');
-                }}
-              >
-                {lng.get('menu.logout')}
-            </Dropdown.Link>
-            {/* <span className="dropdown-span">
-              Logout
-            </span> */}
+            <button
+              onClick={handleLogout}
+              className="w-full text-left px-4 py-2 text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 transition duration-150 ease-in-out"
+            >
+              {lng.get('menu.logout')}
+            </button>
           </Dropdown.Content>
         </Dropdown>
       </div>
