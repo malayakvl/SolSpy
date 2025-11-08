@@ -54,6 +54,9 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::post('/add-compare', [ApiValidatorController::class, 'addCompare'])->name('api.validators.addCompare');
     Route::get('/favorite-count', [ApiValidatorController::class, 'getFavoriteCount'])->name('api.validators.getFavoriteCount');
     Route::post('/add-favorite', [ApiValidatorController::class, 'addFavorite'])->name('api.validators.addFavorite');
+    Route::get('/notice-count', [ApiValidatorController::class, 'getNoticeCount'])->name('api.validators.getNoticeCount');
+    Route::post('/add-notice', [ApiValidatorController::class, 'addNotice'])->name('api.validators.addNotice');
+    Route::get('/notice-count', [ApiValidatorController::class, 'getNoticeCount'])->name('api.validators.getNoticeCount');
 
     Route::post('/ban-validator', [ApiValidatorController::class, 'banValidator'])->name('api.validators.banValidator');
     Route::post('/mark-validators', [ApiValidatorController::class, 'markValidators'])->name('api.validators.markValidator');
