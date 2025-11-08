@@ -7,6 +7,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { appEpochSelector, appLangSelector } from '../../Redux/Layout/selectors';
 import { setFilterAction } from '../../Redux/Validators';
 import ValidatorFavoriteActions from "./../Validators/Partials/ValidatorFavoriteActions";
+import ValidatorActions from "./../Validators/Partials/ValidatorActions";
 import axios from 'axios';
 import { perPageSelector, filterTypeSelector } from '../../Redux/Validators/selectors';
 import 'pure-react-carousel/dist/react-carousel.es.css';
@@ -324,7 +325,7 @@ export default function Index(validatorsData) {
             }
         }
     };
-
+    console.log('Favorites page loaded');
     return (
         <AuthenticatedLayout header={<Head />}>
             <Head title={msg.get('validators.title')} />

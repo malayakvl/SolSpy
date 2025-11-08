@@ -497,6 +497,7 @@ class ValidatorDataService
             // since the search_validators_timeout function doesn't support array parameters
             $queryNew = "SELECT * FROM data.search_validators_timeout('" . $searchTerm . "', '" . $filterType . "', null, '" . $sortColumn . "', $offset, $limit, null, ARRAY[" . implode(',', array_map('intval', $favoriteIds)) . "]);";
         }
+        dd($queryNew);exit;
         $validatorsData = DB::select($queryNew);
         
         
