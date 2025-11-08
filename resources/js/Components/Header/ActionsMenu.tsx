@@ -23,6 +23,7 @@ export default function ActionsMenu(props) {
     const permissions = usePage().props.auth.can;
     const [favLength, setFavLength] = useState(0);
     const [compareLength, setCompareLength] = useState(0);
+    const [noticeCount, setNoticeCount] = useState(0);
 
     // Function to update favorite count
     const updateFavoriteCount = async () => {
@@ -74,20 +75,48 @@ export default function ActionsMenu(props) {
         }
     };
 
+    const updateNoticeCount = async () => {
+        if (!user) {
+            // For unregistered users, get count from localStorage
+            const noticeList = JSON.parse(localStorage.getItem('validatorNotice') || '[]');
+            setNoticeCount(noticeList.length);
+        } else {
+            // For registered users, fetch count from server
+            try {
+                const response = await axios.get('/api/notice-count', {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                setNoticeCount(response.data.count || 0);
+            } catch (error) {
+                console.error('Error fetching notice count:', error);
+                // Fallback to localStorage if API fails
+                const noticeList = JSON.parse(localStorage.getItem('validatorNotice') || '[]');
+                setNoticeCount(noticeList.length);
+            }
+        }
+    };
+
     useEffect(() => {
         // Initial counts
         updateFavoriteCount();
         updateComparisonCount();
+        updateNoticeCount();
         
         // Listen for favorite count changes
         window.addEventListener('favoriteCountChanged', updateFavoriteCount);
         // Listen for comparison count changes
         window.addEventListener('comparisonCountChanged', updateComparisonCount);
+        // Listen for notice count changes
+        window.addEventListener('noticeCountChanged', updateNoticeCount);   
         
         // Cleanup listeners
         return () => {
             window.removeEventListener('favoriteCountChanged', updateFavoriteCount);
             window.removeEventListener('comparisonCountChanged', updateComparisonCount);
+            window.removeEventListener('noticeCountChanged', updateNoticeCount);
         };
     }, [user]);
 
@@ -108,9 +137,13 @@ export default function ActionsMenu(props) {
                     <span className="absolute top-[-10px] right-[-10px] bg-[#703da7] font-bold rounded-full w-[16px] h-[16px] px-[4px] py-0 text-xs text-white">{favLength}</span>
                     <FontAwesomeIcon icon={faHeart} className="w-[16px] h-[16px] text-white" />
                 </a>
-                <Link href={'/blocked'} className="inline-flex items-center menu-main-btn text-sm">
+                <a 
+                    href={user ? '/notices' : `/favorites?ids=${encodeURIComponent(localStorage.getItem('validatorFavorites') || '[]')}`}
+                    className="inline-flex items-center menu-main-btn text-sm relative"
+                >
+                    <span className="absolute top-[-10px] right-[-10px] bg-[#703da7] font-bold rounded-full w-[16px] h-[16px] px-[4px] py-0 text-xs text-white">{noticeCount}</span>
                     <FontAwesomeIcon icon={faBell} className="w-[16px] h-[16px] text-white" />
-                </Link>
+                </a>
             </div>
         </>
     );

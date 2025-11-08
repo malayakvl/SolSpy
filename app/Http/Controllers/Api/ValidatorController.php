@@ -1314,8 +1314,9 @@ public function hardware(Request $request)
     public function addCompare(Request $request) {
         $user = $request->user();
         $validatorId = $request->input('validatorId');
-        DB::statement('SELECT data.toggle_comparisons(' .$user->id. ', ' .$validatorId. ')');
-        
+        // DB::statement('SELECT data.toggle_comparisons(' .$user->id. ', ' .$validatorId. ')');
+        DB::statement('SELECT data.validator_user_actions(' .$user->id. ', ' .$validatorId. ', \'compare\')');
+
         return response()->json([
             'success' => true,
             'message' => 'Comparison list updated'
@@ -1347,7 +1348,8 @@ public function hardware(Request $request)
         $user = $request->user();
         if ($user->id) {
             $validatorId = $request->input('validatorId');
-            DB::statement('SELECT data.toggle_favorite(' .$user->id. ', ' .$validatorId. ')');
+            // DB::statement('SELECT data.toggle_favorite(' .$user->id. ', ' .$validatorId. ')');
+            DB::statement('SELECT data.validator_user_actions(' .$user->id. ', ' .$validatorId. ', \'favorite\')');
         }
         
         // Dispatch event for frontend to update favorite count
@@ -1367,6 +1369,44 @@ public function hardware(Request $request)
             $count = DB::table('data.validators2users')
                 ->where('user_id', $user->id)
                 ->where('type', 'favorite')
+                ->count();
+                
+            return response()->json([
+                'count' => $count
+            ]);
+        }
+        
+        // For unregistered users, return 0 or handle appropriately
+        return response()->json([
+            'count' => 0
+        ]);
+    }
+
+    public function addNotice(Request $request) {
+        $user = $request->user();
+        if ($user->id) {
+            $validatorId = $request->input('validatorId');
+            // DB::statement('SELECT data.toggle_favorite(' .$user->id. ', ' .$validatorId. ')');
+            DB::statement('SELECT data.validator_user_actions(' .$user->id. ', ' .$validatorId. ', \'notice\')');
+        }
+        
+        // Dispatch event for frontend to update favorite count
+        // This would typically be done with Laravel's event broadcasting
+        // For now, we'll just return a success response
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Notice list updated'
+        ]);
+    }
+
+    public function getNoticeCount(Request $request) {
+        $user = $request->user();
+        if ($user && $user->id) {
+            // For registered users, count favorites from database
+            $count = DB::table('data.validators2users')
+                ->where('user_id', $user->id)
+                ->where('type', 'notice')
                 ->count();
                 
             return response()->json([

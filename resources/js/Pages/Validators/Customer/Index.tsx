@@ -76,7 +76,6 @@ export default function CustomerIndex(validatorsData) {
         highlight: 1
     }); // Remember last page for each filter type
     const [sortClickState, setSortClickState] = useState<{column: string, direction: string} | null>(null); // Track sort click state
-console.log(user);
 
     const [itemsPerPage] = useState(perPage); // Number of items per page
     const [selectAll, setSelectAll] = useState(false);
