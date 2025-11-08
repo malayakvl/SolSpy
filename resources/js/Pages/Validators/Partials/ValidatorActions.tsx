@@ -289,7 +289,7 @@ export default function ValidatorActions({validator, onBanToggle, showViewBtn = 
             }
         }
     }
-
+    console.log('ValidatorActions.tsx loaded', isInNotice);
     return (
         <>
             <div className="flex items-center">
@@ -303,18 +303,18 @@ export default function ValidatorActions({validator, onBanToggle, showViewBtn = 
                         <span className="cursor-pointer" onClick={() => addToCompare(validator.id)}>
                             <FontAwesomeIcon 
                                 icon={isInComparison ? faScaleUnbalanced : faScaleBalanced} 
-                                className={`mr-2 ${isInComparison ? 'text-red-500' : ''}`}
+                                className={`mr-2 ${isInComparison ? 'text-purple-500' : ''}`}
                             />
                         </span>
                         <span className="cursor-pointer" onClick={() => addToFavorite(validator.id)}>
                             <FontAwesomeIcon 
                                 icon={faHeart} 
-                                className={`mr-2 ${isInFavorites ? 'text-red-500' : ''}`}
+                                className={`mr-2 ${isInFavorites ? 'text-purple-500' : ''}`}
                             />
                         </span>
                         <span className="cursor-pointer" onClick={() => addToNotice(validator.id)}>
                             <FontAwesomeIcon icon={faBell} 
-                            className={`mr-2 ${isInNotice ? 'text-red-500' : ''}`} />
+                            className={`mr-2 ${isInNotice ? 'text-purple-500' : ''}`} />
                         </span>
                         <span>
                             <FontAwesomeIcon icon={faMoneyBill} className="mr-2" />
