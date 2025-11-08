@@ -218,7 +218,7 @@ export default function ValidatorActions({validator, onBanToggle, showViewBtn = 
                         'Accept': 'application/json'
                     }
                 });
-                setInNotice(!isInNotice);
+                setIsInNotice(!isInNotice);
                 toast.success('Notice list updated', {
                     position: "top-right",
                     autoClose: 2000,
@@ -247,8 +247,8 @@ export default function ValidatorActions({validator, onBanToggle, showViewBtn = 
             if (favoritesList.includes(validatorId)) {
                 // Remove from favorites
                 const updatedList = favoritesList.filter(id => id !== validatorId);
-                localStorage.setItem('vakidatorNotice', JSON.stringify(updatedList));
-                setIsInFavorites(false);
+                localStorage.setItem('validatorNotice', JSON.stringify(updatedList));
+                setIsInNotice(false);
                 toast.info('Validator removed from notice', {
                     position: "top-right",
                     autoClose: 2000,
@@ -275,7 +275,7 @@ export default function ValidatorActions({validator, onBanToggle, showViewBtn = 
                 }
                 favoritesList.push(validatorId);
                 localStorage.setItem('validatorNotice', JSON.stringify(favoritesList));
-                setIsInFavorites(true);
+                setIsInNotice(true);
                 toast.success('Validator added to notice', {
                     position: "top-right",
                     autoClose: 2000,
@@ -312,10 +312,12 @@ export default function ValidatorActions({validator, onBanToggle, showViewBtn = 
                                 className={`mr-2 ${isInFavorites ? 'text-purple-500' : ''}`}
                             />
                         </span>
-                        <span className="cursor-pointer" onClick={() => addToNotice(validator.id)}>
-                            <FontAwesomeIcon icon={faBell} 
-                            className={`mr-2 ${isInNotice ? 'text-purple-500' : ''}`} />
-                        </span>
+                        {user?.id && (
+                            <span className="cursor-pointer" onClick={() => addToNotice(validator.id)}>
+                                <FontAwesomeIcon icon={faBell} 
+                                className={`mr-2 ${isInNotice ? 'text-purple-500' : ''}`} />
+                            </span>
+                        )}
                         <span>
                             <FontAwesomeIcon icon={faMoneyBill} className="mr-2" />
                         </span>
