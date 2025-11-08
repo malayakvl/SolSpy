@@ -2,33 +2,30 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Http\Request;
+use App\Services\ValidatorDataService;
+use App\Services\SpyRankService;
+use App\Services\TotalStakeService;
+use App\Services\ValidatorAveragesService;
 use App\Models\Settings;
 use App\Models\Settings2User;
 use App\Models\Favorits;
 use App\Models\ValidatorOrder;
-use App\Services\ValidatorDataService;
-use App\Services\TotalStakeService;
-use App\Services\SpyRankService;
-use App\Services\ValidatorAveragesService;
 use Illuminate\Support\Facades\DB;
 
 class ValidatorController extends Controller
 {
     protected $validatorDataService;
-    protected $totalStakeService;
     protected $spyRankService;
+    protected $totalStakeService;
 
-    public function __construct(
-        ValidatorDataService $validatorDataService,
-        TotalStakeService $totalStakeService,
-        SpyRankService $spyRankService
-    ) {
+    public function __construct(ValidatorDataService $validatorDataService, SpyRankService $spyRankService, TotalStakeService $totalStakeService)
+    {
         $this->validatorDataService = $validatorDataService;
-        $this->totalStakeService = $totalStakeService;
         $this->spyRankService = $spyRankService;
+        $this->totalStakeService = $totalStakeService;
     }
 
     /**
@@ -142,12 +139,11 @@ class ValidatorController extends Controller
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
         // Fetch validators data using service
-        $validators = $this->validatorDataService->fetchDataValidators($userId ?? null, $filterType, $offset, $totalStakeLamports, 'spy_rank', $searchTerm);
+        $validators = $this->validatorDataService->fetchDataValidators($userId ?? null, $filterType, $offset, $limit, $totalStakeLamports, 'spy_rank', $searchTerm);
         $sortedValidators = $validators['validatorsAllData']->toArray();
         $filteredTotalCount = $validators['totalFilteredValidators'];
         // Get top validators
         $topValidatorsWithRanks = $this->validatorDataService->fetchDataTopValidators($sortedValidators, $totalStakeLamports);
-
         // Get top news items
         $topNewsItems = $this->getTopNewsItems();
         // Check if user is authenticated and has admin/manager role
