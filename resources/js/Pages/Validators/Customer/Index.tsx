@@ -150,8 +150,84 @@ export default function CustomerIndex(validatorsData) {
     const [displayOptions, setDisplayOptions] = useState({
         all: true,
         top: false,
-        highlight: false
+        highlight: false,
+        notRussian: false,
+        onlyWithName: false,
+        onlyWithWebsite: false,
+        onlyValidated: false,
+        onlyWithMevAndZeroCommission: false
     });
+    
+    // Initialize display options from URL parameters
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Initialize display options from individual URL parameters
+        // If parameter is missing, it means it's false
+        setDisplayOptions({
+            all: urlParams.get('displayAll') === 'true',
+            top: urlParams.get('displayTop') === 'true',
+            highlight: urlParams.get('displayHighlight') === 'true',
+            notRussian: urlParams.get('displayNotRussian') === 'true',
+            onlyWithName: urlParams.get('displayOnlyWithName') === 'true',
+            onlyWithWebsite: urlParams.get('displayOnlyWithWebsite') === 'true',
+            onlyValidated: urlParams.get('displayOnlyValidated') === 'true',
+            onlyWithMevAndZeroCommission: urlParams.get('displayOnlyWithMevAndZeroCommission') === 'true'
+        });
+    }, []);
+    
+    // Update URL with display options
+    const updateUrlWithDisplayOptions = (newOptions) => {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Only include parameters for checked options
+        Object.keys(newOptions).forEach(key => {
+            // Remove all display parameters first
+            urlParams.delete(`display${key.charAt(0).toUpperCase() + key.slice(1)}`);
+        });
+        
+        // Add parameters only for checked options
+        Object.entries(newOptions).forEach(([key, value]) => {
+            if (value === true) {
+                const paramName = `display${key.charAt(0).toUpperCase() + key.slice(1)}`;
+                urlParams.set(paramName, 'true');
+            }
+        });
+        
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+    };
+    
+    // Handle display option change
+    const handleDisplayOptionChange = (optionName, value) => {
+        let newOptions;
+        
+        if (optionName === 'all' && value === true) {
+            // If selecting "All", deselect all other options
+            newOptions = {
+                all: true,
+                top: false,
+                highlight: false,
+                notRussian: false,
+                onlyWithName: false,
+                onlyWithWebsite: false,
+                onlyValidated: false,
+                onlyWithMevAndZeroCommission: false
+            };
+        } else if (optionName !== 'all' && value === true) {
+            // If selecting any option other than "All", deselect "All"
+            newOptions = { ...displayOptions, [optionName]: value, all: false };
+        } else {
+            // For all other cases, just update the specific option
+            newOptions = { ...displayOptions, [optionName]: value };
+        }
+        
+        setDisplayOptions(newOptions);
+        updateUrlWithDisplayOptions(newOptions);
+        
+        // Trigger data refresh if needed
+        // fetchData();
+    };
     // Search term state
     const [searchTerm, setSearchTerm] = useState('');
     // View mode state - table or grid
@@ -428,6 +504,7 @@ export default function CustomerIndex(validatorsData) {
         const sortColumn = urlParams.get('sortColumn') || 'spy_rank';
         const sortDirection = urlParams.get('sortDirection') || 'ASC';
         const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
+        
         try {
             // Build URL with all parameters
             // Use authenticated endpoint if user is logged in, otherwise use public endpoint
@@ -438,6 +515,16 @@ export default function CustomerIndex(validatorsData) {
             if (searchParam) {
                 url += `&search=${encodeURIComponent(searchParam)}`;
             }
+            
+            // Add display options to URL if they are true
+            if (displayOptions.all) url += `&displayAll=true`;
+            if (displayOptions.top) url += `&displayTop=true`;
+            if (displayOptions.highlight) url += `&displayHighlight=true`;
+            if (displayOptions.notRussian) url += `&displayNotRussian=true`;
+            if (displayOptions.onlyWithName) url += `&displayOnlyWithName=true`;
+            if (displayOptions.onlyWithWebsite) url += `&displayOnlyWithWebsite=true`;
+            if (displayOptions.onlyValidated) url += `&displayOnlyValidated=true`;
+            if (displayOptions.onlyWithMevAndZeroCommission) url += `&displayOnlyWithMevAndZeroCommission=true`;
             
             const response = await axios.get(url);
             // console.log('Fetched data:', response.data); // Add this line to debug
@@ -463,32 +550,7 @@ export default function CustomerIndex(validatorsData) {
                 setIsPaginationOrSorting(false);
             }
         }
-        // try {
-        //     const params = new URLSearchParams();
-        //     const urlParams = new URLSearchParams(window.location.search);
-        //     const currentFilterType = urlParams.get('filterType') || 'all';
-        //     const searchParam = urlParams.get('search') || '';
-        //     const sortColumn = urlParams.get('sortColumn') || 'spy_rank';
-        //     const sortDirection = urlParams.get('sortDirection') || 'ASC';
-        //     const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
-            
-        //     // params.set('sortDirection', sortConfig.direction);
-            
-        //     // const response = await axios.get(`/api/fetch-validators?${params.toString()}`);
-        //     let url = user ? 
-        //         `/api/fetch-validators-auth?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}` :
-        //         `/api/fetch-validators?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`;
-                
-        //     if (searchParam) {
-        //         url += `&search=${encodeURIComponent(searchParam)}`;
-        //     }
-        //     setData(response.data.validatorsData);
-        //     setTotalRecords(response.data.totalCount);
-        // } catch (error) {
-        //     console.error('Error fetching data:', error);
-        // } finally {
-        //     setIsLoading(false);
-        // }
+        
     };
 
 
@@ -504,7 +566,7 @@ export default function CustomerIndex(validatorsData) {
             clearInterval(intervalId);
             window.removeEventListener('filterChanged', handleFilterChange);
         };
-    }, []);
+    }, [displayOptions]);
     
     const showNotificationsSettingsPopup = () => {
         setShowNoticePopup(true);
@@ -573,7 +635,13 @@ export default function CustomerIndex(validatorsData) {
                                              displayOptions.all ? 'All' : 
                                              displayOptions.top && displayOptions.highlight ? 'Top & Highlight' :
                                              displayOptions.top ? 'Top' : 
-                                             displayOptions.highlight ? 'Highlight' : 'Select Options'}
+                                             displayOptions.highlight ? 'Highlight' : 
+                                             displayOptions.notRussian ? 'Not Russian' : 
+                                             displayOptions.onlyWithName ? 'Only With Name' : 
+                                             displayOptions.onlyWithWebsite ? 'Only With Website' : 
+                                             displayOptions.onlyValidated ? 'Only Validated' : 
+                                             displayOptions.onlyWithMevAndZeroCommission ? 'Only With Mev AND Comission 0%' : 
+                                             'Select Options'}
                                         </span>
                                         <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
@@ -587,7 +655,7 @@ export default function CustomerIndex(validatorsData) {
                                                         type="checkbox"
                                                         className="form-checkbox"
                                                         checked={displayOptions.all}
-                                                        onChange={() => setDisplayOptions({...displayOptions, all: !displayOptions.all})}
+                                                        onChange={() => handleDisplayOptionChange('all', !displayOptions.all)}
                                                     />
                                                     <span>All</span>
                                                 </label>
@@ -596,8 +664,8 @@ export default function CustomerIndex(validatorsData) {
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
-                                                        checked={displayOptions.highlight}
-                                                        onChange={() => setDisplayOptions({...displayOptions, highlight: !displayOptions.highlight})}
+                                                        checked={displayOptions.notRussian}
+                                                        onChange={() => handleDisplayOptionChange('notRussian', !displayOptions.notRussian)}
                                                     />
                                                     <span>Not Russian</span>
                                                 </label>
@@ -605,8 +673,8 @@ export default function CustomerIndex(validatorsData) {
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
-                                                        checked={displayOptions.highlight}
-                                                        onChange={() => setDisplayOptions({...displayOptions, highlight: !displayOptions.highlight})}
+                                                        checked={displayOptions.onlyWithName}
+                                                        onChange={() => handleDisplayOptionChange('onlyWithName', !displayOptions.onlyWithName)}
                                                     />
                                                     <span>Only With Name</span>
                                                 </label>
@@ -614,8 +682,8 @@ export default function CustomerIndex(validatorsData) {
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
-                                                        checked={displayOptions.highlight}
-                                                        onChange={() => setDisplayOptions({...displayOptions, highlight: !displayOptions.highlight})}
+                                                        checked={displayOptions.onlyWithWebsite}
+                                                        onChange={() => handleDisplayOptionChange('onlyWithWebsite', !displayOptions.onlyWithWebsite)}
                                                     />
                                                     <span>Only With Website</span>
                                                 </label>
@@ -623,8 +691,8 @@ export default function CustomerIndex(validatorsData) {
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
-                                                        checked={displayOptions.highlight}
-                                                        onChange={() => setDisplayOptions({...displayOptions, highlight: !displayOptions.highlight})}
+                                                        checked={displayOptions.onlyValidated}
+                                                        onChange={() => handleDisplayOptionChange('onlyValidated', !displayOptions.onlyValidated)}
                                                     />
                                                     <span>Only Validated</span>
                                                 </label>
@@ -632,8 +700,8 @@ export default function CustomerIndex(validatorsData) {
                                                     <input
                                                         type="checkbox"
                                                         className="form-checkbox"
-                                                        checked={displayOptions.highlight}
-                                                        onChange={() => setDisplayOptions({...displayOptions, highlight: !displayOptions.highlight})}
+                                                        checked={displayOptions.onlyWithMevAndZeroCommission}
+                                                        onChange={() => handleDisplayOptionChange('onlyWithMevAndZeroCommission', !displayOptions.onlyWithMevAndZeroCommission)}
                                                     />
                                                     <span>Only With Mev AND Comission 0%</span>
                                                 </label>

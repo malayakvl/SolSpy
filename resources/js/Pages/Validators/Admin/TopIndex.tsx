@@ -93,7 +93,6 @@ export default function TopIndex(validatorsData) {
                                 dragClass="sortableDrag"
                                 list={list}
                                 setList={(newList) => {
-                                    console.log('New list', newList)
                                     setList(newList);
                                 }}
                                 animation="200"

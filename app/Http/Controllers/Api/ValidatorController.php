@@ -685,6 +685,19 @@ public function hardware(Request $request)
         $validatorId = $request->input('validatorId'); // Get sort column
         $sortDirection = $request->input('sortDirection', 'ASC'); // Get sort direction
         $userId = $request->user() ? $request->user()->id : null;
+        
+        // Get display options from request parameters
+        $displayOptions = [
+            'all' => $request->input('displayAll', false) === 'true',
+            'top' => $request->input('displayTop', false) === 'true',
+            'highlight' => $request->input('displayHighlight', false) === 'true',
+            'notRussian' => $request->input('displayNotRussian', false) === 'true',
+            'onlyWithName' => $request->input('displayOnlyWithName', false) === 'true',
+            'onlyWithWebsite' => $request->input('displayOnlyWithWebsite', false) === 'true',
+            'onlyValidated' => $request->input('displayOnlyValidated', false) === 'true',
+            'onlyWithMevAndZeroCommission' => $request->input('displayOnlyWithMevAndZeroCommission', false) === 'true'
+        ];
+        
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
@@ -699,7 +712,8 @@ public function hardware(Request $request)
             $limit, 
             $offset, 
             $searchTerm,
-            $validatorId
+            $validatorId,
+            $displayOptions
         );
         return response()->json([
             'validatorsData' => $data['validatorsData'],
