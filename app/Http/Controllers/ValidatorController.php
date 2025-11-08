@@ -127,9 +127,25 @@ class ValidatorController extends Controller
         return $topNewsItems;
     }
 
+    private function getDisplayOptionsFromRequest($request) {
+        $options = [
+            'all', 'top', 'highlight', 'notRussian', 
+            'onlyWithName', 'onlyWithWebsite', 'onlyValidated', 'onlyWithMevAndZeroCommission'
+        ];
+        $options = ['all', 'top', 'highlight', 'notRussian', 'onlyWithName', 'onlyWithWebsite', 'onlyValidated', 'onlyWithMevAndZeroCommission'];
+        $displayOptions = [];
+        foreach ($options as $option) {
+            $paramName = 'display' . ucfirst($option);
+            $displayOptions[$option] = $request->get($paramName, 'false') === 'true';
+        }
+        
+        return $displayOptions;
+    }
+
     public function index(Request $request)
     {
         $limit = 10;
+        $displayOptions = $this->getDisplayOptionsFromRequest($request);
         $page = max(1, (int) $request->get('page', 1));
         $offset = ($page - 1) * $limit;
         $filterType = $request->get('filterType', 'all');
@@ -139,7 +155,7 @@ class ValidatorController extends Controller
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
         // Fetch validators data using service
-        $validators = $this->validatorDataService->fetchDataValidators($userId ?? null, $filterType, $offset, $limit, $totalStakeLamports, 'spy_rank', $searchTerm);
+        $validators = $this->validatorDataService->fetchDataValidators($userId ?? null, $filterType, $offset, $limit, $totalStakeLamports, 'spy_rank', $searchTerm, $displayOptions);
         $sortedValidators = $validators['validatorsAllData']->toArray();
         $filteredTotalCount = $validators['totalFilteredValidators'];
         // Get top validators
@@ -211,6 +227,10 @@ class ValidatorController extends Controller
         $sortColumn = $request->get('sortColumn', 'id');
         $sortDirection = $request->get('sortDirection', 'ASC');
         $userId = $request->user() ? $request->user()->id : null;
+        
+        // Get display options from request parameters
+        $displayOptions = $this->getDisplayOptionsFromRequest($request);
+        
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
@@ -223,7 +243,9 @@ class ValidatorController extends Controller
             $filterType, 
             $limit, 
             $offset, 
-            $searchTerm
+            $searchTerm,
+            null, // validatorId
+            $displayOptions
         );
 
         return response()->json([
