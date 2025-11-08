@@ -122,7 +122,7 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
             />
             <button 
                 type="submit"
-                className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]  text-sm"
+                className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#bd7ffa] text-[13px]  text-sm"
             >
                 Search
             </button>
@@ -138,7 +138,7 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
                     <select 
                         value={currentFilter}
                         onChange={(e) => handleFilterChange(e.target.value)}
-                        className="p-2 border border-gray-300 rounded text-sm"
+                        className="p-2 border border-gray-300 rounded text-sm bg-transparent"
                     >
                         <option value="all">{msg.get('validators.all')}</option>
                         <option value="top">{msg.get('validators.top')}</option>
@@ -147,7 +147,7 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
                     <button 
                         type="button"
                         onClick={onGearClick}
-                        className="p-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+                        className="p-2 bg-[#ad68f2] rounded hover:bg-[#bd7ffa] text-sm"
                         title="Configure Columns"
                     >
                         <FontAwesomeIcon icon={faGear} />
