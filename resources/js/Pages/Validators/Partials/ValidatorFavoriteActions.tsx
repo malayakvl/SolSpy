@@ -6,7 +6,8 @@ import {
     faMoneyBill,
     faEye,
     faScaleBalanced,
-    faScaleUnbalanced
+    faScaleUnbalanced,
+    faBell
 } from '@fortawesome/free-solid-svg-icons';
 import { Link, usePage } from "@inertiajs/react";
 import axios from 'axios';
@@ -16,6 +17,7 @@ export default function ValidatorFavoriteActions({validator, onBanToggle}) {
     const user = usePage().props.auth.user;
     const [isInComparison, setIsInComparison] = useState(false);
     const [isInFavorites, setIsInFavorites] = useState(false);
+    const [isInNotice, setIsInNotice] = useState(false);
     // Get role names as array of strings
     const userRoleNames = user?.roles?.map(role => role.name) || [];
     // Check if user has Admin role
@@ -29,8 +31,13 @@ export default function ValidatorFavoriteActions({validator, onBanToggle}) {
             
             const favoritesList = JSON.parse(localStorage.getItem('validatorFavorites') || '[]');
             setIsInFavorites(favoritesList.includes(validator.id));
+        } else {
+            // For registered users, use the is_favorite property from the validator object
+            setIsInFavorites(validator.is_favorite || false);
+            setIsInComparison(validator.is_compare || false);
+            setIsInNotice(validator.is_notice || false);
         }
-    }, [validator.id, user?.id]);
+    }, [validator.id, validator.is_favorite, user?.id]);
 
     const addToCompare = async (validatorId) => {
         if (user?.id) {
@@ -199,6 +206,90 @@ export default function ValidatorFavoriteActions({validator, onBanToggle}) {
         }
     }
 
+    const addToNotice = async (validatorId) => {
+        if (user?.id) {
+            // Registered user - use API
+            try {
+                await axios.post('/api/add-notice', {
+                    validatorId: validatorId
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                setIsInNotice(!isInNotice);
+                toast.success('Notice list updated', {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+                // Dispatch event for registered users
+                window.dispatchEvent(new CustomEvent('noticeCountChanged'));
+            } catch (error) {
+                console.error('Error:', error);
+                    toast.error('Failed to update notice list', {
+                        position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+            }
+        } else {
+            // Unregistered user - use localStorage with max 5 items
+            const noticeList = JSON.parse(localStorage.getItem('validatorNotice') || '[]');
+            
+            if (noticeList.includes(validatorId)) {
+                // Remove from notice
+                const updatedList = noticeList.filter(id => id !== validatorId);
+                localStorage.setItem('validatorNotice', JSON.stringify(updatedList));
+                setIsInNotice(false);
+                toast.info('Validator removed from notice', {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+                // Dispatch event when removing
+                window.dispatchEvent(new CustomEvent('noticeCountChanged'));
+            } else {
+                // Add to notice
+                if (noticeList.length >= 5) {
+                    toast.error('Maximum 5 validators can be added to notice for unregistered users', {
+                        position: "top-right",
+                        autoClose: 1000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                    });
+                    
+                    return;
+                }
+                noticeList.push(validatorId);
+                localStorage.setItem('validatorNotice', JSON.stringify(noticeList));
+                setIsInNotice(true);
+                toast.success('Validator added to notice', {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+                // Dispatch event when adding
+                window.dispatchEvent(new CustomEvent('noticeCountChanged'));
+            }
+        }
+    }
+
     return (
         <>
             <Link href={`/validator/${validator.vote_pubkey}`}>
@@ -218,9 +309,12 @@ export default function ValidatorFavoriteActions({validator, onBanToggle}) {
                             className={`mr-2 text-red-500`}
                         />
                     </span>
-                    <span>
-                        <FontAwesomeIcon icon={faEnvelope} className="mr-2" />
-                    </span>
+                    {user?.id && (
+                        <span className="cursor-pointer" onClick={() => addToNotice(validator.id)}>
+                            <FontAwesomeIcon icon={faBell} 
+                            className={`mr-2 ${isInNotice ? 'text-purple-500' : ''}`} />
+                        </span>
+                    )}
                     <span>
                         <FontAwesomeIcon icon={faMoneyBill} className="mr-2" />
                     </span>
