@@ -44,11 +44,11 @@ export default function TopContentCarousel({
             ))}
           </Slider>
           <div className="flex justify-between items-center mt-2">
-            <ButtonBack className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]">
+            <ButtonBack className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#bd7ffa] text-[13px]">
               Back
             </ButtonBack>
             <DotGroup />
-            <ButtonNext className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]">
+            <ButtonNext className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#bd7ffa] text-[13px]">
               Next
             </ButtonNext>
           </div>
@@ -105,11 +105,11 @@ export default function TopContentCarousel({
             )}
           </Slider>
           <div className="flex justify-between items-center mt-2">
-            <ButtonBack className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]">
+            <ButtonBack className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#bd7ffa] text-[13px]">
               Back
             </ButtonBack>
             <DotGroup />
-            <ButtonNext className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]">
+            <ButtonNext className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#bd7ffa] text-[13px]">
               Next
             </ButtonNext>
           </div>

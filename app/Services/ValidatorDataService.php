@@ -122,13 +122,27 @@ class ValidatorDataService
         }
     }
 
-    public function fetchDataValidators($userId, string $filterType, int $offset, $totalStakeLamports, $sortColumn = 'spyRank', $searchTerm = '')
+    public function fetchDataValidators($userId, string $filterType, int $offset, int $limit, $totalStakeLamports, $sortColumn = 'spyRank', $searchTerm = '', $displayOptions = [])
     {
-        // Вызов функции PostgreSQL
-        // dd("SELECT * FROM data.search_validators('', 'all', 8, 'spy_rank', 0, 10);");
-        $query = DB::select("SELECT * FROM data.search_validators('" .$searchTerm. "', 'all', 8, 'spy_rank', 0, 10);");
+        // Extract display options with defaults
+        $onlyWithName = $displayOptions['onlyWithName'] ?? null;
+        $onlyWithWebsite = $displayOptions['onlyWithWebsite'] ?? null;
+        $notRussian = $displayOptions['notRussian'] ?? null;
+        $onlyValidated = $displayOptions['onlyValidated'] ?? null;
+        $onlyWithMevAndZeroCommission = $displayOptions['onlyWithMevAndZeroCommission'] ?? null;
+        
+        // Build the query with display options
+        $query = "SELECT * FROM data.search_validators('" .$searchTerm. "', '" .$filterType. "', " . ($userId ?? 'null') . ", 'spy_rank', " . $offset . ", " . $limit . 
+                 ", " . ($onlyWithName === true ? 'true' : ($onlyWithName === false ? 'false' : 'null')) .
+                 ", " . ($onlyWithWebsite === true ? 'true' : ($onlyWithWebsite === false ? 'false' : 'null')) .
+                 ", " . ($notRussian === true ? 'true' : ($notRussian === false ? 'false' : 'null')) .
+                 ", " . ($onlyValidated === true ? 'true' : ($onlyValidated === false ? 'false' : 'null')) .
+                 ", " . ($onlyWithMevAndZeroCommission === true ? 'true' : ($onlyWithMevAndZeroCommission === false ? 'false' : 'null')) .
+                 ", NULL" .  // p_validator_ids parameter
+                 ");";
+        $res = DB::select($query);
         // Преобразуем результат в коллекцию для дальнейшей обработки
-        $validatorsData = collect($query);
+        $validatorsData = collect($res);
 
         // Подсчет общего количества записей
         $totalCountQuery = DB::table('data.validators');
@@ -137,6 +151,34 @@ class ValidatorDataService
         } elseif ($filterType === 'top') {
             $totalCountQuery->where('is_top', true);
         }
+        
+        // Apply display options filters for totalCountQuery
+        if (!empty($displayOptions)) {
+            if (!empty($displayOptions['onlyWithName']) && $displayOptions['onlyWithName'] === true) {
+                $totalCountQuery->whereNotNull('name')->where('name', '!=', '');
+            }
+            
+            if (!empty($displayOptions['onlyWithWebsite']) && $displayOptions['onlyWithWebsite'] === true) {
+                $totalCountQuery->whereNotNull('url')->where('url', '!=', '');
+            }
+            
+            if (!empty($displayOptions['notRussian']) && $displayOptions['notRussian'] === true) {
+                $totalCountQuery->where(function($q) {
+                    $q->whereNull('country')
+                      ->orWhere('country', '=', '')
+                      ->orWhereRaw("LOWER(TRIM(country)) NOT IN ('russia', 'российская федерация', 'россия', 'rf')");
+                });
+            }
+            
+            if (!empty($displayOptions['onlyValidated']) && $displayOptions['onlyValidated'] === true) {
+                $totalCountQuery->where('delinquent', false);
+            }
+            
+            if (!empty($displayOptions['onlyWithMevAndZeroCommission']) && $displayOptions['onlyWithMevAndZeroCommission'] === true) {
+                $totalCountQuery->where('jito', true)->where('commission', 0);
+            }
+        }
+        
         if ($searchTerm) {
             $totalCountQuery->where(function ($q) use ($searchTerm) {
                 $q->where('name', 'ILIKE', '%' . $searchTerm . '%')
@@ -187,8 +229,15 @@ class ValidatorDataService
         ];
     }
 
-    public function timeoutData($sortColumn, $sortDirection, $totalStakeLamports, $userId = null, $filterType = 'all', $limit = 10, $offset = 0, $searchTerm = '', $validatorId = null)
+    public function timeoutData($sortColumn, $sortDirection, $totalStakeLamports, $userId = null, $filterType = 'all', $limit = 10, $offset = 0, $searchTerm = '', $validatorId = null, $displayOptions = [])
     { 
+        // Extract display options with defaults
+        $onlyWithName = $displayOptions['onlyWithName'] ?? null;
+        $onlyWithWebsite = $displayOptions['onlyWithWebsite'] ?? null;
+        $notRussian = $displayOptions['notRussian'] ?? null;
+        $onlyValidated = $displayOptions['onlyValidated'] ?? null;
+        $onlyWithMevAndZeroCommission = $displayOptions['onlyWithMevAndZeroCommission'] ?? null;
+        
         // For TVC Rank, we need to sort by activated_stake in descending order
         // because higher activated_stake means better (lower) rank
         $actualSortDirection = $sortDirection;
@@ -198,14 +247,14 @@ class ValidatorDataService
         }
         if ($userId)
             if ($validatorId)
-                $queryNew = "SELECT * FROM data.search_validators_timeout('" .$searchTerm. "', '" .$filterType. "', $userId, '" .$sortColumn. "', $offset, $limit, $validatorId);";
+                $queryNew = "SELECT * FROM data.search_validators_timeout('" .$searchTerm. "', '" .$filterType. "', $userId, '" .$sortColumn. "', $offset, $limit, $validatorId, NULL, " . ($onlyWithName === true ? 'true' : ($onlyWithName === false ? 'false' : 'null')) . ", " . ($onlyWithWebsite === true ? 'true' : ($onlyWithWebsite === false ? 'false' : 'null')) . ", " . ($notRussian === true ? 'true' : ($notRussian === false ? 'false' : 'null')) . ", " . ($onlyValidated === true ? 'true' : ($onlyValidated === false ? 'false' : 'null')) . ", " . ($onlyWithMevAndZeroCommission === true ? 'true' : ($onlyWithMevAndZeroCommission === false ? 'false' : 'null')) . ");";
             else
-                $queryNew = "SELECT * FROM data.search_validators_timeout('" .$searchTerm. "', '" .$filterType. "', $userId, '" .$sortColumn. "', $offset, $limit, null);";
+                $queryNew = "SELECT * FROM data.search_validators_timeout('" .$searchTerm. "', '" .$filterType. "', $userId, '" .$sortColumn. "', $offset, $limit, null, NULL, " . ($onlyWithName === true ? 'true' : ($onlyWithName === false ? 'false' : 'null')) . ", " . ($onlyWithWebsite === true ? 'true' : ($onlyWithWebsite === false ? 'false' : 'null')) . ", " . ($notRussian === true ? 'true' : ($notRussian === false ? 'false' : 'null')) . ", " . ($onlyValidated === true ? 'true' : ($onlyValidated === false ? 'false' : 'null')) . ", " . ($onlyWithMevAndZeroCommission === true ? 'true' : ($onlyWithMevAndZeroCommission === false ? 'false' : 'null')) . ");";
         else
             if ($validatorId)
-                $queryNew = "SELECT * FROM data.search_validators_timeout('" .$searchTerm. "', '" .$filterType. "', null, '" .$sortColumn. "', $offset, $limit, $validatorId);";
+                $queryNew = "SELECT * FROM data.search_validators_timeout('" .$searchTerm. "', '" .$filterType. "', null, '" .$sortColumn. "', $offset, $limit, $validatorId, NULL, " . ($onlyWithName === true ? 'true' : ($onlyWithName === false ? 'false' : 'null')) . ", " . ($onlyWithWebsite === true ? 'true' : ($onlyWithWebsite === false ? 'false' : 'null')) . ", " . ($notRussian === true ? 'true' : ($notRussian === false ? 'false' : 'null')) . ", " . ($onlyValidated === true ? 'true' : ($onlyValidated === false ? 'false' : 'null')) . ", " . ($onlyWithMevAndZeroCommission === true ? 'true' : ($onlyWithMevAndZeroCommission === false ? 'false' : 'null')) . ");";
             else
-                $queryNew = "SELECT * FROM data.search_validators_timeout('" .$searchTerm. "', '" .$filterType. "', null, '" .$sortColumn. "', $offset, $limit, null);";
+                $queryNew = "SELECT * FROM data.search_validators_timeout('" .$searchTerm. "', '" .$filterType. "', null, '" .$sortColumn. "', $offset, $limit, null, NULL, " . ($onlyWithName === true ? 'true' : ($onlyWithName === false ? 'false' : 'null')) . ", " . ($onlyWithWebsite === true ? 'true' : ($onlyWithWebsite === false ? 'false' : 'null')) . ", " . ($notRussian === true ? 'true' : ($notRussian === false ? 'false' : 'null')) . ", " . ($onlyValidated === true ? 'true' : ($onlyValidated === false ? 'false' : 'null')) . ", " . ($onlyWithMevAndZeroCommission === true ? 'true' : ($onlyWithMevAndZeroCommission === false ? 'false' : 'null')) . ");";
         $validatorsData = DB::select($queryNew);
         
         // Calculate total count based on filter
@@ -497,7 +546,6 @@ class ValidatorDataService
             // since the search_validators_timeout function doesn't support array parameters
             $queryNew = "SELECT * FROM data.search_validators_timeout('" . $searchTerm . "', '" . $filterType . "', null, '" . $sortColumn . "', $offset, $limit, null, ARRAY[" . implode(',', array_map('intval', $favoriteIds)) . "]);";
         }
-        dd($queryNew);exit;
         $validatorsData = DB::select($queryNew);
         
         
@@ -512,7 +560,7 @@ class ValidatorDataService
     public function fetchDataComparisonsValidators($userId, string $filterType, int $offset, $totalStakeLamports, $comparisonIds = null)
     {
         if ($userId)
-            $queryNew = "SELECT * FROM data.search_validators('', 'favorite', ".$userId.", 'spy_rank', 0, 10);";
+            $queryNew = "SELECT * FROM data.search_validators('', 'compare', ".$userId.", 'spy_rank', 0, 10);";
         else                
             $queryNew = "SELECT * FROM data.search_validators('', 'all', null, 'spy_rank', 0, 10, ARRAY[" . implode(',', array_map('intval', $comparisonIds)) . "]);";
         $queryRes = DB::select($queryNew);
@@ -536,7 +584,7 @@ class ValidatorDataService
     public function timeoutCompareData($sortColumn, $sortDirection, $totalStakeLamports, $userId = null, $filterType = 'all', $limit = 10, $offset = 0, $searchTerm = '', $comparisonIds = null)
     { 
         if ($userId) {
-            $queryNew = "SELECT * FROM data.search_validators_timeout('" . $searchTerm . "', 'favorite', $userId, '" . $sortColumn . "', $offset, $limit, null);";
+            $queryNew = "SELECT * FROM data.search_validators_timeout('" . $searchTerm . "', 'compare', $userId, '" . $sortColumn . "', $offset, $limit, null);";
         } else {
             // For unauthenticated users with specific favorite IDs, we need to use a different approach
             // since the search_validators_timeout function doesn't support array parameters
@@ -670,7 +718,7 @@ class ValidatorDataService
     {
         // For authenticated users, use the comparison table
         if ($userId) {
-            $query = DB::select("SELECT * FROM data.search_validators('', 'compare', '" .$userId. "', 'spy_rank', 0, 10);");
+            $query = DB::select("SELECT * FROM data.search_validators('', 'compare', " . $userId . ", 'spy_rank', 0, 10);");
             // Преобразуем результат в коллекцию для дальнейшей обработки
             $validatorsData = collect($query);
 
