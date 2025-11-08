@@ -122,11 +122,11 @@ class ValidatorDataService
         }
     }
 
-    public function fetchDataValidators($userId, string $filterType, int $offset, $totalStakeLamports, $sortColumn = 'spyRank', $searchTerm = '')
+    public function fetchDataValidators($userId, string $filterType, int $offset, int $limit, $totalStakeLamports, $sortColumn = 'spyRank', $searchTerm = '')
     {
         // Вызов функции PostgreSQL
         // dd("SELECT * FROM data.search_validators('', 'all', 8, 'spy_rank', 0, 10);");
-        $query = DB::select("SELECT * FROM data.search_validators('" .$searchTerm. "', 'all', 8, 'spy_rank', 0, 10);");
+        $query = DB::select("SELECT * FROM data.search_validators('" .$searchTerm. "', '" .$filterType. "', " . ($userId ?? 'null') . ", 'spy_rank', " . $offset . ", " . $limit . ");");
         // Преобразуем результат в коллекцию для дальнейшей обработки
         $validatorsData = collect($query);
 
@@ -497,7 +497,6 @@ class ValidatorDataService
             // since the search_validators_timeout function doesn't support array parameters
             $queryNew = "SELECT * FROM data.search_validators_timeout('" . $searchTerm . "', '" . $filterType . "', null, '" . $sortColumn . "', $offset, $limit, null, ARRAY[" . implode(',', array_map('intval', $favoriteIds)) . "]);";
         }
-        dd($queryNew);exit;
         $validatorsData = DB::select($queryNew);
         
         
@@ -512,7 +511,7 @@ class ValidatorDataService
     public function fetchDataComparisonsValidators($userId, string $filterType, int $offset, $totalStakeLamports, $comparisonIds = null)
     {
         if ($userId)
-            $queryNew = "SELECT * FROM data.search_validators('', 'favorite', ".$userId.", 'spy_rank', 0, 10);";
+            $queryNew = "SELECT * FROM data.search_validators('', 'compare', ".$userId.", 'spy_rank', 0, 10);";
         else                
             $queryNew = "SELECT * FROM data.search_validators('', 'all', null, 'spy_rank', 0, 10, ARRAY[" . implode(',', array_map('intval', $comparisonIds)) . "]);";
         $queryRes = DB::select($queryNew);
@@ -536,7 +535,7 @@ class ValidatorDataService
     public function timeoutCompareData($sortColumn, $sortDirection, $totalStakeLamports, $userId = null, $filterType = 'all', $limit = 10, $offset = 0, $searchTerm = '', $comparisonIds = null)
     { 
         if ($userId) {
-            $queryNew = "SELECT * FROM data.search_validators_timeout('" . $searchTerm . "', 'favorite', $userId, '" . $sortColumn . "', $offset, $limit, null);";
+            $queryNew = "SELECT * FROM data.search_validators_timeout('" . $searchTerm . "', 'compare', $userId, '" . $sortColumn . "', $offset, $limit, null);";
         } else {
             // For unauthenticated users with specific favorite IDs, we need to use a different approach
             // since the search_validators_timeout function doesn't support array parameters
@@ -670,7 +669,7 @@ class ValidatorDataService
     {
         // For authenticated users, use the comparison table
         if ($userId) {
-            $query = DB::select("SELECT * FROM data.search_validators('', 'compare', '" .$userId. "', 'spy_rank', 0, 10);");
+            $query = DB::select("SELECT * FROM data.search_validators('', 'compare', " . $userId . ", 'spy_rank', 0, 10);");
             // Преобразуем результат в коллекцию для дальнейшей обработки
             $validatorsData = collect($query);
 
