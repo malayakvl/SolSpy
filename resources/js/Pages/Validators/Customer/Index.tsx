@@ -114,7 +114,6 @@ export default function CustomerIndex(validatorsData) {
                         { name: "Stake Pool", show: false },
                         { name: "Inflation Comission", show: false },
                         { name: "Mev (Jito) Comission", show: false },
-                        { name: "Jito Score", show: false },
                         { name: "SFDP Status", show: false },
                         { name: "Location", show: false },
                         { name: "Ip", show: false },
@@ -130,7 +129,6 @@ export default function CustomerIndex(validatorsData) {
         { name: "Stake Pool", show: false },
         { name: "Inflation Comission", show: false },
         { name: "Mev (Jito) Comission", show: false },
-        { name: "Jito Score", show: false },
         { name: "SFDP Status", show: false },
         { name: "Location", show: false },
         { name: "Ip", show: false },
@@ -665,9 +663,6 @@ export default function CustomerIndex(validatorsData) {
                 <div className="p-4 sm:p-8 mb-8 content-data bg-content">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold">{msg.get('validators.welcome')}&nbsp;{user.name}</h2>
-                        {/* <Link href={route('admin.validators.top')} className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px]">
-                            {msgProfile.get('profile.view.profile')}
-                        </Link> */}
                     </div>
                     <hr/>
                     <ActionButtons 
