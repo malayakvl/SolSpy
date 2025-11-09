@@ -99,6 +99,30 @@ export default function CustomerIndex(validatorsData) {
     
     // Add effect to log when showNotificationModal changes
     const [columnSettings, setColumnSettings] = useState(null);
+    const [columnsNoticeConfig, setColumnsNoticeConfig] = useState(() => {
+        if (validatorsData.settingsData?.notice_settings) {
+            const parsedFields = JSON.parse(validatorsData.settingsData.notice_settings);
+            // Fix any instances of "MEV Comission" to "MEV Commission"
+            return parsedFields.map(field => 
+                field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
+            );
+        } else {
+            return [
+                        { name: "Status", show: false },
+                        { name: "Jito Score", show: false },
+                        { name: "Vote Rate", show: false },
+                        { name: "Stake Pool", show: false },
+                        { name: "Inflation Comission", show: false },
+                        { name: "Mev (Jito) Comission", show: false },
+                        { name: "Jito Score", show: false },
+                        { name: "SFDP Status", show: false },
+                        { name: "Location", show: false },
+                        { name: "Ip", show: false },
+                        { name: "Client", show: false }
+
+            ];
+        }
+    });
     const initialNoticeColumns = [
         { name: "Status", show: false },
         { name: "Jito Score", show: false },
@@ -113,8 +137,12 @@ export default function CustomerIndex(validatorsData) {
         { name: "Client", show: false }
     ];
     const [columnsConfig, setColumnsConfig] = useState(() => {
+        let parsedFields;
         if (validatorsData.settingsData?.table_fields) {
-            const parsedFields = (validatorsData.settingsData.table_fields);
+            if (typeof validatorsData.settingsData.table_fields === 'text')
+                parsedFields = JSON.parse(validatorsData.settingsData.table_fields);
+            else
+                parsedFields = validatorsData.settingsData.table_fields;
             // Fix any instances of "MEV Comission" to "MEV Commission"
             return parsedFields.map(field => 
                 field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
@@ -409,8 +437,8 @@ export default function CustomerIndex(validatorsData) {
 
     const fetchColumnSettings = async () => {
         try {
-            const response = await axios.get('/api/user/column-settings');
-            const settings = response.data.settings || defaultColumnSettings;
+            const response = await axios.get('/api/settings/customer-columns');
+            const settings = response.data.settings.table_fields || defaultColumnSettings;
             
             // Ensure all default columns are present in the settings
             const mergedSettings = defaultColumnSettings.map(defaultCol => {
@@ -425,6 +453,25 @@ export default function CustomerIndex(validatorsData) {
         }
     };
 
+    const fetchColumnNoticeSettings = async () => {
+        // try {
+        //     const response = await axios.get('/api/settings/customer-columns');
+        //     // console.log(response.data.data.notice_settings)
+        //     const settings = initialNoticeColumns;
+        //     // console.log(def)
+        //     // Ensure all default columns are present in the settings
+        //     const mergedSettings = initialNoticeColumns.map(defaultCol => {
+        //         const savedCol = settings.find(col => col.name === defaultCol.name);
+        //         return savedCol ? { ...defaultCol, ...savedCol } : defaultCol;
+        //     });
+            
+        //     setDisplayOptions(mergedSettings);
+        //     // setColumnsConfig(mergedSettings);
+        // } catch (error) {
+        //     console.error('Error fetching column settings:', error);
+        // }
+    };
+
     const toggleModal = async () => {
         if (!showModal) {
             // Fetch fresh data before opening modal
@@ -436,7 +483,7 @@ export default function CustomerIndex(validatorsData) {
     const toggleNotificationModal = async () => {
         if (!showNotificationModal) {
             // Fetch fresh data before opening modal
-            await fetchColumnSettings();
+            await fetchColumnNoticeSettings();
         }
         setShowNotificationModal(!showNotificationModal); // Toggles the state
     };
@@ -469,6 +516,28 @@ export default function CustomerIndex(validatorsData) {
             toast.error('Failed to save column settings');
         }
     };
+
+    const handleColumnNoticeSave = async (columns) => {
+        const normalizedColumns = columns.map(field => 
+            field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
+        );
+        setDisplayOptions(normalizedColumns);
+        try {
+            await axios.post('/api/settings/customer-notice/update', {
+                columns: normalizedColumns
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                }
+            });
+            setShowNoticePopup(false);
+            toast.success('Notice settings saved successfully!');
+        } catch (error) {
+            console.error('Error:', error);
+            toast.error('Failed to save column settings');
+        }
+    }
 
     const handleFilterChange = (newFilterValue: string) => {
         // Save current page for current filter before switching
@@ -630,7 +699,7 @@ export default function CustomerIndex(validatorsData) {
                                         className="border rounded px-4 py-2 bg-transparent cursor-pointer flex items-center justify-between w-40"
                                         onClick={() => setIsDisplayDropdownOpen(!isDisplayDropdownOpen)}
                                     >
-                                        <span>
+                                        <span className="dropdown-notice">
                                             {displayOptions.all && displayOptions.top && displayOptions.highlight ? 'All Selected' : 
                                              displayOptions.all ? 'All' : 
                                              displayOptions.top && displayOptions.highlight ? 'Top & Highlight' :
@@ -863,11 +932,14 @@ export default function CustomerIndex(validatorsData) {
                         {(showNotificationModal) && (
                             <ModalNotice 
                                 onClose={closeNotificationModal} 
-                                initialColumns={initialNoticeColumns}
-                                onSave={() => {
+                                initialColumns={columnsNoticeConfig}
+                                user={user}
+                                onSave={(columns) => {
                                     // Normalize column names before saving
-                                    
-                                    handleColumnSettingsSave(normalizedColumns);
+                                    const normalizedColumns = columns.map(field => 
+                                        field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
+                                    );
+                                    handleColumnNoticeSave(normalizedColumns);
                                 }}
                             >
                                 {/* Modal Content */}

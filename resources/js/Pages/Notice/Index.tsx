@@ -6,7 +6,7 @@ import lngVaidators from '../../Lang/Validators/translation';
 import { useSelector, useDispatch } from 'react-redux';
 import { appEpochSelector, appLangSelector } from '../../Redux/Layout/selectors';
 import { setFilterAction } from '../../Redux/Validators';
-import ValidatorFavoriteActions from "./../Validators/Partials/ValidatorFavoriteActions";
+// import ValidatorActions from "./../Validators/Partials/ValidatorActions";
 import ValidatorActions from "./../Validators/Partials/ValidatorActions";
 import axios from 'axios';
 import { perPageSelector, filterTypeSelector } from '../../Redux/Validators/selectors';
@@ -292,7 +292,7 @@ export default function Index(validatorsData) {
         const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
         try {
             // Build URL with all parameters
-            let url = `/api/${!user ? 'fetch-favorite-validators-public' : 'fetch-favorite-validators'}?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`;
+            let url = `/api/fetch-notice-validators?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`;
             if (searchParam) {
                 url += `&search=${encodeURIComponent(searchParam)}`;
             }

@@ -831,6 +831,55 @@ class ValidatorController extends Controller
         ]);
     }
 
+    public function notices(Request $request) {
+        $limit = 10;
+        $page = max(1, (int) $request->get('page', 1));
+        $offset = ($page - 1) * $limit;
+        $filterType = $request->get('filterType', 'all');
+        $userId = $request->user() ? $request->user()->id : null;
+        
+        // For unauthenticated users, get favorite validator IDs from request parameter
+        $noticeIds = null;
+        if (!$userId) {
+            // Try to get favorite IDs from different sources
+            $noticeIds = $request->get('ids', $request->input('ids', $request->query('ids', [])));
+            if (is_string($noticeIds)) {
+                $noticeIds = json_decode($noticeIds, true) ?: [];
+            }
+            
+            // If we still don't have favorite IDs, try to get them from localStorage
+            // This is a fallback for cases where the frontend didn't pass them correctly
+            if (empty($noticeIds)) {
+                // We can't directly access localStorage from PHP, but we can check if the request
+                // contains a special header or cookie that might have been set by JavaScript
+                // For now, we'll just leave it as an empty array
+                $favoriteIds = [];
+            }
+        } else {
+            $noticeIds = DB::table('data.validators2users')
+                ->where('user_id', $userId)
+                ->where('type', 'notice')
+                ->pluck('validator_id')
+                ->toArray();
+        }
+        // Get total stake data
+        $stakeData = $this->totalStakeService->getTotalStake();
+        $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
+        // Fetch validators data using service
+        $validators = $this->validatorDataService->fetchDataNoticeValidators($userId, $filterType, $offset, $totalStakeLamports, $noticeIds);
+        // dd($validators['results']);exit;
+        $filteredTotalCount = $validators['totalFilteredValidators'];
+
+        return Inertia::render('Notice/Index', [
+            'validatorsData' => $validators['results'],
+            'settingsData' => Settings::first(),
+            'totalCount' => $filteredTotalCount,
+            'currentPage' => $page,
+            'filterType' => $filterType,
+            'totalStakeData' => $stakeData[0],
+        ]);
+    }
+
     /**
      * Handle bulk actions for admin validators
      */
