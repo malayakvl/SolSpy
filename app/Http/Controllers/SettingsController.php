@@ -70,6 +70,37 @@ class SettingsController extends Controller
         ]);
     }
 
+    public function updateCustomerNoticeSettings(Request $request)
+    { 
+        $user = $request->user();
+        $settings2User = Settings2User::where('user_id', $user->id)->first();
+        $columnsData = $request->get('columns');
+        if (!$settings2User) {
+            // Check if columns data is already JSON or needs to be encoded
+            $noticeFields = is_string($columnsData) ? $columnsData : json_encode($columnsData);
+            
+            // Use proper parameter binding for INSERT to avoid SQL injection and escaping issues
+            // Adding created_at and updated_at fields
+            DB::statement('INSERT INTO data.settings2user (notice_settings, user_id, created_at, updated_at) VALUES (?, ?, NOW(), NOW())', [
+                $noticeFields,
+                $user->id
+            ]);
+        } else {
+            // Check if columns data is already JSON or needs to be encoded
+            $noticeFields = is_string($columnsData) ? $columnsData : json_encode($columnsData);
+            
+            // Use proper parameter binding to avoid escaping issues with backslashes
+            DB::statement('UPDATE data.settings2user SET notice_settings = ?, updated_at = NOW() WHERE user_id = ?', [
+                $noticeFields, 
+                $user->id
+            ]);
+        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Success',
+        ]);
+    }
+
 
     public function update(Request $request)
     { 

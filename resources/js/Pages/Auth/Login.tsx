@@ -122,7 +122,7 @@ export default function Login({ status, canResetPassword }) {
               label={msg.get('auth.email')}
               required
             />
-            {errors.email && <div className="text-red-500 text-sm mt-1">{errors.email}</div>}
+            {/* {errors.email && <div className="text-red-500 text-sm mt-1">{errors.email}</div>} */}
           </div>
           <div className="pb-4">
             <InputText
@@ -140,8 +140,8 @@ export default function Login({ status, canResetPassword }) {
         <div className="mt-4 flex items-center justify-end">
           {canResetPassword && (
             <Link
-              href={'/reset'}
-              className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              href={'/forgot-password'}
+              className="rounded-md text-sm text-white underline hover:text-[#703ea2] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
               {msg.get('auth.forgot')}
             </Link>

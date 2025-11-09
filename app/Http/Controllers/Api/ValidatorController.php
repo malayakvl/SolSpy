@@ -725,6 +725,52 @@ public function hardware(Request $request)
         ]);
     }
 
+     public function timeoutNoticeData(Request $request)
+    {
+        $page = max(1, (int) $request->input('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1
+        $limit = 10; // Количество записей на страницу
+        $offset = ($page - 1) * $limit; // Расчет offset
+        $filterType = $request->input('filterType', 'all'); // Get filter type
+        $searchTerm = $request->input('search', ''); // Get search term
+        $sortColumn = $request->input('sortColumn', 'id'); // Get sort column
+        $sortDirection = $request->input('sortDirection', 'ASC'); // Get sort direction
+        $userId = $request->user() ? $request->user()->id : null;
+        
+        // For unauthenticated users, get favorite validator IDs from request parameter
+        $favoriteIds = null;
+        if (!$userId) {
+            $favoriteIds = $request->input('ids', []); // Get from localStorage parameter
+            if (is_string($favoriteIds)) {
+                $favoriteIds = json_decode($favoriteIds, true) ?: [];
+            }
+        }
+        // Get total stake data
+        $stakeData = $this->totalStakeService->getTotalStake();
+        $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
+
+        // Fetch timeout data using service
+        $data = $this->validatorDataService->timeoutNoticeData(
+            $sortColumn, 
+            $sortDirection, 
+            $totalStakeLamports,
+            $userId, 
+            $filterType, 
+            $limit, 
+            $offset, 
+            $searchTerm,
+            $favoriteIds
+        );
+
+        return response()->json([
+            'validatorsData' => $data['validatorsData'],
+            'settingsData' => Settings::first(),
+            'totalCount' => $data['filteredTotalCount'],
+            'currentPage' => $page,
+            'filterType' => $filterType,
+            'totalStakeData' => $stakeData[0],
+        ]);
+    }
+
     public function timeoutFavoriteData(Request $request)
     {
         $page = max(1, (int) $request->input('page', 1)); // Получаем номер страницы с фронтенда, приводим к integer с минимумом 1
