@@ -46,6 +46,7 @@ Route::get('/dashboard/manager', function () {
 
 Route::get('/comparisons/{page?}', [ValidatorController::class, 'comparisons'])->name('validators.comparisons');
 Route::get('/favorites/{page?}', [ValidatorController::class, 'favorites'])->name('validators.favorites');
+Route::get('/notices/{page?}', [ValidatorController::class, 'notices'])->name('validators.notice');
 // 
 Route::get('/sortable', [ValidatorController::class, 'sortable'])->name('validators.sortable');
 

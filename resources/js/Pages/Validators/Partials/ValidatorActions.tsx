@@ -289,7 +289,7 @@ export default function ValidatorActions({validator, onBanToggle, showViewBtn = 
             }
         }
     }
-    console.log('ValidatorActions.tsx loaded', isInNotice);
+
     return (
         <>
             <div className="flex items-center">
