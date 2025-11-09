@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux';
 import Switch from 'react-ios-switch';
 import { appEpochSelector, appLangSelector } from '../../../Redux/Layout/selectors';
 
-const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, children }) => {
+const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, user,children }) => {
     const appLang = useSelector(appLangSelector);
     const msg = new Lang({
         messages: lngVaidators,
@@ -19,7 +19,7 @@ const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, 
     const [loading, setLoading] = useState(false);
     // Store the original initial state to revert to on Cancel
     const originalColumnsRef = useRef(JSON.parse(JSON.stringify(initialColumns || [])));
-    
+
     const connectTelegram = async () => {
         try {
             const res = await fetch("/api/telegram/connect-link", {
@@ -43,29 +43,56 @@ const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, 
         }
     };
 
+    const applyChanges = async (data) => {
+        try {
+            console.log(data);
+            onSave();
+            // const res = await fetch("/api/save-notice-settings", {
+            // method: "POST",
+            //     headers: {
+            //         "Content-Type": "application/json",
+            //         "X-CSRF-TOKEN": document
+            //         .querySelector('meta[name="csrf-token"]')
+            //         ?.getAttribute("content"),
+            //     },
+            //     credentials: "include",
+            //     data: data
+            // });
+
+            // const data = await res.json();
+
+            // if (data.url) {
+            //     window.open(data.url, "_blank");
+            // }
+        } catch (e) {
+            console.error("Telegram connect error", e);
+        }
+    }
+
 
     return (
         <div className="modal-overlay-columns relative z-50">
             <div className="modal-header">
                 <div className="modal-title mt-3">
                     <span className="mt-2 inline-block">{msg.get('validators.notice-settings')}</span>
-                    
-                    <span className="float-right">
-                        <button
-                            onClick={connectTelegram}
-                            style={{
-                                display: 'inline-block',
-                                padding: '6px 12px',
-                                backgroundColor: '#703ea2',
-                                color: 'white',
-                                borderRadius: '6px',
-                                fontWeight: '600',
-                                textDecoration: 'none',
-                                border: 'none',
-                                cursor: 'pointer'
-                            }}
-                        >{msg.get('validators.connect-telegram')}</button>
-                    </span>
+                    {!user.telegram_links?.length && (
+                        <span className="float-right">
+                            <button
+                                onClick={connectTelegram}
+                                style={{
+                                    display: 'inline-block',
+                                    padding: '6px 12px',
+                                    backgroundColor: '#703ea2',
+                                    color: 'white',
+                                    borderRadius: '6px',
+                                    fontWeight: '600',
+                                    textDecoration: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer'
+                                }}
+                            >{msg.get('validators.connect-telegram')}</button>
+                        </span>
+                    )}
                 </div>
                 <div className="modal-close cursor-pointer" onClick={onClose}>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" className="w-6 h-6">
@@ -80,32 +107,6 @@ const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, 
                 </div>
             </div>
             <div className="modal-content mt-6" onClick={e => e.stopPropagation()}>
-                {/* Tabs navigation */}
-                <div className="border-b border-gray-200">
-                    {/* <nav className="flex space-x-8">
-                        <button
-                            onClick={() => setActiveTab('telegram')}
-                            className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                                activeTab === 'telegram'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                            }`}
-                        >
-                            {msg.get('validators.telegram')}
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('email')}
-                            className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                                activeTab === 'email'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                            }`}
-                        >
-                            {msg.get('validators.email')}
-                        </button>
-                    </nav> */}
-                </div>
-                            
                 {/* Tab content */}
                 <div className="mt-4">
                     {activeTab === 'telegram' && (
@@ -153,6 +154,7 @@ const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, 
                     <button 
                         className="btn-submit"
                         onClick={() => {
+                            // applyChanges(list);
                             if (onSave) {
                                 onSave(list);
                             }

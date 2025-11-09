@@ -76,6 +76,6 @@ class RegisteredUserController extends Controller
             $this->validatorDataService->migrateLocalStorageFavoriteData($userId, $favoriteIds);
         }
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect(route('validators.view', absolute: false));
     }
 }

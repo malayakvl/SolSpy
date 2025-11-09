@@ -43,7 +43,7 @@ class DashboardController extends Controller
 
         
         // Default redirect for authenticated users without specific roles
-        return redirect()->route('dashboard.customer');
+        return redirect()->route('validators');
     }
 
     function indexCustomer(Request $request)
@@ -74,7 +74,7 @@ class DashboardController extends Controller
         $validatorsBlocked = $this->validatorDataService->fetchDataBlockedValidators($userId, $filterType, $offset, $totalStakeLamports, $favoriteIds);
         $blockedTotalCount = $validatorsBlocked['totalFilteredValidators'];
         
-        return Inertia::render('Dashboard/Customer/Index', [
+        return Inertia::render('Validators/Index', [
             'favoriteValidators' => $validatorsFavorites['results'],
             'favoritesTotalCount' => $favoritesTotalCount,
             'blockedValidators' => $validatorsBlocked['results'],
