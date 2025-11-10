@@ -135,12 +135,20 @@ export default function CustomerIndex(validatorsData) {
         { name: "Client", show: false }
     ];
     const [columnsConfig, setColumnsConfig] = useState(() => {
-        let parsedFields;
         if (validatorsData.settingsData?.table_fields) {
-            if (typeof validatorsData.settingsData.table_fields === 'text')
-                parsedFields = JSON.parse(validatorsData.settingsData.table_fields);
-            else
+            let parsedFields;
+            if (typeof validatorsData.settingsData.table_fields === 'string') {
+                // If it's a string, try to parse it as JSON
+                try {
+                    parsedFields = JSON.parse(validatorsData.settingsData.table_fields);
+                } catch (e) {
+                    console.error('Error parsing table_fields JSON:', e);
+                    parsedFields = [];
+                }
+            } else {
+                // If it's already an object/array, use it directly
                 parsedFields = validatorsData.settingsData.table_fields;
+            }
             // Fix any instances of "MEV Comission" to "MEV Commission"
             return parsedFields.map(field => 
                 field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
