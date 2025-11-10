@@ -136,6 +136,11 @@ return [
             'path' => storage_path('logs/cron.log'),
             'level' => 'info',
         ],
+        'telegram' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/telegram.log'),
+            'level' => 'info',
+        ],
     ],
 
 ];
