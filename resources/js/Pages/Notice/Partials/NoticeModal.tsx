@@ -44,31 +44,19 @@ const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, 
     };
 
     const connectTelegram = async () => {
-        try {
-            const res = await fetch("/api/telegram/connect-link", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": document
-                        .querySelector('meta[name="csrf-token"]')
-                        ?.getAttribute("content"),
-                },
-                credentials: "include",
-            });
+        const res = await fetch("/api/telegram/connect-link", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute("content")
+            },
+            credentials: "include",
+        });
 
-            const data = await res.json();
-
-            if (data.url) {
-                // Открываем бота **без передачи токена**
-                window.open(`https://t.me/${data.botName}`, "_blank");
-
-                // Показываем пользователю инструкцию (опционально)
-                alert("✅ Telegram открыт\n\nНажмите кнопку в Telegram, чтобы завершить привязку.");
-            }
-        } catch (e) {
-            console.error("Telegram connect error", e);
-        }
+        const data = await res.json();
+        if (data.url) window.open(data.url, "_blank");
     };
+
 
 
     const applyChanges = async (data) => {

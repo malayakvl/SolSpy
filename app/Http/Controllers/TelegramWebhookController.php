@@ -14,34 +14,42 @@ class TelegramWebhookController extends Controller
         // 1️⃣ Логируем весь приходящий запрос
         Log::channel('telegram')->info('Webhook request received', $request->all());
 
-        $message = $request->message ?? null;
+        // 2️⃣ Callback от inline-кнопки (сначала)
+        if (isset($request['callback_query'])) {
+            $callback = $request['callback_query'];
+            $chatId = $callback['from']['id'] ?? null;
+            Log::channel('telegram')->info('Callback received', ['chat_id' => $chatId]);
 
-        // 2️⃣ Если нет сообщения — просто возвращаем
+            $link = TelegramLink::whereNull('chat_id')->orderBy('id', 'desc')->first();
+
+            if ($link) {
+                $link->chat_id = $chatId;
+                $link->save();
+
+                $this->sendTelegramMessage($chatId, "✅ Telegram успешно подключён!");
+                Log::channel('telegram')->info("Chat_id {$chatId} saved via callback");
+            } else {
+                $this->sendTelegramMessage($chatId, "⚠️ Не найден токен. Попробуйте подключить снова.");
+                Log::channel('telegram')->warning("Callback but no pending token for chat {$chatId}");
+            }
+
+            return response()->json(['status' => 'callback_handled']);
+        }
+
+        // 3️⃣ Обычные сообщения
+        $message = $request->message ?? null;
         if (!$message) {
-            Log::channel('telegram')->info('No message found in request');
+            Log::channel('telegram')->info('No message in request');
             return response()->json(['status' => 'ok']);
         }
 
         $chatId = $message['chat']['id'] ?? null;
         $text = trim($message['text'] ?? '');
-        Log::channel('telegram')->info("Processing message", [
+        Log::channel('telegram')->info('Processing message', [
             'chat_id' => $chatId,
             'text' => $text,
-            'hex_text' => bin2hex($text) // для отладки скрытых символов
+            'hex_text' => bin2hex($text)
         ]);
-
-        // 3️⃣ Если пользователь нажал просто /start
-        if ($text === '/start') {
-            Log::channel('telegram')->info('Received plain /start, sending inline button', [
-                'chat_id' => $chatId
-            ]);
-            $this->sendTelegramMessageWithButton(
-                $chatId,
-                "👋 Привет! Чтобы завершить привязку Telegram, нажмите кнопку ниже 👇"
-            );
-
-            return response()->json(['status' => 'start_button_sent']);
-        }
 
         // 4️⃣ Обработка deep-link /start TOKEN
         if (preg_match('/^\/start\s+(\S+)$/', $text, $matches)) {
@@ -67,26 +75,15 @@ class TelegramWebhookController extends Controller
             return response()->json(['status' => 'linked']);
         }
 
-        // 5️⃣ Callback от inline-кнопки
-        if (isset($request['callback_query'])) {
-            $callback = $request['callback_query'];
-            $chatId = $callback['from']['id'] ?? null;
-            Log::channel('telegram')->info('Callback received', ['chat_id' => $chatId]);
+        // 5️⃣ Plain /start
+        if ($text === '/start') {
+            Log::channel('telegram')->info('Received /start, sending inline button', ['chat_id' => $chatId]);
+            $this->sendTelegramMessageWithButton(
+                $chatId,
+                "👋 Привет! Чтобы завершить привязку Telegram, нажмите кнопку ниже 👇"
+            );
 
-            $link = TelegramLink::whereNull('chat_id')->orderBy('id', 'desc')->first();
-
-            if ($link) {
-                $link->chat_id = $chatId;
-                $link->save();
-
-                $this->sendTelegramMessage($chatId, "✅ Telegram успешно подключён!");
-                Log::channel('telegram')->info("Chat_id {$chatId} saved via callback");
-            } else {
-                $this->sendTelegramMessage($chatId, "⚠️ Не найден токен. Попробуйте подключить снова.");
-                Log::channel('telegram')->warning("Callback but no pending token for chat {$chatId}");
-            }
-
-            return response()->json(['status' => 'callback_handled']);
+            return response()->json(['status' => 'start_button_sent']);
         }
 
         // 6️⃣ Любые другие сообщения
@@ -98,6 +95,7 @@ class TelegramWebhookController extends Controller
         return response()->json(['status' => 'ok']);
     }
 
+    // Отправка простого сообщения
     private function sendTelegramMessage(string $chatId, string $text): void
     {
         $token = env('TELEGRAM_BOT_TOKEN');
@@ -107,6 +105,7 @@ class TelegramWebhookController extends Controller
         ]);
     }
 
+    // Отправка inline-кнопки
     private function sendTelegramMessageWithButton(string $chatId, string $text): void
     {
         $token = env('TELEGRAM_BOT_TOKEN');
