@@ -359,7 +359,7 @@ export default function Index(validatorsData) {
                         <div className="bg-white p-6 rounded-lg shadow-lg">
                             <div className="flex flex-col items-center">
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-                                <p className="text-gray-700">Завантаження даних...</p>
+                                <p className="text-gray-700">{msg.get('validators.loading-data')}</p>
                             </div>
                         </div>
                     </div>

@@ -460,22 +460,22 @@ export default function CustomerIndex(validatorsData) {
     };
 
     const fetchColumnNoticeSettings = async () => {
-        // try {
-        //     const response = await axios.get('/api/settings/customer-columns');
-        //     // console.log(response.data.data.notice_settings)
-        //     const settings = initialNoticeColumns;
-        //     // console.log(def)
-        //     // Ensure all default columns are present in the settings
-        //     const mergedSettings = initialNoticeColumns.map(defaultCol => {
-        //         const savedCol = settings.find(col => col.name === defaultCol.name);
-        //         return savedCol ? { ...defaultCol, ...savedCol } : defaultCol;
-        //     });
+        try {
+            const response = await axios.get('/api/settings/customer-columns');
+            // console.log(response.data.data.notice_settings)
+            const settings = initialNoticeColumns;
+            // console.log(def)
+            // Ensure all default columns are present in the settings
+            const mergedSettings = initialNoticeColumns.map(defaultCol => {
+                const savedCol = settings.find(col => col.name === defaultCol.name);
+                return savedCol ? { ...defaultCol, ...savedCol } : defaultCol;
+            });
             
-        //     setDisplayOptions(mergedSettings);
-        //     // setColumnsConfig(mergedSettings);
-        // } catch (error) {
-        //     console.error('Error fetching column settings:', error);
-        // }
+            setDisplayOptions(mergedSettings);
+            // setColumnsConfig(mergedSettings);
+        } catch (error) {
+            console.error('Error fetching column settings:', error);
+        }
     };
 
     const toggleModal = async () => {
