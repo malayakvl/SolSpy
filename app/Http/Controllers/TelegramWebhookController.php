@@ -20,13 +20,16 @@ class TelegramWebhookController extends Controller
             $chatId = $callback['from']['id'] ?? null;
             Log::channel('telegram')->info('Callback received', ['chat_id' => $chatId]);
 
+            // Ищем последнюю запись без chat_id
             $link = TelegramLink::whereNull('chat_id')->orderBy('id', 'desc')->first();
 
             if ($link) {
                 $link->chat_id = $chatId;
                 $link->save();
 
-                $this->sendTelegramMessage($chatId, "✅ Telegram успешно подключён!");
+                // ✅ Сообщение о подключении
+                $this->sendTelegramMessage($chatId, "✅ Telegram успешно подключён! 🎉 Вы теперь будете получать уведомления.");
+
                 Log::channel('telegram')->info("Chat_id {$chatId} saved via callback");
             } else {
                 $this->sendTelegramMessage($chatId, "⚠️ Не найден токен. Попробуйте подключить снова.");
@@ -65,7 +68,9 @@ class TelegramWebhookController extends Controller
                 $link->chat_id = $chatId;
                 $link->save();
 
-                $this->sendTelegramMessage($chatId, "✅ Telegram подключён!");
+                // ✅ Сообщение о подключении
+                $this->sendTelegramMessage($chatId, "✅ Telegram подключён! 🎉 Вы теперь будете получать уведомления.");
+
                 Log::channel('telegram')->info("Chat_id {$chatId} saved via deep-link", ['token' => $token]);
             } else {
                 $this->sendTelegramMessage($chatId, "❌ Неверный или просроченный токен.");
