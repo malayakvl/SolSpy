@@ -14,7 +14,10 @@ const lngValidators = {
     'notice-settings': 'Notice Settings',
     telegram: 'Telegram',
     email: 'Email',
-    'connect-telegram': "Connect Telegram"
+    'connect-telegram': "Connect Telegram",
+    'title-notice': 'Notice Validators',
+    'loading-data': 'Loading data...',
+
   },
   'uk.validators': {
     title: 'Валідатори',
@@ -31,8 +34,10 @@ const lngValidators = {
     'notice-settings': 'Налаштування сповіщень',
     telegram: 'Telegram',
     email: 'Email',
-    'connect-telegram': "Connect Telegram"
-
+    'connect-telegram': "Connect Telegram",
+    'title-notice': 'Валідатори зі сповіщеннями',
+    'loading-data': 'Завантаження даних...',
+    
   },
 };
 export default lngValidators;
