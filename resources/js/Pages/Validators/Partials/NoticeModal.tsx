@@ -34,6 +34,9 @@ const NoticeModal = ({ onClose, onSave, onColumnChange, onSort, initialColumns, 
             });
 
             const data = await res.json();
+            setTimeout(() => {
+                window.open(data.url, "_blank");
+            }, 200); // 200 ms, can be increased up to 500 ms
 
             if (data.url) {
                 window.open(data.url, "_blank");
