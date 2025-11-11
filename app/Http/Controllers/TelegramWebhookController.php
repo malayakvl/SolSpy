@@ -58,8 +58,9 @@ class TelegramWebhookController extends Controller
         }
 
         // ✅ Обработка deep-link (если вдруг Telegram передал `/start token`)
-        if (str_starts_with($text, '/start ')) {
-            $token = trim(str_replace('/start', '', $text));
+        // ✅ Обработка deep-link (если Telegram передал `/start token`)
+        if (preg_match('/^\/start\s+(\S+)$/', $text, $matches)) {
+            $token = $matches[1]; // токен из текста
 
             $link = TelegramLink::where('token', $token)->first();
 
