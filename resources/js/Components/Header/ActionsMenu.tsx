@@ -127,21 +127,21 @@ export default function ActionsMenu(props) {
                     href={user ? '/comparisons' : `/comparisons?ids=${encodeURIComponent(localStorage.getItem('validatorCompare') || '[]')}`}
                     className="inline-flex items-center menu-main-btn text-sm relative"
                 >
-                    <span className="absolute top-[-10px] right-[-10px] bg-[#703da7] font-bold rounded-full w-[16px] h-[16px] px-[4px] py-0 text-xs text-white">{compareLength}</span>
+                    <span className="eclipse-qty">{compareLength}</span>
                     <FontAwesomeIcon icon={faScaleBalanced} className="w-[16px] h-[16px] text-white" />
                 </Link>
                 <Link
                     href={user ? '/favorites' : `/favorites?ids=${encodeURIComponent(localStorage.getItem('validatorFavorites') || '[]')}`}
                     className="inline-flex items-center menu-main-btn text-sm relative"
                 >
-                    <span className="absolute top-[-10px] right-[-10px] bg-[#703da7] font-bold rounded-full w-[16px] h-[16px] px-[4px] py-0 text-xs text-white">{favLength}</span>
+                    <span className="eclipse-qty">{favLength}</span>
                     <FontAwesomeIcon icon={faHeart} className="w-[16px] h-[16px] text-white" />
                 </Link>
                 <Link
                     href={user ? '/notices' : `/favorites?ids=${encodeURIComponent(localStorage.getItem('validatorFavorites') || '[]')}`}
                     className="inline-flex items-center menu-main-btn text-sm relative"
                 >
-                    <span className="absolute top-[-10px] right-[-10px] bg-[#703da7] font-bold rounded-full w-[16px] h-[16px] px-[4px] py-0 text-xs text-white">{noticeCount}</span>
+                    <span className="eclipse-qty">{noticeCount}</span>
                     <FontAwesomeIcon icon={faBell} className="w-[16px] h-[16px] text-white" />
                 </Link>
             </div>

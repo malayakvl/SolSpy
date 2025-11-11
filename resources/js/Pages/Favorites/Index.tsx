@@ -325,7 +325,6 @@ export default function Index(validatorsData) {
             }
         }
     };
-    console.log('Favorites page loaded');
     return (
         <AuthenticatedLayout header={<Head />}>
             <Head title={msg.get('validators.title')} />

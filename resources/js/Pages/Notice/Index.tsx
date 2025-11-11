@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout';
 import { Head, usePage, router } from '@inertiajs/react';
 import Lang from 'lang.js';
 import lngVaidators from '../../Lang/Validators/translation';
+import lngProfile from '../../Lang/Profile/translation';
 import { useSelector, useDispatch } from 'react-redux';
 import { appEpochSelector, appLangSelector } from '../../Redux/Layout/selectors';
 import { setFilterAction } from '../../Redux/Validators';
@@ -13,6 +14,10 @@ import { perPageSelector, filterTypeSelector } from '../../Redux/Validators/sele
 import 'pure-react-carousel/dist/react-carousel.es.css';
 import ValidatorPagination from './../Validators/Pagination';
 import { renderColumnHeader, renderColumnCell } from '../../Components/Validators/ValidatorTableComponents';
+import ValidatorFilters from './Partials/ValidatorFilters';
+import ActionButtons from '../../Components/Validators/ActionButtons';
+import Modal from './Partials/ColumnsModal';
+import ModalNotice from './Partials/NoticeModal';
 
 export default function Index(validatorsData) {
     const dispatch = useDispatch();
@@ -24,9 +29,69 @@ export default function Index(validatorsData) {
     const [isLoading, setIsLoading] = useState(false); // Add loading state
     // Track if the current data fetch is due to pagination or sorting
     const [isPaginationOrSorting, setIsPaginationOrSorting] = useState(false);
+    const [viewMode, setViewMode] = useState<'table' | 'grid'>(validatorsData.settingsData.view_mode || 'table');
+    const [columnsNoticeConfig, setColumnsNoticeConfig] = useState(() => {
+        if (validatorsData.settingsData?.notice_settings) {
+            const parsedFields = JSON.parse(validatorsData.settingsData.notice_settings);
+            // Fix any instances of "MEV Comission" to "MEV Commission"
+            return parsedFields.map(field => 
+                field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
+            );
+        } else {
+            return [
+                        { name: "Status", show: false },
+                        { name: "Jito Score", show: false },
+                        { name: "Vote Rate", show: false },
+                        { name: "Stake Pool", show: false },
+                        { name: "Inflation Comission", show: false },
+                        { name: "Mev (Jito) Comission", show: false },
+                        { name: "SFDP Status", show: false },
+                        { name: "Location", show: false },
+                        { name: "Ip", show: false },
+                        { name: "Client", show: false }
+
+            ];
+        }
+    });
+    const initialNoticeColumns = [
+        { name: "Status", show: false },
+        { name: "Jito Score", show: false },
+        { name: "Vote Rate", show: false },
+        { name: "Stake Pool", show: false },
+        { name: "Inflation Comission", show: false },
+        { name: "Mev (Jito) Comission", show: false },
+        { name: "SFDP Status", show: false },
+        { name: "Location", show: false },
+        { name: "Ip", show: false },
+        { name: "Client", show: false }
+    ];
+    
+    const [showModal, setShowModal] = useState(false);
+    const [showNotificationModal, setShowNotificationModal] = useState(false);
+    
+    // Use refs to track modal states that persist across re-renders
+    const showModalRef = useRef(showModal);
+    const showNotificationModalRef = useRef(showNotificationModal);
+
+    // Display dropdown state
+    const [isDisplayDropdownOpen, setIsDisplayDropdownOpen] = useState(false);
+    const [displayOptions, setDisplayOptions] = useState({
+        all: true,
+        top: false,
+        highlight: false,
+        notRussian: false,
+        onlyWithName: false,
+        onlyWithWebsite: false,
+        onlyValidated: false,
+        onlyWithMevAndZeroCommission: false
+    });
 
     const msg = new Lang({
         messages: lngVaidators,
+        locale: appLang,
+    });
+    const msgProfile = new Lang({
+        messages: lngProfile,
         locale: appLang,
     });
 
@@ -46,7 +111,6 @@ export default function Index(validatorsData) {
     const [selectAll, setSelectAll] = useState(false);
     const [checkedIds, setCheckedIds] = useState<string[]>([]);
     const [totalRecords, setTotalRecords] = useState(validatorsData.totalCount);
-    const [showModal, setShowModal] = useState(false);
     const [columnSettings, setColumnSettings] = useState(null);
     const [columnsConfig, setColumnsConfig] = useState(() => {
         if (validatorsData.settingsData?.table_fields) {
@@ -103,9 +167,54 @@ export default function Index(validatorsData) {
         }
     };
 
+    const toggleModal = async () => {
+        if (!showModal) {
+            // Fetch fresh data before opening modal
+            await fetchColumnSettings();
+        }
+        setShowModal(!showModal); // Toggles the state
+    };
+
+    const toggleNotificationModal = async () => {
+        if (!showNotificationModal) {
+            // Fetch fresh data before opening modal
+            await fetchColumnNoticeSettings();
+        }
+        setShowNotificationModal(!showNotificationModal); // Toggles the state
+    };
+
+    const handleExport = () => {
+        // Make API call to export endpoint
+        window.location.href = '/api/export-data';
+    };
+    
+    const openModal = () => setShowModal(true);
+    const closeModal = () => setShowModal(false);
+    const openNoticeModal = () => setShowNotificationModal(true);
+    const closeNotificationModal = () => setShowNotificationModal(false);
+
     // Filter out banned validators from the data
     // const filteredData = data.filter(validator => !bannedValidators.includes(validator.id));
     const filteredData = data;
+
+const fetchColumnNoticeSettings = async () => {
+        try {
+            const response = await axios.get('/api/settings/customer-columns');
+            // console.log(response.data.data.notice_settings)
+            const settings = initialNoticeColumns;
+            // console.log(def)
+            // Ensure all default columns are present in the settings
+            const mergedSettings = initialNoticeColumns.map(defaultCol => {
+                const savedCol = settings.find(col => col.name === defaultCol.name);
+                return savedCol ? { ...defaultCol, ...savedCol } : defaultCol;
+            });
+            
+            setDisplayOptions(mergedSettings);
+            // setColumnsConfig(mergedSettings);
+        } catch (error) {
+            console.error('Error fetching column settings:', error);
+        }
+    };
 
     const handleCheckboxChange = (id) => {
         if (checkedIds.includes(id)) {
@@ -152,6 +261,32 @@ export default function Index(validatorsData) {
             // Remove all visible validator IDs from checkedIds
             setCheckedIds(prev => prev.filter(id => !visibleValidatorIds.includes(id)));
         }
+    };
+
+    const handleFilterChange = (newFilterValue: string) => {
+        // Save current page for current filter before switching
+        setLastPages(prev => ({
+            ...prev,
+            [filterTypeDataSelector]: currentPage
+        }));
+        
+        // Get the saved page for the new filter
+        const savedPage = lastPages[newFilterValue] || 1;
+        
+        dispatch(setFilterAction(newFilterValue));
+        
+        // Update URL with new filter and page
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('filterType', newFilterValue);
+        urlParams.set('page', savedPage.toString());
+        
+        // Update the browser URL
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+        
+        // Update currentPage state
+        // This will trigger the useEffect to fetch data
+        setCurrentPage(savedPage);
     };
 
     // Pagination logic - server-side
@@ -325,10 +460,10 @@ export default function Index(validatorsData) {
             }
         }
     };
-    console.log('Favorites page loaded');
+
     return (
         <AuthenticatedLayout header={<Head />}>
-            <Head title={msg.get('validators.title')} />
+            <Head title={msg.get('validators.title-notice')} />
             <div className="py-0">
                 {/* Loading overlay - only shown during pagination and sorting */}
                 {isLoading && (
@@ -336,7 +471,7 @@ export default function Index(validatorsData) {
                         <div className="bg-white p-6 rounded-lg shadow-lg">
                             <div className="flex flex-col items-center">
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-                                <p className="text-gray-700">Завантаження даних...</p>
+                                <p className="text-gray-700">{msg.get('validators.loading-data')}</p>
                             </div>
                         </div>
                     </div>
@@ -344,7 +479,25 @@ export default function Index(validatorsData) {
                 
                 <div className="p-4 sm:p-8 mb-8 content-data bg-content">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold">{msg.get('validators.title')}&nbsp;</h2>
+                        <h2 className="text-2xl font-bold">{msg.get('validators.title-notice')}&nbsp;</h2>
+                    </div>
+                    <hr/>
+                    <ActionButtons 
+                        user={user}
+                        viewMode={viewMode}
+                        setViewMode={setViewMode}
+                        toggleModal={toggleModal}
+                        toggleNotificationModal={toggleNotificationModal}
+                        handleExport={handleExport}
+                        msgProfile={msgProfile}
+                    />
+                    <div className="flex justify-between items-start mt-10">
+                        <div className="flex-1">
+                            <ValidatorFilters 
+                                filterType={filterTypeDataSelector}
+                                onFilterChange={handleFilterChange}
+                            />
+                        </div>
                     </div>
                     {data.length > 0 ? (
                         <div className="mt-6">
@@ -400,6 +553,45 @@ export default function Index(validatorsData) {
                     )}
                     
                 </div>
+                {(showModal) && (
+                    <Modal 
+                        onClose={closeModal} 
+                        onSave={(columns) => {
+                            // Normalize column names before saving
+                            const normalizedColumns = columns.map(field => 
+                                field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
+                            );
+                            handleColumnSettingsSave(normalizedColumns);
+                        }}
+                        initialColumns={columnsConfig}
+                        onColumnChange={(columnName, isVisible, index, updatedList) => {
+                            // Update the columns configuration
+                            setColumnsConfig(updatedList);
+                        }}
+                        onSort={(newList) => {
+                            // Update the columns configuration
+                            setColumnsConfig(newList);
+                        }}
+                    >
+                        {/* Modal Content */}
+                    </Modal>
+                )}
+                {(showNotificationModal) && (
+                    <ModalNotice 
+                        onClose={closeNotificationModal} 
+                        initialColumns={columnsNoticeConfig}
+                        user={user}
+                        onSave={(columns) => {
+                            // Normalize column names before saving
+                            const normalizedColumns = columns.map(field => 
+                                field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
+                            );
+                            handleColumnNoticeSave(normalizedColumns);
+                        }}
+                    >
+                        {/* Modal Content */}
+                    </ModalNotice>
+                )}
             </div>
         </AuthenticatedLayout>
     );

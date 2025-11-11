@@ -29,7 +29,6 @@ class TelegramConnectController extends Controller
             ]
         );
 
-        // Берём имя бота из .env
         $botName = env('TELEGRAM_BOT_NAME', 'solspyapp_bot');
 
         // Логируем генерацию ссылки
@@ -37,9 +36,10 @@ class TelegramConnectController extends Controller
             'token' => $token
         ]);
 
-        // Возвращаем ссылку пользователю
+        // Возвращаем ссылку и имя бота
         return response()->json([
-            'url' => "https://t.me/{$botName}?start={$token}",
+            'url' => "https://t.me/{$botName}?start={$token}", // deep-link на всякий случай
+            'botName' => $botName, // <-- важно: клиенту нужно имя бота
         ]);
     }
 }
