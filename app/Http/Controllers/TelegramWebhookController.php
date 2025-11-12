@@ -104,29 +104,97 @@ class TelegramWebhookController extends Controller
     private function sendTelegramMessage(string $chatId, string $text): void
     {
         $token = env('TELEGRAM_BOT_TOKEN');
-        Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+        
+        // Log the attempt to send message
+        Log::channel('telegram')->info('Attempting to send Telegram message', [
             'chat_id' => $chatId,
             'text' => $text,
+            'token_available' => !empty($token)
         ]);
+        
+        if (empty($token)) {
+            Log::channel('telegram')->error('TELEGRAM_BOT_TOKEN is not set in environment variables');
+            return;
+        }
+        
+        try {
+            $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+                'chat_id' => $chatId,
+                'text' => $text,
+            ]);
+            
+            if ($response->failed()) {
+                Log::channel('telegram')->error('Failed to send Telegram message', [
+                    'chat_id' => $chatId,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+            } else {
+                Log::channel('telegram')->info('Successfully sent Telegram message', [
+                    'chat_id' => $chatId,
+                    'response' => $response->json(),
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::channel('telegram')->error('Exception while sending Telegram message', [
+                'chat_id' => $chatId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
     }
 
     // Отправка inline-кнопки
     private function sendTelegramMessageWithButton(string $chatId, string $text): void
     {
         $token = env('TELEGRAM_BOT_TOKEN');
-        Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+        
+        // Log the attempt to send message with button
+        Log::channel('telegram')->info('Attempting to send Telegram message with button', [
             'chat_id' => $chatId,
             'text' => $text,
-            'reply_markup' => [
-                'inline_keyboard' => [
-                    [
+            'token_available' => !empty($token)
+        ]);
+        
+        if (empty($token)) {
+            Log::channel('telegram')->error('TELEGRAM_BOT_TOKEN is not set in environment variables');
+            return;
+        }
+        
+        try {
+            $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+                'chat_id' => $chatId,
+                'text' => $text,
+                'reply_markup' => [
+                    'inline_keyboard' => [
                         [
-                            'text' => '✅ Подтвердить Telegram',
-                            'callback_data' => 'confirm_telegram',
+                            [
+                                'text' => '✅ Подтвердить Telegram',
+                                'callback_data' => 'confirm_telegram',
+                            ],
                         ],
                     ],
                 ],
-            ],
-        ]);
+            ]);
+            
+            if ($response->failed()) {
+                Log::channel('telegram')->error('Failed to send Telegram message with button', [
+                    'chat_id' => $chatId,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+            } else {
+                Log::channel('telegram')->info('Successfully sent Telegram message with button', [
+                    'chat_id' => $chatId,
+                    'response' => $response->json(),
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::channel('telegram')->error('Exception while sending Telegram message with button', [
+                'chat_id' => $chatId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
     }
 }
