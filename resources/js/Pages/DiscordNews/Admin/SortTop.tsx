@@ -76,16 +76,16 @@ export default function SortTopDiscordNews({ topNews }: SortTopDiscordNewsProps)
                         <h2 className="text-2xl font-bold">Sort Top Discord News</h2>
                         <div className="flex gap-2">
                             <button
-                                onClick={cancelSort}
-                                className="inline-flex items-center px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
+                              onClick={cancelSort}
+                              className="inline-flex items-center px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
                             >
                                 <FontAwesomeIcon icon={faTimes} className="mr-2" />
                                 Cancel
                             </button>
                             <button
-                                onClick={saveOrder}
-                                disabled={isSaving}
-                                className="inline-flex items-center px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px] text-sm disabled:opacity-50"
+                              onClick={saveOrder}
+                              disabled={isSaving}
+                              className="inline-flex items-center px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px] text-sm disabled:opacity-50"
                             >
                                 <FontAwesomeIcon icon={faSave} className="mr-2" />
                                 {isSaving ? 'Saving...' : 'Save Order'}
@@ -104,8 +104,8 @@ export default function SortTopDiscordNews({ topNews }: SortTopDiscordNewsProps)
                         <div className="text-center py-8">
                             <p className="text-gray-500">No top Discord news items found.</p>
                             <Link 
-                                href={route('admin.discord.news')} 
-                                className="mt-4 inline-block text-blue-500 hover:text-blue-700"
+                              href={route('admin.discord.news')} 
+                              className="mt-4 inline-block text-blue-500 hover:text-blue-700"
                             >
                                 Back to Discord News Management
                             </Link>
@@ -116,17 +116,17 @@ export default function SortTopDiscordNews({ topNews }: SortTopDiscordNewsProps)
                                 <div key={item.id} className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 flex items-center">
                                     <div className="flex flex-col items-center mr-4">
                                         <button
-                                            onClick={() => moveItem(index, 'up')}
-                                            disabled={index === 0}
-                                            className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                                          onClick={() => moveItem(index, 'up')}
+                                          disabled={index === 0}
+                                          className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
                                         >
                                             <FontAwesomeIcon icon={faArrowUp} />
                                         </button>
                                         <span className="text-xs text-gray-500 my-1">{index + 1}</span>
                                         <button
-                                            onClick={() => moveItem(index, 'down')}
-                                            disabled={index === newsItems.length - 1}
-                                            className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                                          onClick={() => moveItem(index, 'down')}
+                                          disabled={index === newsItems.length - 1}
+                                          className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
                                         >
                                             <FontAwesomeIcon icon={faArrowDown} />
                                         </button>

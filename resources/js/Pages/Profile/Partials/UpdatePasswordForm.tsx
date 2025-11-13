@@ -9,10 +9,11 @@ import { useSelector } from 'react-redux';
 import { appLangSelector } from '../../../Redux/Layout/selectors';
 import Lang from 'lang.js';
 import lngProfile from '../../../Lang/Profile/translation';
+import { type FormEvent } from 'react';
 
 export default function UpdatePasswordForm({ className = '' }) {
-  const passwordInput = useRef();
-  const currentPasswordInput = useRef();
+  const passwordInput = useRef<HTMLInputElement>(null);
+  const currentPasswordInput = useRef<HTMLInputElement>(null);
   const appLang = useSelector(appLangSelector);
   const msg = new Lang({
     messages: lngProfile,
@@ -26,7 +27,7 @@ export default function UpdatePasswordForm({ className = '' }) {
       password_confirmation: '',
     });
 
-  const updatePassword = e => {
+  const updatePassword = (e: FormEvent) => {
     e.preventDefault();
 
     put(route('password.update'), {
@@ -35,12 +36,12 @@ export default function UpdatePasswordForm({ className = '' }) {
       onError: errors => {
         if (errors.password) {
           reset('password', 'password_confirmation');
-          passwordInput.current.focus();
+          passwordInput.current?.focus();
         }
 
         if (errors.current_password) {
           reset('current_password');
-          currentPasswordInput.current.focus();
+          currentPasswordInput.current?.focus();
         }
       },
     });

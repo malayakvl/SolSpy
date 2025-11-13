@@ -5,10 +5,10 @@ import { createSelector } from 'reselect';
 // ------------------------------------
 const rootSelector = createSelector(
     (state: State.Root) => state.user,
-    (user: State.User): State.User => user
+    (user: User.Root): User.Root => user
 );
 
 export const userSelector = createSelector(
     rootSelector,
-    (user: State.User): User.User => user.user
+    (user: User.Root): User.User => user.user
 );

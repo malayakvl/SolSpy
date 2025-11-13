@@ -272,11 +272,36 @@ class ValidatorDataService
             $totalCountQuery = $totalCountQuery->where('data.validators.is_top', true);
         }
         
+        // Apply display options filters for totalCountQuery to match the main query
+        if (!is_null($onlyWithName) && $onlyWithName === true) {
+            $totalCountQuery->whereNotNull('name')->where('name', '!=', '');
+        }
+        
+        if (!is_null($onlyWithWebsite) && $onlyWithWebsite === true) {
+            $totalCountQuery->whereNotNull('url')->where('url', '!=', '');
+        }
+        
+        if (!is_null($notRussian) && $notRussian === true) {
+            $totalCountQuery->where(function($q) {
+                $q->whereNull('country')
+                  ->orWhere('country', '=', '')
+                  ->orWhereRaw("LOWER(TRIM(country)) NOT IN ('russia', 'российская федерация', 'россия', 'rf')");
+            });
+        }
+        
+        if (!is_null($onlyValidated) && $onlyValidated === true) {
+            $totalCountQuery->where('delinquent', false);
+        }
+        
+        if (!is_null($onlyWithMevAndZeroCommission) && $onlyWithMevAndZeroCommission === true) {
+            $totalCountQuery->where('jito', true)->where('commission', 0);
+        }
+        
         // Add the hack to filter validators starting from ID 19566 for count as well
         // $totalCountQuery = $totalCountQuery->where('data.validators.id', '>=', '19566');
         
         $filteredTotalCount = $totalCountQuery->count();
-        
+        // dd($filteredTotalCount);exit;
         $validatorsAllData = DB::table('data.validators')
             ->orderBy('activated_stake', 'DESC')->get();
         $sortedValidators = $validatorsAllData->toArray();

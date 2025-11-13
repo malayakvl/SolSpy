@@ -43,7 +43,7 @@ export default function Register() {
   };
 
   return (
-    <GuestLayout>
+    <GuestLayout auth={null}>
       <Head title="Register" />
 
       <form onSubmit={submit}>

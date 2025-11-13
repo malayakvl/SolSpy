@@ -1,3 +1,4 @@
+import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faSortUp,
@@ -8,14 +9,13 @@ import ValidatorActivatedStake from '../../Pages/Validators/Partials/ValidatorAc
 import ValidatorCredits from '../../Pages/Validators/Partials/ValidatorCredits';
 import ValidatorRate from '../../Pages/Validators/Partials/ValidatorRate';
 import ValidatorSpyRank from '../../Pages/Validators/Partials/ValidatorSpyRank';
-import ValidatorUptime from '../../Pages/Validators/Partials/ValidatorUptime';
+// import ValidatorUptime from '../../Pages/Validators/Partials/ValidatorUptime';
 import ValidatorName from '../../Pages/Validators/Partials/ValidatorName';
-import ValidatorScore from '../../Pages/Validators/Partials/ValidatorScore';
+// import ValidatorScore from '../../Pages/Validators/Partials/ValidatorScore';
 import ValidatorSFDP from '../../Pages/Validators/Partials/ValidatorSFDP';
 import ValidatorStatus from '../../Pages/Validators/Partials/ValidatorStatus';
 import ValidatorJiitoScore from '../../Pages/Validators/Partials/ValidatorJiitoScore';
 import ValidatorTVCScore from '../../Pages/Validators/Partials/ValidatorTVCScore';
-console.log(1111)
 // Shared function to render column headers
 export const renderColumnHeader = (columnName, sortClickState, setSortClickState, setCurrentPage, isLoading = false, setIsPaginationOrSorting = null) => {
     // Map column names to sort keys
@@ -91,22 +91,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>Spy Rank</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'spy_rank' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'spy_rank' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'spy_rank' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'spy_rank' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -120,22 +120,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>Name</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'name' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'name' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'name' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'name' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -148,22 +148,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>Status</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'status' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'status' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'status' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'status' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -176,22 +176,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>TVC Score</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'tvc_score' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'tvc_score' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'tvc_score' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'tvc_score' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -204,22 +204,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>TVC Rank</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'tvc_rank' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'tvc_rank' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'tvc_rank' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'tvc_rank' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -232,22 +232,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>Vote Credits</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'vote_credits' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'vote_credits' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'vote_credits' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'vote_credits' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -260,22 +260,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>Active Stake</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'active_stake' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'active_stake' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'active_stake' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'active_stake' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -288,22 +288,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>Vote Rate</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'vote_rate' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'vote_rate' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'vote_rate' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'vote_rate' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -316,22 +316,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>Jiito Score</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'jiito_score' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'jiito_score' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'jiito_score' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'jiito_score' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -344,22 +344,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>Inflation<br/>Commission</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'inflation_commission' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'inflation_commission' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'inflation_commission' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'inflation_commission' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -372,22 +372,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>MEV<br/>Commission</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'mev_commission' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'mev_commission' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'mev_commission' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'mev_commission' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -400,22 +400,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>Uptime</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'uptime' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'uptime' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'uptime' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'uptime' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -428,22 +428,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>Client/Version</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'client_version' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'client_version' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'client_version' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'client_version' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -456,22 +456,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>Status SFDP</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'status_sfdp' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'status_sfdp' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'status_sfdp' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'status_sfdp' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -484,22 +484,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>Location</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'location' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'location' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'location' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'location' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -512,22 +512,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>Awards</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'awards' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'awards' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'awards' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'awards' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -540,22 +540,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>Website</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'website' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'website' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'website' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'website' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -568,22 +568,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>City</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'city' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'city' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'city' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'city' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -596,22 +596,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>ASN</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'asn' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'asn' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'asn' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'asn' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -624,22 +624,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>IP</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'ip' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'ip' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'ip' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'ip' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -652,22 +652,22 @@ export const renderColumnHeader = (columnName, sortClickState, setSortClickState
                         <span>JS</span>
                         <div className="flex flex-col ml-2">
                             <FontAwesomeIcon 
-                                icon={faSortUp} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortUp} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'jito_score' && currentSortDirection === 'ASC') || 
                                     (sortClickState && sortClickState.column === 'jito_score' && sortClickState.direction === 'ASC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('ASC')}
+                              onClick={() => handleSort('ASC')}
                             />
                             <FontAwesomeIcon 
-                                icon={faSortDown} 
-                                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                              icon={faSortDown} 
+                              className={`text-xs cursor-pointer hover:text-blue-500 ${
                                     (currentSortColumn === 'jito_score' && currentSortDirection === 'DESC') || 
                                     (sortClickState && sortClickState.column === 'jito_score' && sortClickState.direction === 'DESC') 
                                     ? 'text-blue-500' : 'text-gray-400'
                                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                onClick={() => handleSort('DESC')}
+                              onClick={() => handleSort('DESC')}
                             />
                         </div>
                     </div>
@@ -691,10 +691,10 @@ export const renderColumnCell = (columnName, validator, epoch, settingsData, tot
             <td>
                 {validator.avatar_url || validator.avatar_file_url ? (
                     <img 
-                        src={validator.avatar_url || validator.avatar_file_url} 
-                        alt={`${validator.name} avatar`} 
-                        className="w-8 h-8 rounded-full"
-                        onError={(e) => {
+                      src={validator.avatar_url || validator.avatar_file_url} 
+                      alt={`${validator.name} avatar`} 
+                      className="w-8 h-8 rounded-full"
+                      onError={(e) => {
                             e.currentTarget.style.display = 'none';
                             // Create a fallback element
                             const fallback = document.createElement('div');
@@ -716,7 +716,12 @@ export const renderColumnCell = (columnName, validator, epoch, settingsData, tot
                     <ValidatorName validator={validator} />
                 </td>
             );
-        case "Status": return <td><ValidatorStatus validator={validator} /></td>;
+        case "Status": 
+            return (
+                <td>
+                    <ValidatorStatus validator={validator} />
+                </td>
+            );
         case "TVC Score": 
             return (
                 <td>
@@ -745,7 +750,7 @@ export const renderColumnCell = (columnName, validator, epoch, settingsData, tot
         case "Jiito Score": 
             return (
                 <td>
-                    <ValidatorJiitoScore validator={validator} epoch={epoch} />
+                    <ValidatorJiitoScore validator={validator} />
                 </td>
             );
         case "Active": return <td>{!validator.delinquent ? 'Active' : 'Offline'}</td>;
@@ -781,7 +786,6 @@ export const renderColumnCell = (columnName, validator, epoch, settingsData, tot
 
 // Shared function to initialize columns configuration
 export const initializeColumnsConfig = (settingsData) => {
-    console.log(typeof settingsData.table_fields);
     if (settingsData?.table_fields) {
         const parsedFields = typeof settingsData.table_fields === 'object' ? settingsData.table_fields : JSON.parse(settingsData.table_fields);
         // Fix any instances of "MEV Comission" to "MEV Commission"

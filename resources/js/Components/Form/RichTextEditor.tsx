@@ -58,14 +58,14 @@ export default function RichTextEditor({
     return (
         <div className="rich-text-editor">
             <ReactQuill
-                theme="snow"
-                value={value}
-                onChange={handleChange}
-                modules={modules}
-                formats={formats}
-                placeholder={placeholder}
-                readOnly={disabled}
-                style={{ 
+              theme="snow"
+              value={value}
+              onChange={handleChange}
+              modules={modules}
+              formats={formats}
+              placeholder={placeholder}
+              readOnly={disabled}
+              style={{ 
                     minHeight: height + 'px'
                 }}
             />

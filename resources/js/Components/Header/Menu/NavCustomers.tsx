@@ -5,18 +5,41 @@ import Lang from 'lang.js';
 import lngHeader from '../../../Lang/Header/translation';
 import { Link, usePage } from '@inertiajs/react';
 
-export default function NavCustomers(props) {
+interface UserRole {
+  name?: string;
+  [key: string]: any;
+}
+
+interface UserProps {
+  name?: string;
+  roles?: UserRole[];
+  [key: string]: any;
+}
+
+interface AuthProps {
+  user?: UserProps;
+  can?: any;
+  role?: string;
+}
+
+interface PageProps {
+  auth?: AuthProps;
+  [key: string]: any;
+}
+
+export default function NavCustomers(props: any) {
   const appLang = useSelector(appLangSelector);
   const lng = new Lang({
     messages: lngHeader,
-    locale: appLang,
+    locale: appLang as string,
   });
-  const permissions = usePage().props.auth.can;
+  const { props: pageProps } = usePage<PageProps>();
+  const permissions = pageProps.auth?.can;
 
   return (
     <>
-      {(usePage().props.auth.user?.roles[0]?.name === 'Admin' ||
-        permissions['customer-all']) && (
+      {(pageProps.auth?.user?.roles?.[0]?.name === 'Admin' ||
+        permissions?.['customer-all']) && (
         <Menu as="div" className="relative top-menu-nav">
           <MenuButton className="inline-flex items-center menu-main-btn text-sm">
             {lng.get('menu.customers')}
@@ -31,7 +54,7 @@ export default function NavCustomers(props) {
                                         data-[enter]:ease-out data-[leave]:ease-in mt-[10px]"
           >
             <div>
-              {permissions['customer-all'] && (
+              {permissions?.['customer-all'] && (
                 <MenuItem>
                   <Link 
                     className="submenu block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
@@ -41,7 +64,7 @@ export default function NavCustomers(props) {
                   </Link>
                 </MenuItem>
               )}
-              {permissions['customer-all'] && (
+              {permissions?.['customer-all'] && (
                 <MenuItem>
                   <Link 
                     href={'/roles'} 

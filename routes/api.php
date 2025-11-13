@@ -43,7 +43,6 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::post('/settings/customer-columns/update', [SettingsController::class, 'updateCustomerSettings'])->name('settingsUser.update');
     Route::post('/settings/customer-notice/update', [SettingsController::class, 'updateCustomerNoticeSettings'])->name('settingsNoticeUser.update');
     Route::get('/fetch-validators-auth', [ApiValidatorController::class, 'timeoutData'])->name('validators.timeoutDataAuth');
-    // Route::get('/fetch-blocke-validators', [ApiValidatorController::class, 'timeoutBlockedData'])->name('validators.timeoutBlockedData');
     Route::get('/fetch-favorite-validators', [ApiValidatorController::class, 'timeoutFavoriteData'])->name('validators.timeoutFavoriteData');
     Route::get('/fetch-blocked-validators', [ApiValidatorController::class, 'timeoutBlockedData'])->name('validators.timeoutBlockedData');
     Route::get('/fetch-notice-validators', [ApiValidatorController::class, 'timeoutNoticeData'])->name('validators.timeoutNoticeData');

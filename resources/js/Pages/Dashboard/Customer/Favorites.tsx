@@ -351,22 +351,22 @@ export default function Favorites({validatorsData}) {
     return (
         <div className="mt-6">
             <ValidatorTable
-                data={data}
-                columnsConfig={columnsConfig}
-                selectAll={selectAll}
-                checkedIds={checkedIds}
-                handleSelectAllChange={handleSelectAllChange}
-                handleCheckboxChange={handleCheckboxChange}
-                handleBanToggle={handleBanToggle}
-                sortClickState={sortClickState}
-                setSortClickState={setSortClickState}
-                setCurrentPage={setCurrentPage}
-                isLoading={isLoading}
-                setIsPaginationOrSorting={setIsPaginationOrSorting}
-                epoch={epoch}
-                settingsData={validatorsData.settingsData}
-                totalStakeData={validatorsData.totalStakeData}
-                getOrderedVisibleColumns={getOrderedVisibleColumns}
+              data={data}
+              columnsConfig={columnsConfig}
+              selectAll={selectAll}
+              checkedIds={checkedIds}
+              handleSelectAllChange={handleSelectAllChange}
+              handleCheckboxChange={handleCheckboxChange}
+              handleBanToggle={handleBanToggle}
+              sortClickState={sortClickState}
+              setSortClickState={setSortClickState}
+              setCurrentPage={setCurrentPage}
+              isLoading={isLoading}
+              setIsPaginationOrSorting={setIsPaginationOrSorting}
+              epoch={epoch}
+              settingsData={validatorsData.settingsData}
+              totalStakeData={validatorsData.totalStakeData}
+              getOrderedVisibleColumns={getOrderedVisibleColumns}
             /> 
                         
             {/* <ValidatorPagination 

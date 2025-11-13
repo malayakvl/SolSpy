@@ -40,9 +40,9 @@ export default function ValidatorAdminActions({ checkedIds, onActionComplete }: 
     return (
         <div className="relative">
             <button
-                type="button"
-                onClick={() => setShowAdminDropdown(!showAdminDropdown)}
-                className="px-2 py-1 text-xs"
+              type="button"
+              onClick={() => setShowAdminDropdown(!showAdminDropdown)}
+              className="px-2 py-1 text-xs"
             >
                 <FontAwesomeIcon icon={faChevronDown} />
             </button>
@@ -50,8 +50,8 @@ export default function ValidatorAdminActions({ checkedIds, onActionComplete }: 
                 <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
                     <div className="py-1">
                         <button
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            onClick={() => {
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => {
                                 addMarkToValidators('top');
                                 setShowAdminDropdown(false);
                             }}
@@ -59,8 +59,8 @@ export default function ValidatorAdminActions({ checkedIds, onActionComplete }: 
                             Set Top
                         </button>
                         <button
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            onClick={() => {
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => {
                                 addMarkToValidators('highlight');
                                 setShowAdminDropdown(false);
                             }}

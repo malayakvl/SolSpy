@@ -28,14 +28,14 @@ export default function ActionButtons({
         <>
             <div className="flex justify-end mt-4">
                 <button 
-                    onClick={toggleNotificationModal}
-                    className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px]"
+                  onClick={toggleNotificationModal}
+                  className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px]"
                 >
                     {msgProfile.get('profile.setup.notice')}
                 </button>
                 <button 
-                    onClick={handleExport}
-                    className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px] ml-3"
+                  onClick={handleExport}
+                  className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px] ml-3"
                 >
                     {msgProfile.get('profile.export')}
                 </button>

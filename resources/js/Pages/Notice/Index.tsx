@@ -483,19 +483,19 @@ const fetchColumnNoticeSettings = async () => {
                     </div>
                     <hr/>
                     <ActionButtons 
-                        user={user}
-                        viewMode={viewMode}
-                        setViewMode={setViewMode}
-                        toggleModal={toggleModal}
-                        toggleNotificationModal={toggleNotificationModal}
-                        handleExport={handleExport}
-                        msgProfile={msgProfile}
+                      user={user}
+                      viewMode={viewMode}
+                      setViewMode={setViewMode}
+                      toggleModal={toggleModal}
+                      toggleNotificationModal={toggleNotificationModal}
+                      handleExport={handleExport}
+                      msgProfile={msgProfile}
                     />
                     <div className="flex justify-between items-start mt-10">
                         <div className="flex-1">
                             <ValidatorFilters 
-                                filterType={filterTypeDataSelector}
-                                onFilterChange={handleFilterChange}
+                              filterType={filterTypeDataSelector}
+                              onFilterChange={handleFilterChange}
                             />
                         </div>
                     </div>
@@ -508,9 +508,9 @@ const fetchColumnNoticeSettings = async () => {
                                             <th className="relative">
                                                 <div className="flex items-center gap-2">
                                                     <input 
-                                                        type="checkbox" 
-                                                        checked={selectAll}
-                                                        onChange={handleSelectAllChange} 
+                                                      type="checkbox" 
+                                                      checked={selectAll}
+                                                      onChange={handleSelectAllChange} 
                                                     />
                                                 </div>
                                             </th>
@@ -524,10 +524,10 @@ const fetchColumnNoticeSettings = async () => {
                                             <td className="text-left">
                                                 <div className="pl-[10px]">
                                                     <input 
-                                                        type="checkbox" 
-                                                        id={validator.id} 
-                                                        checked={checkedIds.includes(validator.id)}
-                                                        onChange={() => handleCheckboxChange(validator.id)} 
+                                                      type="checkbox" 
+                                                      id={validator.id} 
+                                                      checked={checkedIds.includes(validator.id)}
+                                                      onChange={() => handleCheckboxChange(validator.id)} 
                                                     />
                                                 </div>
                                             </td>
@@ -542,10 +542,10 @@ const fetchColumnNoticeSettings = async () => {
                             </div>
                             
                             <ValidatorPagination 
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                filterType={filterTypeDataSelector}
-                                onPageChange={handlePageChange}
+                              currentPage={currentPage}
+                              totalPages={totalPages}
+                              filterType={filterTypeDataSelector}
+                              onPageChange={handlePageChange}
                             />
                         </div>
                     ) : (
@@ -555,20 +555,20 @@ const fetchColumnNoticeSettings = async () => {
                 </div>
                 {(showModal) && (
                     <Modal 
-                        onClose={closeModal} 
-                        onSave={(columns) => {
+                      onClose={closeModal} 
+                      onSave={(columns) => {
                             // Normalize column names before saving
                             const normalizedColumns = columns.map(field => 
                                 field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
                             );
                             handleColumnSettingsSave(normalizedColumns);
                         }}
-                        initialColumns={columnsConfig}
-                        onColumnChange={(columnName, isVisible, index, updatedList) => {
+                      initialColumns={columnsConfig}
+                      onColumnChange={(columnName, isVisible, index, updatedList) => {
                             // Update the columns configuration
                             setColumnsConfig(updatedList);
                         }}
-                        onSort={(newList) => {
+                      onSort={(newList) => {
                             // Update the columns configuration
                             setColumnsConfig(newList);
                         }}
@@ -578,10 +578,10 @@ const fetchColumnNoticeSettings = async () => {
                 )}
                 {(showNotificationModal) && (
                     <ModalNotice 
-                        onClose={closeNotificationModal} 
-                        initialColumns={columnsNoticeConfig}
-                        user={user}
-                        onSave={(columns) => {
+                      onClose={closeNotificationModal} 
+                      initialColumns={columnsNoticeConfig}
+                      user={user}
+                      onSave={(columns) => {
                             // Normalize column names before saving
                             const normalizedColumns = columns.map(field => 
                                 field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field

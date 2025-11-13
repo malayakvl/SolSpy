@@ -89,14 +89,14 @@ export default function TopIndex(validatorsData) {
                     <div className="mt-6">
                         <div className="overflow-x-auto">
                             <ReactSortable
-                                filter=".addImageButtonContainer"
-                                dragClass="sortableDrag"
-                                list={list}
-                                setList={(newList) => {
+                              filter=".addImageButtonContainer"
+                              dragClass="sortableDrag"
+                              list={list}
+                              setList={(newList) => {
                                     setList(newList);
                                 }}
-                                animation="200"
-                                easing="ease-out"
+                              animation="200"
+                              easing="ease-out"
                             >
                                 {list.map((validator, index) => (
                                     <div className="draggable-item" key={index}>
@@ -104,16 +104,16 @@ export default function TopIndex(validatorsData) {
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center">
                                                     <FontAwesomeIcon 
-                                                        icon={faGripLines} 
-                                                        className="text-gray-400 mr-2 cursor-move sortable-handle"
+                                                      icon={faGripLines} 
+                                                      className="text-gray-400 mr-2 cursor-move sortable-handle"
                                                     />
                                                     <div className="flex-shrink-0 h-10 w-10">
                                                         {validator.avatar_file_url ? (
                                                             <img 
-                                                                src={validator.avatar_file_url} 
-                                                                alt={validator.name} 
-                                                                className="h-10 w-10 rounded-full"
-                                                                onError={(e) => {
+                                                              src={validator.avatar_file_url} 
+                                                              alt={validator.name} 
+                                                              className="h-10 w-10 rounded-full"
+                                                              onError={(e) => {
                                                                     const target = e.target as HTMLImageElement;
                                                                     target.style.display = 'none';
                                                                     target.parentElement!.innerHTML = 
@@ -145,8 +145,8 @@ export default function TopIndex(validatorsData) {
                             </ReactSortable>
                             <div className="flex justify-end mt-4">
                                 <button 
-                                    className="btn-submit"
-                                    onClick={handleApplyChanges}
+                                  className="btn-submit"
+                                  onClick={handleApplyChanges}
                                 >
                                     {msg.get('validators.btnApplyChanges')}
                                 </button>

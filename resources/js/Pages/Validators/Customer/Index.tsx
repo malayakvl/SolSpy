@@ -9,41 +9,20 @@ import { appEpochSelector, appLangSelector } from '../../../Redux/Layout/selecto
 import { setFilterAction } from '../../../Redux/Validators/actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faBan,
-    faCheck,
-    faStar,
     faGear,
-    faSortUp,
-    faSortDown,
-    faColumns,
     faTable,
     faTh
 } from '@fortawesome/free-solid-svg-icons';
-import ValidatorCredits from "../Partials/ValidatorCredits";
-import ValidatorRate from "../Partials/ValidatorRate";
-import ValidatorActions from "../Partials/ValidatorActions";
-import ValidatorName from "../Partials/ValidatorName";
-import ValidatorActivatedStake from "../Partials/ValidatorActivatedStake";
-import ValidatorUptime from "../Partials/ValidatorUptime";
-import ValidatorScore from "../Partials/ValidatorScore";
-import ValidatorSFDP from "../Partials/ValidatorSFDP";
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import ValidatorSpyRank from "../Partials/ValidatorSpyRank";
 import { perPageSelector, filterTypeSelector } from '../../../Redux/Validators/selectors';
-import { Link } from "@inertiajs/react";
-import { userSelector } from '../../../Redux/Users/selectors';
 import Modal from '../Partials/ColumnsModal';
 import ModalNotice from '../Partials/NoticeModal';
 
 import ValidatorFilters from './Filters';
 import ValidatorPagination from './Pagination';
-import ValidatorAdminActions from './Actions';
 import { renderColumnHeader, renderColumnCell } from '../../../Components/Validators/ValidatorTableComponents';
 import { renderBlock } from '../../../Components/Validators/ValidatorGridComponents';
-import ValidatorCard from '../../../Components/Validators/ValidatorCard'; 
-import ValidatorGridCard from '../../../Components/Validators/ValidatorGridCard';
-import TopContentCarousel from '../../../Components/Validators/TopContentCarousel';
 import ActionButtons from '../../../Components/Validators/ActionButtons';
 
 export default function CustomerIndex(validatorsData) {
@@ -56,7 +35,6 @@ export default function CustomerIndex(validatorsData) {
     const [isLoading, setIsLoading] = useState(false); // Add loading state
     // Track if the current data fetch is due to pagination or sorting
     const [isPaginationOrSorting, setIsPaginationOrSorting] = useState(false);
-    const [selectedItems, setSelectedItems] = useState<number[]>([]);
 
     const msg = new Lang({
         messages: lngVaidators,
@@ -77,10 +55,10 @@ export default function CustomerIndex(validatorsData) {
     }); // Remember last page for each filter type
     const [sortClickState, setSortClickState] = useState<{column: string, direction: string} | null>(null); // Track sort click state
 
-    const [itemsPerPage] = useState(perPage); // Number of items per page
+    const [itemsPerPage] = useState(Number(perPage)); // Number of items per page
     const [selectAll, setSelectAll] = useState(false);
     const [checkedIds, setCheckedIds] = useState<(string | number)[]>([]);
-    const [totalRecords, setTotalRecords] = useState(validatorsData.totalCount);
+    const [totalRecords, setTotalRecords] = useState<number>(validatorsData.totalCount);
     const [showModal, setShowModal] = useState(false);
     const [showNotificationModal, setShowNotificationModal] = useState(false);
     
@@ -98,8 +76,7 @@ export default function CustomerIndex(validatorsData) {
     }, [showNotificationModal]);
     
     // Add effect to log when showNotificationModal changes
-    const [columnSettings, setColumnSettings] = useState(null);
-    const [columnsNoticeConfig, setColumnsNoticeConfig] = useState(() => {
+    const [columnsNoticeConfig] = useState(() => {
         if (validatorsData.settingsData?.notice_settings) {
             const parsedFields = JSON.parse(validatorsData.settingsData.notice_settings);
             // Fix any instances of "MEV Comission" to "MEV Commission"
@@ -112,8 +89,8 @@ export default function CustomerIndex(validatorsData) {
                         { name: "Jito Score", show: false },
                         { name: "Vote Rate", show: false },
                         { name: "Stake Pool", show: false },
-                        { name: "Inflation Comission", show: false },
-                        { name: "Mev (Jito) Comission", show: false },
+                        { name: "Inflation Commission", show: false },
+                        { name: "Mev (Jito) Commission", show: false },
                         { name: "SFDP Status", show: false },
                         { name: "Location", show: false },
                         { name: "Ip", show: false },
@@ -122,18 +99,6 @@ export default function CustomerIndex(validatorsData) {
             ];
         }
     });
-    const initialNoticeColumns = [
-        { name: "Status", show: false },
-        { name: "Jito Score", show: false },
-        { name: "Vote Rate", show: false },
-        { name: "Stake Pool", show: false },
-        { name: "Inflation Comission", show: false },
-        { name: "Mev (Jito) Comission", show: false },
-        { name: "SFDP Status", show: false },
-        { name: "Location", show: false },
-        { name: "Ip", show: false },
-        { name: "Client", show: false }
-    ];
     const [columnsConfig, setColumnsConfig] = useState(() => {
         if (validatorsData.settingsData?.table_fields) {
             let parsedFields;
@@ -178,6 +143,7 @@ export default function CustomerIndex(validatorsData) {
             ];
         }
     });
+
 
     // Display dropdown state
     const [isDisplayDropdownOpen, setIsDisplayDropdownOpen] = useState(false);
@@ -259,18 +225,24 @@ export default function CustomerIndex(validatorsData) {
         setDisplayOptions(newOptions);
         updateUrlWithDisplayOptions(newOptions);
         
-        // Trigger data refresh if needed
-        // fetchData();
+        // Reset to first page and trigger data refresh when display options change
+        setCurrentPage(1);
+        
+        // Update URL with new page number
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('page', '1');
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+        
+        fetchData();
     };
     // Search term state
     const [searchTerm, setSearchTerm] = useState('');
     // View mode state - table or grid
     const [viewMode, setViewMode] = useState<'table' | 'grid'>(validatorsData.settingsData.view_mode || 'table');
-    const [showNoticePopup, setShowNoticePopup] = useState(false);
     const displayDropdownRef = useRef<HTMLDivElement>(null);
 
     // Get role names as array of strings
-    const userRoleNames = user?.roles?.map(role => role.name) || [];
     // Check if user has Admin/Manager role
     useEffect(() => {
         const bannedList = JSON.parse(localStorage.getItem('validatorBanned') || '[]');
@@ -292,15 +264,15 @@ export default function CustomerIndex(validatorsData) {
     }, []);
 
     // Handle ban toggle from child component
-    const handleBanToggle = (validatorId: number, isBanned: boolean) => {
-        if (isBanned) {
-            // Add to banned list
-            setBannedValidators(prev => [...prev, validatorId]);
-        } else {
-            // Remove from banned list
-            setBannedValidators(prev => prev.filter(id => id !== validatorId));
-        }
-    };
+    // const handleBanToggle = (validatorId: number, isBanned: boolean) => {
+    //     if (isBanned) {
+    //         // Add to banned list
+    //         setBannedValidators(prev => [...prev, validatorId]);
+    //     } else {
+    //         // Remove from banned list
+    //         setBannedValidators(prev => prev.filter(id => id !== validatorId));
+    //     }
+    // };
 
     // Filter out banned validators from the data
     // const filteredData = data.filter(validator => !bannedValidators.includes(validator.id));
@@ -423,15 +395,11 @@ export default function CustomerIndex(validatorsData) {
     };
 
     // Helper function to render column cell by name
-    const renderColumnCellLocal = (columnName, validator, index) => {
+    const renderColumnCellLocal = (columnName, validator) => {
         return renderColumnCell(columnName, validator, epoch, validatorsData.settingsData, validatorsData.totalStakeData, data);
     };
 
-    const renderGridLocal = (columnName, validator, index) => {
-        return renderColumnCell(columnName, validator, epoch, validatorsData.settingsData, validatorsData.totalStakeData, data);
-    };
-
-    const renderBlockLocal = (columnName, validator, index) => {
+    const renderBlockLocal = (columnName, validator) => {
         return renderBlock(columnName, validator, epoch, validatorsData.settingsData, validatorsData.totalStakeData, data);
     };
 
@@ -443,17 +411,7 @@ export default function CustomerIndex(validatorsData) {
 
     const fetchColumnSettings = async () => {
         try {
-            const response = await axios.get('/api/settings/customer-columns');
-            const settings = response.data.settings.table_fields || defaultColumnSettings;
-            
-            // Ensure all default columns are present in the settings
-            const mergedSettings = defaultColumnSettings.map(defaultCol => {
-                const savedCol = settings.find(col => col.name === defaultCol.name);
-                return savedCol ? { ...defaultCol, ...savedCol } : defaultCol;
-            });
-            
-            setColumnSettings(mergedSettings);
-            setColumnsConfig(mergedSettings);
+            await axios.get('/api/settings/customer-columns');
         } catch (error) {
             console.error('Error fetching column settings:', error);
         }
@@ -461,18 +419,7 @@ export default function CustomerIndex(validatorsData) {
 
     const fetchColumnNoticeSettings = async () => {
         try {
-            const response = await axios.get('/api/settings/customer-columns');
-            // console.log(response.data.data.notice_settings)
-            const settings = initialNoticeColumns;
-            // console.log(def)
-            // Ensure all default columns are present in the settings
-            const mergedSettings = initialNoticeColumns.map(defaultCol => {
-                const savedCol = settings.find(col => col.name === defaultCol.name);
-                return savedCol ? { ...defaultCol, ...savedCol } : defaultCol;
-            });
-            
-            setDisplayOptions(mergedSettings);
-            // setColumnsConfig(mergedSettings);
+            await axios.get('/api/settings/customer-columns');
         } catch (error) {
             console.error('Error fetching column settings:', error);
         }
@@ -494,9 +441,7 @@ export default function CustomerIndex(validatorsData) {
         setShowNotificationModal(!showNotificationModal); // Toggles the state
     };
     
-    const openModal = () => setShowModal(true);
     const closeModal = () => setShowModal(false);
-    const openNoticeModal = () => setShowNotificationModal(true);
     const closeNotificationModal = () => setShowNotificationModal(false);
     
     const handleColumnSettingsSave = async (columns) => {
@@ -505,7 +450,6 @@ export default function CustomerIndex(validatorsData) {
             field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
         );
         
-        setColumnSettings(normalizedColumns);
         try {
             await axios.post('/api/settings/customer-columns/update', {
                 columns: normalizedColumns
@@ -537,7 +481,7 @@ export default function CustomerIndex(validatorsData) {
                     'Accept': 'application/json',
                 }
             });
-            setShowNoticePopup(false);
+            setShowModal(false);
             toast.success('Notice settings saved successfully!');
         } catch (error) {
             console.error('Error:', error);
@@ -571,21 +515,20 @@ export default function CustomerIndex(validatorsData) {
         setCurrentPage(savedPage);
     };
 
-    const fetchData = async (page: number = 1) => {
+    const fetchData = async () => {
         setIsLoading(true);
         const urlParams = new URLSearchParams(window.location.search);
         const currentFilterType = urlParams.get('filterType') || 'all';
         const searchParam = urlParams.get('search') || '';
         const sortColumn = urlParams.get('sortColumn') || 'spy_rank';
         const sortDirection = urlParams.get('sortDirection') || 'ASC';
-        const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
         
         try {
             // Build URL with all parameters
             // Use authenticated endpoint if user is logged in, otherwise use public endpoint
             let url = user ? 
-                `/api/fetch-validators-auth?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}` :
-                `/api/fetch-validators?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`;
+                `/api/fetch-validators-auth?page=${currentPage}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}` :
+                `/api/fetch-validators?page=${currentPage}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`;
                 
             if (searchParam) {
                 url += `&search=${encodeURIComponent(searchParam)}`;
@@ -631,56 +574,36 @@ export default function CustomerIndex(validatorsData) {
 
     useEffect(() => {
         const intervalId = setInterval(() => {
-            // Get current page from URL to ensure we're using the latest page
-            const urlParams = new URLSearchParams(window.location.search);
-            const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
             fetchData();
         }, parseInt(validatorsData.settingsData.update_interval)*1000);
         
         return () => {
             clearInterval(intervalId);
-            window.removeEventListener('filterChanged', handleFilterChange);
         };
     }, [displayOptions]);
     
-    const showNotificationsSettingsPopup = () => {
-        setShowNoticePopup(true);
-    };
-
     const handleExport = () => {
         // Make API call to export endpoint
         window.location.href = '/api/export-data';
     };
 
     return (
-        <AuthenticatedLayout header={<Head />}>
+        <AuthenticatedLayout header={<Head />} auth={usePage().props.auth}>
             <Head title={msg.get('welcome')} />
             <div className="py-0">
-                {/* Loading overlay - only shown during pagination and sorting */}
-                {/* {isLoading && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white p-6 rounded-lg shadow-lg">
-                            <div className="flex flex-col items-center">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 mb-4"></div>
-                                <p className="text-gray-700">Завантаження даних...</p>
-                            </div>
-                        </div>
-                    </div>
-                )} */}
-                
                 <div className="p-4 sm:p-8 mb-8 content-data bg-content">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold">{msg.get('validators.welcome')}&nbsp;{user.name}</h2>
                     </div>
                     <hr/>
                     <ActionButtons 
-                        user={user}
-                        viewMode={viewMode}
-                        setViewMode={setViewMode}
-                        toggleModal={toggleModal}
-                        toggleNotificationModal={toggleNotificationModal}
-                        handleExport={handleExport}
-                        msgProfile={msgProfile}
+                      user={user}
+                      viewMode={viewMode}
+                      setViewMode={setViewMode}
+                      toggleModal={toggleModal}
+                      toggleNotificationModal={toggleNotificationModal}
+                      handleExport={handleExport}
+                      msgProfile={msgProfile}
                     />
                         
                     <div className="flex justify-between items-start mt-10">
@@ -688,19 +611,27 @@ export default function CustomerIndex(validatorsData) {
                             <div className="flex items-center gap-4 w-full">
                                 <div className="flex-grow">
                                     <ValidatorFilters 
-                                        filterType={filterTypeDataSelector}
-                                        onFilterChange={handleFilterChange}
-                                        isAdmin={false}
-                                        onGearClick={null}
-                                        searchTerm={searchTerm}
-                                        onSearchChange={setSearchTerm}
+                                      filterType={filterTypeDataSelector}
+                                      onFilterChange={handleFilterChange}
+                                      isAdmin={false}
+                                      onGearClick={null}
+                                      searchTerm={searchTerm}
+                                      onSearchChange={setSearchTerm}
                                     />
                                 </div>
                                 <div>Display</div>
                                 <div className="relative flex-shrink-0" ref={displayDropdownRef}>
                                     <div 
-                                        className="border rounded px-4 py-2 bg-transparent cursor-pointer flex items-center justify-between w-40"
-                                        onClick={() => setIsDisplayDropdownOpen(!isDisplayDropdownOpen)}
+                                      className="border rounded px-4 py-2 bg-transparent cursor-pointer flex items-center justify-between w-40"
+                                      onClick={() => setIsDisplayDropdownOpen(!isDisplayDropdownOpen)}
+                                      onKeyDown={(e) => {
+                                          if (e.key === 'Enter' || e.key === ' ') {
+                                              e.preventDefault();
+                                              setIsDisplayDropdownOpen(!isDisplayDropdownOpen);
+                                          }
+                                      }}
+                                      role="button"
+                                      tabIndex={0}
                                     >
                                         <span className="dropdown-notice">
                                             {displayOptions.all && displayOptions.top && displayOptions.highlight ? 'All Selected' : 
@@ -724,56 +655,56 @@ export default function CustomerIndex(validatorsData) {
                                             <div className="p-2">
                                                 <label className="customer-filter-label">
                                                     <input
-                                                        type="checkbox"
-                                                        className="form-checkbox"
-                                                        checked={displayOptions.all}
-                                                        onChange={() => handleDisplayOptionChange('all', !displayOptions.all)}
+                                                      type="checkbox"
+                                                      className="form-checkbox"
+                                                      checked={displayOptions.all}
+                                                      onChange={() => handleDisplayOptionChange('all', !displayOptions.all)}
                                                     />
                                                     <span>All</span>
                                                 </label>
                                                 
                                                 <label className="customer-filter-label">
                                                     <input
-                                                        type="checkbox"
-                                                        className="form-checkbox"
-                                                        checked={displayOptions.notRussian}
-                                                        onChange={() => handleDisplayOptionChange('notRussian', !displayOptions.notRussian)}
+                                                      type="checkbox"
+                                                      className="form-checkbox"
+                                                      checked={displayOptions.notRussian}
+                                                      onChange={() => handleDisplayOptionChange('notRussian', !displayOptions.notRussian)}
                                                     />
                                                     <span>Not Russian</span>
                                                 </label>
                                                 <label className="customer-filter-label">
                                                     <input
-                                                        type="checkbox"
-                                                        className="form-checkbox"
-                                                        checked={displayOptions.onlyWithName}
-                                                        onChange={() => handleDisplayOptionChange('onlyWithName', !displayOptions.onlyWithName)}
+                                                      type="checkbox"
+                                                      className="form-checkbox"
+                                                      checked={displayOptions.onlyWithName}
+                                                      onChange={() => handleDisplayOptionChange('onlyWithName', !displayOptions.onlyWithName)}
                                                     />
                                                     <span>Only With Name</span>
                                                 </label>
                                                 <label className="customer-filter-label">
                                                     <input
-                                                        type="checkbox"
-                                                        className="form-checkbox"
-                                                        checked={displayOptions.onlyWithWebsite}
-                                                        onChange={() => handleDisplayOptionChange('onlyWithWebsite', !displayOptions.onlyWithWebsite)}
+                                                      type="checkbox"
+                                                      className="form-checkbox"
+                                                      checked={displayOptions.onlyWithWebsite}
+                                                      onChange={() => handleDisplayOptionChange('onlyWithWebsite', !displayOptions.onlyWithWebsite)}
                                                     />
                                                     <span>Only With Website</span>
                                                 </label>
                                                 <label className="customer-filter-label">
                                                     <input
-                                                        type="checkbox"
-                                                        className="form-checkbox"
-                                                        checked={displayOptions.onlyValidated}
-                                                        onChange={() => handleDisplayOptionChange('onlyValidated', !displayOptions.onlyValidated)}
+                                                      type="checkbox"
+                                                      className="form-checkbox"
+                                                      checked={displayOptions.onlyValidated}
+                                                      onChange={() => handleDisplayOptionChange('onlyValidated', !displayOptions.onlyValidated)}
                                                     />
                                                     <span>Only Validated</span>
                                                 </label>
                                                 <label className="customer-filter-label">
                                                     <input
-                                                        type="checkbox"
-                                                        className="form-checkbox"
-                                                        checked={displayOptions.onlyWithMevAndZeroCommission}
-                                                        onChange={() => handleDisplayOptionChange('onlyWithMevAndZeroCommission', !displayOptions.onlyWithMevAndZeroCommission)}
+                                                      type="checkbox"
+                                                      className="form-checkbox"
+                                                      checked={displayOptions.onlyWithMevAndZeroCommission}
+                                                      onChange={() => handleDisplayOptionChange('onlyWithMevAndZeroCommission', !displayOptions.onlyWithMevAndZeroCommission)}
                                                     />
                                                     <span>Only With Mev AND Comission 0%</span>
                                                 </label>
@@ -781,20 +712,20 @@ export default function CustomerIndex(validatorsData) {
                                         </div>
                                     )}
                                 </div>
-                                <button href={route('admin.validators.top')} onClick={toggleModal} className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px] ml-3 flex-shrink-0">
+                                <button onClick={toggleModal} className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px] ml-3 flex-shrink-0">
                                     <div className="flex items-center" >
                                         <FontAwesomeIcon icon={faGear} className="w-5 h-5 mr-2" />
                                         <span>Columns</span>
                                     </div>
                                 </button>
                                 <button 
-                                    onClick={() => {
+                                  onClick={() => {
                                         setViewMode(viewMode === 'table' ? 'grid' : 'table');
                                         if (user?.id) {
                                             axios.post('/api/update-view-mode', {
                                                 viewMode: viewMode === 'table' ? 'grid' : 'table'
-                                            }).then(response => {
-                                                console.log(response.data);
+                                            }).then(() => {
+                                                // Response handling
                                             }).catch(error => {
                                                 console.error(error);
                                             });
@@ -802,12 +733,12 @@ export default function CustomerIndex(validatorsData) {
                                             localStorage.setItem('viewMode', viewMode === 'table' ? 'grid' : 'table');
                                         }
                                     }}
-                                    className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px] ml-3 flex-shrink-0 w-[150px]"
+                                  className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-[#78549c] text-[13px] ml-3 flex-shrink-0 w-[150px]"
                                 >
                                     <div className="flex items-center justify-center">
                                         <FontAwesomeIcon 
-                                            icon={viewMode === 'table' ? faTh : faTable} 
-                                            className="w-5 h-5 mr-2" 
+                                          icon={viewMode === 'table' ? faTh : faTable} 
+                                          className="w-5 h-5 mr-2" 
                                         />
                                         <span>{viewMode === 'table' ? 'Grid View' : 'Table View'}</span>
                                     </div>
@@ -826,14 +757,14 @@ export default function CustomerIndex(validatorsData) {
                                 </span>
                                 <div className="flex gap-2">
                                     <button
-                                        onClick={() => handleBulkAction('top')}
-                                        className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+                                      onClick={() => handleBulkAction('top')}
+                                      className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
                                     >
                                         Toggle Top
                                     </button>
                                     <button
-                                        onClick={() => handleBulkAction('highlight')}
-                                        className="px-3 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                                      onClick={() => handleBulkAction('highlight')}
+                                      className="px-3 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600"
                                     >
                                         Toggle Highlight
                                     </button>
@@ -851,9 +782,9 @@ export default function CustomerIndex(validatorsData) {
                                             <th className="relative">
                                                 <div className="flex items-center gap-2">
                                                     <input 
-                                                        type="checkbox" 
-                                                        checked={selectAll}
-                                                        onChange={handleSelectAllChange} 
+                                                      type="checkbox" 
+                                                      checked={selectAll}
+                                                      onChange={handleSelectAllChange} 
                                                     />
                                                 </div>
                                             </th>
@@ -867,17 +798,17 @@ export default function CustomerIndex(validatorsData) {
                                             <td className="text-left">
                                                 <div className="pl-[10px]">
                                                     <input 
-                                                        type="checkbox" 
-                                                        id={validator.id} 
-                                                        checked={checkedIds.includes(validator.id)}
-                                                        onChange={() => handleCheckboxChange(validator.id)} 
+                                                      type="checkbox" 
+                                                      id={validator.id} 
+                                                      checked={checkedIds.includes(validator.id)}
+                                                      onChange={() => handleCheckboxChange(validator.id)} 
                                                     />
                                                 </div>
                                             </td>
                                             <td className="text-center">
-                                                <ValidatorActions validator={validator} onBanToggle={handleBanToggle} />
+                                                {/* <ValidatorActions validator={validator} onBanToggle={handleBanToggle} /> */}
                                             </td>
-                                            {getOrderedVisibleColumns().map(column => renderColumnCellLocal(column.name, validator, index))}
+                                            {getOrderedVisibleColumns().map(column => renderColumnCellLocal(column.name, validator))}
                                         </tr>
                                     ))}
                                     </tbody>
@@ -890,54 +821,56 @@ export default function CustomerIndex(validatorsData) {
                                     <div className="relative border mx-2 my-2 px-4 py-2" key={validator.id}>
                                         <div className="pl-[10px]">
                                             <input 
-                                                type="checkbox" 
-                                                id={validator.id} 
-                                                checked={checkedIds.includes(validator.id)}
-                                                onChange={() => handleCheckboxChange(validator.id)} 
+                                              type="checkbox" 
+                                              id={validator.id} 
+                                              checked={checkedIds.includes(validator.id)}
+                                              onChange={() => handleCheckboxChange(validator.id)} 
                                             />
                                         </div>
-                                        {getOrderedVisibleColumns().map(column => renderBlockLocal(column.name, validator, index))}
+                                        {getOrderedVisibleColumns().map(column => renderBlockLocal(column.name, validator))}
                                     </div>
                                 ))}
                             </div>
                         )}
                         
                         <ValidatorPagination 
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            filterType={filterTypeDataSelector}
-                            onPageChange={handlePageChange}
+                          currentPage={currentPage}
+                          totalPages={totalPages}
+                          filterType={filterTypeDataSelector}
+                          onPageChange={handlePageChange}
                         />
                         
                         {(showModal) && (
                             <Modal 
-                                onClose={closeModal} 
-                                onSave={(columns) => {
+                              onClose={closeModal} 
+                              onSave={(columns) => {
                                     // Normalize column names before saving
                                     const normalizedColumns = columns.map(field => 
                                         field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
                                     );
                                     handleColumnSettingsSave(normalizedColumns);
                                 }}
-                                initialColumns={columnsConfig}
-                                onColumnChange={(columnName, isVisible, index, updatedList) => {
+                              initialColumns={columnsConfig}
+                              onColumnChange={(columnName, isVisible, index, updatedList) => {
                                     // Update the columns configuration
                                     setColumnsConfig(updatedList);
                                 }}
-                                onSort={(newList) => {
+                              onSort={(newList) => {
                                     // Update the columns configuration
                                     setColumnsConfig(newList);
                                 }}
                             >
-                                {/* Modal Content */}
+                                <div />
                             </Modal>
                         )}
                         {(showNotificationModal) && (
                             <ModalNotice 
-                                onClose={closeNotificationModal} 
-                                initialColumns={columnsNoticeConfig}
-                                user={user}
-                                onSave={(columns) => {
+                              onClose={closeNotificationModal} 
+                              initialColumns={columnsNoticeConfig}
+                              user={user}
+                              onColumnChange={() => {}}
+                              onSort={() => {}}
+                              onSave={(columns) => {
                                     // Normalize column names before saving
                                     const normalizedColumns = columns.map(field => 
                                         field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
@@ -945,7 +878,7 @@ export default function CustomerIndex(validatorsData) {
                                     handleColumnNoticeSave(normalizedColumns);
                                 }}
                             >
-                                {/* Modal Content */}
+                                <div />
                             </ModalNotice>
                         )}
                     </div>

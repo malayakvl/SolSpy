@@ -6,9 +6,7 @@ import ValidatorActivatedStake from '../../Pages/Validators/Partials/ValidatorAc
 import ValidatorCredits from '../../Pages/Validators/Partials/ValidatorCredits';
 import ValidatorRate from '../../Pages/Validators/Partials/ValidatorRate';
 import ValidatorSpyRank from '../../Pages/Validators/Partials/ValidatorSpyRank';
-import ValidatorUptime from '../../Pages/Validators/Partials/ValidatorUptime';
 import ValidatorName from '../../Pages/Validators/Partials/ValidatorName';
-import ValidatorScore from '../../Pages/Validators/Partials/ValidatorScore';
 import ValidatorSFDP from '../../Pages/Validators/Partials/ValidatorSFDP';
 import ValidatorStatus from '../../Pages/Validators/Partials/ValidatorStatus';
 import ValidatorJiitoScore from '../../Pages/Validators/Partials/ValidatorJiitoScore';
@@ -72,10 +70,10 @@ const ValidatorTable: React.FC<ValidatorTableProps> = ({
             case "Avatar": 
                 return validator.avatar_url || validator.avatar_file_url ? (
                     <img 
-                        src={validator.avatar_url || validator.avatar_file_url} 
-                        alt={`${validator.name} avatar`} 
-                        className="w-8 h-8 rounded-full"
-                        onError={(e) => {
+                      src={validator.avatar_url || validator.avatar_file_url} 
+                      alt={`${validator.name} avatar`} 
+                      className="w-8 h-8 rounded-full"
+                      onError={(e) => {
                             e.currentTarget.style.display = 'none';
                             // Create a fallback element
                             const fallback = document.createElement('div');
@@ -104,7 +102,7 @@ const ValidatorTable: React.FC<ValidatorTableProps> = ({
             case "Vote Rate": 
                 return <ValidatorRate validator={validator} epoch={epoch} settingsData={settingsData} totalStakeData={totalStakeData} />;
             case "Jiito Score": 
-                return <ValidatorJiitoScore validator={validator} epoch={epoch} />;
+                return <ValidatorJiitoScore validator={validator} />;
             case "Active": 
                 return !validator.delinquent ? 'Active' : 'Offline';
             case "Inflation Commission": 
@@ -146,9 +144,9 @@ const ValidatorTable: React.FC<ValidatorTableProps> = ({
                         <th className="relative">
                             <div className="flex items-center gap-2">
                                 <input 
-                                    type="checkbox" 
-                                    checked={selectAll}
-                                    onChange={handleSelectAllChange} 
+                                  type="checkbox" 
+                                  checked={selectAll}
+                                  onChange={handleSelectAllChange} 
                                 />
                             </div>
                         </th>
@@ -162,11 +160,11 @@ const ValidatorTable: React.FC<ValidatorTableProps> = ({
                             <td className="text-left text-white">
                                 <div className="pl-[10px]">
                                     <input 
-                                        key={`checkbox-${validator.id}`}
-                                        type="checkbox" 
-                                        id={validator.id} 
-                                        checked={checkedIds.includes(validator.id)}
-                                        onChange={() => handleCheckboxChange(validator.id)} 
+                                      key={`checkbox-${validator.id}`}
+                                      type="checkbox" 
+                                      id={validator.id} 
+                                      checked={checkedIds.includes(validator.id)}
+                                      onChange={() => handleCheckboxChange(validator.id)} 
                                     />
                                 </div>
                             </td>
