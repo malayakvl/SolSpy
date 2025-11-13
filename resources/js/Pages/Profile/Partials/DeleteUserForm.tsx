@@ -10,10 +10,11 @@ import { useSelector } from 'react-redux';
 import { appLangSelector } from '../../../Redux/Layout/selectors';
 import Lang from 'lang.js';
 import lngProfile from '../../../Lang/Profile/translation';
+import { type FormEvent } from 'react';
 
 export default function DeleteUserForm({ className = '' }) {
   const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(false);
-  const passwordInput = useRef();
+  const passwordInput = useRef<HTMLInputElement>(null);
   const appLang = useSelector(appLangSelector);
   const msg = new Lang({
     messages: lngProfile,
@@ -36,13 +37,13 @@ export default function DeleteUserForm({ className = '' }) {
     setConfirmingUserDeletion(true);
   };
 
-  const deleteUser = e => {
+  const deleteUser = (e: FormEvent) => {
     e.preventDefault();
 
     destroy(route('profile.destroy'), {
       preserveScroll: true,
       onSuccess: () => closeModal(),
-      onError: () => passwordInput.current.focus(),
+      onError: () => passwordInput.current?.focus(),
       onFinish: () => reset(),
     });
   };
@@ -101,7 +102,7 @@ export default function DeleteUserForm({ className = '' }) {
           </div>
 
           <div className="mt-6 flex justify-end">
-            <SecondaryButton onClick={closeModal}>
+            <SecondaryButton onClick={closeModal} disabled={processing}>
               {msg.get('profile.cancel.title')}
             </SecondaryButton>
 

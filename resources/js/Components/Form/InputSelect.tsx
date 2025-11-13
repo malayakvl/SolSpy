@@ -1,7 +1,6 @@
 import InputLabel from './InputLabel';
 import React, { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
-import lngHeaders from '../../Lang/Datatable/translation';
 import lngDropdown from '../../Lang/Dropdown/translation';
 import { useSelector } from 'react-redux';
 import { appLangSelector } from '../../Redux/Layout/selectors';

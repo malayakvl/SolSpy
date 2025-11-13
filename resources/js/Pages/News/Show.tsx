@@ -95,8 +95,8 @@ export default function Show({ article, relatedArticles = [] }: NewsShowProps) {
                     {/* Navigation */}
                     <div className="mb-6">
                         <Link
-                            href={route('admin.news.index')}
-                            className="inline-flex items-center text-blue-500 hover:text-blue-700"
+                          href={route('admin.news.index')}
+                          className="inline-flex items-center text-blue-500 hover:text-blue-700"
                         >
                             <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
                             Back to News
@@ -113,11 +113,13 @@ export default function Show({ article, relatedArticles = [] }: NewsShowProps) {
                                         Featured
                                     </span>
                                 )}
-                                <span className={`text-sm px-3 py-1 rounded-full ${
+                                <span
+                                  className={`text-sm px-3 py-1 rounded-full ${
                                     article.status === 'published' 
                                         ? 'bg-green-100 text-green-800' 
                                         : 'bg-gray-100 text-gray-800'
-                                }`}>
+                                }`}
+                                >
                                     {article.status.charAt(0).toUpperCase() + article.status.slice(1)}
                                 </span>
                             </div>
@@ -145,8 +147,8 @@ export default function Show({ article, relatedArticles = [] }: NewsShowProps) {
                                     {article.views_count.toLocaleString()} views
                                 </span>
                                 <button
-                                    onClick={handleShare}
-                                    className="flex items-center text-blue-500 hover:text-blue-700"
+                                  onClick={handleShare}
+                                  className="flex items-center text-blue-500 hover:text-blue-700"
                                 >
                                     <FontAwesomeIcon icon={faShare} className="mr-2" />
                                     Share
@@ -157,9 +159,9 @@ export default function Show({ article, relatedArticles = [] }: NewsShowProps) {
                             {article.image_url && (
                                 <div className="mb-8">
                                     <img
-                                        src={article.image_url}
-                                        alt={article.translation.title}
-                                        className="w-full h-64 md:h-96 object-cover rounded-lg shadow-lg"
+                                      src={article.image_url}
+                                      alt={article.translation.title}
+                                      className="w-full h-64 md:h-96 object-cover rounded-lg shadow-lg"
                                     />
                                 </div>
                             )}
@@ -167,8 +169,8 @@ export default function Show({ article, relatedArticles = [] }: NewsShowProps) {
 
                         {/* Article content */}
                         <div 
-                            className="prose prose-lg max-w-none mb-12"
-                            dangerouslySetInnerHTML={{ __html: article.translation.content }}
+                          className="prose prose-lg max-w-none mb-12"
+                          dangerouslySetInnerHTML={{ __html: article.translation.content }}
                         />
 
                         {/* Article footer */}
@@ -183,8 +185,8 @@ export default function Show({ article, relatedArticles = [] }: NewsShowProps) {
                                     )}
                                 </div>
                                 <button
-                                    onClick={handleShare}
-                                    className="flex items-center px-4 py-2 text-sm bg-[#703ea2] text-white rounded hover:bg-blue-600"
+                                  onClick={handleShare}
+                                  className="flex items-center px-4 py-2 text-sm bg-[#703ea2] text-white rounded hover:bg-blue-600"
                                 >
                                     <FontAwesomeIcon icon={faShare} className="mr-2" />
                                     Share Article
@@ -202,9 +204,9 @@ export default function Show({ article, relatedArticles = [] }: NewsShowProps) {
                                     <div key={relatedArticle.id} className="bg-white rounded-lg shadow-md overflow-hidden">
                                         {relatedArticle.image_url && (
                                             <img
-                                                src={relatedArticle.image_url}
-                                                alt={relatedArticle.translation.title}
-                                                className="w-full h-48 object-cover"
+                                              src={relatedArticle.image_url}
+                                              alt={relatedArticle.translation.title}
+                                              className="w-full h-48 object-cover"
                                             />
                                         )}
                                         <div className="p-4">
@@ -221,8 +223,8 @@ export default function Show({ article, relatedArticles = [] }: NewsShowProps) {
                                             </div>
                                             <h3 className="font-semibold text-lg mb-2 line-clamp-2">
                                                 <Link
-                                                    href={route('news.show', relatedArticle.slug)}
-                                                    className="text-gray-900 hover:text-blue-600"
+                                                  href={route('news.show', relatedArticle.slug)}
+                                                  className="text-gray-900 hover:text-blue-600"
                                                 >
                                                     {relatedArticle.translation.title}
                                                 </Link>
@@ -238,8 +240,8 @@ export default function Show({ article, relatedArticles = [] }: NewsShowProps) {
                                                     {relatedArticle.views_count} views
                                                 </span>
                                                 <Link
-                                                    href={route('news.show', relatedArticle.slug)}
-                                                    className="text-blue-500 hover:text-blue-700"
+                                                  href={route('news.show', relatedArticle.slug)}
+                                                  className="text-blue-500 hover:text-blue-700"
                                                 >
                                                     Read more →
                                                 </Link>

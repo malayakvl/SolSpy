@@ -25,7 +25,7 @@ export default function InputRoleSelect({
   return (
     <div className="relative">
       <InputLabel htmlFor={name} value={label} />
-      {props.options.length > 0 && (
+      {props.options?.length > 0 && (
         <select
           id={name}
           name={name}

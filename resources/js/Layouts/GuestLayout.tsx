@@ -1,6 +1,7 @@
+import React from 'react';
 import Footer from '../Components/Footer/Footer';
 import Header from '../Components/Header/Header';
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 
 
 export default function GuestLayout({ children, auth }) {

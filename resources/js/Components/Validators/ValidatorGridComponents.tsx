@@ -1,3 +1,4 @@
+import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faSortUp,
@@ -692,10 +693,10 @@ export const renderBlock = (columnName, validator, epoch, settingsData, totalSta
                 Avatar:
                 {validator.avatar_url || validator.avatar_file_url ? (
                     <img 
-                        src={validator.avatar_url || validator.avatar_file_url} 
-                        alt={`${validator.name} avatar`} 
-                        className="w-8 h-8 rounded-full"
-                        onError={(e) => {
+                      src={validator.avatar_url || validator.avatar_file_url} 
+                      alt={`${validator.name} avatar`} 
+                      className="w-8 h-8 rounded-full"
+                      onError={(e) => {
                             e.currentTarget.style.display = 'none';
                             // Create a fallback element
                             const fallback = document.createElement('div');
@@ -726,7 +727,13 @@ export const renderBlock = (columnName, validator, epoch, settingsData, totalSta
                     <ValidatorTVCScore validator={validator} />
                 </div>
             );
-        case "TVC Rank": return <div className="flex items-center justify-between text-sm py-1.5">TVC Rank: <ValidatorTVCRank validator={validator} /></div>;
+        case "TVC Rank": 
+            return (
+                <div className="flex items-center justify-between text-sm py-1.5">
+                    <div>TVC Rank:</div>
+                    {validator.tvcRank || 'N/A'}
+                </div>
+            );
         case "Vote Credits": 
             return (
                 <div className="flex items-center justify-between text-sm py-1.5">
@@ -754,8 +761,8 @@ export const renderBlock = (columnName, validator, epoch, settingsData, totalSta
         case "Jiito Score": 
             return (
                 <div className="flex items-center justify-between text-sm py-1.5">
-                    <div>Jito Score:</div>
-                    <ValidatorJiitoScore validator={validator} epoch={epoch} />
+                    <div>Jiito Score:</div>
+                    <ValidatorJiitoScore validator={validator} />
                 </div>
             );
         case "Inflation Commission": return <div className="flex items-center justify-between text-sm py-1.5"><div>Inflation Commission:</div> {validator.jito_commission !== undefined ? `${(parseFloat(validator.jito_commission) / 100).toFixed(2)}%` : 'N/A'}</div>;

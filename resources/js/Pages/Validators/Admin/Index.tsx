@@ -539,10 +539,10 @@ export default function AdminIndex(validatorsData) {
                     <div className="flex justify-between items-start mt-10">
                         <div className="flex-1">
                             <ValidatorFilters 
-                                filterType={filterTypeDataSelector}
-                                onFilterChange={handleFilterChange}
-                                isAdmin={isAdmin}
-                                onGearClick={toggleModal}
+                              filterType={filterTypeDataSelector}
+                              onFilterChange={handleFilterChange}
+                              isAdmin={isAdmin}
+                              onGearClick={toggleModal}
                             />
                         </div>
                     </div>
@@ -556,14 +556,14 @@ export default function AdminIndex(validatorsData) {
                                 </span>
                                 <div className="flex gap-2">
                                     <button
-                                        onClick={() => handleBulkAction('top')}
-                                        className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+                                      onClick={() => handleBulkAction('top')}
+                                      className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
                                     >
                                         Toggle Top
                                     </button>
                                     <button
-                                        onClick={() => handleBulkAction('highlight')}
-                                        className="px-3 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                                      onClick={() => handleBulkAction('highlight')}
+                                      className="px-3 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600"
                                     >
                                         Toggle Highlight
                                     </button>
@@ -598,9 +598,9 @@ export default function AdminIndex(validatorsData) {
                                         <th className="relative">
                                             <div className="flex items-center gap-2">
                                                 <input 
-                                                    type="checkbox" 
-                                                    checked={selectAll}
-                                                    onChange={handleSelectAllChange} 
+                                                  type="checkbox" 
+                                                  checked={selectAll}
+                                                  onChange={handleSelectAllChange} 
                                                 />
                                                 {/* {isAdmin && (
                                                     <ValidatorAdminActions 
@@ -623,10 +623,10 @@ export default function AdminIndex(validatorsData) {
                                         <td className="text-left">
                                             <div className="pl-[10px]">
                                                 <input 
-                                                    type="checkbox" 
-                                                    id={validator.id} 
-                                                    checked={checkedIds.includes(validator.id)}
-                                                    onChange={() => handleCheckboxChange(validator.id)} 
+                                                  type="checkbox" 
+                                                  id={validator.id} 
+                                                  checked={checkedIds.includes(validator.id)}
+                                                  onChange={() => handleCheckboxChange(validator.id)} 
                                                 />
                                             </div>
                                         </td>
@@ -641,28 +641,28 @@ export default function AdminIndex(validatorsData) {
                         </div>
                         
                         <ValidatorPagination 
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            filterType={filterTypeDataSelector}
-                            onPageChange={handlePageChange}
+                          currentPage={currentPage}
+                          totalPages={totalPages}
+                          filterType={filterTypeDataSelector}
+                          onPageChange={handlePageChange}
                         />
                         
                         {(showModal && isAdmin) && (
                             <Modal 
-                                onClose={closeModal} 
-                                onSave={(columns) => {
+                              onClose={closeModal} 
+                              onSave={(columns) => {
                                     // Normalize column names before saving
                                     const normalizedColumns = columns.map(field => 
                                         field.name === "MEV Comission" ? {...field, name: "MEV Commission"} : field
                                     );
                                     handleColumnSettingsSave(normalizedColumns);
                                 }}
-                                initialColumns={columnsConfig}
-                                onColumnChange={(columnName, isVisible, index, updatedList) => {
+                              initialColumns={columnsConfig}
+                              onColumnChange={(columnName, isVisible, index, updatedList) => {
                                     // Update the columns configuration
                                     setColumnsConfig(updatedList);
                                 }}
-                                onSort={(newList) => {
+                              onSort={(newList) => {
                                     // Update the columns configuration
                                     setColumnsConfig(newList);
                                 }}

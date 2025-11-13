@@ -49,8 +49,8 @@ export default function Featured({ featured }: FeaturedProps) {
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold">Featured News</h2>
                     <Link
-                        href={route('news.index')}
-                        className="text-blue-500 hover:text-blue-700"
+                      href={route('news.index')}
+                      className="text-blue-500 hover:text-blue-700"
                     >
                         View All News →
                     </Link>
@@ -62,9 +62,9 @@ export default function Featured({ featured }: FeaturedProps) {
                             <div key={article.id} className="bg-white rounded-lg shadow-md overflow-hidden border-2 border-yellow-400">
                                 {article.image_url && (
                                     <img
-                                        src={article.image_url}
-                                        alt={article.translation?.title}
-                                        className="w-full h-48 object-cover"
+                                      src={article.image_url}
+                                      alt={article.translation?.title}
+                                      className="w-full h-48 object-cover"
                                     />
                                 )}
                                 <div className="p-4">
@@ -79,8 +79,8 @@ export default function Featured({ featured }: FeaturedProps) {
                                     </div>
                                     <h3 className="font-semibold text-lg mb-2 line-clamp-2">
                                         <Link
-                                            href={route('news.show', article.slug)}
-                                            className="text-gray-900 hover:text-blue-600"
+                                          href={route('news.show', article.slug)}
+                                          className="text-gray-900 hover:text-blue-600"
                                         >
                                             {article.translation?.title}
                                         </Link>
@@ -96,8 +96,8 @@ export default function Featured({ featured }: FeaturedProps) {
                                             {article.views_count} views
                                         </span>
                                         <Link
-                                            href={route('news.show', article.slug)}
-                                            className="text-blue-500 hover:text-blue-700"
+                                          href={route('news.show', article.slug)}
+                                          className="text-blue-500 hover:text-blue-700"
                                         >
                                             Read more →
                                         </Link>
@@ -110,8 +110,8 @@ export default function Featured({ featured }: FeaturedProps) {
                     <div className="text-center py-8">
                         <p className="text-gray-500 mb-4">No featured articles available at the moment.</p>
                         <Link
-                            href={route('news.index')}
-                            className="text-blue-500 hover:text-blue-700"
+                          href={route('news.index')}
+                          className="text-blue-500 hover:text-blue-700"
                         >
                             Browse All News →
                         </Link>

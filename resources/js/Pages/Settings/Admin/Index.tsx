@@ -83,9 +83,9 @@ export default function CreateEdit({ settingsData, isEdit = true, languages = [
                                         {msg.get('settings.update_interval')}
                                     </label>
                                     <select
-                                        value={data.update_interval}
-                                        onChange={(e) => setData('update_interval', e.target.value)}
-                                        className="admin-select w-[220px]"
+                                      value={data.update_interval}
+                                      onChange={(e) => setData('update_interval', e.target.value)}
+                                      className="admin-select w-[220px]"
                                     >
                                         <option value="2">2</option>
                                         <option value="5">5</option>
@@ -97,9 +97,9 @@ export default function CreateEdit({ settingsData, isEdit = true, languages = [
                                         {msg.get('settings.collect_score_retention')}
                                     </label>
                                     <select
-                                        value={data.collect_score_retention}
-                                        onChange={(e) => setData('collect_score_retention', e.target.value)}
-                                        className="admin-select w-[220px]"
+                                      value={data.collect_score_retention}
+                                      onChange={(e) => setData('collect_score_retention', e.target.value)}
+                                      className="admin-select w-[220px]"
                                     >
                                         <option value="10">10</option>
                                         <option value="20">20</option>
@@ -113,9 +113,9 @@ export default function CreateEdit({ settingsData, isEdit = true, languages = [
                         {/* Submit Button */}
                         <div className="flex justify-end gap-4">
                             <button
-                                type="submit"
-                                disabled={processing}
-                                className="inline-flex items-center px-6 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 disabled:opacity-50 text-sm"
+                              type="submit"
+                              disabled={processing}
+                              className="inline-flex items-center px-6 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 disabled:opacity-50 text-sm"
                             >
                                 <FontAwesomeIcon icon={faSave} className="mr-2" />
                                 {processing ? 'Saving...' : (msg.get('settings.save'))}

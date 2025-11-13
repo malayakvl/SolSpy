@@ -6,17 +6,29 @@ import Dropdown from '../../Components/Form/Dropdown';
 import { usePage, router } from '@inertiajs/react';
 import { useState } from 'react';
 
+interface AuthProps {
+  user?: any;
+  can?: any;
+  role?: string;
+}
+
+interface PageProps {
+  auth?: AuthProps;
+  [key: string]: any;
+}
+
 export default function ProfileMenu() {
   const [showingNavigationDropdown, setShowingNavigationDropdown] =
     useState(false);
-  const user = usePage().props.auth.user;
+  const { props: pageProps } = usePage<PageProps>();
+  const user = pageProps.auth?.user;
   const appLang = useSelector(appLangSelector);
   const lng = new Lang({
     messages: lngHeader,
-    locale: appLang,
+    locale: appLang as string,
   });
-  const permissions = usePage().props.auth.can;
-  const source = user.name;
+  const permissions = pageProps.auth?.can;
+  const source = user?.name || '';
   const array = source.split(' ');
   const fioResult =
     array[0] +
@@ -24,7 +36,7 @@ export default function ProfileMenu() {
     (array[1] ? array[1][0] : '');
 
   // Function to handle logout with proper CSRF handling
-  const handleLogout = (e) => {
+  const handleLogout = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Clear localStorage
@@ -55,8 +67,8 @@ export default function ProfileMenu() {
           <Dropdown.Trigger>
           <span className="inline-flex">
             <button
-                type="button"
-                className="inline-flex items-center
+              type="button"
+              className="inline-flex items-center
                                 px-2 text-sm lng-menu
                                 font-medium leading-4 text-gray-500
                                 transition duration-150
@@ -70,10 +82,10 @@ export default function ProfileMenu() {
 
           <Dropdown.Content>
             <Dropdown.Link
-                href={'/profile'}
-                method="get"
-                as="button"
-              >
+              href={'/profile'}
+              method="get"
+              as="button"
+            >
               {lng.get('menu.profile')}
             </Dropdown.Link>
             <button

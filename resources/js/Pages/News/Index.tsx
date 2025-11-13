@@ -120,15 +120,15 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
                         {isAdmin && (
                             <div className="flex gap-2">
                                 <Link
-                                    href="/admin/news/create"
-                                    className="inline-flex items-center px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]"
+                                  href="/admin/news/create"
+                                  className="inline-flex items-center px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]"
                                 >
                                     <FontAwesomeIcon icon={faPlus} className="mr-2" />
                                     Create News
                                 </Link>
                                 <Link
-                                    href="/admin/news"
-                                    className="inline-flex items-center px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                  href="/admin/news"
+                                  className="inline-flex items-center px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
                                 >
                                     <FontAwesomeIcon icon={faCog} className="mr-2" />
                                     Manage News
@@ -146,9 +146,9 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
                                     <div key={`${article.type}-${article.id}`} className="bg-white rounded-lg shadow-md overflow-hidden border-2 border-purple-400">
                                         {article.image_url && (
                                             <img
-                                                src={article.image_url}
-                                                alt={article.title}
-                                                className="w-full h-48 object-cover"
+                                              src={article.image_url}
+                                              alt={article.title}
+                                              className="w-full h-48 object-cover"
                                             />
                                         )}
                                         <div className="p-4">
@@ -163,8 +163,8 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
                                             </div>
                                             <h4 className="font-semibold text-lg mb-2 line-clamp-2">
                                                 <a
-                                                    href={article.url}
-                                                    className="text-gray-900 hover:text-blue-600"
+                                                  href={article.url}
+                                                  className="text-gray-900 hover:text-blue-600"
                                                 >
                                                     {article.title}
                                                 </a>
@@ -179,8 +179,8 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
                                                     {article.type === 'news' ? 'News' : 'Discord'}
                                                 </span>
                                                 <a
-                                                    href={article.url}
-                                                    className="text-blue-500 hover:text-blue-700"
+                                                  href={article.url}
+                                                  className="text-blue-500 hover:text-blue-700"
                                                 >
                                                     Read more →
                                                 </a>
@@ -197,18 +197,18 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
                         <div className="flex flex-wrap gap-4 items-end">
                             <div className="flex-1 min-w-[200px]">
                                 <input
-                                    type="text"
-                                    placeholder="Search news..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full p-2 border border-gray-300 rounded"
+                                  type="text"
+                                  placeholder="Search news..."
+                                  value={searchTerm}
+                                  onChange={(e) => setSearchTerm(e.target.value)}
+                                  className="w-full p-2 border border-gray-300 rounded"
                                 />
                             </div>
                             <div>
                                 <select
-                                    value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value)}
-                                    className="p-2 border border-gray-300 rounded"
+                                  value={statusFilter}
+                                  onChange={(e) => setStatusFilter(e.target.value)}
+                                  className="p-2 border border-gray-300 rounded"
                                 >
                                     <option value="all">All Status</option>
                                     <option value="published">Published</option>
@@ -217,17 +217,17 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
                             </div>
                             <div>
                                 <select
-                                    value={featuredFilter}
-                                    onChange={(e) => setFeaturedFilter(e.target.value)}
-                                    className="p-2 border border-gray-300 rounded"
+                                  value={featuredFilter}
+                                  onChange={(e) => setFeaturedFilter(e.target.value)}
+                                  className="p-2 border border-gray-300 rounded"
                                 >
                                     <option value="all">All Articles</option>
                                     <option value="featured">Featured Only</option>
                                 </select>
                             </div>
                             <button
-                                type="submit"
-                                className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]"
+                              type="submit"
+                              className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]"
                             >
                                 Search
                             </button>
@@ -243,9 +243,9 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
                                     <div key={article.id} className="bg-white rounded-lg shadow-md overflow-hidden border-2 border-yellow-400">
                                         {article.image_url && (
                                             <img
-                                                src={article.image_url}
-                                                alt={article.translation?.title}
-                                                className="w-full h-48 object-cover"
+                                              src={article.image_url}
+                                              alt={article.translation?.title}
+                                              className="w-full h-48 object-cover"
                                             />
                                         )}
                                         <div className="p-4">
@@ -260,8 +260,8 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
                                             </div>
                                             <h4 className="font-semibold text-lg mb-2 line-clamp-2">
                                                 <Link
-                                                    href={route('news.show', article.slug)}
-                                                    className="text-gray-900 hover:text-blue-600"
+                                                  href={route('news.show', article.slug)}
+                                                  className="text-gray-900 hover:text-blue-600"
                                                 >
                                                     {article.translation?.title}
                                                 </Link>
@@ -277,8 +277,8 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
                                                     {article.views_count} views
                                                 </span>
                                                 <Link
-                                                    href={route('news.show', article.slug)}
-                                                    className="text-blue-500 hover:text-blue-700"
+                                                  href={route('news.show', article.slug)}
+                                                  className="text-blue-500 hover:text-blue-700"
                                                 >
                                                     Read more →
                                                 </Link>
@@ -296,18 +296,20 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
                             <div key={article.id} className="bg-white rounded-lg shadow-md overflow-hidden">
                                 {article.image_url && (
                                     <img
-                                        src={article.image_url}
-                                        alt={article.translation?.title}
-                                        className="w-full h-48 object-cover"
+                                      src={article.image_url}
+                                      alt={article.translation?.title}
+                                      className="w-full h-48 object-cover"
                                     />
                                 )}
                                 <div className="p-4">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <span className={`text-xs px-2 py-1 rounded ${
+                                        <span
+                                          className={`text-xs px-2 py-1 rounded ${
                                             article.status === 'published' 
                                                 ? 'bg-green-100 text-green-800' 
                                                 : 'bg-gray-100 text-gray-800'
-                                        }`}>
+                                        }`}
+                                        >
                                             {article.status}
                                         </span>
                                         {article.is_featured && (
@@ -322,8 +324,8 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
                                     </div>
                                     <h4 className="font-semibold text-lg mb-2 line-clamp-2">
                                         <Link
-                                            href={route('news.show', article.slug)}
-                                            className="text-gray-900 hover:text-blue-600"
+                                          href={route('news.show', article.slug)}
+                                          className="text-gray-900 hover:text-blue-600"
                                         >
                                             {article.translation?.title}
                                         </Link>
@@ -339,8 +341,8 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
                                             {article.views_count} views
                                         </span>
                                         <Link
-                                            href={route('news.show', article.slug)}
-                                            className="text-blue-500 hover:text-blue-700"
+                                          href={route('news.show', article.slug)}
+                                          className="text-blue-500 hover:text-blue-700"
                                         >
                                             Read more →
                                         </Link>
@@ -356,9 +358,9 @@ export default function Index({ news, featured, filters = {} }: NewsIndexProps) 
                             <div className="flex space-x-1">
                                 {Array.from({ length: news.last_page }, (_, i) => i + 1).map((page) => (
                                     <Link
-                                        key={page}
-                                        href={route('news.index', { ...filters, page })}
-                                        className={`px-3 py-2 text-sm rounded ${
+                                      key={page}
+                                      href={route('news.index', { ...filters, page })}
+                                      className={`px-3 py-2 text-sm rounded ${
                                             page === news.current_page
                                                 ? 'bg-[#703ea2] text-white'
                                                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'

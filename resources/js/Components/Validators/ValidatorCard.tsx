@@ -1,11 +1,8 @@
+import React from 'react';
 import { useSelector } from 'react-redux';
 import { appLangSelector } from '../../Redux/Layout/selectors';
 import Lang from 'lang.js';
 import lngVaidators from '../../Lang/Validators/translation';
-import Dropdown from '../../Components/Form/Dropdown';
-import { usePage } from '@inertiajs/react';
-import { useState } from 'react';
-import { Link } from '@inertiajs/react';
 import ValidatorName from '../../Pages/Validators/Partials/ValidatorName';
 import ValidatorUptime from '../../Pages/Validators/Partials/ValidatorUptime';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -17,8 +14,25 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import ValidatorSFDP from '../../Pages/Validators/Partials/ValidatorSFDP';
 
-export default function ValidatorCard({validator, epoch, settingsData, totalStakeData, validators, isSelected, onCheckboxChange}) {
-  const user = usePage().props.auth.user;
+type ValidatorCardProps = {
+    validator: any;
+    epoch: any;
+    settingsData: any;
+    totalStakeData: any;
+    validators: any;
+    isSelected?: boolean;
+    onCheckboxChange?: (validatorId: number) => void;
+};
+
+export default function ValidatorCard({
+    validator,
+    epoch,
+    settingsData,
+    totalStakeData,
+    validators,
+    isSelected = false,
+    onCheckboxChange,
+}: ValidatorCardProps) {
   const appLang = useSelector(appLangSelector);
   const lng = new Lang({
     messages: lngVaidators,
@@ -27,24 +41,12 @@ export default function ValidatorCard({validator, epoch, settingsData, totalStak
 
   return (
       <div className={`flex flex-col v-card ${isSelected ? 'ring-2 ring-blue-500' : ''}`}>
-        {/* <div className="flex items-center p-2 bg-gray-50">
-            <input 
-                type="checkbox" 
-                id={`card-${validator.id}`} 
-                checked={isSelected}
-                onChange={() => onCheckboxChange(validator.id)}
-                className="mr-2"
-            />
-            <label htmlFor={`card-${validator.id}`} className="text-sm font-medium text-gray-700">
-                Select
-            </label>
-        </div> */}
         <div className="flex flex-col h-[200px] items-center bg-[#292035] rounded-[5px] border md:flex-row dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
             <img 
-                src={validator.avatar_url || validator.avatar_file_url} 
-                alt={`${validator.name} avatar`} 
-                className="w-auto rounded-full p-2 h-[140px]"
-                onError={(e) => {
+              src={validator.avatar_url || validator.avatar_file_url} 
+              alt={`${validator.name} avatar`} 
+              className="w-auto rounded-full p-2 h-[140px]"
+              onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     // Create a fallback element
                     const fallback = document.createElement('div');
@@ -81,7 +83,7 @@ export default function ValidatorCard({validator, epoch, settingsData, totalStak
                     <div className="text-center">
                         {validator.commission !== undefined ? `${(parseFloat(validator.commission) / 100).toFixed(2)}%` : 'N/A'}
                     </div>
-                    <div className="text-center"><ValidatorUptime validator={validator} /></div>
+                    <div className="text-center"><ValidatorUptime validator={validator} epoch={epoch} /></div>
                     <div className="text-center ">
                         <span className="bg-[#703ea2] text-white px-1 px-2 rounded-lg inline-block text-[12px]">
                             {validator.version || validator.software_version || 'N/A'}

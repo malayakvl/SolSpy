@@ -1,30 +1,33 @@
+import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { appLangSelector } from '../../Redux/Layout/selectors';
 import Lang from 'lang.js';
 import lngHeader from '../../Lang/Header/translation';
-import { usePage } from '@inertiajs/react';
-import { Link } from '@inertiajs/react';
-import ApplicationLogo from "./ApplicationLogo";
-import ActionsMenu from "./ActionsMenu";
-import LangMenu from "./LangMenu";
-import ProfileMenu from "./ProfileMenu";
+import { usePage, Link } from '@inertiajs/react';
+import ApplicationLogo from './ApplicationLogo';
+import ActionsMenu from './ActionsMenu';
+import LangMenu from './LangMenu';
+import ProfileMenu from './ProfileMenu';
 import axios from 'axios';
-import {useEffect, useState} from "react";
-import ProgressBar from "./ProgressBar";
-import { setEpochAction, setSettingsAction } from "../../Redux/Layout";
+import ProgressBar from './ProgressBar';
+import { setEpochAction, setSettingsAction } from '../../Redux/Layout';
 
-export default function Header(auth) {
+type HeaderProps = {
+  auth?: {
+    user?: any;
+  };
+};
+
+export default function Header({ auth }: HeaderProps) {
   const dispatch = useDispatch();
-  const user = usePage().props.auth.user;
+  const inertiaAuth = usePage().props.auth;
+  const user = auth?.user ?? inertiaAuth?.user;
   const appLang = useSelector(appLangSelector);
-  const [solRate, setSolRate] = useState({})
-  const [epochPersent, setEpochPersent] = useState<any>(0)
-  const [settingsData, setSettingsData] = useState('');
-  const [settingsFetched, setSettingsFetched] = useState(false)
-  const [barProgress, setBarProgress] = useState(null);
+  const [epochPercent, setEpochPercent] = useState<number>(0);
+  const [settingsData, setSettingsData] = useState<any>(null);
+  const [settingsFetched, setSettingsFetched] = useState(false);
   const [barProgressCaption, setBarProgressCaption] = useState('');
-  const [completedPersent, setCompletedPersent] = useState(100);
-
+  const [completedPercent, setCompletedPercent] = useState<number>(100);
 
   const msg = new Lang({
       messages: lngHeader,
@@ -35,14 +38,14 @@ export default function Header(auth) {
   const fetchData = async () => {
     try {
       const response = await axios.get('/api/fetch-settings');
-      setSolRate(response.data.data.sol_rate)
-      setSettingsData(response.data.data);
-      dispatch(setEpochAction(response.data.data.epoch));
-      dispatch(setSettingsAction(response.data.data));
-      setEpochPersent(response.data.data.epoch_completed_percent);
-      setCompletedPersent(response.data.data.epoch_completed_percent);
+      const data = response.data.data;
+      setSettingsData(data);
+      dispatch(setEpochAction(data.epoch));
+      dispatch(setSettingsAction(data));
+      setEpochPercent(data.epoch_completed_percent);
+      setCompletedPercent(data.epoch_completed_percent);
 
-      setBarProgressCaption(response.data.data.epoch_remaining_time);
+      setBarProgressCaption(data.epoch_remaining_time);
 
 
       // console.log(`Залишилось: ${days} дн, ${hours} год, ${minutes} хв, ${seconds} сек`);
@@ -60,12 +63,12 @@ export default function Header(auth) {
     }
     const intervalId = setInterval(fetchData, 60000);
     return () => clearInterval(intervalId);
-  }, [settingsFetched])
+  }, [settingsFetched]);
 
   const userRoleNames = user?.roles?.map(role => role.name) || [];
   const isAdmin = userRoleNames.includes('Admin');
   const isManager = userRoleNames.includes('Manager');
-  const isCustomer = userRoleNames.includes('Customer');
+  // const isCustomer = userRoleNames.includes('Customer');
 
   return (
     <header className="bg-gray-900">
@@ -125,9 +128,9 @@ export default function Header(auth) {
             </div>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 nav-link">
               <div className="progress-block">
-                 <ProgressBar progress={100 - completedPersent} caption={`${barProgressCaption} ${msg.get('menu.left')}`} />
+                 <ProgressBar progress={100 - completedPercent} caption={`${barProgressCaption} ${msg.get('menu.left')}`} />
                  <div className="text-sm epoch-data">
-                    {msg.get('menu.epoch')}  {settingsData?.epoch} ({(100 - epochPersent).toFixed(2)}%)
+                    {msg.get('menu.epoch')}  {settingsData?.epoch} ({(100 - epochPercent).toFixed(2)}%)
                   </div>
               </div>
             </div>
@@ -150,14 +153,14 @@ export default function Header(auth) {
                 ) : (
                   <>
                   <Link
-                        href="/login"
-                        className="rounded-md px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-white text-sm"
-                    >
+                    href="/login"
+                    className="rounded-md px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-white text-sm"
+                  >
                       {msg.get('menu.login')}
                     </Link>
                     <Link
-                        href="/register"
-                        className="rounded-md px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-white text-sm"
+                      href="/register"
+                      className="rounded-md px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-white text-sm"
                     >
                       {msg.get('menu.register')}
                     </Link>

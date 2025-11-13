@@ -1,12 +1,12 @@
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 
 export default function Edit({ mustVerifyEmail, status }) {
   return (
-    <AuthenticatedLayout header={<Head title="Profile" />}>
+    <AuthenticatedLayout header={<Head title="Profile" />} auth={usePage().props.auth}>
       <Head title="Profile" />
       <div className="py-0">
         <div>

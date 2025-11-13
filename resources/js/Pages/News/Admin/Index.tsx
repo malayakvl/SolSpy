@@ -193,15 +193,15 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                         <h2 className="text-2xl font-bold">Manage News</h2>
                         <div className="flex gap-2">
                             <button
-                                onClick={handleSortTopNews}
-                                className="inline-flex items-center px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 text-sm"
+                              onClick={handleSortTopNews}
+                              className="inline-flex items-center px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 text-sm"
                             >
                                 <FontAwesomeIcon icon={faSort} className="mr-2" />
                                 Sort Top News
                             </button>
                             <Link
-                                href={route('admin.news.create')}
-                                className="inline-flex items-center px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px] text-sm"
+                              href={route('admin.news.create')}
+                              className="inline-flex items-center px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px] text-sm"
                             >
                                 <FontAwesomeIcon icon={faPlus} className="mr-2" />
                                 Create News
@@ -214,17 +214,17 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                         <div className="flex flex-wrap gap-4 items-end">
                             <div className="flex-1 min-w-[200px]">
                                 <input
-                                    type="text"
-                                    placeholder="Search news..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full p-2 border border-gray-300 rounded text-sm"
+                                  type="text"
+                                  placeholder="Search news..."
+                                  value={searchTerm}
+                                  onChange={(e) => setSearchTerm(e.target.value)}
+                                  className="w-full p-2 border border-gray-300 rounded text-sm"
                                 />
                             </div>
                             <div>
                                 <select
-                                    value={statusFilter}
-                                    onChange={(e) => {
+                                  value={statusFilter}
+                                  onChange={(e) => {
                                         const newStatus = e.target.value;
                                         setStatusFilter(newStatus);
                                         
@@ -249,7 +249,7 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                                             replace: true
                                         });
                                     }}
-                                    className="admin-select w-[220px]"
+                                  className="admin-select w-[220px]"
                                 >
                                     <option value="all">All Status</option>
                                     <option value="published">Published</option>
@@ -259,8 +259,8 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                             </div>
                             <div>
                                 <select
-                                    value={featuredFilter}
-                                    onChange={(e) => {
+                                  value={featuredFilter}
+                                  onChange={(e) => {
                                         const newFeatured = e.target.value;
                                         setFeaturedFilter(newFeatured);
                                         
@@ -285,15 +285,15 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                                             replace: true
                                         });
                                     }}
-                                    className="admin-select w-[220px]"
+                                  className="admin-select w-[220px]"
                                 >
                                     <option value="all">All Articles</option>
                                     <option value="featured">Featured Only</option>
                                 </select>
                             </div>
                             <button
-                                type="submit"
-                                className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px] text-sm"
+                              type="submit"
+                              className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px] text-sm"
                             >
                                 Search
                             </button>
@@ -309,32 +309,32 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                                 </span>
                                 <div className="flex gap-2">
                                     <button
-                                        onClick={() => handleBulkAction('top')}
-                                        className="px-3 py-1 text-xs bg-violet-500 text-white rounded hover:bg-green-600"
+                                      onClick={() => handleBulkAction('top')}
+                                      className="px-3 py-1 text-xs bg-violet-500 text-white rounded hover:bg-green-600"
                                     >
                                         Toggle Top
                                     </button>
                                     <button
-                                        onClick={() => handleBulkAction('publish')}
-                                        className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+                                      onClick={() => handleBulkAction('publish')}
+                                      className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
                                     >
                                         Publish
                                     </button>
                                     <button
-                                        onClick={() => handleBulkAction('draft')}
-                                        className="px-3 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
+                                      onClick={() => handleBulkAction('draft')}
+                                      className="px-3 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
                                     >
                                         Draft
                                     </button>
                                     <button
-                                        onClick={() => handleBulkAction('feature')}
-                                        className="px-3 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                                      onClick={() => handleBulkAction('feature')}
+                                      className="px-3 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600"
                                     >
                                         Feature
                                     </button>
                                     <button
-                                        onClick={() => handleBulkAction('delete')}
-                                        className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
+                                      onClick={() => handleBulkAction('delete')}
+                                      className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
                                     >
                                         Delete
                                     </button>
@@ -350,10 +350,10 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                                 <tr>
                                     <th>
                                         <input
-                                            type="checkbox"
-                                            checked={selectedItems.length === news.data.length && news.data.length > 0}
-                                            onChange={toggleSelectAll}
-                                            className="rounded"
+                                          type="checkbox"
+                                          checked={selectedItems.length === news.data.length && news.data.length > 0}
+                                          onChange={toggleSelectAll}
+                                          className="rounded"
                                         />
                                     </th>
                                     <th>
@@ -378,19 +378,19 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                                     <tr key={article.id} className={selectedItems.includes(article.id) ? 'bg-blue-50' : ''}>
                                         <td>
                                             <input
-                                                type="checkbox"
-                                                checked={selectedItems.includes(article.id)}
-                                                onChange={() => toggleSelection(article.id)}
-                                                className="rounded"
+                                              type="checkbox"
+                                              checked={selectedItems.includes(article.id)}
+                                              onChange={() => toggleSelection(article.id)}
+                                              className="rounded"
                                             />
                                         </td>
                                         <td>
                                             <div className="flex items-center">
                                                 {article.image_url && (
                                                     <img
-                                                        src={article.image_url}
-                                                        alt={getArticleTitle(article)}
-                                                        className="w-12 h-12 object-cover rounded mr-4"
+                                                      src={article.image_url}
+                                                      alt={getArticleTitle(article)}
+                                                      className="w-12 h-12 object-cover rounded mr-4"
                                                     />
                                                 )}
                                                 <div>
@@ -420,21 +420,21 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                                         <td>
                                             <div className="flex items-center gap-2">
                                                 <Link
-                                                    href={route('news.show', article.slug)}
-                                                    className="text-purple-300 hover:text-purple-800"
-                                                    target="_blank"
+                                                  href={route('news.show', article.slug)}
+                                                  className="text-purple-300 hover:text-purple-800"
+                                                  target="_blank"
                                                 >
                                                     <FontAwesomeIcon icon={faEye} />
                                                 </Link>
                                                 <Link
-                                                    href={route('admin.news.edit', article.id)}
-                                                    className="text-indigo-600 hover:text-indigo-900"
+                                                  href={route('admin.news.edit', article.id)}
+                                                  className="text-indigo-600 hover:text-indigo-900"
                                                 >
                                                     <FontAwesomeIcon icon={faEdit} />
                                                 </Link>
                                                 <button
-                                                    onClick={() => handleDelete(article.id)}
-                                                    className="text-red-600 hover:text-red-900"
+                                                  onClick={() => handleDelete(article.id)}
+                                                  className="text-red-600 hover:text-red-900"
                                                 >
                                                     <FontAwesomeIcon icon={faTrash} />
                                                 </button>
@@ -467,9 +467,9 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                                     
                                     return (
                                         <Link
-                                            key={page}
-                                            href={route('admin.news.index', pageParams)}
-                                            className={`px-3 py-2 text-sm rounded ${
+                                          key={page}
+                                          href={route('admin.news.index', pageParams)}
+                                          className={`px-3 py-2 text-sm rounded ${
                                                 page === news.current_page
                                                     ? 'bg-[#703ea2] text-white'
                                                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -488,8 +488,8 @@ export default function AdminIndex({ news, filters = {} }: AdminNewsIndexProps) 
                         <div className="text-center py-8">
                             <p className="text-gray-500 mb-4">No news articles found.</p>
                             <Link
-                                href={route('admin.news.create')}
-                                className="inline-flex items-center px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]"
+                              href={route('admin.news.create')}
+                              className="inline-flex items-center px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]"
                             >
                                 <FontAwesomeIcon icon={faPlus} className="mr-2" />
                                 Create your first news article

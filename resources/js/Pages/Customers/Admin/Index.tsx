@@ -90,8 +90,8 @@ export default function CustomersAdminIndex({ users }: CustomersAdminIndexProps)
                                         </td>
                                         <td>
                                             <a
-                                                href={`/login-as/${user.id}`}
-                                                className="btn btn-admin-login text-purple-500 hover:underline text-sm"
+                                              href={`/login-as/${user.id}`}
+                                              className="btn btn-admin-login text-purple-500 hover:underline text-sm"
                                             >
                                                 Login
                                             </a>
@@ -108,9 +108,9 @@ export default function CustomersAdminIndex({ users }: CustomersAdminIndexProps)
                             <div className="flex space-x-1">
                                 {Array.from({ length: users.last_page }, (_, i) => i + 1).map((page) => (
                                     <a
-                                        key={page}
-                                        href={route('admin.customers.index', { page })}
-                                        className={`px-3 py-2 text-sm rounded ${
+                                      key={page}
+                                      href={route('admin.customers.index', { page })}
+                                      className={`px-3 py-2 text-sm rounded ${
                                             page === users.current_page
                                                 ? 'bg-[#703ea2] text-white'
                                                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'

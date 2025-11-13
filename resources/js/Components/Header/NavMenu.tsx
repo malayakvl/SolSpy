@@ -4,22 +4,37 @@ import { useSelector } from 'react-redux';
 import { appLangSelector } from '../../Redux/Layout/selectors';
 import Lang from 'lang.js';
 import lngHeader from '../../Lang/Header/translation';
-import { Link, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 import NavCustomers from './Menu/NavCustomers';
 
-export default function NavMenu(props) {
+interface NavMenuProps {
+  [key: string]: any;
+}
+
+interface AuthProps {
+  user?: any;
+  can?: any;
+  role?: string;
+}
+
+interface PageProps {
+  auth?: AuthProps;
+  [key: string]: any;
+}
+
+export default function NavMenu(props: NavMenuProps) {
   const appLang = useSelector(appLangSelector);
   const lng = new Lang({
     messages: lngHeader,
-    locale: appLang,
+    locale: appLang as string,
   });
-  const user = usePage().props.auth.user;
-  const permissions = usePage().props.auth.can;
+  
+  const { props: pageProps } = usePage<PageProps>();
 
   return (
     <>
       <div className="md:space-x-4 md:flex md:pr-[30px]">
-        {usePage().props?.auth.role && (
+        {pageProps?.auth?.role && (
           <div className="md:mt-[3px]">
             <Menu as="div" className="relative top-menu-nav">
               <MenuButton className="inline-flex items-center text-sm">

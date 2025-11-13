@@ -114,12 +114,12 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
     return (
         <form onSubmit={handleSearch} className="flex items-start gap-4">
             <input 
-                className="flex-1 p-2 border border-gray-300 rounded text-sm"
-                type="text" 
-                placeholder="Search by name..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => {
+              className="flex-1 p-2 border border-gray-300 rounded text-sm"
+              type="text" 
+              placeholder="Search by name..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                         e.preventDefault();
                         handleSearch(e);
@@ -127,15 +127,15 @@ export default function ValidatorFilters({ filterType, onFilterChange, isAdmin, 
                 }}
             />
             <button 
-                type="submit"
-                className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]  text-sm"
+              type="submit"
+              className="px-4 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 text-[13px]  text-sm"
             >
                 Search
             </button>
             <button 
-                type="button"
-                onClick={handleClearFilters}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
+              type="button"
+              onClick={handleClearFilters}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
             >
                 Clear
             </button>

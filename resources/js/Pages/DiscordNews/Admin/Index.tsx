@@ -158,8 +158,8 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold">Discord News</h2>
                         <button
-                            onClick={handleSortTopNews}
-                            className="inline-flex items-center px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 text-sm"
+                          onClick={handleSortTopNews}
+                          className="inline-flex items-center px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 text-sm"
                         >
                             <FontAwesomeIcon icon={faSort} className="mr-2" />
                             Sort Top News
@@ -186,8 +186,8 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
                                 </span>
                                 <div className="flex gap-2">
                                     <button
-                                        onClick={() => handleBulkAction('top')}
-                                        className="px-3 py-1 text-xs bg-violet-500 text-white rounded hover:bg-yellow-600"
+                                      onClick={() => handleBulkAction('top')}
+                                      className="px-3 py-1 text-xs bg-violet-500 text-white rounded hover:bg-yellow-600"
                                     >
                                         Toggle Top
                                     </button>
@@ -205,10 +205,10 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
                                 <tr>
                                     <th>
                                         <input
-                                            type="checkbox"
-                                            checked={news.data.length > 0 && news.data.every(item => selectedItemIds.includes(item.id))}
-                                            onChange={toggleSelectAll}
-                                            className="rounded"
+                                          type="checkbox"
+                                          checked={news.data.length > 0 && news.data.every(item => selectedItemIds.includes(item.id))}
+                                          onChange={toggleSelectAll}
+                                          className="rounded"
                                         />
                                     </th>
                                     <th>Title & Description</th>
@@ -222,18 +222,18 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
                                     <tr key={article.id} className={selectedItemIds.includes(article.id) ? 'bg-blue-50' : ''}>
                                         <td>
                                             <input
-                                                type="checkbox"
-                                                checked={selectedItemIds.includes(article.id)}
-                                                onChange={() => toggleSelection(article.id)} // Pass just the ID
-                                                className="rounded"
+                                              type="checkbox"
+                                              checked={selectedItemIds.includes(article.id)}
+                                              onChange={() => toggleSelection(article.id)} // Pass just the ID
+                                              className="rounded"
                                             />
                                         </td>
                                         <td>
                                             <a
-                                                href={article.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-purple-300 hover:text-purple-800 font-medium"
+                                              href={article.url}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="text-purple-300 hover:text-purple-800 font-medium"
                                             >
                                                 {article.title}
                                             </a>
@@ -249,10 +249,10 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
                                             {article.source}<br/>
                                             {article.url && (
                                                 <a 
-                                                    href={article.url} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer"
-                                                    className="text-purple-300 hover:text-purple-800 underline text-sm flex items-center"
+                                                  href={article.url} 
+                                                  target="_blank" 
+                                                  rel="noopener noreferrer"
+                                                  className="text-purple-300 hover:text-purple-800 underline text-sm flex items-center"
                                                 >
                                                     {article.url.length > 30 ? `${article.url.substring(0, 30)}...` : article.url}
                                                     <FontAwesomeIcon icon={faEye} className="ml-1 text-xs" />
@@ -279,8 +279,8 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
                                 {/* Previous button */}
                                 {parseInt(news.current_page) > 1 && (
                                     <Link
-                                        href={route('admin.discord.news', { ...filters, page: parseInt(news.current_page) - 1 })}
-                                        className="px-3 py-2 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                      href={route('admin.discord.news', { ...filters, page: parseInt(news.current_page) - 1 })}
+                                      className="px-3 py-2 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
                                     >
                                         Previous
                                     </Link>
@@ -290,8 +290,8 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
                                 {parseInt(news.current_page) > 3 && (
                                     <>
                                         <Link
-                                            href={route('admin.discord.news', { ...filters, page: 1 })}
-                                            className={`px-3 py-2 text-sm rounded ${
+                                          href={route('admin.discord.news', { ...filters, page: 1 })}
+                                          className={`px-3 py-2 text-sm rounded ${
                                                 parseInt(news.current_page) === 1
                                                     ? 'bg-[#703ea2] text-white'
                                                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -323,9 +323,9 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
 
                                     return (
                                         <Link
-                                            key={page}
-                                            href={route('admin.discord.news', { ...filters, page })}
-                                            className={`px-3 py-2 text-sm rounded ${
+                                          key={page}
+                                          href={route('admin.discord.news', { ...filters, page })}
+                                          className={`px-3 py-2 text-sm rounded ${
                                                 pageNumber === currentPage
                                                     ? 'bg-[#703ea2] text-white'
                                                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -343,8 +343,8 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
                                             <span className="px-3 py-2 text-sm text-gray-500">...</span>
                                         )}
                                         <Link
-                                            href={route('admin.discord.news', { ...filters, page: news.last_page })}
-                                            className={`px-3 py-2 text-sm rounded ${
+                                          href={route('admin.discord.news', { ...filters, page: news.last_page })}
+                                          className={`px-3 py-2 text-sm rounded ${
                                                 parseInt(news.current_page) === parseInt(news.last_page)
                                                     ? 'bg-[#703ea2] text-white'
                                                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -358,8 +358,8 @@ export default function AdminIndex({ news, featured, filters = {} }: NewsIndexPr
                                 {/* Next button */}
                                 {parseInt(news.current_page) < parseInt(news.last_page) && (
                                     <Link
-                                        href={route('admin.discord.news', { ...filters, page: parseInt(news.current_page) + 1 })}
-                                        className="px-3 py-2 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                      href={route('admin.discord.news', { ...filters, page: parseInt(news.current_page) + 1 })}
+                                      className="px-3 py-2 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
                                     >
                                         Next
                                     </Link>

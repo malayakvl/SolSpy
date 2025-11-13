@@ -1,18 +1,20 @@
-import ApplicationLogo from '../Components/Header/ApplicationLogo';
-import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Lang from 'lang.js';
 import lngHeader from '../Lang/Header/translation';
 import { useSelector } from 'react-redux';
 import { appLangSelector, isShowOverlaySelector } from '../Redux/Layout/selectors';
-import NavMenu from '../Components/Header/NavMenu';
-import ProfileMenu from '../Components/Header/ProfileMenu';
-import LangMenu from '../Components/Header/LangMenu';
 import Header from "../Components/Header/Header";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { type ReactNode } from 'react';
 
-export default function AuthenticatedLayout({ header, children, auth }) {
+interface AuthenticatedLayoutProps {
+  header: ReactNode;
+  children: ReactNode;
+  auth: any;
+}
+
+export default function AuthenticatedLayout({ header, children, auth }: AuthenticatedLayoutProps) {
   const appLang = useSelector(appLangSelector);
   const lng = new Lang({
     messages: lngHeader,

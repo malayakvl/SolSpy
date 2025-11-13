@@ -33,7 +33,7 @@ export default function Dashboard(validatorsData) {
     const [columnsConfig, setColumnsConfig] = useState(() => {
         return initializeColumnsConfig(validatorsData.settingsData);
     });
-console.log(validatorsData)
+
     const handleCheckboxChange = (id) => {
         if (checkedIds.includes(id)) {
             // Remove from checkedIds
