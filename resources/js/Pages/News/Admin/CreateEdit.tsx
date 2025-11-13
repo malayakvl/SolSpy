@@ -150,8 +150,8 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                     <div className="flex justify-between items-center mb-6 ">
                         <div className="flex items-center gap-4">
                             <Link
-                                href={route('admin.news.index')}
-                                className="inline-flex items-center text-blue-500 hover:text-blue-700 text-sm"
+                              href={route('admin.news.index')}
+                              className="inline-flex items-center text-blue-500 hover:text-blue-700 text-sm"
                             >
                                 <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
                                 Back to News
@@ -163,9 +163,9 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                         <div className="flex gap-2">
                             {data.slug && (
                                 <a
-                                    href={previewUrl}
-                                    target="_blank"
-                                    className="inline-flex items-center px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                  href={previewUrl}
+                                  target="_blank"
+                                  className="inline-flex items-center px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
                                 >
                                     <FontAwesomeIcon icon={faEye} className="mr-2" />
                                     Preview
@@ -185,11 +185,11 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                                         Slug *
                                     </label>
                                     <input
-                                        type="text"
-                                        value={data.slug}
-                                        onChange={(e) => setData('slug', e.target.value)}
-                                        className="input-text"
-                                        required
+                                      type="text"
+                                      value={data.slug}
+                                      onChange={(e) => setData('slug', e.target.value)}
+                                      className="input-text"
+                                      required
                                     />
                                     {errors.slug && <p className="text-red-500 text-xs mt-1">{errors.slug}</p>}
                                 </div>
@@ -199,9 +199,9 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                                         Status
                                     </label>
                                     <select
-                                        value={data.status}
-                                        onChange={(e) => setData('status', e.target.value)}
-                                        className="input-text"
+                                      value={data.status}
+                                      onChange={(e) => setData('status', e.target.value)}
+                                      className="input-text"
                                     >
                                         <option value="draft">Draft</option>
                                         <option value="published">Published</option>
@@ -214,22 +214,22 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                                         Featured Image URL
                                     </label>
                                     <input
-                                        type="url"
-                                        value={data.image_url}
-                                        onChange={(e) => setData('image_url', e.target.value)}
-                                        className="input-text"
-                                        placeholder="https://example.com/image.jpg"
+                                      type="url"
+                                      value={data.image_url}
+                                      onChange={(e) => setData('image_url', e.target.value)}
+                                      className="input-text"
+                                      placeholder="https://example.com/image.jpg"
                                     />
                                     {errors.image_url && <p className="text-red-500 text-xs mt-1">{errors.image_url}</p>}
                                 </div>
 
                                 <div className="flex items-center">
                                     <input
-                                        type="checkbox"
-                                        id="is_featured"
-                                        checked={data.is_featured}
-                                        onChange={(e) => setData('is_featured', e.target.checked)}
-                                        className="rounded"
+                                      type="checkbox"
+                                      id="is_featured"
+                                      checked={data.is_featured}
+                                      onChange={(e) => setData('is_featured', e.target.checked)}
+                                      className="rounded"
                                     />
                                     <label>
                                         Featured Article
@@ -242,10 +242,10 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                                 <div className="mt-4">
                                     <p className="text-sm font-medium text-white mb-2">Image Preview:</p>
                                     <img
-                                        src={data.image_url}
-                                        alt="Preview"
-                                        className="w-48 h-32 object-cover rounded border"
-                                        onError={(e) => {
+                                      src={data.image_url}
+                                      alt="Preview"
+                                      className="w-48 h-32 object-cover rounded border"
+                                      onError={(e) => {
                                             e.currentTarget.style.display = 'none';
                                         }}
                                     />
@@ -259,10 +259,10 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                                 <nav className="flex space-x-8 px-6">
                                     {languages.map((language) => (
                                         <button
-                                            key={language.code}
-                                            type="button"
-                                            onClick={() => setActiveTab(language.code)}
-                                            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                                          key={language.code}
+                                          type="button"
+                                          onClick={() => setActiveTab(language.code)}
+                                          className={`py-4 px-1 border-b-2 font-medium text-sm ${
                                                 activeTab === language.code
                                                     ? 'border-purple-500 text-white-600'
                                                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -281,8 +281,8 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                             <div className="p-6">
                                 {languages.map((language) => (
                                     <div
-                                        key={language.code}
-                                        className={activeTab === language.code ? 'block' : 'hidden'}
+                                      key={language.code}
+                                      className={activeTab === language.code ? 'block' : 'hidden'}
                                     >
                                         <div className="space-y-4">
                                             <div>
@@ -290,11 +290,11 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                                                     Title *
                                                 </label>
                                                 <input
-                                                    type="text"
-                                                    value={data.translations[language.code]?.title || ''}
-                                                    onChange={(e) => handleTitleChange(language.code, e.target.value)}
-                                                    className="input-text"
-                                                    required={language.code === 'en'}
+                                                  type="text"
+                                                  value={data.translations[language.code]?.title || ''}
+                                                  onChange={(e) => handleTitleChange(language.code, e.target.value)}
+                                                  className="input-text"
+                                                  required={language.code === 'en'}
                                                 />
                                                 {errors[`translations.${language.code}.title`] && (
                                                     <p className="text-red-500 text-xs mt-1">
@@ -308,17 +308,17 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                                                     Excerpt
                                                 </label>
                                                 <textarea
-                                                    value={data.translations[language.code]?.excerpt || ''}
-                                                    onChange={(e) => setData('translations', {
+                                                  value={data.translations[language.code]?.excerpt || ''}
+                                                  onChange={(e) => setData('translations', {
                                                         ...data.translations,
                                                         [language.code]: {
                                                             ...data.translations[language.code],
                                                             excerpt: e.target.value
                                                         }
                                                     })}
-                                                    rows={3}
-                                                    className="input-text"
-                                                    placeholder="Brief description of the article..."
+                                                  rows={3}
+                                                  className="input-text"
+                                                  placeholder="Brief description of the article..."
                                                 />
                                             </div>
 
@@ -328,9 +328,9 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                                                         Content *
                                                     </label>
                                                     <button
-                                                        type="button"
-                                                        onClick={() => setPreviewMode(!previewMode)}
-                                                        className="px-3 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
+                                                      type="button"
+                                                      onClick={() => setPreviewMode(!previewMode)}
+                                                      className="px-3 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
                                                     >
                                                         {previewMode ? 'Edit' : 'Preview'}
                                                     </button>
@@ -338,23 +338,23 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                                                 
                                                 {previewMode ? (
                                                     <div 
-                                                        className="w-full p-4 border border-gray-300 rounded min-h-[600px] bg-gray-50 prose max-w-none"
-                                                        dangerouslySetInnerHTML={{ 
+                                                      className="w-full p-4 border border-gray-300 rounded min-h-[600px] bg-gray-50 prose max-w-none"
+                                                      dangerouslySetInnerHTML={{ 
                                                             __html: data.translations[language.code]?.content || '<p class="text-gray-500 italic">No content to preview</p>' 
                                                         }}
                                                     />
                                                 ) : (
                                                     <RichTextEditor
-                                                        value={data.translations[language.code]?.content || ''}
-                                                        onChange={(content) => setData('translations', {
+                                                      value={data.translations[language.code]?.content || ''}
+                                                      onChange={(content) => setData('translations', {
                                                             ...data.translations,
                                                             [language.code]: {
                                                                 ...data.translations[language.code],
                                                                 content: content
                                                             }
                                                         })}
-                                                        placeholder="Article content..."
-                                                        height={600}
+                                                      placeholder="Article content..."
+                                                      height={600}
                                                     />
                                                 )}
                                                 
@@ -375,18 +375,18 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                                                             Meta Description
                                                         </label>
                                                         <textarea
-                                                            value={data.translations[language.code]?.meta_description || ''}
-                                                            onChange={(e) => setData('translations', {
+                                                          value={data.translations[language.code]?.meta_description || ''}
+                                                          onChange={(e) => setData('translations', {
                                                                 ...data.translations,
                                                                 [language.code]: {
                                                                     ...data.translations[language.code],
                                                                     meta_description: e.target.value
                                                                 }
                                                             })}
-                                                            rows={2}
-                                                            maxLength={160}
-                                                            className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
-                                                            placeholder="Brief description for search engines (max 160 characters)..."
+                                                          rows={2}
+                                                          maxLength={160}
+                                                          className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                                          placeholder="Brief description for search engines (max 160 characters)..."
                                                         />
                                                         <p className="text-xs text-gray-500 mt-1">
                                                             {(data.translations[language.code]?.meta_description || '').length}/160 characters
@@ -398,17 +398,17 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                                                             Meta Keywords
                                                         </label>
                                                         <input
-                                                            type="text"
-                                                            value={data.translations[language.code]?.meta_keywords || ''}
-                                                            onChange={(e) => setData('translations', {
+                                                          type="text"
+                                                          value={data.translations[language.code]?.meta_keywords || ''}
+                                                          onChange={(e) => setData('translations', {
                                                                 ...data.translations,
                                                                 [language.code]: {
                                                                     ...data.translations[language.code],
                                                                     meta_keywords: e.target.value
                                                                 }
                                                             })}
-                                                            className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
-                                                            placeholder="keyword1, keyword2, keyword3..."
+                                                          className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                                          placeholder="keyword1, keyword2, keyword3..."
                                                         />
                                                     </div>
                                                 </div>
@@ -422,15 +422,15 @@ export default function CreateEdit({ article, isEdit = false, languages = [
                         {/* Submit Button */}
                         <div className="flex justify-end gap-4">
                             <Link
-                                href={route('admin.news.index')}
-                                className="px-6 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 text-sm"
+                              href={route('admin.news.index')}
+                              className="px-6 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 text-sm"
                             >
                                 Cancel
                             </Link>
                             <button
-                                type="submit"
-                                disabled={processing}
-                                className="inline-flex items-center px-6 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 disabled:opacity-50 text-sm"
+                              type="submit"
+                              disabled={processing}
+                              className="inline-flex items-center px-6 py-2 bg-[#703ea2] text-white rounded hover:bg-blue-600 disabled:opacity-50 text-sm"
                             >
                                 <FontAwesomeIcon icon={faSave} className="mr-2" />
                                 {processing ? 'Saving...' : (isEdit ? 'Update Article' : 'Create Article')}

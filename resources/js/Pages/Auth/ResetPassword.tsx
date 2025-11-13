@@ -22,7 +22,7 @@ export default function ResetPassword({ token, email }) {
   };
 
   return (
-    <GuestLayout>
+    <GuestLayout auth={null}>
       <Head title="Reset Password" />
 
       <form onSubmit={submit}>

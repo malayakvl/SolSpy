@@ -6,34 +6,34 @@ import lngVaidators from '../../Lang/Validators/translation';
 import { useSelector, useDispatch } from 'react-redux';
 import { appEpochSelector, appLangSelector } from '../../Redux/Layout/selectors';
 import { setFilterAction } from '../../Redux/Validators/actions';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-    faBan,
-    faCheck,
-    faStar,
-    faGear,
-    faSortUp,
-    faSortDown
-} from '@fortawesome/free-solid-svg-icons';
-import ValidatorCredits from "./Partials/ValidatorCredits";
-import ValidatorRate from "./Partials/ValidatorRate";
-import ValidatorActions from "./Partials/ValidatorActions";
-import ValidatorName from "./Partials/ValidatorName";
-import ValidatorActivatedStake from "./Partials/ValidatorActivatedStake";
-import ValidatorUptime from "./Partials/ValidatorUptime";
-import ValidatorScore from "./Partials/ValidatorScore";
+// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+// import {
+//     faBan,
+//     faCheck,
+//     faStar,
+//     faGear,
+//     faSortUp,
+//     faSortDown
+// } from '@fortawesome/free-solid-svg-icons';
+// import ValidatorCredits from "./Partials/ValidatorCredits";
+// import ValidatorRate from "./Partials/ValidatorRate";
+// import ValidatorActions from "./Partials/ValidatorActions";
+// import ValidatorName from "./Partials/ValidatorName";
+// import ValidatorActivatedStake from "./Partials/ValidatorActivatedStake";
+// import ValidatorUptime from "./Partials/ValidatorUptime";
+// import ValidatorScore from "./Partials/ValidatorScore";
 import axios from 'axios';
-import { toast } from 'react-toastify';
-import ValidatorSpyRank from "./Partials/ValidatorSpyRank";
+// import { toast } from 'react-toastify';
+// import ValidatorSpyRank from "./Partials/ValidatorSpyRank";
 import { perPageSelector, filterTypeSelector } from '../../Redux/Validators/selectors';
-import { Link } from "@inertiajs/react";
-import { userSelector } from '../../Redux/Users/selectors';
+// import { Link } from "@inertiajs/react";
+// import { userSelector } from '../../Redux/Users/selectors';
 import Modal from './Partials/ColumnsModal';
-import { CarouselProvider, Slider, Slide, ButtonBack, ButtonNext, DotGroup } from 'pure-react-carousel';
+// import { CarouselProvider, Slider, Slide, ButtonBack, ButtonNext, DotGroup } from 'pure-react-carousel';
 import 'pure-react-carousel/dist/react-carousel.es.css';
 import ValidatorPagination from './Pagination';
 import { renderColumnHeader, renderColumnCell, initializeColumnsConfig } from '../../Components/Validators/ValidatorTableComponents';
-import ValidatorCard from '../../Components/Validators/ValidatorCard'; 
+// import ValidatorCard from '../../Components/Validators/ValidatorCard'; 
 import TopContentCarousel from '../../Components/Validators/TopContentCarousel';
 import ValidatorFilters from './Partials/ValidatorFilters';
 import ValidatorTable from '../../Components/Validators/ValidatorTable';
@@ -45,8 +45,8 @@ export default function Index(validatorsData) {
     const perPage = useSelector(perPageSelector);
     const appLang = useSelector(appLangSelector);
     const filterTypeDataSelector = validatorsData.filterType || useSelector(filterTypeSelector); // Filter type from props or Redux state
-    const [slideCount, setSlideCount] = useState(2);
-    const [currentSlide, setCurrentSlide] = useState(0);
+    // const [slideCount, setSlideCount] = useState(2);
+    // const [currentSlide, setCurrentSlide] = useState(0);
     const [isLoading, setIsLoading] = useState(false); // Add loading state
     // Track if the current data fetch is due to pagination or sorting
     const [isPaginationOrSorting, setIsPaginationOrSorting] = useState(false);
@@ -56,7 +56,12 @@ export default function Index(validatorsData) {
     });
 
     const epoch = useSelector(appEpochSelector);
-    const user = usePage().props.auth.user;
+    const { auth } = usePage().props as unknown as { auth: any };
+    const user = auth?.user;
+    const userRoleNames: string[] = Array.isArray(user?.roles)
+        ? user.roles.map((role: { name: string }) => role.name)
+        : [];
+    const isAdmin = userRoleNames.includes('Admin') || userRoleNames.includes('Manager');
     const [dataFetched, setDataFetched] = useState(false);
     const [currentPage, setCurrentPage] = useState(validatorsData.currentPage);
     const [lastPages, setLastPages] = useState({
@@ -67,22 +72,22 @@ export default function Index(validatorsData) {
     const [sortClickState, setSortClickState] = useState<{column: string, direction: string} | null>(null); // Track sort click state
 
 
-    const [itemsPerPage] = useState(perPage); // Number of items per page
+    const [itemsPerPage] = useState(Number(perPage)); // Number of items per page
     const [selectAll, setSelectAll] = useState(false);
     const [checkedIds, setCheckedIds] = useState<string[]>([]);
-    const [totalRecords, setTotalRecords] = useState(validatorsData.totalCount);
-    const [showModal, setShowModal] = useState(false);
-    const [columnSettings, setColumnSettings] = useState(null);
+    const [totalRecords, setTotalRecords] = useState<number>(validatorsData.totalCount);
+    // const [showModal, setShowModal] = useState(false);
+    // const [columnSettings, setColumnSettings] = useState(null);
     const [columnsConfig, setColumnsConfig] = useState(() => {
         return initializeColumnsConfig(validatorsData.settingsData);
     });
 
     // Get role names as array of strings
-    const userRoleNames = user?.roles?.map(role => role.name) || [];
+    // const userRoleNames = user?.roles?.map(role => role.name) || [];
     // Check if user has Admin/Manager role
-    const isAdmin = userRoleNames.includes('Admin');
-    const isManager = userRoleNames.includes('Manager');
-    const isCustomer = userRoleNames.includes('Customer');
+    // const isAdmin = userRoleNames.includes('Admin');
+    // const isManager = userRoleNames.includes('Manager');
+    // const isCustomer = userRoleNames.includes('Customer');
 
     useEffect(() => {
         const bannedList = JSON.parse(localStorage.getItem('validatorBanned') || '[]');
@@ -300,6 +305,10 @@ export default function Index(validatorsData) {
         }
     };
 
+    const handleGearClick = async () => {
+        await fetchColumnSettings();
+    };
+
     const fetchData = async () => {
         // Show loading indicator only for pagination and sorting operations
         if (isPaginationOrSorting) {
@@ -350,7 +359,7 @@ export default function Index(validatorsData) {
     };
 
     return (
-        <AuthenticatedLayout header={<Head />}>
+        <AuthenticatedLayout header={<Head />} auth={auth}>
             <Head title={msg.get('validators.title')} />
             <div className="py-0">
                 {/* Loading overlay - only shown during pagination and sorting */}
@@ -372,47 +381,49 @@ export default function Index(validatorsData) {
                     
                     {/* Top Validators and News Section */}
                     <TopContentCarousel 
-                        topValidatorsData={validatorsData.topValidatorsData}
-                        topNewsData={validatorsData.topNewsData}
-                        epoch={epoch}
-                        settingsData={validatorsData.settingsData}
-                        totalStakeData={validatorsData.totalStakeData}
-                        validatorsData={validatorsData.validators}
+                      topValidatorsData={validatorsData.topValidatorsData}
+                      topNewsData={validatorsData.topNewsData}
+                      epoch={epoch}
+                      settingsData={validatorsData.settingsData}
+                      totalStakeData={validatorsData.totalStakeData}
+                      validatorsData={validatorsData.validators}
                     />
                     <div className="flex justify-between items-start mt-10">
                         <div className="flex-1">
                             <ValidatorFilters 
-                                filterType={filterTypeDataSelector}
-                                onFilterChange={handleFilterChange}
+                              filterType={filterTypeDataSelector}
+                              onFilterChange={handleFilterChange}
+                              isAdmin={isAdmin}
+                              onGearClick={handleGearClick}
                             />
                         </div>
                     </div>
 
                     <div className="mt-6">
                         <ValidatorTable
-                            data={data}
-                            columnsConfig={columnsConfig}
-                            selectAll={selectAll}
-                            checkedIds={checkedIds}
-                            handleSelectAllChange={handleSelectAllChange}
-                            handleCheckboxChange={handleCheckboxChange}
-                            handleBanToggle={handleBanToggle}
-                            sortClickState={sortClickState}
-                            setSortClickState={setSortClickState}
-                            setCurrentPage={setCurrentPage}
-                            isLoading={isLoading}
-                            setIsPaginationOrSorting={setIsPaginationOrSorting}
-                            epoch={epoch}
-                            settingsData={validatorsData.settingsData}
-                            totalStakeData={validatorsData.totalStakeData}
-                            getOrderedVisibleColumns={getOrderedVisibleColumns}
+                          data={data}
+                          columnsConfig={columnsConfig}
+                          selectAll={selectAll}
+                          checkedIds={checkedIds}
+                          handleSelectAllChange={handleSelectAllChange}
+                          handleCheckboxChange={handleCheckboxChange}
+                          handleBanToggle={handleBanToggle}
+                          sortClickState={sortClickState}
+                          setSortClickState={setSortClickState}
+                          setCurrentPage={setCurrentPage}
+                          isLoading={isLoading}
+                          setIsPaginationOrSorting={setIsPaginationOrSorting}
+                          epoch={epoch}
+                          settingsData={validatorsData.settingsData}
+                          totalStakeData={validatorsData.totalStakeData}
+                          getOrderedVisibleColumns={getOrderedVisibleColumns}
                         />
                         
                         <ValidatorPagination 
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            filterType={filterTypeDataSelector}
-                            onPageChange={handlePageChange}
+                          currentPage={currentPage}
+                          totalPages={totalPages}
+                          filterType={filterTypeDataSelector}
+                          onPageChange={handlePageChange}
                         />
                     </div>
                 </div>

@@ -1,8 +1,4 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
-import { appLangSelector } from '../../Redux/Layout/selectors';
-import Lang from 'lang.js';
-import lngVaidators from '../../Lang/Validators/translation';
 import ValidatorName from '../../Pages/Validators/Partials/ValidatorName';
 import ValidatorUptime from '../../Pages/Validators/Partials/ValidatorUptime';
 import ValidatorSFDP from '../../Pages/Validators/Partials/ValidatorSFDP';
@@ -11,13 +7,6 @@ import ValidatorScore from '../../Pages/Validators/Partials/ValidatorScore';
 import ValidatorRate from '../../Pages/Validators/Partials/ValidatorRate';
 import ValidatorCredits from '../../Pages/Validators/Partials/ValidatorCredits';
 import ValidatorActivatedStake from '../../Pages/Validators/Partials/ValidatorActivatedStake';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-    faFire,
-    faHouse,
-    faFrog,
-    faCircleRadiation
-} from '@fortawesome/free-solid-svg-icons';
 
 interface ValidatorGridCardProps {
     validator: any;
@@ -38,14 +27,8 @@ export default function ValidatorGridCard({
     onCheckboxChange,
     columnsConfig
 }: ValidatorGridCardProps) {
-    const appLang = useSelector(appLangSelector);
-    const lng = new Lang({
-        messages: lngVaidators,
-        locale: appLang,
-    });
-
     // Helper function to render cell content based on column name
-    const renderColumnContent = (columnName: string, validator: any) => {
+    const renderColumnContent = (columnName: string) => {
         switch (columnName) {
             case "Spy Rank":
                 return <ValidatorSpyRank validator={validator} />;
@@ -54,32 +37,41 @@ export default function ValidatorGridCard({
             case "Avatar":
                 return (
                     <img 
-                        src={validator.avatar_url || validator.avatar_file_url} 
-                        alt={`${validator.name} avatar`} 
-                        className="w-8 h-8 rounded-full"
-                        onError={(e) => {
+                      src={validator.avatar_url || validator.avatar_file_url} 
+                      alt={`${validator.name} avatar`} 
+                      className="w-8 h-8 rounded-full"
+                      onError={(e) => {
                             e.currentTarget.style.display = 'none';
                         }}
                     />
                 );
             case "Status":
                 return (
-                    <span className={`px-2 py-1 rounded-full text-xs ${
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
                         validator.delinquent 
                             ? 'bg-red-100 text-red-800' 
                             : 'bg-green-100 text-green-800'
-                    }`}>
+                    }`}
+                    >
                         {validator.delinquent ? 'Delinquent' : 'Active'}
                     </span>
                 );
             case "TVC Score":
-                return <ValidatorScore validator={validator} />;
+                return <ValidatorScore validator={validator} epoch={epoch} />;
             case "Active Stake":
-                return <ValidatorActivatedStake validator={validator} totalStakeData={totalStakeData} />;
+                return <ValidatorActivatedStake validator={validator} epoch={epoch} />;
             case "Vote Credits":
-                return <ValidatorCredits validator={validator} />;
+                return <ValidatorCredits validator={validator} epoch={epoch} />;
             case "Vote Rate":
-                return <ValidatorRate validator={validator} />;
+                return (
+                    <ValidatorRate
+                      validator={validator}
+                      epoch={epoch}
+                      settingsData={settingsData}
+                      totalStakeData={totalStakeData}
+                    />
+                );
             case "Inflation Commission":
                 return validator.commission !== undefined 
                     ? `${(parseFloat(validator.commission) / 100).toFixed(2)}%` 
@@ -89,7 +81,7 @@ export default function ValidatorGridCard({
                     ? `${(parseFloat(validator.jito_commission) / 100).toFixed(2)}%` 
                     : 'N/A';
             case "Uptime":
-                return <ValidatorUptime validator={validator} />;
+                return <ValidatorUptime validator={validator} epoch={epoch} />;
             case "Client/Version":
                 return (
                     <span className="bg-[#703ea2] text-white px-2 py-1 rounded-lg text-xs">
@@ -105,10 +97,10 @@ export default function ValidatorGridCard({
             case "Website":
                 return validator.www_url ? (
                     <a 
-                        href={validator.www_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline"
+                      href={validator.www_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline"
                     >
                         Link
                     </a>
@@ -116,28 +108,36 @@ export default function ValidatorGridCard({
             case "City":
                 return validator.city || 'N/A';
             case "ASN":
-                return validator.asn || 'N/A';
+                return validator.asn || validator.autonomous_system_number || 'N/A';
             case "IP":
                 return validator.ip || 'N/A';
             case "Jiito Score":
-                return validator.jito_score?.toFixed(2) || 'N/A';
+                if (validator.jito_score === undefined || validator.jito_score === null) {
+                    return 'N/A';
+                }
+                const numericScore = typeof validator.jito_score === 'string'
+                    ? parseFloat(validator.jito_score)
+                    : validator.jito_score;
+                return Number.isFinite(numericScore) ? numericScore.toFixed(2) : 'N/A';
             default:
                 return 'N/A';
         }
     };
 
     return (
-        <div className={`flex flex-col border rounded-lg shadow-sm overflow-hidden ${
+        <div
+          className={`flex flex-col border rounded-lg shadow-sm overflow-hidden ${
             isSelected ? 'ring-2 ring-blue-500' : 'bg-white'
-        }`}>
+        }`}
+        >
             {/* Selection Header */}
             <div className="flex items-center p-3 bg-gray-50 border-b">
                 <input 
-                    type="checkbox" 
-                    id={`card-${validator.id}`} 
-                    checked={isSelected}
-                    onChange={() => onCheckboxChange(validator.id)}
-                    className="mr-2 h-4 w-4 text-blue-600 rounded"
+                  type="checkbox" 
+                  id={`card-${validator.id}`} 
+                  checked={isSelected}
+                  onChange={() => onCheckboxChange(validator.id)}
+                  className="mr-2 h-4 w-4 text-blue-600 rounded"
                 />
                 <label htmlFor={`card-${validator.id}`} className="text-sm font-medium text-gray-700">
                     Select
@@ -156,7 +156,7 @@ export default function ValidatorGridCard({
                                     {column.name}:
                                 </div>
                                 <div className="w-2/3 text-sm text-gray-900">
-                                    {renderColumnContent(column.name, validator)}
+                                    {renderColumnContent(column.name)}
                                 </div>
                             </div>
                         ))

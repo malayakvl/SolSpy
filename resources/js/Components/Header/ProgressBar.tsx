@@ -4,10 +4,10 @@ const ProgressBarWithCaption = ({ progress, caption }) => {
 
     return (
         <div
-            className="progress-bar"
+          className="progress-bar"
         >
             <div
-                style={{
+              style={{
                     width: `${progress}%`,
                     backgroundColor: '#d2cdcd',
                     opacity: 0.3,

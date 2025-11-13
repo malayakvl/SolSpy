@@ -354,9 +354,9 @@ export default function Index(validatorsData) {
                                             <th className="relative">
                                                 <div className="flex items-center gap-2">
                                                     <input 
-                                                        type="checkbox" 
-                                                        checked={selectAll}
-                                                        onChange={handleSelectAllChange} 
+                                                      type="checkbox" 
+                                                      checked={selectAll}
+                                                      onChange={handleSelectAllChange} 
                                                     />
                                                 </div>
                                             </th>
@@ -370,10 +370,10 @@ export default function Index(validatorsData) {
                                             <td className="text-left">
                                                 <div className="pl-[10px]">
                                                     <input 
-                                                        type="checkbox" 
-                                                        id={validator.id} 
-                                                        checked={checkedIds.includes(validator.id)}
-                                                        onChange={() => handleCheckboxChange(validator.id)} 
+                                                      type="checkbox" 
+                                                      id={validator.id} 
+                                                      checked={checkedIds.includes(validator.id)}
+                                                      onChange={() => handleCheckboxChange(validator.id)} 
                                                     />
                                                 </div>
                                             </td>
@@ -388,10 +388,10 @@ export default function Index(validatorsData) {
                             </div>
                             
                             <ValidatorPagination 
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                filterType={filterTypeDataSelector}
-                                onPageChange={handlePageChange}
+                              currentPage={currentPage}
+                              totalPages={totalPages}
+                              filterType={filterTypeDataSelector}
+                              onPageChange={handlePageChange}
                             />
                         </div>
                     ) : (

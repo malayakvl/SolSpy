@@ -1,6 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
-export default function ValidatorStatus({ validator, epoch, type = 'table' }) {
+type ValidatorStatusProps = {
+    validator: any;
+    type?: string;
+};
+
+export default function ValidatorStatus({ validator, type = 'table' }: ValidatorStatusProps) {
     // Determine color class based on eligibility 
     let statusColorClass = 'text-red-500';
     let bgColorClass = 'bg-red-100';

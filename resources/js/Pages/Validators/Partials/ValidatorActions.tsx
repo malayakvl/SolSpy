@@ -302,20 +302,22 @@ export default function ValidatorActions({validator, onBanToggle, showViewBtn = 
                     <>
                         <span className="cursor-pointer" onClick={() => addToCompare(validator.id)}>
                             <FontAwesomeIcon 
-                                icon={isInComparison ? faScaleUnbalanced : faScaleBalanced} 
-                                className={`mr-2 ${isInComparison ? 'text-purple-500' : ''}`}
+                              icon={isInComparison ? faScaleUnbalanced : faScaleBalanced} 
+                              className={`mr-2 ${isInComparison ? 'text-purple-500' : ''}`}
                             />
                         </span>
                         <span className="cursor-pointer" onClick={() => addToFavorite(validator.id)}>
                             <FontAwesomeIcon 
-                                icon={faHeart} 
-                                className={`mr-2 ${isInFavorites ? 'text-purple-500' : ''}`}
+                              icon={faHeart} 
+                              className={`mr-2 ${isInFavorites ? 'text-purple-500' : ''}`}
                             />
                         </span>
                         {user?.id && (
                             <span className="cursor-pointer" onClick={() => addToNotice(validator.id)}>
-                                <FontAwesomeIcon icon={faBell} 
-                                className={`mr-2 ${isInNotice ? 'text-purple-500' : ''}`} />
+                                <FontAwesomeIcon
+                                  icon={faBell} 
+                                  className={`mr-2 ${isInNotice ? 'text-purple-500' : ''}`}
+                                />
                             </span>
                         )}
                         <span>

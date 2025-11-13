@@ -4,6 +4,16 @@ import { usePage } from '@inertiajs/react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
+interface InputCalendarProps {
+  className?: string;
+  name: string;
+  label: string;
+  values: Record<string, any>;
+  onChange: (date: Date | null) => void;
+  type?: string;
+  [key: string]: any; // Allow additional props to be passed through
+}
+
 export default function InputCalendar({
   className = '',
   name,
@@ -12,38 +22,26 @@ export default function InputCalendar({
   onChange,
   type,
   ...props
-}) {
+}: InputCalendarProps) {
   const { errors } = usePage().props;
-  const [startDate, setStartDate] = useState(new Date());
+  const [startDate, setStartDate] = useState<Date | null>(new Date());
 
   return (
     <div className={`relative`}>
-      <InputLabel htmlFor={name} value={label} />
+      <InputLabel htmlFor={name} value={label}>
+        {label}
+      </InputLabel>
       <DatePicker
         id={name}
         name={name}
-        value={values[name]}
-        className={`input-text`}
         selected={startDate}
-        onChange={date => {
+        className={`input-text`}
+        onChange={(date: Date | null) => {
           setStartDate(date);
           onChange(date);
         }}
+        {...props}
       />
-      {/*<input*/}
-      {/*    id={name}*/}
-      {/*    onChange={onChange}*/}
-      {/*    onClick={() => {*/}
-      {/*        console.log('show calendar')*/}
-      {/*    }}*/}
-      {/*    type={type ? type : 'text'}*/}
-      {/*    value={values[name]}*/}
-
-      {/*    className={*/}
-      {/*        'input-text ' +*/}
-      {/*        className*/}
-      {/*    }*/}
-      {/*/>*/}
       {errors[name] && <div className="form-error">{errors[name]}</div>}
     </div>
   );

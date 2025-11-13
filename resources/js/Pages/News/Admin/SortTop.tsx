@@ -182,8 +182,8 @@ export default function SortTopNews({ topNews }: SortTopNewsProps) {
                                 </div>
                             )}
                             <button
-                                onClick={cancelSort}
-                                className="inline-flex items-center px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
+                              onClick={cancelSort}
+                              className="inline-flex items-center px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
                             >
                                 <FontAwesomeIcon icon={faTimes} className="mr-2" />
                                 Cancel
@@ -201,8 +201,8 @@ export default function SortTopNews({ topNews }: SortTopNewsProps) {
                         <div className="text-center py-8">
                             <p className="text-gray-500">No top news items found.</p>
                             <Link 
-                                href="/admin/news" 
-                                className="mt-4 inline-block text-blue-500 hover:text-blue-700"
+                              href="/admin/news" 
+                              className="mt-4 inline-block text-blue-500 hover:text-blue-700"
                             >
                                 Back to News Management
                             </Link>
@@ -210,28 +210,28 @@ export default function SortTopNews({ topNews }: SortTopNewsProps) {
                     ) : (
                         <div className="space-y-3">
                             <ReactSortable
-                                list={newsItems}
-                                setList={handleSetList}
-                                animation={200}
-                                easing="ease-out"
-                                filter=".no-drag"
-                                preventOnFilter={false}
-                                className="space-y-3"
+                              list={newsItems}
+                              setList={handleSetList}
+                              animation={200}
+                              easing="ease-out"
+                              filter=".no-drag"
+                              preventOnFilter={false}
+                              className="space-y-3"
                             >
                                 {newsItems.map((item) => (
                                     <div key={`${item.type}-${item.id}`} className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 flex items-center sortable-item">
                                         <div className="flex items-center">
                                             <FontAwesomeIcon 
-                                                icon={faGripLines} 
-                                                className="text-gray-400 mr-2 cursor-move sortable-handle"
+                                              icon={faGripLines} 
+                                              className="text-gray-400 mr-2 cursor-move sortable-handle"
                                             />
                                             <div className="flex-shrink-0 h-12 w-12">
                                                 {item.type === 'news' ? (
                                                     item.image_url ? (
                                                         <img 
-                                                            src={item.image_url} 
-                                                            alt={item.title} 
-                                                            className="h-12 w-12 rounded object-cover"
+                                                          src={item.image_url} 
+                                                          alt={item.title} 
+                                                          className="h-12 w-12 rounded object-cover"
                                                         />
                                                     ) : (
                                                         <div className="h-12 w-12 rounded bg-gray-200 flex items-center justify-center">
@@ -263,11 +263,13 @@ export default function SortTopNews({ topNews }: SortTopNewsProps) {
                                             </div>
                                             
                                             <div className="flex items-center">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                <span
+                                                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                                     item.type === 'news' 
                                                         ? 'bg-blue-100 text-blue-800' 
                                                         : 'bg-indigo-100 text-indigo-800'
-                                                }`}>
+                                                }`}
+                                                >
                                                     {item.type === 'news' ? 'News' : 'Discord'}
                                                 </span>
                                             </div>

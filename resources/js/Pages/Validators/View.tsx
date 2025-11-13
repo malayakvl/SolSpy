@@ -1054,22 +1054,22 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
 
                                                 {/* Total progress (expected slots) */}
                                                 <div
-                                                    className="absolute left-0 h-full bg-gray-600/40"
-                                                    style={{
+                                                  className="absolute left-0 h-full bg-gray-600/40"
+                                                  style={{
                                                         width: `${(leaderData.leader_slots / leaderData.expected_slots) * 100}%`
                                                     }}
                                                 />
 
                                                 {/* Produced slots */}
                                                 <div
-                                                    className="absolute left-0 h-full bg-green-500"
-                                                    style={{ width: `${leaderData.produced_rate}%` }}
+                                                  className="absolute left-0 h-full bg-green-500"
+                                                  style={{ width: `${leaderData.produced_rate}%` }}
                                                 />
 
                                                 {/* Skipped slots */}
                                                 <div
-                                                    className="absolute left-0 h-full bg-red-500/80"
-                                                    style={{ width: `${leaderData.skip_rate}%` }}
+                                                  className="absolute left-0 h-full bg-red-500/80"
+                                                  style={{ width: `${leaderData.skip_rate}%` }}
                                                 />
 
                                                 {/* Overlay text */}
@@ -1111,14 +1111,14 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                                         <div className="flex-grow relative bg-gray-700 rounded-full h-2.5 overflow-hidden">
                                             {/* Produced (зелёный) */}
                                             <div
-                                                className="absolute left-0 h-full bg-green-500 transition-all duration-500 ease-in-out"
-                                                style={{ width: skipData ? `${skipData.produced_rate || 0}%` : '0%' }}
+                                              className="absolute left-0 h-full bg-green-500 transition-all duration-500 ease-in-out"
+                                              style={{ width: skipData ? `${skipData.produced_rate || 0}%` : '0%' }}
                                             />
                                             
                                             {/* Skipped (красный) */}
                                             <div
-                                                className="absolute right-0 h-full bg-red-500 transition-all duration-500 ease-in-out"
-                                                style={{ width: skipData ? `${skipData.skip_rate || 0}%` : '0%' }}
+                                              className="absolute right-0 h-full bg-red-500 transition-all duration-500 ease-in-out"
+                                              style={{ width: skipData ? `${skipData.skip_rate || 0}%` : '0%' }}
                                             />
                                             
                                             {/* Процент по центру */}
@@ -1149,13 +1149,13 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                                         <div className="flex-grow relative bg-gray-700 rounded-full h-2.5 overflow-hidden">
                                             {/* Produced (зелёный слева) */}
                                             <div
-                                                className="absolute left-0 h-full bg-green-500 transition-all duration-500 ease-in-out"
-                                                style={{ width: skipData ? `${skipData.produced_rate}%` : '0%' }}
+                                              className="absolute left-0 h-full bg-green-500 transition-all duration-500 ease-in-out"
+                                              style={{ width: skipData ? `${skipData.produced_rate}%` : '0%' }}
                                             />
                                             {/* Skipped (красный фон, полупрозрачный) */}
                                             <div
-                                                className="absolute left-0 h-full bg-red-500 opacity-30 transition-all duration-500 ease-in-out"
-                                                style={{ width: skipData ? `${skipData.skip_rate}%` : '0%' }}
+                                              className="absolute left-0 h-full bg-red-500 opacity-30 transition-all duration-500 ease-in-out"
+                                              style={{ width: skipData ? `${skipData.skip_rate}%` : '0%' }}
                                             />
                                             <div className="absolute inset-0 flex items-center justify-center">
                                                 <span className="text-xs font-bold text-white drop-shadow-md">

@@ -1,3 +1,4 @@
+import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { appLangSelector } from '../../Redux/Layout/selectors';
 import Lang from 'lang.js';
@@ -8,10 +9,6 @@ import { changeLangAction } from '../../Redux/Layout';
 export default function LangMenu() {
   const dispatch = useDispatch();
   const appLang = useSelector(appLangSelector);
-  const lng = new Lang({
-    messages: lngHeader,
-    locale: appLang,
-  });
 
   return (
     <div className="space-x-8 sm:-my-px sm:flex md:flex md:mt-[-8px] relative md:mr-[15px]">
@@ -33,16 +30,32 @@ export default function LangMenu() {
           </span>
         </Dropdown.Trigger>
 
-        <Dropdown.Content width={24}>
+        <Dropdown.Content width="24">
           <span
             className="dropdown-span"
             onClick={() => dispatch(changeLangAction('en'))}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                dispatch(changeLangAction('en'));
+              }
+            }}
+            role="button"
+            tabIndex={0}
           >
             En
           </span>
           <span
             className="dropdown-span"
             onClick={() => dispatch(changeLangAction('uk'))}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                dispatch(changeLangAction('uk'));
+              }
+            }}
+            role="button"
+            tabIndex={0}
           >
             Укр
           </span>

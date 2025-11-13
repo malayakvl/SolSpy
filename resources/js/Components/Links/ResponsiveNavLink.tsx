@@ -1,11 +1,19 @@
-import { Link } from '@inertiajs/react';
+import { Link, type InertiaLinkProps } from '@inertiajs/react';
+import { type ReactNode } from 'react';
+
+// Extend InertiaLinkProps and keep href required since it's needed by the Link component
+interface ResponsiveNavLinkProps extends InertiaLinkProps {
+  active?: boolean;
+  className?: string;
+  children: ReactNode;
+}
 
 export default function ResponsiveNavLink({
   active = false,
   className = '',
   children,
   ...props
-}) {
+}: ResponsiveNavLinkProps) {
   return (
     <Link
       {...props}

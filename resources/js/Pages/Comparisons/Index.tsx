@@ -37,10 +37,10 @@ const ValidatorAvatar = ({ validator }) => {
                 <div className="w-8 h-8 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center text-xs text-gray-500" />
             ) : (
                 <img 
-                    src={validator.avatar_url || validator.avatar_file_url} 
-                    alt={`${validator.name} avatar`} 
-                    className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500"
-                    onError={() => setImageError(true)}
+                  src={validator.avatar_url || validator.avatar_file_url} 
+                  alt={`${validator.name} avatar`} 
+                  className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500"
+                  onError={() => setImageError(true)}
                 />
             )}
             <div className="pt-2">{validator.name}</div>
@@ -278,9 +278,9 @@ export default function Index(validatorsData) {
                                         {data.map((validator) => (
                                             <td key={validator.id} className="text-center">
                                                 <button 
-                                                    onClick={() => addToCompare(validator.id)}
-                                                    className="text-red-500 hover:text-red-700 cursor-pointer"
-                                                    title="Remove from comparison"
+                                                  onClick={() => addToCompare(validator.id)}
+                                                  className="text-red-500 hover:text-red-700 cursor-pointer"
+                                                  title="Remove from comparison"
                                                 >
                                                     <FontAwesomeIcon icon={faTrash} scale={1.5} color="#ff6347" />
                                                 </button>

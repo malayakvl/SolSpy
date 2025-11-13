@@ -9,12 +9,33 @@ import { appLangSelector } from '../../../Redux/Layout/selectors';
 import Lang from 'lang.js';
 import lngProfile from '../../../Lang/Profile/translation';
 
+// Define the interface for the user object
+interface User {
+  name: string;
+  email: string;
+  email_verified_at?: string | null;
+  [key: string]: any;
+}
+
+// Define the interface for auth props
+interface AuthProps {
+  user: User;
+  [key: string]: any;
+}
+
+// Define the interface for page props
+interface PageProps {
+  auth: AuthProps;
+  [key: string]: any;
+}
+
 export default function UpdateProfileInformation({
   mustVerifyEmail,
   status,
   className = '',
 }) {
-  const user = usePage().props.auth.user;
+  const { props } = usePage<PageProps>();
+  const user = props.auth.user;
   const appLang = useSelector(appLangSelector);
   const msg = new Lang({
     messages: lngProfile,

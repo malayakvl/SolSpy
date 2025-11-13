@@ -33,8 +33,8 @@ export default function Dashboard({auth}) {
                             <div className="border-b border-gray-200">
                                 <nav className="flex space-x-8">
                                     <button
-                                        onClick={() => setActiveTab('favorites')}
-                                        className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                                      onClick={() => setActiveTab('favorites')}
+                                      className={`py-4 px-1 border-b-2 font-medium text-sm ${
                                             activeTab === 'favorites'
                                                 ? 'border-blue-500 text-blue-600'
                                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -43,8 +43,8 @@ export default function Dashboard({auth}) {
                                         {msg.get('dashboard.favorites')}
                                     </button>
                                     <button
-                                        onClick={() => setActiveTab('comparisons')}
-                                        className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                                      onClick={() => setActiveTab('comparisons')}
+                                      className={`py-4 px-1 border-b-2 font-medium text-sm ${
                                             activeTab === 'comparisons'
                                                 ? 'border-blue-500 text-blue-600'
                                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -53,8 +53,8 @@ export default function Dashboard({auth}) {
                                         {msg.get('dashboard.comparisons')}
                                     </button>
                                     <button
-                                        onClick={() => setActiveTab('blocked')}
-                                        className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                                      onClick={() => setActiveTab('blocked')}
+                                      className={`py-4 px-1 border-b-2 font-medium text-sm ${
                                             activeTab === 'blocked'
                                                 ? 'border-blue-500 text-blue-600'
                                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'

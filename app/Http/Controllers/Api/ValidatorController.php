@@ -697,11 +697,9 @@ public function hardware(Request $request)
             'onlyValidated' => $request->input('displayOnlyValidated', false) === 'true',
             'onlyWithMevAndZeroCommission' => $request->input('displayOnlyWithMevAndZeroCommission', false) === 'true'
         ];
-        
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
-
         // Fetch timeout data using service
         $data = $this->validatorDataService->timeoutData(
             $sortColumn, 

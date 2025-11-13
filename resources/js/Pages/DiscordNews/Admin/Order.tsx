@@ -103,8 +103,8 @@ export default function DiscordNewsOrder() {
                             <p className="text-gray-600">Drag and drop to reorder news items</p>
                         </div>
                         <button 
-                            className="btn-submit"
-                            onClick={handleApplyChanges}
+                          className="btn-submit"
+                          onClick={handleApplyChanges}
                         >
                             Apply Changes
                         </button>
@@ -113,30 +113,30 @@ export default function DiscordNewsOrder() {
                     <div className="mt-6">
                         <div className="overflow-x-auto">
                             <ReactSortable
-                                list={newsItems}
-                                setList={handleSortChange}
-                                tag="ul"
-                                animation={200}
-                                easing="ease-out"
-                                filter=".no-drag"
-                                preventOnFilter={false}
-                                className="space-y-3"
+                              list={newsItems}
+                              setList={handleSortChange}
+                              tag="ul"
+                              animation={200}
+                              easing="ease-out"
+                              filter=".no-drag"
+                              preventOnFilter={false}
+                              className="space-y-3"
                             >
                                 {newsItems.map((item) => (
                                     <li key={item.id} className="bg-white sortable-item border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 p-4">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center">
                                                 <FontAwesomeIcon 
-                                                    icon={faGripLines} 
-                                                    className="text-gray-400 mr-2 cursor-move sortable-handle"
+                                                  icon={faGripLines} 
+                                                  className="text-gray-400 mr-2 cursor-move sortable-handle"
                                                 />
                                                 <div className="flex-shrink-0 h-10 w-10">
                                                     {item.image_url ? (
                                                         <img 
-                                                            src={item.image_url} 
-                                                            alt={item.title} 
-                                                            className="h-10 w-10 rounded-full object-cover"
-                                                            onError={(e) => {
+                                                          src={item.image_url} 
+                                                          alt={item.title} 
+                                                          className="h-10 w-10 rounded-full object-cover"
+                                                          onError={(e) => {
                                                                 const target = e.target as HTMLImageElement;
                                                                 target.style.display = 'none';
                                                                 target.parentElement!.innerHTML = 
@@ -169,12 +169,12 @@ export default function DiscordNewsOrder() {
                                                     {new Date(item.published_at).toLocaleDateString()}
                                                 </div>
                                                 <button 
-                                                    onClick={() => toggleTopStatus(item.id)}
-                                                    className="text-yellow-500 hover:text-yellow-600"
+                                                  onClick={() => toggleTopStatus(item.id)}
+                                                  className="text-yellow-500 hover:text-yellow-600"
                                                 >
                                                     <FontAwesomeIcon 
-                                                        icon={item.is_top ? faStar : faStarHalfAlt} 
-                                                        className={item.is_top ? "text-yellow-500" : "text-gray-300"}
+                                                      icon={item.is_top ? faStar : faStarHalfAlt} 
+                                                      className={item.is_top ? "text-yellow-500" : "text-gray-300"}
                                                     />
                                                 </button>
                                             </div>

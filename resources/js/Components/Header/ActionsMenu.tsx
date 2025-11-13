@@ -20,7 +20,7 @@ export default function ActionsMenu(props) {
         locale: appLang,
     });
     const user = usePage().props.auth.user;
-    const permissions = usePage().props.auth.can;
+    // const permissions = usePage().props.auth.can;
     const [favLength, setFavLength] = useState(0);
     const [compareLength, setCompareLength] = useState(0);
     const [noticeCount, setNoticeCount] = useState(0);
@@ -124,22 +124,22 @@ export default function ActionsMenu(props) {
         <>
             <div className="md:space-x-4 md:flex md:pr-[30px]">
                 <Link
-                    href={user ? '/comparisons' : `/comparisons?ids=${encodeURIComponent(localStorage.getItem('validatorCompare') || '[]')}`}
-                    className="inline-flex items-center menu-main-btn text-sm relative"
+                  href={user ? '/comparisons' : `/comparisons?ids=${encodeURIComponent(localStorage.getItem('validatorCompare') || '[]')}`}
+                  className="inline-flex items-center menu-main-btn text-sm relative"
                 >
                     <span className="eclipse-qty">{compareLength}</span>
                     <FontAwesomeIcon icon={faScaleBalanced} className="w-[16px] h-[16px] text-white" />
                 </Link>
                 <Link
-                    href={user ? '/favorites' : `/favorites?ids=${encodeURIComponent(localStorage.getItem('validatorFavorites') || '[]')}`}
-                    className="inline-flex items-center menu-main-btn text-sm relative"
+                  href={user ? '/favorites' : `/favorites?ids=${encodeURIComponent(localStorage.getItem('validatorFavorites') || '[]')}`}
+                  className="inline-flex items-center menu-main-btn text-sm relative"
                 >
                     <span className="eclipse-qty">{favLength}</span>
                     <FontAwesomeIcon icon={faHeart} className="w-[16px] h-[16px] text-white" />
                 </Link>
                 <Link
-                    href={user ? '/notices' : `/favorites?ids=${encodeURIComponent(localStorage.getItem('validatorFavorites') || '[]')}`}
-                    className="inline-flex items-center menu-main-btn text-sm relative"
+                  href={user ? '/notices' : `/favorites?ids=${encodeURIComponent(localStorage.getItem('validatorFavorites') || '[]')}`}
+                  className="inline-flex items-center menu-main-btn text-sm relative"
                 >
                     <span className="eclipse-qty">{noticeCount}</span>
                     <FontAwesomeIcon icon={faBell} className="w-[16px] h-[16px] text-white" />
