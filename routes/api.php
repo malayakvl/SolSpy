@@ -34,7 +34,6 @@ Route::get('/validator-hardware', [ApiValidatorController::class, 'hardware']);
 
 Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle']);
 
-// routes/api.php
 
 // Session-based authentication for SPA API calls (this is what you need for authenticated users)
 Route::middleware(['web', 'auth'])->group(function () {

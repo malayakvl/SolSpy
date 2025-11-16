@@ -10,7 +10,7 @@ $kernel->bootstrap();
 use Illuminate\Support\Facades\Artisan;
 
 while (true) {
-    Artisan::call('app:run-cron-dayly-jobs');
+    Artisan::call('app:run-cron-daily-jobs');
     echo "app:run-cron-jobs ran at " . date('Y-m-d H:i:s') . "\n";
     sleep(86400); // Задержка 24 часа (86400 секунд)
 }

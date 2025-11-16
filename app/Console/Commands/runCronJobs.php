@@ -35,9 +35,9 @@ class runCronJobs extends Command
             // Artisan::call('app:update-epoch-max-credits'); //Need to start hourly
             Artisan::call('app:fetch-validators');
             Artisan::call('rpc:fetch-validators');
-            Artisan::call('rpc:fetch-validator-scores');
+            // Artisan::call('rpc:fetch-validator-scores');
             // Artisan::call('validators:update-scores-auto');
-            Artisan::call('validators:update-spy-rank');
+            // Artisan::call('validators:update-spy-rank');
             
 
             // Вывод результата команды (опционально)

@@ -24,6 +24,7 @@ import ValidatorPagination from './Pagination';
 import { renderColumnHeader, renderColumnCell } from '../../../Components/Validators/ValidatorTableComponents';
 import { renderBlock } from '../../../Components/Validators/ValidatorGridComponents';
 import ActionButtons from '../../../Components/Validators/ActionButtons';
+import ValidatorActions from '../Partials/ValidatorActions';
 
 export default function CustomerIndex(validatorsData) {
     const dispatch = useDispatch();
@@ -275,8 +276,7 @@ export default function CustomerIndex(validatorsData) {
     // };
 
     // Filter out banned validators from the data
-    // const filteredData = data.filter(validator => !bannedValidators.includes(validator.id));
-    const filteredData = data;
+    const filteredData = data.filter(validator => !bannedValidators.includes(validator.id));
 
     const handleCheckboxChange = (id: string | number) => {
         if (checkedIds.includes(id)) {
@@ -571,7 +571,6 @@ export default function CustomerIndex(validatorsData) {
         
     };
 
-
     useEffect(() => {
         const intervalId = setInterval(() => {
             fetchData();
@@ -586,7 +585,7 @@ export default function CustomerIndex(validatorsData) {
         // Make API call to export endpoint
         window.location.href = '/api/export-data';
     };
-
+console.log('here');
     return (
         <AuthenticatedLayout header={<Head />} auth={usePage().props.auth}>
             <Head title={msg.get('welcome')} />
