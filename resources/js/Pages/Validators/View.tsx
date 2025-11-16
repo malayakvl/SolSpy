@@ -1543,7 +1543,7 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </AuthenticatedLayout> 
     );
 }
 
