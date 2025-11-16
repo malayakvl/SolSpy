@@ -56,3 +56,16 @@ curl -F "url=${NGROK_URL}/api/telegram/webhook" \
 ```bash
 curl "https://api.telegram.org/bot${BOT_TOKEN}/getWebhookInfo" | jq
 ```
+
+
+```bash
+| Действие                 | Команда                        |
+| ------------------------ | ------------------------------ |
+| **Остановить сервис**    | `sudo systemctl stop ngrok`    |
+| **Запустить сервис**     | `sudo systemctl start ngrok`   |
+| **Перезапустить**        | `sudo systemctl restart ngrok` |
+| **Отключить автозапуск** | `sudo systemctl disable ngrok` |
+| **Включить автозапуск**  | `sudo systemctl enable ngrok`  |
+| **Проверить статус**     | `sudo systemctl status ngrok`  |
+| **Посмотреть логи**      | `sudo journalctl -u ngrok -f`  |
+```

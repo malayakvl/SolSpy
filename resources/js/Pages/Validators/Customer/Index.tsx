@@ -24,6 +24,7 @@ import ValidatorPagination from './Pagination';
 import { renderColumnHeader, renderColumnCell } from '../../../Components/Validators/ValidatorTableComponents';
 import { renderBlock } from '../../../Components/Validators/ValidatorGridComponents';
 import ActionButtons from '../../../Components/Validators/ActionButtons';
+import ValidatorActions from '../Partials/ValidatorActions';
 
 export default function CustomerIndex(validatorsData) {
     const dispatch = useDispatch();
@@ -264,19 +265,18 @@ export default function CustomerIndex(validatorsData) {
     }, []);
 
     // Handle ban toggle from child component
-    // const handleBanToggle = (validatorId: number, isBanned: boolean) => {
-    //     if (isBanned) {
-    //         // Add to banned list
-    //         setBannedValidators(prev => [...prev, validatorId]);
-    //     } else {
-    //         // Remove from banned list
-    //         setBannedValidators(prev => prev.filter(id => id !== validatorId));
-    //     }
-    // };
+    const handleBanToggle = (validatorId: number, isBanned: boolean) => {
+        if (isBanned) {
+            // Add to banned list
+            setBannedValidators(prev => [...prev, validatorId]);
+        } else {
+            // Remove from banned list
+            setBannedValidators(prev => prev.filter(id => id !== validatorId));
+        }
+    };
 
     // Filter out banned validators from the data
-    // const filteredData = data.filter(validator => !bannedValidators.includes(validator.id));
-    const filteredData = data;
+    const filteredData = data.filter(validator => !bannedValidators.includes(validator.id));
 
     const handleCheckboxChange = (id: string | number) => {
         if (checkedIds.includes(id)) {
@@ -571,7 +571,6 @@ export default function CustomerIndex(validatorsData) {
         
     };
 
-
     useEffect(() => {
         const intervalId = setInterval(() => {
             fetchData();
@@ -586,7 +585,7 @@ export default function CustomerIndex(validatorsData) {
         // Make API call to export endpoint
         window.location.href = '/api/export-data';
     };
-
+console.log('here');
     return (
         <AuthenticatedLayout header={<Head />} auth={usePage().props.auth}>
             <Head title={msg.get('welcome')} />
@@ -806,7 +805,7 @@ export default function CustomerIndex(validatorsData) {
                                                 </div>
                                             </td>
                                             <td className="text-center">
-                                                {/* <ValidatorActions validator={validator} onBanToggle={handleBanToggle} /> */}
+                                                <ValidatorActions validator={validator} onBanToggle={handleBanToggle} />
                                             </td>
                                             {getOrderedVisibleColumns().map(column => renderColumnCellLocal(column.name, validator))}
                                         </tr>
