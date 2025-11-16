@@ -804,7 +804,7 @@ console.log('here');
                                                     />
                                                 </div>
                                             </td>
-                                            <td className="text-center">
+                                            <td className="text-center ">
                                                 <ValidatorActions validator={validator} onBanToggle={handleBanToggle} />
                                             </td>
                                             {getOrderedVisibleColumns().map(column => renderColumnCellLocal(column.name, validator))}
