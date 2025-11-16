@@ -34,7 +34,7 @@ export default tseslint.config(
       "react/jsx-closing-bracket-location": [2, "tag-aligned"],
       "react/react-in-jsx-scope": "off",
       "react/prop-types": "off",
-      "no-console": ["error", { "allow": ["warn", "error"] }],
+      "no-console": "off",
       "jsx-a11y/click-events-have-key-events": "error",
       "jsx-a11y/no-static-element-interactions": "error"
     }
