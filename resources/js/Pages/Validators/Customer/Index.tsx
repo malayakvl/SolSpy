@@ -265,15 +265,15 @@ export default function CustomerIndex(validatorsData) {
     }, []);
 
     // Handle ban toggle from child component
-    const handleBanToggle = (validatorId: number, isBanned: boolean) => {
-        if (isBanned) {
-            // Add to banned list
-            setBannedValidators(prev => [...prev, validatorId]);
-        } else {
-            // Remove from banned list
-            setBannedValidators(prev => prev.filter(id => id !== validatorId));
-        }
-    };
+    // const handleBanToggle = (validatorId: number, isBanned: boolean) => {
+    //     if (isBanned) {
+    //         // Add to banned list
+    //         setBannedValidators(prev => [...prev, validatorId]);
+    //     } else {
+    //         // Remove from banned list
+    //         setBannedValidators(prev => prev.filter(id => id !== validatorId));
+    //     }
+    // };
 
     // Filter out banned validators from the data
     const filteredData = data.filter(validator => !bannedValidators.includes(validator.id));
@@ -805,7 +805,7 @@ console.log('here');
                                                 </div>
                                             </td>
                                             <td className="text-center">
-                                                <ValidatorActions validator={validator} onBanToggle={handleBanToggle} />
+                                                {/* <ValidatorActions validator={validator} onBanToggle={handleBanToggle} /> */}
                                             </td>
                                             {getOrderedVisibleColumns().map(column => renderColumnCellLocal(column.name, validator))}
                                         </tr>
