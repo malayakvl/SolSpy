@@ -300,25 +300,37 @@ export default function ValidatorActions({validator, onBanToggle, showViewBtn = 
                 )}
                 {!isAdmin && (
                     <>
-                        <span className="cursor-pointer" onClick={() => addToCompare(validator.id)}>
+                        <button 
+                          className="cursor-pointer bg-transparent border-0 p-0"
+                          onClick={() => addToCompare(validator.id)}
+                          aria-label={isInComparison ? "Remove from comparison" : "Add to comparison"}
+                        >
                             <FontAwesomeIcon 
                               icon={isInComparison ? faScaleUnbalanced : faScaleBalanced} 
                               className={`mr-2 ${isInComparison ? 'text-purple-500' : ''}`}
                             />
-                        </span>
-                        <span className="cursor-pointer" onClick={() => addToFavorite(validator.id)}>
+                        </button>
+                        <button 
+                          className="cursor-pointer bg-transparent border-0 p-0 ml-2"
+                          onClick={() => addToFavorite(validator.id)}
+                          aria-label={isInFavorites ? "Remove from favorites" : "Add to favorites"}
+                        >
                             <FontAwesomeIcon 
                               icon={faHeart} 
                               className={`mr-2 ${isInFavorites ? 'text-purple-500' : ''}`}
                             />
-                        </span>
+                        </button>
                         {user?.id && (
-                            <span className="cursor-pointer" onClick={() => addToNotice(validator.id)}>
+                            <button 
+                              className="cursor-pointer bg-transparent border-0 p-0 ml-2"
+                              onClick={() => addToNotice(validator.id)}
+                              aria-label={isInNotice ? "Remove from notice" : "Add to notice"}
+                            >
                                 <FontAwesomeIcon
                                   icon={faBell} 
                                   className={`mr-2 ${isInNotice ? 'text-purple-500' : ''}`}
                                 />
-                            </span>
+                            </button>
                         )}
                         <span>
                             <FontAwesomeIcon icon={faMoneyBill} className="mr-2" />
