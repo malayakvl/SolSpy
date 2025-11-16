@@ -1483,8 +1483,8 @@ public function hardware(Request $request)
         
         $validatorId = $request->input('validatorId');
         // Assuming there's a ban function in the database
-        $result = DB::statement('SELECT data.toggle_ban(' .$user->id. ', ' .$validatorId. ')');
-        
+        DB::statement('SELECT data.validator_user_actions(' .$user->id. ', ' .$validatorId. ', \'ban\')');
+
         return response()->json([
             'success' => true,
             'message' => 'Ban status updated'
