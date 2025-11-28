@@ -12,6 +12,10 @@ use App\Http\Controllers\TelegramConnectController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\RpcProxyController;
 
+Route::get('/rpc-proxy-test-ok', function() {
+    return response()->json(['status'=>'ok']);
+});
+
 // Обычный маршрут прокси без ограничений (для теста)
 Route::post('/rpc-proxy-test', [RpcProxyController::class, 'proxy']);
 
