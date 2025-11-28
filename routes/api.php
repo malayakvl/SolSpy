@@ -14,7 +14,9 @@ use App\Http\Controllers\RpcProxyController;
 
 // Обычный маршрут прокси без ограничений (для теста)
 Route::post('/rpc-proxy-test', [RpcProxyController::class, 'proxy']);
-
+Route::get('/rpc-proxy-test-ok', function() {
+    return response()->json(['status'=>'ok']);
+});
 // С защитой: ограничение количества запросов (Rate limiting)
 Route::middleware('throttle:60,1') // максимум 60 запросов в минуту с одного IP
 ->post('/rpc-proxy', [RpcProxyController::class, 'proxy']);
