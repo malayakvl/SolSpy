@@ -100,7 +100,7 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
     const votePubkey = validatorData.vote_pubkey;
     const validatorIdentityPubkey = validatorData.node_pubkey;
     const [chartTab, setChartTab] = useState<string>('active_stake');
-    const [isBlocked, setIsBlocked] = useState<boolean>(validatorData.blocked_id ? true : false);
+    const [isInBanned, setIsInBanned] = useState<boolean>(validatorData.blocked_id ? true : false);
     const [isInComparison, setIsInComparison] = useState(false);
     const [isInFavorites, setIsInFavorites] = useState(false);
     const [nextSlots, setNextSlots] = useState<Array<{slot: number | null, timeLeft: string, date: string}>>([]);
@@ -247,39 +247,6 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
             line: { 
                 tension: 0.4 
             } 
-        }
-    };
-
-    const addToBlock = async () => {
-        const validatorId = validatorData.id;
-        if (user?.id) {
-            try {
-                await axios.post('/api/ban-validator', { validatorId }, {
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
-                });
-                toast.success('Ban list updated', { position: "top-right", autoClose: 2000 });
-                setIsBlocked(!isBlocked);
-            } catch (error) {
-                console.error('Error:', error);
-                toast.error('Failed to update ban list', { position: "top-right", autoClose: 3000 });
-            }
-        } else {
-            const banList = JSON.parse(localStorage.getItem('validatorBlocked') || '[]');
-            if (banList.includes(validatorId)) {
-                const updatedList = banList.filter(id => id !== validatorId);
-                localStorage.setItem('validatorBlocked', JSON.stringify(updatedList));
-                setIsBlocked(false);
-                toast.info('Validator removed from block list', { position: "top-right", autoClose: 2000 });
-            } else {
-                if (banList.length >= 5) {
-                    toast.error('Maximum 5 validators can be added to blocked for unregistered users', { position: "top-right", autoClose: 1000 });
-                    return;
-                }
-                banList.push(validatorId);
-                localStorage.setItem('validatorBlocked', JSON.stringify(banList));
-                setIsBlocked(true);
-                toast.success('Validator added to block list', { position: "top-right", autoClose: 2000 });
-            }
         }
     };
 
@@ -897,7 +864,6 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
     };
 
     useEffect(() => {
-        console.log(settingsData)
         // Set up interval for periodic data fetching
         const intervalId = setInterval(() => {
             fetchData();
@@ -916,6 +882,122 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
             window.removeEventListener('filterChanged', handleFilterChange);
         };
     }, []);
+
+    const addToBanList = async () => {
+        const validatorId = validatorData.id;
+        if (user?.id) {
+            try {
+                await axios.post('/api/ban-validator', { validatorId }, {
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+                });
+                toast.success('Ban list updated', { position: "top-right", autoClose: 2000 });
+                setIsInBanned(!isInBanned);
+            } catch (error) {
+                console.error('Error:', error);
+                toast.error('Failed to update ban list', { position: "top-right", autoClose: 3000 });
+            }
+        } else {
+            const banList = JSON.parse(localStorage.getItem('validatorBlocked') || '[]');
+            if (banList.includes(validatorId)) {
+                const updatedList = banList.filter(id => id !== validatorId);
+                localStorage.setItem('validatorBlocked', JSON.stringify(updatedList));
+                setIsInBanned(false);
+                toast.info('Validator removed from block list', { position: "top-right", autoClose: 2000 });
+            } else {
+                if (banList.length >= 5) {
+                    toast.error('Maximum 5 validators can be added to blocked for unregistered users', { position: "top-right", autoClose: 1000 });
+                    return;
+                }
+                banList.push(validatorId);
+                localStorage.setItem('validatorBlocked', JSON.stringify(banList));
+                setIsInBanned(true);
+                toast.success('Validator added to block list', { position: "top-right", autoClose: 2000 });
+            }
+        }
+    };
+
+    // const addToBanList = async (validatorId) => {
+    //     if (user?.id) {
+    //         // Registered user - use API
+    //         try {
+    //             await axios.post('/api/add-ban-list', {
+    //                 validatorId: validatorId
+    //             }, {
+    //                 headers: {
+    //                     'Content-Type': 'application/json',
+    //                     'Accept': 'application/json'
+    //                 }
+    //             });
+    //             setIsInBanned(!isInComparison);
+    //             toast.success('Ban list updated', {
+    //                 position: "top-right",
+    //                 autoClose: 2000,
+    //                 hideProgressBar: false,
+    //                 closeOnClick: true,
+    //                 pauseOnHover: true,
+    //                 draggable: true,
+    //             });
+    //             // Dispatch event for registered users
+    //             window.dispatchEvent(new CustomEvent('banCountChanged'));
+    //         } catch (error) {
+    //             console.error('Error:', error);
+    //             toast.error('Failed to update comparison list', {
+    //                 position: "top-right",
+    //                 autoClose: 3000,
+    //                 hideProgressBar: false,
+    //                 closeOnClick: true,
+    //                 pauseOnHover: true,
+    //                 draggable: true,
+    //             });
+    //         }
+    //     } else {
+    //         // Unregistered user - use localStorage with max 2 items
+    //         const banList = JSON.parse(localStorage.getItem('validatorBanList') || '[]');
+            
+    //         if (banList.includes(validatorId)) {
+    //             // Remove from comparison
+    //             const updatedList = banList.filter(id => id !== validatorId);
+    //             localStorage.setItem('validatorBanList', JSON.stringify(updatedList));
+    //             setIsInBanned(false);
+    //             toast.info('Validator removed from comparison', {
+    //                 position: "top-right",
+    //                 autoClose: 2000,
+    //                 hideProgressBar: false,
+    //                 closeOnClick: true,
+    //                 pauseOnHover: true,
+    //                 draggable: true,
+    //             });
+    //             // Dispatch event when removing
+    //             window.dispatchEvent(new CustomEvent('banCountChanged'));
+    //         } else {
+    //             // Add to comparison
+    //             if (compareList.length >= 2) {
+    //                 toast.error('Maximum 2 validators can be compared for unregistered users', {
+    //                     position: "top-right",
+    //                     autoClose: 2000,
+    //                     hideProgressBar: false,
+    //                     closeOnClick: true,
+    //                     pauseOnHover: true,
+    //                     draggable: true,
+    //                 });
+    //                 return;
+    //             }
+    //             banList.push(validatorId);
+    //             localStorage.setItem('validatorBanList', JSON.stringify(banList));
+    //             setIsInBanned(true);
+    //             toast.success('Validator added to ban list', {
+    //                 position: "top-right",
+    //                 autoClose: 2000,
+    //                 hideProgressBar: false,
+    //                 closeOnClick: true,
+    //                 pauseOnHover: true,
+    //                 draggable: true,
+    //             });
+    //             // Dispatch event when adding
+    //             window.dispatchEvent(new CustomEvent('banListUpdated'));
+    //         }
+    //     }
+    // }
 
     return (
         <AuthenticatedLayout header={<Head />}>
@@ -1233,10 +1315,62 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                         </div>
                         <div className="w-1/2 ml-2">
                             <ul className="flex flex-row w-full border-b border-gray-300">
-                                <li onClick={() => setChartTab('uptime')} className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'uptime' ? 'bg-[#703da7] text-white' : 'text-[#c6c9d0] hover:text-[#703da7]'}`}>Uptime</li>
-                                <li onClick={() => setChartTab('skip_rate')} className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'skip_rate' ? 'bg-[#703da7] text-white' : 'text-[#c6c9d0] hover:text-[#703da7]'}`}>Skip Rate</li>
-                                <li onClick={() => setChartTab('active_stake')} className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'active_stake' ? 'bg-[#703da7] text-white' : 'text-[#c6c9d0] hover:text-[#703da7]'}`}>Active Stake</li>
-                                <li onClick={() => setChartTab('commission')} className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'commission' ? 'bg-[#703da7] text-white' : 'text-[#c6c9d0] hover:text-[#703da7]'}`}>Commission</li>
+                                <li 
+                                  onClick={() => setChartTab('uptime')} 
+                                  onKeyDown={(e) => {
+                                      if (e.key === 'Enter' || e.key === ' ') {
+                                          setChartTab('uptime');
+                                      }
+                                  }}
+                                  className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'uptime' ? 'bg-[#703da7] text-white' : 'text-[#c6c9d0] hover:text-[#703da7]'}`}
+                                  tabIndex={0}
+                                  role="button"
+                                  aria-label="Uptime chart"
+                                >
+                                  Uptime
+                                </li>
+                                <li 
+                                  onClick={() => setChartTab('skip_rate')} 
+                                  onKeyDown={(e) => {
+                                      if (e.key === 'Enter' || e.key === ' ') {
+                                          setChartTab('skip_rate');
+                                      }
+                                  }}
+                                  className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'skip_rate' ? 'bg-[#703da7] text-white' : 'text-[#c6c9d0] hover:text-[#703da7]'}`}
+                                  tabIndex={0}
+                                  role="button"
+                                  aria-label="Skip rate chart"
+                                >
+                                  Skip Rate
+                                </li>
+                                <li 
+                                  onClick={() => setChartTab('active_stake')} 
+                                  onKeyDown={(e) => {
+                                      if (e.key === 'Enter' || e.key === ' ') {
+                                          setChartTab('active_stake');
+                                      }
+                                  }}
+                                  className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'active_stake' ? 'bg-[#703da7] text-white' : 'text-[#c6c9d0] hover:text-[#703da7]'}`}
+                                  tabIndex={0}
+                                  role="button"
+                                  aria-label="Active stake chart"
+                                >
+                                  Active Stake
+                                </li>
+                                <li 
+                                  onClick={() => setChartTab('commission')} 
+                                  onKeyDown={(e) => {
+                                      if (e.key === 'Enter' || e.key === ' ') {
+                                          setChartTab('commission');
+                                      }
+                                  }}
+                                  className={`px-4 py-2 font-medium text-md cursor-pointer ${chartTab === 'commission' ? 'bg-[#703da7] text-white' : 'text-[#c6c9d0] hover:text-[#703da7]'}`}
+                                  tabIndex={0}
+                                  role="button"
+                                  aria-label="Commission chart"
+                                >
+                                  Commission
+                                </li>
                             </ul>
                             <div className={`w-full ${chartTab === 'uptime' ? 'block' : 'hidden'}`}>
                                 <ChartErrorBoundary>
@@ -1400,11 +1534,16 @@ export default function Index({ validatorData, settingsData, totalStakeData }) {
                         </div>
                     </div>
                     <div className="flex justify-center mt-3">
-                        <button className="btn btn-pink">Add Validator to Black List</button>
+                        <button 
+                          className={isInBanned ? "btn-cancel" : "btn btn-pink"}
+                          onClick={() => addToBanList(validatorData.id)}
+                        >
+                          {isInBanned ? "Remove Validator from Black List" : "Add Validator to Black List"}
+                        </button>
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </AuthenticatedLayout> 
     );
 }
 
