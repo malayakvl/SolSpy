@@ -10,7 +10,14 @@ use App\Http\Controllers\DiscordNewsController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\TelegramConnectController;
 use App\Http\Controllers\TelegramWebhookController;
+use App\Http\Controllers\RpcProxyController;
 
+// Обычный маршрут прокси без ограничений (для теста)
+Route::post('/rpc-proxy-test', [RpcProxyController::class, 'proxy']);
+
+// С защитой: ограничение количества запросов (Rate limiting)
+Route::middleware('throttle:60,1') // максимум 60 запросов в минуту с одного IP
+->post('/rpc-proxy', [RpcProxyController::class, 'proxy']);
 
 Route::get('/fetch-settings', [SettingsController::class, 'getDataWithHeader'])->name('settings.get');
 Route::get('/fetch-settings-data', [SettingsController::class, 'getDataWithHeaderNew'])->name('settings.getNew');
