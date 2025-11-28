@@ -16,6 +16,23 @@ Route::get('/rpc-proxy-test-ok', function() {
     return response()->json(['status'=>'ok']);
 });
 
+Route::get('/rpc-balance-test', function () {
+    $walletPubKey = 'DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV'; // тестовый кошелек
+
+    $rpcUrl = 'http://103.167.235.81:8899'; // приватная нода
+
+    $response = Http::withHeaders([
+        'Content-Type' => 'application/json'
+    ])->post($rpcUrl, [
+        'jsonrpc' => '2.0',
+        'id' => 1,
+        'method' => 'getBalance',
+        'params' => [$walletPubKey]
+    ]);
+
+    return $response->json();
+});
+
 // Обычный маршрут прокси без ограничений (для теста)
 Route::post('/rpc-proxy-test', [RpcProxyController::class, 'proxy']);
 
