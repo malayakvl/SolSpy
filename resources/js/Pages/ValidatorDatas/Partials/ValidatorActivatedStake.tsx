@@ -23,7 +23,7 @@ export default function ValidatorActivatedStake({validator, epoch}) {
 
     return (
         <>
-            {formatSOL(validator.activated_stake)}!!
+            {formatSOL(validator.activated_stake)}
             <span className="text-xs text-gray-500 hidden">
                 {Number(validator.stake).toLocaleString('en-US', {
                     minimumFractionDigits: 0,

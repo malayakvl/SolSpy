@@ -34,7 +34,7 @@ export default function TVCScore({ validator }) {
 
     return (
         <span className={`transition-colors duration-300 ${colorClass}`}>
-            {tvcScore}!!
+            {tvcScore}
         </span>
     );
 }
