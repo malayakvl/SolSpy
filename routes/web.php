@@ -5,12 +5,12 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\ValidatorController;
-use App\Http\Controllers\Api\ValidatorController as ApiValidatorController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\DiscordController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ValidatorDataController;
 
 use Inertia\Inertia;
 
@@ -51,7 +51,8 @@ Route::get('/notices/{page?}', [ValidatorController::class, 'notices'])->name('v
 Route::get('/sortable', [ValidatorController::class, 'sortable'])->name('validators.sortable');
 
 // Specific validator routes
-Route::get('/validators/{page?}', [ValidatorController::class, 'index'])->name('validators.view');
+//Route::get('/validators/{page?}', [ValidatorController::class, 'index'])->name('validators.view');
+Route::get('/validators/{page?}', [ValidatorDataController::class, 'index'])->name('validators.view');
 Route::get('/validator/{voteKey}', [ValidatorController::class, 'view'])->name('validator.view');
 
 // Route to redirect to Google's OAuth page
@@ -110,4 +111,5 @@ Route::get('/api/validators/average-rank', [ValidatorController::class, 'getAver
 
 // Home page route - MUST be last to avoid catching other routes
 require __DIR__.'/auth.php';
-Route::get('/{page?}', [ValidatorController::class, 'index'])->name('home');
+//Route::get('/{page?}', [ValidatorController::class, 'index'])->name('home');
+Route::get('/{page?}', [ValidatorDataController::class, 'index'])->name('home');

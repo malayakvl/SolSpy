@@ -7,7 +7,7 @@ export default function ValidatorCredits({ validator, epoch }) {
     // Вычисление текущего значения credits
     let _credits = 0;
     const epochData = JSON.parse(validator?.epoch_credits ? validator.epoch_credits : '[]');
-
+console.log('vote_credits')
     if (epochData.length > 0) {
         const result = epochData.find(subArray => subArray[0] === epoch);
         const resultIndex = epochData.findIndex(subArray => subArray[0] === epoch);

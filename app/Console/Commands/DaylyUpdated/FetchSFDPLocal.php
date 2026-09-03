@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands\Rpc;
+namespace App\Console\Commands\DaylyUpdated;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use phpseclib3\Net\SSH2;
 use Dotenv\Dotenv;
 use Exception;
+use function App\Console\Commands\Rpc\str_contains;
 
 class FetchSFDPLocal extends Command
 {
@@ -17,7 +18,7 @@ class FetchSFDPLocal extends Command
      *
      * @var string
      */
-    protected $signature = 'rpc:fetch-sfdp-local';
+    protected $signature = 'score:update-status';
 
     /**
      * The console command description.
@@ -85,7 +86,7 @@ class FetchSFDPLocal extends Command
 
             $validators = DB::table('data.validators')
                 ->select('vote_pubkey', 'id')
-                ->where('vote_pubkey', '=', 'DHoZJqvvMGvAXw85Lmsob7YwQzFVisYg8HY4rt5BAj6M')
+                ->where('vote_pubkey', '=', '53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR')
                 ->get();
             foreach ($validators as $validator) {
                 $votePubkey = $validator->vote_pubkey;
@@ -219,14 +220,13 @@ class FetchSFDPLocal extends Command
                 $this->info("Commission: {$commission}%");
 
                 // Запись в базу
-//                DB::table('data.validators')
-//                    ->where('id', $validatorId)
-//                    ->update([
-//                        'sfdp_status' => $status,
-//                        'commission' => $commission,
-//                        'activated_stake' => $activatedStake,
-//                        'updated_at' => now(),
-//                    ]);
+                DB::table('data.validators')
+                    ->where('id', $validatorId)
+                    ->update([
+                        'sfdp_status' => $status,
+                        'commission' => $commission,
+                        'updated_at' => now(),
+                    ]);
 
                 $this->info("Updated validator ID $validatorId");
                 $this->line('----------------------------------------------------');

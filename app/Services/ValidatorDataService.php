@@ -132,7 +132,7 @@ class ValidatorDataService
         $onlyWithMevAndZeroCommission = $displayOptions['onlyWithMevAndZeroCommission'] ?? null;
         
         // Build the query with display options
-        $query = "SELECT * FROM data.search_validators('" .$searchTerm. "', '" .$filterType. "', " . ($userId ?? 'null') . ", 'spy_rank', " . $offset . ", " . $limit . 
+        $queryOld = "SELECT * FROM data.search_validators('" .$searchTerm. "', '" .$filterType. "', " . ($userId ?? 'null') . ", 'spy_rank', " . $offset . ", " . $limit .
                  ", " . ($onlyWithName === true ? 'true' : ($onlyWithName === false ? 'false' : 'null')) .
                  ", " . ($onlyWithWebsite === true ? 'true' : ($onlyWithWebsite === false ? 'false' : 'null')) .
                  ", " . ($notRussian === true ? 'true' : ($notRussian === false ? 'false' : 'null')) .
@@ -140,7 +140,16 @@ class ValidatorDataService
                  ", " . ($onlyWithMevAndZeroCommission === true ? 'true' : ($onlyWithMevAndZeroCommission === false ? 'false' : 'null')) .
                  ", NULL" .  // p_validator_ids parameter
                  ");";
+        $query = "SELECT * FROM data.get_validators('" .$searchTerm. "', '" .$filterType. "', " . ($userId ?? 'null') . ", 'spy_rank', " . $offset . ", " . $limit .
+            ", " . ($onlyWithName === true ? 'true' : ($onlyWithName === false ? 'false' : 'null')) .
+            ", " . ($onlyWithWebsite === true ? 'true' : ($onlyWithWebsite === false ? 'false' : 'null')) .
+            ", " . ($notRussian === true ? 'true' : ($notRussian === false ? 'false' : 'null')) .
+            ", " . ($onlyValidated === true ? 'true' : ($onlyValidated === false ? 'false' : 'null')) .
+            ", " . ($onlyWithMevAndZeroCommission === true ? 'true' : ($onlyWithMevAndZeroCommission === false ? 'false' : 'null')) .
+            ", NULL" .  // p_validator_ids parameter
+            ");";
         $res = DB::select($query);
+        dd($res);exit;
         // Преобразуем результат в коллекцию для дальнейшей обработки
         $validatorsData = collect($res);
 
@@ -342,12 +351,27 @@ class ValidatorDataService
 
     public function fetchDataTopValidators($sortedValidators, $totalStakeLamports) {
         //getting top validators
+        // $topValidators = DB::table('data.validators')
+        //     ->join('data.validator_order', 'data.validator_order.validator_id', '=', 'data.validators.id')
+        //     ->join('data.validator_scores', 'data.validator_scores.vote_pubkey', '=', 'data.validators.vote_pubkey')
+        //     ->where('data.validators.is_top', true)
+        //     ->orderBy('data.validator_order.sort_order', 'ASC')
+        //     ->limit(10)
+        //     ->get();
         $topValidators = DB::table('data.validators')
             ->join('data.validator_order', 'data.validator_order.validator_id', '=', 'data.validators.id')
+            ->join('data.validator_scores', function ($join) {
+                $join->on('data.validator_scores.vote_pubkey', '=', 'data.validators.vote_pubkey')
+                    ->whereIn('data.validator_scores.id', function ($query) {
+                        $query->selectRaw('MAX(id)')
+                            ->from('data.validator_scores')
+                            ->groupBy('vote_pubkey');
+                    });
+            })
             ->where('data.validators.is_top', true)
             ->orderBy('data.validator_order.sort_order', 'ASC')
             ->limit(10)
-            ->get();
+            ->get();    
         // Calculate TVC rank and Spy rank for top validators as well
         $topValidatorsWithRanks = $topValidators->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
             // Calculate TVC rank

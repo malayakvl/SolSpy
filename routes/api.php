@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\Api\ValidatorController as ApiValidatorController;
+use App\Http\Controllers\ValidatorDataController;
 use App\Http\Controllers\ValidatorOrderController;
 use App\Http\Controllers\DiscordNewsController;
 use App\Http\Controllers\NewsController;
@@ -46,6 +47,7 @@ Route::get('/fetch-by-id-validators/{page?}', [ApiValidatorController::class, 'f
 
 // Public API routes - accessible to everyone
 Route::get('/fetch-validators', [ApiValidatorController::class, 'timeoutData'])->name('validators.timeoutData');
+Route::get('/scored-validators', [ValidatorDataController::class, 'timeoutData'])->name('validators.timeoutData');
 // Route::get('/fetch-favorite-validators', [ApiValidatorController::class, 'timeoutFavoriteData'])->name('validators.timeoutFavoriteData');
 Route::get('/fetch-favorite-validators-public', [ApiValidatorController::class, 'timeoutFavoriteData'])->name('validators.publicFavoriteData');
 Route::get('/fetch-comparison-validators-public', [ApiValidatorController::class, 'publicComparisonData'])->name('validators.publicComparisonData');

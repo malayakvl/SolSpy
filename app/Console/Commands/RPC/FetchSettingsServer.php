@@ -72,7 +72,7 @@ class FetchSettingsServer extends Command
             $epochCompletedTime = '';
             $epochTotalTime = '';
             $epochRemainingTime = '';
-            
+            dd($lines);
             foreach ($lines as $line) {
                 $parts = explode(':', $line, 2);
                 if (count($parts) == 2) {

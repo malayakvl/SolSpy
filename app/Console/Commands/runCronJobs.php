@@ -30,14 +30,19 @@ class runCronJobs extends Command
         while (true) {
             // Здесь ваша логика для команды app:fetch-validators
             $this->info('Cron every 1 sec...');
-            // Например, вызов метода или сервиса
-            // Вызов команды app:fetch-validators
-            // Artisan::call('app:update-epoch-max-credits'); //Need to start hourly
+//            Artisan::call('score:update-metrics');
+//            Artisan::call('score:update-validators');
             Artisan::call('app:fetch-validators');
-            Artisan::call('rpc:fetch-validators');
-            // Artisan::call('rpc:fetch-validator-scores');
-            // Artisan::call('validators:update-scores-auto');
-            // Artisan::call('validators:update-spy-rank');
+
+
+            // Например, вызов метода или сервиса стара версия
+            // Вызов команды app:fetch-validators
+//            // Artisan::call('app:update-epoch-max-credits'); //Need to start hourly
+            Artisan::call('app:fetch-validators');
+//            Artisan::call('rpc:fetch-validators');
+//            // Artisan::call('rpc:fetch-validator-scores');
+//            // Artisan::call('validators:update-scores-auto');
+//            // Artisan::call('validators:update-spy-rank');
             
 
             // Вывод результата команды (опционально)

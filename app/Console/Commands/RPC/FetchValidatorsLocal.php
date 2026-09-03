@@ -32,10 +32,11 @@ class FetchValidatorsLocal extends Command
     {
         // Get collectLength from settings table
         $dbSettings = DB::table('data.settings')->first();
+
         $collectLength = $dbSettings->collect_score_retention ?? 10;
         
-        Log::info('Command rpc:fetch-rpc-scores executed at ' . now());
-        $this->info("Start fetching rpc validator scores info (keeping last $collectLength collections)!");
+        Log::info('Command rpc:fetch-validators-local executed at ' . now());
+        $this->info("Start fetching rpc validator local info (keeping last $collectLength collections)!");
 
         $this->info("Connecting to RPC: {$this->rpcUrl}");
 
@@ -57,6 +58,19 @@ class FetchValidatorsLocal extends Command
             
             // Then get vote accounts data
             $this->info("Fetching vote accounts...");
+
+//            $votePubkey = 'DHoZJqvvMGvAXw85Lmsob7YwQzFVisYg8HY4rt5BAj6M';
+//
+//            $validator = $this->fetchVoteAccount($votePubkey);
+//
+//            if ($validator === null) {
+//                $this->error("Validator $votePubkey not found");
+//                return 1;
+//            }
+//
+//            dd($validator);exit;
+
+
             $voteData = $this->fetchVoteAccounts();
             
             if (!$voteData) {
@@ -135,11 +149,18 @@ class FetchValidatorsLocal extends Command
                     'updated_at' => now()->format('Y-m-d H:i:s')
                 ];
             }
-            
+//            dd($validatorScores);exit;
+
+
             // Insert validator scores into database using PostgreSQL function
             if (!empty($validatorScores)) {
                 $scoresJson = json_encode($validatorScores);
-                $insertedCount = DB::select("SELECT data.insert_validator_scores(?::jsonb) as count", [$scoresJson])[0]->count;
+                
+//                $insertedCount = DB::select("SELECT data.insert_validator_scores(?::jsonb) as count", [$scoresJson])[0]->count;
+                $insertedCount = DB::select(
+                    "SELECT data.insert_validator_scores(?::jsonb, ?::integer) as count", 
+                    [$scoresJson, $dbSettings->epoch]
+                )[0]->count;
                 $this->info("Inserted $insertedCount validator scores into database using PostgreSQL function");
             }
             
@@ -212,6 +233,55 @@ class FetchValidatorsLocal extends Command
         $jsonData = json_decode($response, true);
         return $jsonData['result'] ?? null;
     }
+
+
+    private function fetchVoteAccount(string $votePubkey): ?array
+    {
+        $data = [
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'method' => 'getVoteAccounts',
+            'params' => [[
+                'commitment' => 'finalized',
+                'votePubkey' => $votePubkey,
+                'keepUnstakedDelinquents' => true,
+            ]],
+        ];
+
+        $ch = curl_init($this->rpcUrl);
+
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Accept: application/json',
+            ],
+            CURLOPT_POSTFIELDS => json_encode($data, JSON_THROW_ON_ERROR),
+            CURLOPT_TIMEOUT => 15,
+        ]);
+
+        $response = curl_exec($ch);
+
+        if ($response === false) {
+            throw new \RuntimeException(
+                'cURL error: ' . curl_error($ch)
+            );
+        }
+
+        curl_close($ch);
+
+        $jsonData = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
+
+        if (isset($jsonData['error'])) {
+            throw new \RuntimeException($jsonData['error']['message'] ?? 'Solana RPC error');
+        }
+
+        // Валидатор может быть active или delinquent.
+        return $jsonData['result']['current'][0]
+            ?? $jsonData['result']['delinquent'][0]
+            ?? null;
+    }
     
     private function fetchVoteAccounts()
     {
@@ -236,6 +306,7 @@ class FetchValidatorsLocal extends Command
         curl_close($ch);
 
         $jsonData = json_decode($response, true);
+
         return $jsonData['result'] ?? null;
     }
 }
