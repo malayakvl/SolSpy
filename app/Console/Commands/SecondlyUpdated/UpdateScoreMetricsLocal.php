@@ -71,17 +71,13 @@ class UpdateScoreMetricsLocal extends Command
             if ($targetEpoch <= 0) {
                 $targetEpoch = (int)$currentEpoch;
             }
-//            $jitoValidators = $this->fetchJitoValidators($currentEpoch);
-//            $jitoScores = $this->fetchJitoStewardScores($currentEpoch);
-
-
 
             // 1. Получаем массив с vote-аккаунтами из RPC
             $dValidatorData = $this->fetchVoteAccounts();
 
             $epochCreditsMap = [];
 
-// Объединяем "current" и "delinquent" (на случай, если валидатор отстал, но всё равно есть в сети)
+            // Объединяем "current" и "delinquent" (на случай, если валидатор отстал, но всё равно есть в сети)
             $allAccounts = array_merge(
                 $dValidatorData['current'] ?? [],
                 $dValidatorData['delinquent'] ?? []
@@ -124,16 +120,6 @@ class UpdateScoreMetricsLocal extends Command
                 $epochCreditsNum = (int)($v['epochCredits'] ?? 0);
 
                 $voteAccount = $vote;
-
-//                $jitoData = $jitoValidators[$voteAccount] ?? [];
-//                $stewardScore = $jitoScores[$voteAccount] ?? [];
-//                if ($voteAccount == '53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR') {
-//
-//                    $jitoData['jito_score'] = $stewardScore['score'] ?? 0;
-//                    $jitoData['jito_raw_score'] = $stewardScore['raw_score'] ?? 0;
-//                    $jitoData['jito_eligible'] = ($stewardScore['score'] ?? 0) > 0;
-//                    dd($jitoData['jito_score']);exit;
-//                }
 
                 $epochCredits = (int)($v['epochCredits'] ?? 0);
                 $validatorCredits = (int)($v['credits'] ?? 0);
@@ -191,135 +177,6 @@ class UpdateScoreMetricsLocal extends Command
             Log::error('Validator update failed', ['error' => $e->getMessage()]);
             return 1;
         }
-
-//        try {
-//            $this->info("Fetching cluster nodes information...");
-//            $nodeData = $this->fetchClusterNodes();
-//
-//            // Map версий: nodePubkey → version
-//            $versionMap = [];
-//            if (!empty($nodeData)) {
-//                foreach ($nodeData as $node) {
-//                    if (isset($node['pubkey'], $node['version'])) {
-//                        $versionMap[$node['pubkey']] = $node['version'];
-//                    }
-//                }
-//            }
-//            $this->info("Found versions for " . count($versionMap) . " nodes");
-//
-//            $this->info("Fetching vote accounts...");
-//            $voteData = $this->fetchVoteAccounts();
-//
-//            if (!$voteData) {
-//                $this->error("Failed to fetch vote accounts data");
-//                return 1;
-//            }
-//
-//            $currentValidators = $voteData['current'] ?? [];
-//            $delinquentValidators = $voteData['delinquent'] ?? [];
-//            $validators = array_merge($currentValidators, $delinquentValidators);
-//
-//            // Если текущая эпоха не передана из настроек, определяем её по максимальной эпохе из RPC
-//            if ($targetEpoch <= 0) {
-//                foreach ($validators as $val) {
-//                    if (!empty($val['epochCredits']) && is_array($val['epochCredits'])) {
-//                        foreach ($val['epochCredits'] as $epData) {
-//                            if (isset($epData[0]) && (int)$epData[0] > $targetEpoch) {
-//                                $targetEpoch = (int)$epData[0];
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//
-//            // 1. Рассчитываем TVC-ранги для всей сети строго за целевую эпоху
-//            $tvcRanks = $this->calculateTvcRanks($validators, $targetEpoch);
-//
-//            // 2. ФОРМИРУЕМ MAP КРЕДИТОВ ВСЕЙ СЕТИ ДЛЯ СУЩЕСТВУЮЩЕЙ ЭПОХИ
-//            $networkCreditsMap = [];
-//            foreach ($validators as $val) {
-//                $votePub = $val['votePubkey'] ?? null;
-//                if (!$votePub) continue;
-//
-//                $earned = $this->getEarnedCreditsForEpoch($val['epochCredits'] ?? [], $targetEpoch);
-//                $networkCreditsMap[$votePub] = $earned;
-//            }
-//
-//            // Находим МАКСИМАЛЬНОЕ значение кредитов за эту эпоху среди всех валидаторов
-//            $maxCreditsInNetwork = !empty($networkCreditsMap) ? max($networkCreditsMap) : 0;
-//
-//            // 3. Сортируем валидаторов по заработанным кредитам
-//            usort($validators, function($a, $b) use ($networkCreditsMap) {
-//                $aCredits = $networkCreditsMap[$a['votePubkey'] ?? ''] ?? 0;
-//                $bCredits = $networkCreditsMap[$b['votePubkey'] ?? ''] ?? 0;
-//                return $bCredits <=> $aCredits;
-//            });
-//
-//            $validatorScores = [];
-//
-//            // 4. Обрабатываем каждого валидатора
-//            for ($i = 0; $i < count($validators); $i++) {
-//                $v = $validators[$i];
-//                $identity = $v['nodePubkey'] ?? '';
-//                $vote = $v['votePubkey'] ?? '';
-//
-//                // Кредиты строго за $targetEpoch
-//                $validatorCredits = $networkCreditsMap[$vote] ?? 0;
-//
-//                $lastVote = $v['lastVote'] ?? 0;
-//                $rootSlot = $v['rootSlot'] ?? 0;
-//                $commission = $v['commission'] ?? 0;
-//                $activatedStake = $v['activatedStake'] ?? 0;
-//
-//                $version = $versionMap[$identity] ?? 'unknown';
-//                $stakeSol = $activatedStake / 1000000000;
-//                $stakePercentage = 0.02; // Placeholder
-//
-//                $tvcScore = $tvcRanks[$vote] ?? null;
-//
-//                // Передаем кредиты текущей ноды и МАКСИМАЛЬНЫЕ кредиты сети
-//                $uptimeCalc = $this->calculateNetworkUptime($validatorCredits, $maxCreditsInNetwork);
-//                $uptimeFormatted = number_format($uptimeCalc, 2, '.', '') . '%';
-//
-//                $validatorScores[] = [
-//                    'rank'          => $i + 1,
-//                    'node_pubkey'   => $identity,
-//                    'vote_pubkey'   => $vote,
-//                    'uptime'        => $uptimeFormatted,
-//                    'root_slot'     => (int)$rootSlot,
-//                    'vote_slot'     => (int)$lastVote,
-//                    'commission'    => (float)$commission,
-//                    'credits'       => (int)$validatorCredits,
-//                    'version'       => $version,
-//                    'stake'         => $stakeSol,
-//                    'stake_percent' => $stakePercentage,
-//                    'tvc_score'     => $tvcScore,
-//                    'epoch_credits' => $v['epochCredits'] ?? [],
-//                    'collected_at'  => now()->format('Y-m-d H:i:s'),
-//                    'created_at'    => now()->format('Y-m-d H:i:s'),
-//                    'updated_at'    => now()->format('Y-m-d H:i:s')
-//                ];
-//            }
-//
-//            // Вставка в базу через обновленную PostgreSQL функцию
-//            if (!empty($validatorScores)) {
-//                $scoresJson = json_encode($validatorScores);
-//                $insertedCount = DB::select(
-//                    "SELECT data.update_validator_scores(?::jsonb, ?::integer) as count",
-//                    [$scoresJson, $targetEpoch]
-//                )[0]->count;
-//                $this->info("Inserted $insertedCount validator scores into database using PostgreSQL function");
-//            }
-//
-//            $this->cleanupOldData($collectLength);
-//
-//            return 0;
-//
-//        } catch (\Exception $e) {
-//            $this->error('RPC Error: ' . $e->getMessage());
-//            Log::error('Solana RPC failed', ['error' => $e->getMessage()]);
-//            return 1;
-//        }
     }
 
     /**
@@ -474,10 +331,18 @@ class UpdateScoreMetricsLocal extends Command
         $creditsMap = [];
 
         foreach ($allValidators as $val) {
-            $pubkey = $val['votePubkey'] ?? null;
+            // Поддержка ключей как SSH CLI (voteAccountPubkey), так и RPC (votePubkey)
+            $pubkey = $val['voteAccountPubkey'] ?? $val['votePubkey'] ?? null;
             if (!$pubkey) continue;
 
-            $earnedCredits = $this->getEarnedCreditsForEpoch($val['epochCredits'] ?? [], $targetEpoch);
+            // Если это CLI, там epochCredits лежит прямо числом
+            if (isset($val['epochCredits']) && is_numeric($val['epochCredits'])) {
+                $earnedCredits = (int)$val['epochCredits'];
+            } else {
+                // Если это массив из RPC
+                $earnedCredits = $this->getEarnedCreditsForEpoch($val['epochCredits'] ?? [], $targetEpoch);
+            }
+
             $creditsMap[$pubkey] = $earnedCredits;
         }
 
@@ -568,52 +433,5 @@ class UpdateScoreMetricsLocal extends Command
 
         $jsonData = json_decode($response, true);
         return $jsonData['result'] ?? null;
-    }
-
-
-    private function fetchJitoValidators(?int $epoch = null): ?array
-    {
-        $url = 'https://kobe.mainnet.jito.network/api/v1/validators';
-
-        if ($epoch !== null) {
-            $url .= '?' . http_build_query(['epoch' => $epoch]);
-        }
-
-        $ch = curl_init($url);
-
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPGET => true,
-            CURLOPT_HTTPHEADER => ['Accept: application/json'],
-            CURLOPT_CONNECTTIMEOUT => 10,
-            CURLOPT_TIMEOUT => 30,
-        ]);
-
-        $response = curl_exec($ch);
-        $curlError = curl_error($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        curl_close($ch);
-
-        if ($response === false || $curlError) {
-            $this->error('cURL Error (Jito validators): ' . $curlError);
-            return null;
-        }
-
-        if ($httpCode < 200 || $httpCode >= 300) {
-            $this->error("Jito API returned HTTP {$httpCode}");
-            return null;
-        }
-
-        $jsonData = json_decode($response, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $this->error('Invalid JSON from Jito API: ' . json_last_error_msg());
-            return null;
-        }
-
-        return collect($jsonData['validators'] ?? [])
-            ->keyBy('vote_account')
-            ->all();
     }
 }
