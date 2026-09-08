@@ -33,12 +33,13 @@ class runCronJobs extends Command
 //            Artisan::call('score:update-metrics');
 //            Artisan::call('score:update-validators');
             Artisan::call('app:fetch-validators');
+            
 
 
             // Например, вызов метода или сервиса стара версия
             // Вызов команды app:fetch-validators
 //            // Artisan::call('app:update-epoch-max-credits'); //Need to start hourly
-            Artisan::call('app:fetch-validators');
+            Artisan::call('score:update-score-validator-metrics');
 //            Artisan::call('rpc:fetch-validators');
 //            // Artisan::call('rpc:fetch-validator-scores');
 //            // Artisan::call('validators:update-scores-auto');

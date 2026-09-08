@@ -9,17 +9,30 @@ use Illuminate\Support\Facades\DB;
 use Exception;
 use phpseclib3\Net\SSH2;
 
-class UpdateScoreMetricsLocal extends Command
+class UpdateScoreValidatorMetrics extends Command
 {
-    protected $signature = 'score:update-metrics';
-    protected $description = 'Update score metrics local';
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'score:update-score-validator-metrics';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Command description';
 
     protected $rpcUrl = 'http://103.167.235.81:8899';
 
+    /**
+     * Execute the console command.
+     */
     public function handle()
     {
         $dbSettings = DB::table('data.settings')->first();
-        dd($dbSettings);exit;
         $collectLength = $dbSettings->collect_score_retention ?? 10;
         $targetEpoch = (int)($dbSettings->epoch ?? 0);
         $solanaPath = '/usr/local/bin/solana';
@@ -122,16 +135,6 @@ class UpdateScoreMetricsLocal extends Command
 
                 $voteAccount = $vote;
 
-//                $jitoData = $jitoValidators[$voteAccount] ?? [];
-//                $stewardScore = $jitoScores[$voteAccount] ?? [];
-//                if ($voteAccount == '53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR') {
-//
-//                    $jitoData['jito_score'] = $stewardScore['score'] ?? 0;
-//                    $jitoData['jito_raw_score'] = $stewardScore['raw_score'] ?? 0;
-//                    $jitoData['jito_eligible'] = ($stewardScore['score'] ?? 0) > 0;
-//                    dd($jitoData['jito_score']);exit;
-//                }
-
                 $epochCredits = (int)($v['epochCredits'] ?? 0);
                 $validatorCredits = (int)($v['credits'] ?? 0);
                 $activatedStake = (float)($v['activatedStake'] ?? 0);
@@ -189,6 +192,9 @@ class UpdateScoreMetricsLocal extends Command
             return 1;
         }
     }
+
+
+
 
     /**
      * Извлекает кредиты, заработанные строго за определенную эпоху
@@ -337,33 +343,6 @@ class UpdateScoreMetricsLocal extends Command
         return $jsonData['events'][0]['data'] ?? null;
     }
 
-//    private function calculateTvcRanks(array $allValidators, int $targetEpoch): array
-//    {
-//        $creditsMap = [];
-//
-//        foreach ($allValidators as $val) {
-//            $pubkey = $val['votePubkey'] ?? null;
-//            if (!$pubkey) continue;
-//
-//            $earnedCredits = $this->getEarnedCreditsForEpoch($val['epochCredits'] ?? [], $targetEpoch);
-//            $creditsMap[$pubkey] = $earnedCredits;
-//        }
-//
-//        arsort($creditsMap);
-//
-//        $tvcRanks = [];
-//        $rank = 1;
-//        foreach ($creditsMap as $pubkey => $credits) {
-//            if ($credits > 0) {
-//                $tvcRanks[$pubkey] = $rank;
-//                $rank++;
-//            } else {
-//                $tvcRanks[$pubkey] = null;
-//            }
-//        }
-//
-//        return $tvcRanks;
-//    }
     private function calculateTvcRanks(array $allValidators, int $targetEpoch): array
     {
         $creditsMap = [];
@@ -471,52 +450,5 @@ class UpdateScoreMetricsLocal extends Command
 
         $jsonData = json_decode($response, true);
         return $jsonData['result'] ?? null;
-    }
-
-
-    private function fetchJitoValidators(?int $epoch = null): ?array
-    {
-        $url = 'https://kobe.mainnet.jito.network/api/v1/validators';
-
-        if ($epoch !== null) {
-            $url .= '?' . http_build_query(['epoch' => $epoch]);
-        }
-
-        $ch = curl_init($url);
-
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPGET => true,
-            CURLOPT_HTTPHEADER => ['Accept: application/json'],
-            CURLOPT_CONNECTTIMEOUT => 10,
-            CURLOPT_TIMEOUT => 30,
-        ]);
-
-        $response = curl_exec($ch);
-        $curlError = curl_error($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        curl_close($ch);
-
-        if ($response === false || $curlError) {
-            $this->error('cURL Error (Jito validators): ' . $curlError);
-            return null;
-        }
-
-        if ($httpCode < 200 || $httpCode >= 300) {
-            $this->error("Jito API returned HTTP {$httpCode}");
-            return null;
-        }
-
-        $jsonData = json_decode($response, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $this->error('Invalid JSON from Jito API: ' . json_last_error_msg());
-            return null;
-        }
-
-        return collect($jsonData['validators'] ?? [])
-            ->keyBy('vote_account')
-            ->all();
     }
 }

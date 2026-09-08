@@ -289,6 +289,7 @@ export default function Index(validatorsData) {
         const sortDirection = urlParams.get('sortDirection') || 'ASC';
         const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
         try {
+            console.log(1);
             // Build URL with all parameters
             // Use authenticated endpoint if user is logged in, otherwise use public endpoint
             let url = user ? 

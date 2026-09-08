@@ -111,5 +111,15 @@ Route::get('/api/validators/average-rank', [ValidatorController::class, 'getAver
 
 // Home page route - MUST be last to avoid catching other routes
 require __DIR__.'/auth.php';
-Route::get('/{page?}', [ValidatorController::class, 'index'])->name('home');
-Route::get('/data/{page?}', [ValidatorDataController::class, 'index'])->name('home');
+// Route::get('/data/{page?}', [ValidatorDataController::class, 'index'])->name('home');
+// Route::get('/{page?}', [ValidatorController::class, 'index'])->name('home');
+
+// 1. Маршрут для /data и /data/какая-то-страница
+Route::get('/data/{page?}', [ValidatorDataController::class, 'index'])
+    ->where('page', '[a-zA-Z0-9_-]+')
+    ->name('validator-data.index');
+
+// 2. Главная страница / и страницы /какая-то-страница
+Route::get('/{page?}', [ValidatorController::class, 'index'])
+    ->where('page', '[a-zA-Z0-9_-]+')
+    ->name('validator.index');
