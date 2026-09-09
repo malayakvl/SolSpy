@@ -292,8 +292,8 @@ export default function Index(validatorsData) {
             // Build URL with all parameters
             // Use authenticated endpoint if user is logged in, otherwise use public endpoint
             let url = user ? 
-                `/api/fetch-validators-auth?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}` :
-                `/api/scored-validators?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`;
+                `/api/fetch-validators-auth?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}&responseType=json` :
+                `/api/scored-validators?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}&responseType=json`;
                 
             if (searchParam) {
                 url += `&search=${encodeURIComponent(searchParam)}`;

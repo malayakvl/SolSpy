@@ -6,7 +6,6 @@ use Dotenv\Dotenv;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
-use Exception;
 use phpseclib3\Net\SSH2;
 
 class UpdateScoreMetricsLocal extends Command
@@ -103,9 +102,8 @@ class UpdateScoreMetricsLocal extends Command
             // 3. Рассчитываем TVC-ранги для всей сети
             $this->calculateTvcRanks($validators, $targetEpoch);
 
-            // Находим максимальные кредиты сети для расчета Uptime / Vote Rate
+            // Берем максимальное значение кредитов за эпоху (максимум среди лидирующих нод)
             $maxCreditsInNetwork = !empty($validators) ? ($validators[0]['epochCredits'] ?? 0) : 0;
-
 
             // Рассчитываем общий стейк сети для подсчета stake_percent
             $totalNetworkStake = array_sum(array_column($validators, 'activatedStake')) ?: 1;
@@ -117,12 +115,10 @@ class UpdateScoreMetricsLocal extends Command
             foreach ($validators as $index => $v) {
                 $identity = $v['identityPubkey'] ?? '';
                 $vote = $v['voteAccountPubkey'] ?? '';
-                $epochCreditsNum = (int)($v['epochCredits'] ?? 0);
-
-                $voteAccount = $vote;
 
                 $epochCredits = (int)($v['epochCredits'] ?? 0);
                 $validatorCredits = (int)($v['credits'] ?? 0);
+                $epochCreditsArray = $epochCreditsMap[$vote] ?? [];
                 $activatedStake = (float)($v['activatedStake'] ?? 0);
                 $stakeSol = $activatedStake / 1000000000; // перевод Lamports в SOL
 
@@ -132,40 +128,100 @@ class UpdateScoreMetricsLocal extends Command
                 // Uptime / Vote Rate относительно лидера сети
                 $uptimeCalc = $this->calculateNetworkUptime($validatorCredits, $maxCreditsInNetwork);
                 $uptimeFormatted = number_format($uptimeCalc, 2, '.', '') . '%';
-                // Берем 5-элементный массив из RPC (или заглушку, если ноды нет в RPC)
-                // Достаём тот самый 5-элементный массив epochCredits напрямую из RPC-карты
-                $epochCreditsArray = $epochCreditsMap[$vote] ?? [];
+
+
+                // Точный расчет Vote Rate за текущую эпоху (например: 99.879)
+                $voteRateCalc = $maxCreditsInNetwork > 0
+                    ? round(($epochCredits / $maxCreditsInNetwork) * 100, 3)
+                    : 0.0;
+
                 $validatorScores[] = [
-                    'rank'          => $index + 1, // Наш честный 134 ранг!
-                    'node_pubkey'   => $identity,
-                    'vote_pubkey'   => $vote,
-                    'uptime'        => $uptimeFormatted,
-                    'root_slot'     => (int)($v['rootSlot'] ?? 0),
-                    'vote_slot'     => (int)($v['lastVote'] ?? 0),
-                    'commission'    => (float)(($v['commissionBps'] ?? 0) / 100), // Bps в процент
-                    'credits'       => $validatorCredits,
-                    'version'       => $v['version'] ?? 'unknown',
-                    'stake'         => $stakeSol,
-                    'stake_percent' => $stakePercentage,
-                    'tvc_score'     => $index + 1,
-                    'epoch_credits' => $epochCredits,
+                    'rank'                => $index + 1,
+                    'node_pubkey'         => $identity,
+                    'vote_pubkey'         => $vote,
+                    'uptime'              => $uptimeFormatted,
+                    'vote_rate'           => $voteRateCalc, // <-- Добавили Vote Rate
+                    'root_slot'           => (int)($v['rootSlot'] ?? 0),
+                    'vote_slot'           => (int)($v['lastVote'] ?? 0),
+                    'commission'          => (float)(($v['commissionBps'] ?? 0) / 100),
+                    'credits'             => $validatorCredits,
+                    'version'             => $v['version'] ?? 'unknown',
+                    'stake'               => $stakeSol,
+                    'stake_percent'       => $stakePercentage,
+                    'tvc_score'           => $index + 1,
+                    'epoch_credits'       => $epochCredits,
                     'epoch_credits_array' => $epochCreditsArray,
-                    'collected_at'  => $now,
-                    'created_at'    => $now,
-                    'updated_at'    => $now
+                    'collected_at'        => $now,
+                    'created_at'          => $now,
+                    'updated_at'          => $now
                 ];
             }
+//            foreach ($validators as $index => $v) {
+//                $identity = $v['identityPubkey'] ?? '';
+//                $vote = $v['voteAccountPubkey'] ?? '';
+//                $epochCreditsNum = (int)($v['epochCredits'] ?? 0);
+//
+//
+//
+//                $epochCredits = (int)($v['epochCredits'] ?? 0);
+//                $validatorCredits = (int)($v['credits'] ?? 0);
+//                $activatedStake = (float)($v['activatedStake'] ?? 0);
+//                $stakeSol = $activatedStake / 1000000000; // перевод Lamports в SOL
+//
+//                // Процент стейка от сети
+//                $stakePercentage = round(($activatedStake / $totalNetworkStake) * 100, 4);
+//
+//                // Uptime / Vote Rate относительно лидера сети
+//                $uptimeCalc = $this->calculateNetworkUptime($validatorCredits, $maxCreditsInNetwork);
+//                $uptimeFormatted = number_format($uptimeCalc, 2, '.', '') . '%';
+//                // Берем 5-элементный массив из RPC (или заглушку, если ноды нет в RPC)
+//                // Достаём тот самый 5-элементный массив epochCredits напрямую из RPC-карты
+//                $epochCreditsArray = $epochCreditsMap[$vote] ?? [];
+//                $validatorScores[] = [
+//                    'rank'          => $index + 1, // Наш честный 134 ранг!
+//                    'node_pubkey'   => $identity,
+//                    'vote_pubkey'   => $vote,
+//                    'uptime'        => $uptimeFormatted,
+//                    'root_slot'     => (int)($v['rootSlot'] ?? 0),
+//                    'vote_slot'     => (int)($v['lastVote'] ?? 0),
+//                    'commission'    => (float)(($v['commissionBps'] ?? 0) / 100), // Bps в процент
+//                    'credits'       => $validatorCredits,
+//                    'version'       => $v['version'] ?? 'unknown',
+//                    'stake'         => $stakeSol,
+//                    'stake_percent' => $stakePercentage,
+//                    'tvc_score'     => $index + 1,
+//                    'epoch_credits' => $epochCredits,
+//                    'epoch_credits_array' => $epochCreditsArray,
+//                    'collected_at'  => $now,
+//                    'created_at'    => $now,
+//                    'updated_at'    => $now
+//                ];
+//            }
 
+            // 5. Записываем в базу данных PostgreSQL
             // 5. Записываем в базу данных PostgreSQL
             if (!empty($validatorScores)) {
                 $scoresJson = json_encode($validatorScores);
-                $insertedCount = DB::select(
+
+                // Берем результат выполнения функции
+                $result = DB::selectOne(
                     "SELECT data.update_validator_scores(?::jsonb, ?::integer) as count",
                     [$scoresJson, $targetEpoch]
-                )[0]->count;
+                );
+
+                $insertedCount = $result->count ?? 0;
 
                 $this->info("Successfully inserted {$insertedCount} validator scores into PostgreSQL.");
             }
+//            if (!empty($validatorScores)) {
+//                $scoresJson = json_encode($validatorScores);
+//                $insertedCount = DB::select(
+//                    "SELECT data.update_validator_scores(?::jsonb, ?::integer) as count",
+//                    [$scoresJson, $targetEpoch]
+//                )[0]->count;
+//
+//                $this->info("Successfully inserted {$insertedCount} validator scores into PostgreSQL.");
+//            }
 
             $this->cleanupOldData($collectLength);
 

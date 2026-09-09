@@ -158,71 +158,83 @@ class ValidatorDataController extends Controller
         $filterType = $request->get('filterType', 'all');
         $userId = $request->user() ? $request->user()->id : null;
         $searchTerm = $request->get('search', '');
+        $responseType = $request->get('responseType');
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
         // Fetch validators data using service
-        $validators = $this->validatorService->getValidators($userId ?? null, $filterType, $offset, $limit, $totalStakeLamports, 'spy_rank', $searchTerm, $displayOptions);
+        $validators = $this->validatorDataService->fetchDataValidators($userId ?? null, $filterType, $offset, $limit, $totalStakeLamports, 'tvc_score', $searchTerm, $displayOptions);
         $sortedValidators = $validators['validatorsAllData']->toArray();
         $filteredTotalCount = $validators['totalFilteredValidators'];
         // Get top validators
         $topValidatorsWithRanks = $this->validatorDataService->fetchDataTopValidators($sortedValidators, $totalStakeLamports);
-//dd($validators['results']);exit;
         // Get top news items
         $topNewsItems = $this->getTopNewsItems();
+        $settingsResult = Settings::first();
         // Check if user is authenticated and has admin/manager role
-        if (!$request->user()) {
-            return Inertia::render('ValidatorDatas/Index', [
-                'validatorsData' => $validators['results'],
-                'settingsData' => Settings::first(),
-                'totalCount' => $filteredTotalCount,
-                'currentPage' => $page,
-                'filterType' => $filterType,
-                'totalStakeData' => $stakeData[0],
-                'topValidatorsData' => $topValidatorsWithRanks,
-                'topNewsData' => $topNewsItems
-            ]);
-        } elseif ($request->user()->hasRole('Admin')) {
-            return Inertia::render('Validators/Admin/Index', [
-                'validatorsData' => $validators['results'],
-                'settingsData' => Settings::first(),
-                'totalCount' => $filteredTotalCount,
-                'currentPage' => $page,
-                'filterType' => $filterType,
-                'totalStakeData' => $stakeData[0],
-                'topValidatorsData' => $topValidatorsWithRanks,
-                'topNewsData' => $topNewsItems
-            ]);
-        } elseif ($request->user()->hasRole('Manager')) {
-            return Inertia::render('Validators/Admin/Index', [
-                'validatorsData' => $validators['results'],
-                'settingsData' => Settings::first(),
-                'totalCount' => $filteredTotalCount,
-                'currentPage' => $page,
-                'filterType' => $filterType,
-                'totalStakeData' => $stakeData[0],
-                'topValidatorsData' => $topValidatorsWithRanks,
-                'topNewsData' => $topNewsItems
-            ]);
-        } elseif ($request->user()->hasRole('Customer')) {
-            $settings = Settings::first();
-            $updateInterval = $settings->update_interval;
-            $settings2User = Settings2User::where('user_id', $request->user()->id)->first();
-            if ($settings2User) {
-                $settings = $settings2User;
-                $settings->update_interval = $updateInterval;
+        if ($responseType != 'json') {
+            if (!$request->user()) {
+                return Inertia::render('ValidatorDatas/Index', [
+                    'validatorsData' => $validators['results'],
+                    'settingsData' => $settingsResult,
+                    'totalCount' => $filteredTotalCount,
+                    'currentPage' => $page,
+                    'filterType' => $filterType,
+                    'totalStakeData' => $stakeData[0],
+                    'topValidatorsData' => $topValidatorsWithRanks,
+                    'topNewsData' => $topNewsItems
+                ]);
+            } elseif ($request->user()->hasRole('Admin')) {
+                return Inertia::render('Validators/Admin/Index', [
+                    'validatorsData' => $validators['results'],
+                    'settingsData' => $settingsResult,
+                    'totalCount' => $filteredTotalCount,
+                    'currentPage' => $page,
+                    'filterType' => $filterType,
+                    'totalStakeData' => $stakeData[0],
+                    'topValidatorsData' => $topValidatorsWithRanks,
+                    'topNewsData' => $topNewsItems
+                ]);
+            } elseif ($request->user()->hasRole('Manager')) {
+                return Inertia::render('Validators/Admin/Index', [
+                    'validatorsData' => $validators['results'],
+                    'settingsData' => $settingsResult,
+                    'totalCount' => $filteredTotalCount,
+                    'currentPage' => $page,
+                    'filterType' => $filterType,
+                    'totalStakeData' => $stakeData[0],
+                    'topValidatorsData' => $topValidatorsWithRanks,
+                    'topNewsData' => $topNewsItems
+                ]);
+            } elseif ($request->user()->hasRole('Customer')) {
+                $updateInterval = $settingsResult->update_interval;
+                $settings2User = Settings2User::where('user_id', $request->user()->id)->first();
+                if ($settings2User) {
+                    $settings = $settings2User;
+                    $settings->update_interval = $updateInterval;
+                }
+                return Inertia::render('Validators/Customer/Index', [
+                    'validatorsData' => $validators['results'],
+                    'settingsData' => $settingsResult,
+                    'totalCount' => $filteredTotalCount,
+                    'currentPage' => $page,
+                    'filterType' => $filterType,
+                    'totalStakeData' => $stakeData[0],
+                    'topValidatorsData' => $topValidatorsWithRanks,
+                    'topNewsData' => $topNewsItems
+                ]);
             }
-            return Inertia::render('Validators/Customer/Index', [
+        } else {
+            return response()->json([
                 'validatorsData' => $validators['results'],
-                'settingsData' => $settings,
+                'settingsData' => $settingsResult,
                 'totalCount' => $filteredTotalCount,
                 'currentPage' => $page,
                 'filterType' => $filterType,
                 'totalStakeData' => $stakeData[0],
-                'topValidatorsData' => $topValidatorsWithRanks,
-                'topNewsData' => $topNewsItems
             ]);
         }
+
     }
 
     public function timeoutData(Request $request)
@@ -243,7 +255,7 @@ class ValidatorDataController extends Controller
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
         // Fetch timeout data using service
-        $data = $this->validatorService->getTimeoutData(
+        $data = $this->validatorDataService->timeoutData(
             $sortColumn,
             $sortDirection,
             $totalStakeLamports,

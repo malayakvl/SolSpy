@@ -11,6 +11,7 @@ export default function TVCScore({ validator }) {
     } else if (typeof tvcScore === 'string') {
         tvcScore = parseFloat(tvcScore) || 0;
     }
+console.log('TVC')
 
     useEffect(() => {
         if (prevScore !== tvcScore) {

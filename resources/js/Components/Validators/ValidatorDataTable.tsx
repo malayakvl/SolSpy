@@ -11,6 +11,7 @@ import ValidatorSFDP from '../../Pages/ValidatorDatas/Partials/ValidatorSFDP';
 import ValidatorStatus from '../../Pages/ValidatorDatas/Partials/ValidatorStatus';
 import ValidatorJiitoScore from '../../Pages/ValidatorDatas/Partials/ValidatorJiitoScore';
 import TVCScore from '../../Pages/ValidatorDatas/Partials/TVCScore';
+import ValidatorVoteRate from '../../Pages/ValidatorDatas/Partials/ValidatorVoteRate';
 
 interface ValidatorTableProps {
     data: any[];
@@ -100,7 +101,7 @@ const ValidatorDataTable: React.FC<ValidatorTableProps> = ({
             case "Active Stake": 
                 return <ValidatorActivatedStake validator={validator} epoch={epoch} />;
             case "Vote Rate": 
-                return <ValidatorRate validator={validator} epoch={epoch} settingsData={settingsData} totalStakeData={totalStakeData} />;
+                return <ValidatorVoteRate validator={validator} epoch={epoch} settingsData={settingsData} totalStakeData={totalStakeData} />;
             case "Jiito Score": 
                 return <ValidatorJiitoScore validator={validator} />;
             case "Active": 

@@ -27,13 +27,11 @@ export default function Header({ auth }: HeaderProps) {
   const [settingsData, setSettingsData] = useState<any>(null);
   const [settingsFetched, setSettingsFetched] = useState(false);
   const [barProgressCaption, setBarProgressCaption] = useState('');
-  const [completedPercent, setCompletedPercent] = useState<number>(100);
 
   const msg = new Lang({
       messages: lngHeader,
       locale: appLang,
   });
-
 
   const fetchData = async () => {
     try {
@@ -42,19 +40,14 @@ export default function Header({ auth }: HeaderProps) {
       setSettingsData(data);
       dispatch(setEpochAction(data.epoch));
       dispatch(setSettingsAction(data));
+
+      // Передаємо чистий відсоток виконання (скільки пройшло)
       setEpochPercent(data.epoch_completed_percent);
-      setCompletedPercent(data.epoch_completed_percent);
-
       setBarProgressCaption(data.epoch_remaining_time);
-
-
-      // console.log(`Залишилось: ${days} дн, ${hours} год, ${minutes} хв, ${seconds} сек`);
     } catch (error) {
       console.error('Error:', error);
     }
   };
-
-  
 
   useEffect(() => {
     if (!settingsFetched) {
@@ -68,7 +61,6 @@ export default function Header({ auth }: HeaderProps) {
   const userRoleNames = user?.roles?.map(role => role.name) || [];
   const isAdmin = userRoleNames.includes('Admin');
   const isManager = userRoleNames.includes('Manager');
-  // const isCustomer = userRoleNames.includes('Customer');
 
   return (
     <header className="bg-gray-900">
@@ -76,7 +68,6 @@ export default function Header({ auth }: HeaderProps) {
         <div className="mx-auto max-w-8xl px-2 sm:px-6 lg:px-8">
           <div className="relative flex h-16 items-center justify-between">
             <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
-              {/* <!-- Mobile menu button--> */}
               <button type="button" className="relative inline-flex items-center justify-center rounded-md p-2 text-gray-300 hover:bg-gray-700 hover:text-white focus:outline-2 focus:-outline-offset-1 focus:outline-indigo-500">
                 <span className="absolute -inset-0.5"></span>
                 <span className="sr-only">Open main menu</span>
@@ -94,74 +85,62 @@ export default function Header({ auth }: HeaderProps) {
               </div>
               <div className="hidden sm:ml-6 sm:flex flex-row">
                 <div className="flex space-x-4">
-                 
-                  {/* <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-white/5 hover:text-white" --> */}
-                  {isAdmin ? (
+                  {isAdmin && (
                     <>
-                      <Link href={'/admin/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300  hover:text-[#703ea2]">
+                      <Link href={'/admin/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:text-[#703ea2]">
                         {msg.get('menu.validators')}
                       </Link>
-                      <Link href={'/admin/customers'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300  hover:text-[#703ea2]">
+                      <Link href={'/admin/customers'} className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:text-[#703ea2]">
                         {msg.get('menu.customers')}
                       </Link>
-                      <Link href={'/admin/discord-news'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300  hover:text-[#703ea2]">
+                      <Link href={'/admin/discord-news'} className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:text-[#703ea2]">
                         {msg.get('menu.discord-news')}
                       </Link>
-                      <Link href={'/admin/news'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300  hover:text-[#703ea2]">
+                      <Link href={'/admin/news'} className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:text-[#703ea2]">
                         {msg.get('menu.news')}
                       </Link>
-                      <Link href={'/admin/settings'}  className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300  hover:text-[#703ea2]">
+                      <Link href={'/admin/settings'} className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:text-[#703ea2]">
                           {msg.get('menu.settings')}
                       </Link>
                     </>
-                  ) : (
-                    <> 
-                      {/* <Link href={'/validators'} className="inline-flex items-center menu-main-btn text-sm nav-link text-gray-300 hover:bg-gray-700 hover:text-white">
-                        {msg.get('menu.validators')}
-                      </Link> */}
-                    </>
                   )}
-
-                  
                 </div>
               </div>
             </div>
+
+            {/* Блок прогрес-бару епохи */}
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 nav-link">
               <div className="progress-block">
-                 <ProgressBar progress={100 - completedPercent} caption={`${barProgressCaption} ${msg.get('menu.left')}`} />
+                 {/* Передаємо точний відсоток виконання (без віднімання від 100) */}
+                 <ProgressBar progress={epochPercent} caption={`${barProgressCaption} ${msg.get('menu.left')}`} />
                  <div className="text-sm epoch-data">
-                    {msg.get('menu.epoch')}  {settingsData?.epoch} ({(100 - epochPercent).toFixed(2)}%)
+                    {/* Виводимо скільки пройшло у % */}
+                    {msg.get('menu.epoch')} {settingsData?.epoch} ({Number(epochPercent).toFixed(2)}%)
                   </div>
               </div>
             </div>
+
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 nav-link">
-              <div className="flex whitespace-nowrap text-[#fff] ml-[0px]  mt-[0px]">
-                  
+              <div className="flex whitespace-nowrap text-[#fff] ml-[0px] mt-[0px]">
                   <div className="sol-block">
                     1 SOL {settingsData?.sol_rate}$
                   </div>
                 </div>
             </div>
+
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
               {!isAdmin && !isManager && <ActionsMenu />}
               <LangMenu />
 
-              {/* <!-- Profile dropdown --> */}
               <div className="relative ml-3">
                 {user?.id ? (
                   <ProfileMenu />
                 ) : (
                   <>
-                  <Link
-                    href="/login"
-                    className="rounded-md px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-white text-sm"
-                  >
+                    <Link href="/login" className="rounded-md px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-white text-sm">
                       {msg.get('menu.login')}
                     </Link>
-                    <Link
-                      href="/register"
-                      className="rounded-md px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-white text-sm"
-                    >
+                    <Link href="/register" className="rounded-md px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-white text-sm">
                       {msg.get('menu.register')}
                     </Link>
                   </>
@@ -173,7 +152,6 @@ export default function Header({ auth }: HeaderProps) {
 
         <div id="mobile-menu" hidden className="block sm:hidden">
           <div className="space-y-1 px-2 pt-2 pb-3">
-            {/* <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-white/5 hover:text-white" --> */}
             <a href="#" aria-current="page" className="block rounded-md bg-gray-900 px-3 py-2 text-base font-medium text-white">Dashboard</a>
           </div>
         </div>

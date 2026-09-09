@@ -85,7 +85,6 @@ class FetchValidatorScoresLocal extends Command
 //                    ]);
             }
             $this->info("Fetch scores done");
-            exit;
 
 
 

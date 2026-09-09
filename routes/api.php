@@ -47,7 +47,7 @@ Route::get('/fetch-by-id-validators/{page?}', [ApiValidatorController::class, 'f
 
 // Public API routes - accessible to everyone
 Route::get('/fetch-validators', [ApiValidatorController::class, 'timeoutData'])->name('validators.timeoutData');
-Route::get('/scored-validators', [ValidatorDataController::class, 'timeoutData'])->name('validators.timeoutData');
+Route::get('/scored-validators', [ValidatorDataController::class, 'index'])->name('validators.timeoutData');
 // Route::get('/fetch-favorite-validators', [ApiValidatorController::class, 'timeoutFavoriteData'])->name('validators.timeoutFavoriteData');
 Route::get('/fetch-favorite-validators-public', [ApiValidatorController::class, 'timeoutFavoriteData'])->name('validators.publicFavoriteData');
 Route::get('/fetch-comparison-validators-public', [ApiValidatorController::class, 'publicComparisonData'])->name('validators.publicComparisonData');

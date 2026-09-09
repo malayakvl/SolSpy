@@ -140,7 +140,7 @@ class ValidatorDataService
                  ", " . ($onlyWithMevAndZeroCommission === true ? 'true' : ($onlyWithMevAndZeroCommission === false ? 'false' : 'null')) .
                  ", NULL" .  // p_validator_ids parameter
                  ");";
-        $query = "SELECT * FROM data.get_validators('" .$searchTerm. "', '" .$filterType. "', " . ($userId ?? 'null') . ", 'spy_rank', " . $offset . ", " . $limit .
+        $query = "SELECT * FROM data.get_validators('" .$searchTerm. "', '" .$filterType. "', " . ($userId ?? 'null') . ", 'tvc_score', " . $offset . ", " . $limit .
             ", " . ($onlyWithName === true ? 'true' : ($onlyWithName === false ? 'false' : 'null')) .
             ", " . ($onlyWithWebsite === true ? 'true' : ($onlyWithWebsite === false ? 'false' : 'null')) .
             ", " . ($notRussian === true ? 'true' : ($notRussian === false ? 'false' : 'null')) .
@@ -148,13 +148,15 @@ class ValidatorDataService
             ", " . ($onlyWithMevAndZeroCommission === true ? 'true' : ($onlyWithMevAndZeroCommission === false ? 'false' : 'null')) .
             ", NULL" .  // p_validator_ids parameter
             ");";
+//        dd($query);exit;
         $res = DB::select($query);
-        dd($res);exit;
+
         // Преобразуем результат в коллекцию для дальнейшей обработки
         $validatorsData = collect($res);
 
         // Подсчет общего количества записей
         $totalCountQuery = DB::table('data.validators');
+        $totalCountQuery->where('data.validators.credits_current_epoch', '>', 0);
         if ($filterType === 'highlight') {
             $totalCountQuery->where('is_highlighted', true);
         } elseif ($filterType === 'top') {
@@ -197,7 +199,7 @@ class ValidatorDataService
         $filteredTotalCount = $totalCountQuery->count();
         // Дополнительная обработка для spyRank и других вычислений
         $validatorsAllData = DB::table('data.validators')
-            ->orderByRaw('tvc_rank DESC NULLS LAST')
+            ->orderByRaw('tvc_score DESC NULLS LAST')
             ->get();
         $sortedValidators = $validatorsAllData->toArray();
 
@@ -220,6 +222,7 @@ class ValidatorDataService
 
             return $validator;
         });
+//        dd($sortColumn);exit;
 
         // Сортировка по spyRank (если нужно)
         if (empty($sortColumn) || $sortColumn === 'spyRank' || $sortColumn === 'spy_rank') {
@@ -239,7 +242,7 @@ class ValidatorDataService
     }
 
     public function timeoutData($sortColumn, $sortDirection, $totalStakeLamports, $userId = null, $filterType = 'all', $limit = 10, $offset = 0, $searchTerm = '', $validatorId = null, $displayOptions = [])
-    { 
+    {
         // Extract display options with defaults
         $onlyWithName = $displayOptions['onlyWithName'] ?? null;
         $onlyWithWebsite = $displayOptions['onlyWithWebsite'] ?? null;
@@ -268,6 +271,8 @@ class ValidatorDataService
         
         // Calculate total count based on filter
         $totalCountQuery = DB::table('data.validators');
+        $totalCountQuery->where('data.validators.credits_current_epoch', '>', 0);
+        $totalCountQuery->where('data.validators.credits_current_epoch', '>', 0);
         
         // Apply search filter if provided
         if (!empty($searchTerm)) {
@@ -441,7 +446,7 @@ class ValidatorDataService
         else                
             // For unauthenticated users with specific favorite IDs, we need to use a different approach
             // since the search_validators function doesn't support array parameters
-            $queryNew = "SELECT * FROM data.search_validators('', 'all', null, 'spy_rank', 0, 10, ARRAY[" . implode(',', array_map('intval', $favoriteIds)) . "]);";
+        $queryNew = "SELECT * FROM data.search_validators('', 'all', null, 'spy_rank', 0, 10, ARRAY[" . implode(',', array_map('intval', $favoriteIds)) . "]);";
         $queryRes = DB::select($queryNew);
         // Преобразуем результат в коллекцию для дальнейшей обработки
         $validatorsData = collect($queryRes);
