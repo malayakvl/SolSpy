@@ -318,7 +318,7 @@ export default function Index(validatorsData) {
         const urlParams = new URLSearchParams(window.location.search);
         const currentFilterType = urlParams.get('filterType') || 'all';
         const searchParam = urlParams.get('search') || '';
-        const sortColumn = urlParams.get('sortColumn') || 'spy_rank';
+        const sortColumn = urlParams.get('sortColumn') || 'tvc_score';
         const sortDirection = urlParams.get('sortDirection') || 'ASC';
         const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
         try {

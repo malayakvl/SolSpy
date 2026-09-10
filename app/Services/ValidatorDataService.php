@@ -133,31 +133,6 @@ class ValidatorDataService
 
         
         // Build the query with display options
-        $queryOld = "SELECT * FROM data.search_validators('" .$searchTerm. "', '" .$filterType. "', " . ($userId ?? 'null') . ", 'spy_rank', " . $offset . ", " . $limit .
-                 ", " . ($onlyWithName === true ? 'true' : ($onlyWithName === false ? 'false' : 'null')) .
-                 ", " . ($onlyWithWebsite === true ? 'true' : ($onlyWithWebsite === false ? 'false' : 'null')) .
-                 ", " . ($notRussian === true ? 'true' : ($notRussian === false ? 'false' : 'null')) .
-                 ", " . ($onlyValidated === true ? 'true' : ($onlyValidated === false ? 'false' : 'null')) .
-                 ", " . ($onlyWithMevAndZeroCommission === true ? 'true' : ($onlyWithMevAndZeroCommission === false ? 'false' : 'null')) .
-                 ", NULL" .  // p_validator_ids parameter
-                 ");";
-        $query1 = "SELECT * FROM data.get_validators('" .$searchTerm. "', '" .$filterType. "', " . ($userId ?? 'null') . ", 'tvc_score', " . $offset . ", " . $limit .
-            ", " . ($onlyWithName === true ? 'true' : ($onlyWithName === false ? 'false' : 'null')) .
-            ", " . ($onlyWithWebsite === true ? 'true' : ($onlyWithWebsite === false ? 'false' : 'null')) .
-            ", " . ($notRussian === true ? 'true' : ($notRussian === false ? 'false' : 'null')) .
-            ", " . ($onlyValidated === true ? 'true' : ($onlyValidated === false ? 'false' : 'null')) .
-            ", " . ($onlyWithMevAndZeroCommission === true ? 'true' : ($onlyWithMevAndZeroCommission === false ? 'false' : 'null')) .
-            ", NULL" .  // p_validator_ids parameter
-            ");";
-        $query = "SELECT * FROM data.get_validators('" . $searchTerm . "', '" . $filterType . "', " . ($userId ?? 'null') . ", '" . $sortColumn . "', " . $offset . ", " . $limit .
-            ", " . ($onlyWithName === true ? 'true' : ($onlyWithName === false ? 'false' : 'null')) .
-            ", " . ($onlyWithWebsite === true ? 'true' : ($onlyWithWebsite === false ? 'false' : 'null')) .
-            ", " . ($notRussian === true ? 'true' : ($notRussian === false ? 'false' : 'null')) .
-            ", " . ($onlyValidated === true ? 'true' : ($onlyValidated === false ? 'false' : 'null')) .
-            ", " . ($onlyWithMevAndZeroCommission === true ? 'true' : ($onlyWithMevAndZeroCommission === false ? 'false' : 'null')) .
-            ", NULL" .                       // 12-й параметр: p_validator_ids
-            ", '" . $sortDirection . "'" .   // 13-й параметр: p_sort_direction (ASC/DESC)
-            ");";
         $query = "SELECT * FROM data.get_validators_test('" . $searchTerm . "', '" . $filterType . "', " . ($userId ?? 'null') . ", '" . $sortColumn . "', " . $offset . ", " . $limit .
             ", " . ($onlyWithName === true ? 'true' : ($onlyWithName === false ? 'false' : 'null')) .
             ", " . ($onlyWithWebsite === true ? 'true' : ($onlyWithWebsite === false ? 'false' : 'null')) .
@@ -167,6 +142,7 @@ class ValidatorDataService
             ", NULL" .                       // 12-й параметр: p_validator_ids
             ", '" . $sortDirection . "'" .   // 13-й параметр: p_sort_direction (ASC/DESC)
             ");";
+//        dd($query);
         $res = DB::select($query);
 
         // Преобразуем результат в коллекцию для дальнейшей обработки
@@ -381,31 +357,34 @@ class ValidatorDataService
         //     ->orderBy('data.validator_order.sort_order', 'ASC')
         //     ->limit(10)
         //     ->get();
-        $topValidators = DB::table('data.validators')
-            ->join('data.validator_order', 'data.validator_order.validator_id', '=', 'data.validators.id')
-            ->join('data.validator_score_parameters', function ($join) {
-                $join->on('data.validator_score_parameters.vote_pubkey', '=', 'data.validators.vote_pubkey')
-                    ->whereIn('data.validator_score_parameters.id', function ($query) {
-                        $query->selectRaw('MAX(id)')
-                            ->from('data.validator_score_parameters')
-                            ->groupBy('vote_pubkey');
-                    });
-            })
-            ->where('data.validators.is_top', true)
-            ->orderBy('data.validator_order.sort_order', 'ASC')
-            ->limit(10)
-            ->get();
-        // Calculate TVC rank and Spy rank for top validators as well
-        $topValidatorsWithRanks = $topValidators->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
-            // Calculate TVC rank
-            $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
-            $validator->tvcRank = $tvcRank ?: 'Not found';
-            
-            // Calculate spyRank
-            $validator->spyRank = $this->spyRankService->calculateSpyRank($validator, $totalStakeLamports);
-            
-            return $validator;
-        });
+//        $topValidators = DB::table('data.validators')
+//            ->join('data.validator_order', 'data.validator_order.validator_id', '=', 'data.validators.id')
+//            ->join('data.validator_score_parameters', function ($join) {
+//                $join->on('data.validator_score_parameters.vote_pubkey', '=', 'data.validators.vote_pubkey')
+//                    ->whereIn('data.validator_score_parameters.id', function ($query) {
+//                        $query->selectRaw('MAX(id)')
+//                            ->from('data.validator_score_parameters')
+//                            ->groupBy('vote_pubkey');
+//                    });
+//            })
+//            ->where('data.validators.is_top', true)
+//            ->orderBy('data.validator_order.sort_order', 'ASC')
+//            ->limit(10)
+//            ->get();
+        $query = "SELECT * FROM data.get_validators_test('', 'top', null, 'tvc_score', 0, 10, false, false, false, false, false, NULL, 'desc');";
+        $topValidatorsWithRanks = DB::select($query);
+//        $topValidatorsWithRanks =
+//        // Calculate TVC rank and Spy rank for top validators as well
+//        $topValidatorsWithRanks = $topValidators->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
+//            // Calculate TVC rank
+//            $tvcRank = array_search($validator->vote_pubkey, array_column($sortedValidators, 'vote_pubkey')) + 1;
+//            $validator->tvcRank = $tvcRank ?: 'Not found';
+//
+//            // Calculate spyRank
+//            $validator->spyRank = $this->spyRankService->calculateSpyRank($validator, $totalStakeLamports);
+//
+//            return $validator;
+//        });
 
         return $topValidatorsWithRanks;
     }
