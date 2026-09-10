@@ -24,11 +24,14 @@ export default function TopContentCarousel({
   return (
     <div className="flex">
       {/* Top Validators Carousel */}
-      <div className="flex items-start mb-6 w-1/2 p-0 pr-2" style={{ height: '210px' }}>
+      <div
+        className="flex items-start mb-6 w-1/2 p-0 pr-2"
+        style={{ height: '210px' }}
+      >
         <CarouselProvider
           naturalSlideWidth={100}
           naturalSlideHeight={75}
-          totalSlides={3}
+          totalSlides={topValidatorsData?.length || 1}
           className="w-full h-full"
         >
           <Slider className="h-full">
@@ -55,13 +58,16 @@ export default function TopContentCarousel({
           </div>
         </CarouselProvider>
       </div>
-      
+
       {/* Top News Carousel */}
-      <div className="flex items-start mb-6 w-1/2 p-0 pl-2 bg-[#292035]" style={{ height: '210px' }}>
+      <div
+        className="flex items-start mb-6 w-1/2 p-0 pl-2 bg-[#292035]"
+        style={{ height: '210px' }}
+      >
         <CarouselProvider
           naturalSlideWidth={100}
           naturalSlideHeight={75}
-          totalSlides={topNewsData ? Math.ceil(topNewsData.length / 1) : 1}
+          totalSlides={topValidatorsData?.length || 1}
           className="w-full h-full"
         >
           <Slider className="h-full">

@@ -170,6 +170,7 @@ class ValidatorDataController extends Controller
         $filteredTotalCount = $validators['totalFilteredValidators'];
         // Get top validators
         $topValidatorsWithRanks = $this->validatorDataService->fetchDataTopValidators($sortedValidators, $totalStakeLamports);
+
         // Get top news items
         $topNewsItems = $this->getTopNewsItems();
         $settingsResult = Settings::first();
