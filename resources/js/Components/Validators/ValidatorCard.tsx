@@ -81,7 +81,9 @@ export default function ValidatorCard({
                         {validator.jito_commission !== undefined ? `${(parseFloat(validator.jito_commission) / 100).toFixed(2)}%` : 'N/A'}
                     </div>
                     <div className="text-center">
-                        {validator.commission !== undefined ? `${(parseFloat(validator.commission) / 100).toFixed(2)}%` : 'N/A'}
+                       {validator.commission !== undefined 
+                          ? `${Number(parseFloat(validator.commission).toFixed(2))}%` 
+                          : 'N/A'}
                     </div>
                     <div className="text-center"><ValidatorUptime validator={validator} epoch={epoch} /></div>
                     <div className="text-center ">

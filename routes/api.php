@@ -5,12 +5,34 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\Api\ValidatorController as ApiValidatorController;
+use App\Http\Controllers\ValidatorDataController;
 use App\Http\Controllers\ValidatorOrderController;
 use App\Http\Controllers\DiscordNewsController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\TelegramConnectController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\RpcProxyController;
+
+Route::get('/rpc-proxy-test-ok', function() {
+    return response()->json(['status'=>'ok']);
+});
+
+Route::get('/rpc-balance-test', function () {
+    $walletPubKey = 'DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV'; // тестовый кошелек
+
+    $rpcUrl = 'http://103.167.235.81:8899'; // приватная нода
+
+    $response = Http::withHeaders([
+        'Content-Type' => 'application/json'
+    ])->post($rpcUrl, [
+        'jsonrpc' => '2.0',
+        'id' => 1,
+        'method' => 'getBalance',
+        'params' => [$walletPubKey]
+    ]);
+
+    return $response->json();
+});
 
 // Обычный маршрут прокси без ограничений (для теста)
 Route::post('/rpc-proxy-test', [RpcProxyController::class, 'proxy']);
@@ -25,6 +47,7 @@ Route::get('/fetch-by-id-validators/{page?}', [ApiValidatorController::class, 'f
 
 // Public API routes - accessible to everyone
 Route::get('/fetch-validators', [ApiValidatorController::class, 'timeoutData'])->name('validators.timeoutData');
+Route::get('/scored-validators', [ValidatorDataController::class, 'index'])->name('validators.timeoutData');
 // Route::get('/fetch-favorite-validators', [ApiValidatorController::class, 'timeoutFavoriteData'])->name('validators.timeoutFavoriteData');
 Route::get('/fetch-favorite-validators-public', [ApiValidatorController::class, 'timeoutFavoriteData'])->name('validators.publicFavoriteData');
 Route::get('/fetch-comparison-validators-public', [ApiValidatorController::class, 'publicComparisonData'])->name('validators.publicComparisonData');

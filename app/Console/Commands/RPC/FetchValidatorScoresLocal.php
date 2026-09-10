@@ -54,11 +54,40 @@ class FetchValidatorScoresLocal extends Command
                 }
             }
             $this->info("Found versions for " . count($versionMap) . " nodes");
-            
+
             // Then get vote accounts data
             $this->info("Fetching vote accounts...");
             $voteData = $this->fetchVoteAccounts();
-            
+
+            // 2. Сразу высчитываем TVC-ранги для всей сети
+            $tvcRanks = $this->calculateTvcRanks($voteData);
+
+
+            $validators = DB::table('data.validators')
+                ->select('vote_pubkey', 'id')
+//                ->where('vote_pubkey', '=', '53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR')
+                ->get();
+            foreach ($validators as $validator) {
+                $votePubkey = $validator->vote_pubkey;
+                $validatorId = $validator->id;
+
+                // Получаем ИДЕАЛЬНЫЙ TVC Score (целое число без запятых, например 186)
+                $tvcScore = $tvcRanks[$votePubkey] ?? null;
+
+                $this->info("Validator ID: $validatorId ($votePubkey) | TVC Rank: " . ($tvcScore ?? 'N/A'));
+
+                // Сохраняем в БД (убедись, что колонка tvc_score в БД имеет тип INTEGER, а не FLOAT/DECIMAL!)
+//                DB::table('data.validators')
+//                    ->where('id', $validatorId)
+//                    ->update([
+//                        'tvc_score'  => $tvcScore, // Целое число (напр. 186, 600 и т.д.)
+//                        'updated_at' => now(),
+//                    ]);
+            }
+            $this->info("Fetch scores done");
+
+
+
             if (!$voteData) {
                 echo "Failed to fetch vote accounts data\n";
                 return 1;
@@ -242,6 +271,55 @@ class FetchValidatorScoresLocal extends Command
 
         $jsonData = json_decode($response, true);
         return $jsonData['result'] ?? null;
+    }
+
+    private function calculateTvcRanks($voteAccountsResult): array
+    {
+        if (!$voteAccountsResult) {
+            return [];
+        }
+
+        // Объединяем активных и delinquent валидаторов
+        $allValidators = array_merge(
+            $voteAccountsResult['current'] ?? [],
+            $voteAccountsResult['delinquent'] ?? []
+        );
+
+        $creditsMap = [];
+
+        foreach ($allValidators as $val) {
+            $pubkey = $val['votePubkey'] ?? null;
+            $epochCredits = $val['epochCredits'] ?? [];
+
+            if ($pubkey && !empty($epochCredits)) {
+                // Берем текущую эпоху (последний элемент массива)
+                $currentEpoch = end($epochCredits);
+                // Заработанные кредиты = конец минус начало
+                $earnedCredits = max(0, $currentEpoch[1] - $currentEpoch[2]);
+
+                $creditsMap[$pubkey] = $earnedCredits;
+            } else {
+                $creditsMap[$pubkey] = 0;
+            }
+        }
+
+        // Сортируем валидаторов от большего количества кредитов к меньшему
+        arsort($creditsMap);
+
+        // Присваиваем порядковый номер (Rank/Score): 1, 2, 3 ... 186 ... 688
+        $tvcRanks = [];
+        $rank = 1;
+        foreach ($creditsMap as $pubkey => $credits) {
+            // Записываем только тех, у кого ненулевые кредиты (как требует клиент)
+            if ($credits > 0) {
+                $tvcRanks[$pubkey] = $rank;
+                $rank++;
+            } else {
+                $tvcRanks[$pubkey] = null; // Нода оффлайн / 0 кредитов
+            }
+        }
+
+        return $tvcRanks;
     }
     
     private function fetchVoteAccounts()

@@ -65,17 +65,194 @@ class FetchSFDPLocal extends Command
             
             $this->info('SSH connection established');
 
+            $sfdpOfficialData = [];
+            try {
+                $sfdpResponse = \Illuminate\Support\Facades\Http::timeout(10)
+                    ->get('https://api.solana.org/api/community/v1/sfdp_participants');
+
+                if ($sfdpResponse->successful()) {
+                    foreach ($sfdpResponse->json() as $item) {
+                        // Исправленный ключ: mainnetBetaPubkey
+                        if (isset($item['mainnetBetaPubkey'])) {
+                            $sfdpOfficialData[$item['mainnetBetaPubkey']] = $item;
+                        }
+                    }
+                    $this->info("Loaded " . count($sfdpOfficialData) . " validators from official SFDP API.");
+                }
+            } catch (\Exception $e) {
+                $this->warn("Could not fetch SFDP API: " . $e->getMessage());
+            }
+
             $validators = DB::table('data.validators')
-                ->select('vote_pubkey', 'id')->get();
+                ->select('vote_pubkey', 'id')
+                ->where('vote_pubkey', '=', 'DHoZJqvvMGvAXw85Lmsob7YwQzFVisYg8HY4rt5BAj6M')
+                ->get();
+            foreach ($validators as $validator) {
+                $votePubkey = $validator->vote_pubkey;
+                $validatorId = $validator->id;
+                $this->info("Calculating SFDP status for validator ID: $validatorId (vote pubkey: $votePubkey)");
+
+                // Запрос в локальный RPC getVoteAccounts
+                $rpcUrl = 'http://127.0.0.1:8899';
+                $voteAccountsPayload = json_encode([
+                    'jsonrpc' => '2.0',
+                    'id' => 1,
+                    'method' => 'getVoteAccounts',
+                    'params' => [
+                        ['votePubkey' => $votePubkey]
+                    ]
+                ]);
+
+                $voteAccountsCurl = "curl -s --connect-timeout 10 --max-time 30 -X POST -H 'Content-Type: application/json' -d '$voteAccountsPayload' $rpcUrl 2>&1";
+                $voteAccountsOutput = $ssh->exec($voteAccountsCurl);
+
+                $voteAccountsData = json_decode($voteAccountsOutput, true);
+                $account = null;
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $all = array_merge(
+                        $voteAccountsData['result']['current'] ?? [],
+                        $voteAccountsData['result']['delinquent'] ?? []
+                    );
+                    foreach ($all as $acc) {
+                        if (($acc['votePubkey'] ?? '') === $votePubkey) {
+                            $account = $acc;
+                            break;
+                        }
+                    }
+                }
+
+                if (!$account) {
+                    $this->error("Failed to fetch vote account from RPC for $votePubkey");
+                    continue;
+                }
+
+                // Извлекаем стейк и комиссию
+                $activatedStake = (float)($account['activatedStake'] ?? 0) / 1e9;
+                $commission = (int)($account['commission'] ?? 0);
+
+                $this->info("Activated stake: " . number_format($activatedStake, 2) . " SOL");
+                $this->info("Commission: {$commission}%");
+
+                // Расчет эпох и перформанса
+                $epochCredits = $account['epochCredits'] ?? [];
+                $creditsOk = false;
+
+                if (!empty($epochCredits)) {
+                    if (count($epochCredits) > 1) {
+                        array_pop($epochCredits); // Отбрасываем текущую незавершенную эпоху
+                    }
+
+                    $percentages = [];
+                    $latestEpoch = 'unknown';
+
+                    foreach ($epochCredits as $entry) {
+                        // [0] = epoch, [1] = end credits, [2] = start credits
+                        $epoch = $entry[0];
+                        $creditsEarned = max(0, $entry[1] - $entry[2]);
+
+                        // Норма кредитов за полную эпоху в Solana (~432,000 слотов)
+                        $maxPossibleInEpoch = 432000;
+                        $percentage = ($creditsEarned / $maxPossibleInEpoch) * 100;
+
+                        $percentages[] = min(100.0, $percentage);
+                        $latestEpoch = $epoch;
+                    }
+
+                    $numEpochs = min(64, count($percentages));
+                    $slicedPercentages = array_slice($percentages, -$numEpochs);
+                    $averagePercentage = array_sum($slicedPercentages) / $numEpochs;
+                    $latestPercentage = end($percentages);
+
+                    $this->info("Latest epoch ($latestEpoch): " . number_format($latestPercentage, 2) . "%");
+                    $this->info("Average of last $numEpochs epochs: " . number_format($averagePercentage, 2) . "%");
+
+                    $creditsOk = $averagePercentage >= 95.0;
+                } else {
+                    $this->warn("No epochCredits found in RPC response");
+                }
+
+                if (isset($sfdpOfficialData[$votePubkey])) {
+                    $sfdpEntry = $sfdpOfficialData[$votePubkey];
+                    $rawState = strtolower($sfdpEntry['state'] ?? '');
+                    $testnetState = strtolower($sfdpEntry['testnetState'] ?? '');
+
+                    // 1. ONBOARDED (Только если state явно говорит onboard)
+                    if (str_contains($rawState, 'onboard')) {
+                        $status = 'onboard';
+                    }
+                    // 2. REJECTED / OFFBOARDED / RETIRED
+                    elseif (
+                        str_contains($rawState, 'reject') ||
+                        str_contains($rawState, 'retire') ||
+                        str_contains($rawState, 'offboard') ||
+                        str_contains($rawState, 'delist') ||
+                        str_contains($testnetState, 'reject') ||
+                        str_contains($testnetState, 'offboard')
+                    ) {
+                        $status = 'rejected';
+                    }
+                    // 3. PENDING (Только если стейк > 0 ИЛИ перформанс ок, но НЕТ дисквалификации)
+                    elseif (str_contains($rawState, 'pending') || str_contains($rawState, 'applied')) {
+                        // На solana.org если у валидатора статус Pending, но стейк меньше нормы фонда (100k SOL),
+                        // сайт показывает его как Rejected/Inactive.
+                        if ($activatedStake < 100000 && $activatedStake > 0) {
+                            $status = 'rejected';
+                        } else {
+                            $status = 'pending';
+                        }
+                    }
+                    else {
+                        $status = 'rejected';
+                    }
+                } else {
+                    // Если валидатора вообще нет в реестре SFDP — он не в программе
+                    if ($commission > 5 || !$creditsOk) {
+                        $status = 'rejected';
+                    } elseif ($activatedStake >= 100000) {
+                        $status = 'onboard';
+                    } else {
+                        $status = 'rejected';
+                    }
+                }
+
+                $this->info("Calculated SFDP status: $status");
+                $this->info("Commission: {$commission}%");
+
+                // Запись в базу
+//                DB::table('data.validators')
+//                    ->where('id', $validatorId)
+//                    ->update([
+//                        'sfdp_status' => $status,
+//                        'commission' => $commission,
+//                        'activated_stake' => $activatedStake,
+//                        'updated_at' => now(),
+//                    ]);
+
+                $this->info("Updated validator ID $validatorId");
+                $this->line('----------------------------------------------------');
+            }
+            $this->line('----------------------------------------------------');
+            $this->line('----------------------------------------------------');
+            $this->line('TASK DONE');
+exit;
+
+
+
+
+
             foreach($validators as $validator) { 
                 $votePubkey = $validator->vote_pubkey;
                 $validatorId = $validator->id;
                 $this->info("Calculating SFDP status for validator ID: $validatorId (vote pubkey: $votePubkey)");
+
+
                 // Execute the command to get all validators
                 // $command = "$solanaPath validators -um --sort=credits -r -n";
                 $voteCommand = "$solanaPath vote-account $votePubkey --output json 2>&1";
                 $voteOutput = $ssh->exec($voteCommand);
                 $voteExitStatus = $voteOutput ? 0 : 1;
+
+                dd($voteOutput);exit;
 
                 if ($voteExitStatus !== 0 || empty($voteOutput)) {
                     $this->error("Vote-account command failed with exit status: $voteExitStatus");
@@ -93,6 +270,10 @@ class FetchSFDPLocal extends Command
                 
                 // Розрахунок vote credits з epochVotingHistory
                 $creditsOk = false;
+
+
+
+                
                 if (isset($voteData['epochVotingHistory']) && is_array($voteData['epochVotingHistory']) && !empty($voteData['epochVotingHistory'])) {
                     $history = $voteData['epochVotingHistory'];
                     $percentages = [];

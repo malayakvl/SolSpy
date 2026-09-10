@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
+/***************************************
+ * FetchSettingsLocal.php
+ * fetching sol, epoch info from coingecko, solana rpc and update to database
+ ***************************************/
 class FetchSettingsLocal extends Command
 {
     /**
@@ -31,7 +35,6 @@ class FetchSettingsLocal extends Command
     {
         Log::info('Command app:fetch-settings executed at ' . now());
         $this->info('Start fetching settings info!');
-
         try {
             $url = "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd";
             $ch = curl_init();
@@ -39,10 +42,28 @@ class FetchSettingsLocal extends Command
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             $response = curl_exec($ch);
+
+            curl_setopt_array($ch, [
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => [
+                    'Accept: application/json',
+                    'User-Agent: YourProjectName/1.0 (contact@example.com)',
+                ],
+                CURLOPT_SSL_VERIFYPEER => true,
+            ]);
+
+            $response = curl_exec($ch);
+            if ($response === false) {
+                throw new \RuntimeException(curl_error($ch));
+            }
             curl_close($ch);
+
             $data = json_decode($response, true);
 
-            $query = ('UPDATE data.settings SET sol_rate=' .$data['solana']['usd']);
+            $solUsd = $data['solana']['usd'] ?? null;
+
+            $query = ('UPDATE data.settings SET sol_rate=' .$solUsd);
             DB::statement($query);
 
             $url = 'http://103.167.235.81:8899';
@@ -157,10 +178,7 @@ class FetchSettingsLocal extends Command
         if ($minutes > 0) {
             $parts[] = $minutes . 'm';
         }
-        // if ($seconds > 0) {
-        //     $parts[] = $seconds . 's';
-        // }
-        
+
         return !empty($parts) ? implode(' ', $parts) : '0s';
     }
 }
