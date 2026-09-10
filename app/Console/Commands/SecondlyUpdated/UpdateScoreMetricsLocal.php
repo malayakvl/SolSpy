@@ -21,7 +21,6 @@ class UpdateScoreMetricsLocal extends Command
         $collectLength = $dbSettings->collect_score_retention ?? 10;
         $targetEpoch = (int)($dbSettings->epoch ?? 0);
         $solanaPath = '/usr/local/bin/solana';
-dd(1);
         Log::info('Command score:update-metrics executed at ' . now());
         $this->info("Start updating score metrics local (Epoch: $targetEpoch, keeping last $collectLength collections)!");
         try {
