@@ -156,47 +156,6 @@ class UpdateScoreMetricsLocal extends Command
                     'updated_at'          => $now
                 ];
             }
-//            foreach ($validators as $index => $v) {
-//                $identity = $v['identityPubkey'] ?? '';
-//                $vote = $v['voteAccountPubkey'] ?? '';
-//                $epochCreditsNum = (int)($v['epochCredits'] ?? 0);
-//
-//
-//
-//                $epochCredits = (int)($v['epochCredits'] ?? 0);
-//                $validatorCredits = (int)($v['credits'] ?? 0);
-//                $activatedStake = (float)($v['activatedStake'] ?? 0);
-//                $stakeSol = $activatedStake / 1000000000; // перевод Lamports в SOL
-//
-//                // Процент стейка от сети
-//                $stakePercentage = round(($activatedStake / $totalNetworkStake) * 100, 4);
-//
-//                // Uptime / Vote Rate относительно лидера сети
-//                $uptimeCalc = $this->calculateNetworkUptime($validatorCredits, $maxCreditsInNetwork);
-//                $uptimeFormatted = number_format($uptimeCalc, 2, '.', '') . '%';
-//                // Берем 5-элементный массив из RPC (или заглушку, если ноды нет в RPC)
-//                // Достаём тот самый 5-элементный массив epochCredits напрямую из RPC-карты
-//                $epochCreditsArray = $epochCreditsMap[$vote] ?? [];
-//                $validatorScores[] = [
-//                    'rank'          => $index + 1, // Наш честный 134 ранг!
-//                    'node_pubkey'   => $identity,
-//                    'vote_pubkey'   => $vote,
-//                    'uptime'        => $uptimeFormatted,
-//                    'root_slot'     => (int)($v['rootSlot'] ?? 0),
-//                    'vote_slot'     => (int)($v['lastVote'] ?? 0),
-//                    'commission'    => (float)(($v['commissionBps'] ?? 0) / 100), // Bps в процент
-//                    'credits'       => $validatorCredits,
-//                    'version'       => $v['version'] ?? 'unknown',
-//                    'stake'         => $stakeSol,
-//                    'stake_percent' => $stakePercentage,
-//                    'tvc_score'     => $index + 1,
-//                    'epoch_credits' => $epochCredits,
-//                    'epoch_credits_array' => $epochCreditsArray,
-//                    'collected_at'  => $now,
-//                    'created_at'    => $now,
-//                    'updated_at'    => $now
-//                ];
-//            }
 
             // 5. Записываем в базу данных PostgreSQL
             // 5. Записываем в базу данных PostgreSQL
@@ -204,6 +163,7 @@ class UpdateScoreMetricsLocal extends Command
                 $scoresJson = json_encode($validatorScores);
 
                 // Берем результат выполнения функции
+//                dd($validatorScores[0]);exit;
                 $result = DB::selectOne(
                     "SELECT data.update_validator_scores(?::jsonb, ?::integer) as count",
                     [$scoresJson, $targetEpoch]
@@ -213,15 +173,6 @@ class UpdateScoreMetricsLocal extends Command
 
                 $this->info("Successfully inserted {$insertedCount} validator scores into PostgreSQL.");
             }
-//            if (!empty($validatorScores)) {
-//                $scoresJson = json_encode($validatorScores);
-//                $insertedCount = DB::select(
-//                    "SELECT data.update_validator_scores(?::jsonb, ?::integer) as count",
-//                    [$scoresJson, $targetEpoch]
-//                )[0]->count;
-//
-//                $this->info("Successfully inserted {$insertedCount} validator scores into PostgreSQL.");
-//            }
 
             $this->cleanupOldData($collectLength);
 

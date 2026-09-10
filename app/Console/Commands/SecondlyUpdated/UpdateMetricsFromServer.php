@@ -93,8 +93,6 @@ class UpdateMetricsFromServer extends Command
             }
             unset($validator);
             $jsonForPg = json_encode($data['validators']);
-            dd($jsonForPg);
-            exit;
 
 // 5. Ищем вашего валидатора по vote_pubkey
 //            $myVotePubkey = 'DHoZJqvvMGvAXw85Lmsob7YwQzFVisYg8HY4rt5BAj6M';
@@ -119,7 +117,6 @@ class UpdateMetricsFromServer extends Command
             // 4. Если нужно передать ВЕСЬ массив со 134 местом в PostgreSQL-функцию:
             $jsonForPg = json_encode($data['validators']);
             $epoch = $data['epoch'] ?? 0;
-            exit;
 
             $sfdpOfficialData = [];
             try {
@@ -191,7 +188,6 @@ class UpdateMetricsFromServer extends Command
 
                 // Расчет эпох и перформанса
                 $epochCredits = $account['epochCredits'] ?? [];
-                dd($epochCredits);exit;
                 $creditsOk = false;
 
                 if (!empty($epochCredits)) {
