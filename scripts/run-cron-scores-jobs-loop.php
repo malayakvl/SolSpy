@@ -10,7 +10,8 @@ $kernel->bootstrap();
 use Illuminate\Support\Facades\Artisan;
 
 while (true) {
-    Artisan::call('rpc:fetch-validator-scores');
+    Artisan::call('score:update-metrics-common');
+//    Artisan::call('rpc:fetch-validator-scores');
     echo "rpc:fetch-validator-scores ran at " . date('Y-m-d H:i:s') . "\n";
     sleep(2); // Задержка 2 секунды
 }

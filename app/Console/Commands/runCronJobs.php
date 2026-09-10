@@ -30,7 +30,6 @@ class runCronJobs extends Command
         while (true) {
             // Здесь ваша логика для команды app:fetch-validators
             $this->info('Cron every 1 sec...');
-            Artisan::call('score:update-metrics-common');
             Artisan::call('app:fetch-validators');
 
             // Вывод результата команды (опционально)
