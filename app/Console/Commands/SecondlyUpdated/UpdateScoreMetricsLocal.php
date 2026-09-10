@@ -10,7 +10,7 @@ use phpseclib3\Net\SSH2;
 
 class UpdateScoreMetricsLocal extends Command
 {
-    protected $signature = 'score:update-metrics';
+    protected $signature = 'score:update-metrics-common';
     protected $description = 'Update score metrics local';
 
     protected $rpcUrl = 'http://103.167.235.81:8899';
