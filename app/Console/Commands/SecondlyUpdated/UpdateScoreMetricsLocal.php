@@ -22,6 +22,7 @@ class UpdateScoreMetricsLocal extends Command
         $targetEpoch = (int)($dbSettings->epoch ?? 0);
         $solanaPath = '/usr/local/bin/solana';
         Log::info('Command score:update-metrics executed at ' . now());
+        $this->info('Updating score metrics...');
         $this->info("Start updating score metrics local (Epoch: $targetEpoch, keeping last $collectLength collections)!");
         try {
             $dotenv = Dotenv::createImmutable(base_path());
