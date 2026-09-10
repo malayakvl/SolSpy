@@ -69,11 +69,10 @@ class FetchValidators extends Command
                 
                 // Get current slot for TVR calculation
                 $currentSlot = $this->getCurrentSlot();
-                
                 // Pass the entire response to the database function with current slot
                 if ($currentSlot) {
-                    // $query = "SELECT data.update_validators_common_with_tvc('$response'::jsonb, $currentSlot);";
-                    $query = "SELECT data.update_validators_common_with_tvc_jito('$response'::jsonb, $currentSlot);";
+                     $query = "SELECT data.update_validators_common_with_tvc('$response'::jsonb, $currentSlot);";
+//                    $query = "SELECT data.update_validators_common_with_tvc_jito('$response'::jsonb, $currentSlot);";
                 } else {
                     // Fallback to original function if slot retrieval fails
                     // $query = "SELECT data.update_validators_common_with_tvc('$response'::jsonb, NULL);";

@@ -84,12 +84,11 @@ class FetchValidatorsLocal extends Command
             
             // Combine all validators
             $validators = array_merge($currentValidators, $delinquentValidators);
-            
             // Sort validators by credits (using last epoch data)
             usort($validators, function($a, $b) {
+//                dd($a, $b);
                 $aCredits = 0;
                 $bCredits = 0;
-                
                 if (!empty($a['epochCredits'])) {
                     $lastEpoch = end($a['epochCredits']);
                     $aCredits = $lastEpoch[1] - $lastEpoch[2];
@@ -111,7 +110,7 @@ class FetchValidatorsLocal extends Command
                 $v = $validators[$i];
                 $identity = $v['nodePubkey'] ?? '';
                 $vote = $v['votePubkey'] ?? '';
-                
+
                 // Get credits from last epoch
                 $credits = 0;
                 if (!empty($v['epochCredits'])) {
@@ -155,7 +154,7 @@ class FetchValidatorsLocal extends Command
             // Insert validator scores into database using PostgreSQL function
             if (!empty($validatorScores)) {
                 $scoresJson = json_encode($validatorScores);
-                
+dd($scoresJson);
 //                $insertedCount = DB::select("SELECT data.insert_validator_scores(?::jsonb) as count", [$scoresJson])[0]->count;
                 $insertedCount = DB::select(
                     "SELECT data.insert_validator_scores(?::jsonb, ?::integer) as count", 

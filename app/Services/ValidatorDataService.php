@@ -122,7 +122,7 @@ class ValidatorDataService
         }
     }
 
-    public function fetchDataValidators($userId, string $filterType, int $offset, int $limit, $totalStakeLamports, $sortColumn = 'spyRank', $searchTerm = '', $displayOptions = [])
+    public function fetchDataValidators($userId, string $filterType, int $offset, int $limit, $totalStakeLamports, $sortColumn = 'spyRank', $sortDirection = 'ASC   ', $searchTerm = '', $displayOptions = [])
     {
         // Extract display options with defaults
         $onlyWithName = $displayOptions['onlyWithName'] ?? null;
@@ -130,6 +130,7 @@ class ValidatorDataService
         $notRussian = $displayOptions['notRussian'] ?? null;
         $onlyValidated = $displayOptions['onlyValidated'] ?? null;
         $onlyWithMevAndZeroCommission = $displayOptions['onlyWithMevAndZeroCommission'] ?? null;
+
         
         // Build the query with display options
         $queryOld = "SELECT * FROM data.search_validators('" .$searchTerm. "', '" .$filterType. "', " . ($userId ?? 'null') . ", 'spy_rank', " . $offset . ", " . $limit .
@@ -140,7 +141,7 @@ class ValidatorDataService
                  ", " . ($onlyWithMevAndZeroCommission === true ? 'true' : ($onlyWithMevAndZeroCommission === false ? 'false' : 'null')) .
                  ", NULL" .  // p_validator_ids parameter
                  ");";
-        $query = "SELECT * FROM data.get_validators('" .$searchTerm. "', '" .$filterType. "', " . ($userId ?? 'null') . ", 'tvc_score', " . $offset . ", " . $limit .
+        $query1 = "SELECT * FROM data.get_validators('" .$searchTerm. "', '" .$filterType. "', " . ($userId ?? 'null') . ", 'tvc_score', " . $offset . ", " . $limit .
             ", " . ($onlyWithName === true ? 'true' : ($onlyWithName === false ? 'false' : 'null')) .
             ", " . ($onlyWithWebsite === true ? 'true' : ($onlyWithWebsite === false ? 'false' : 'null')) .
             ", " . ($notRussian === true ? 'true' : ($notRussian === false ? 'false' : 'null')) .
@@ -148,7 +149,24 @@ class ValidatorDataService
             ", " . ($onlyWithMevAndZeroCommission === true ? 'true' : ($onlyWithMevAndZeroCommission === false ? 'false' : 'null')) .
             ", NULL" .  // p_validator_ids parameter
             ");";
-//        dd($query);exit;
+        $query = "SELECT * FROM data.get_validators('" . $searchTerm . "', '" . $filterType . "', " . ($userId ?? 'null') . ", '" . $sortColumn . "', " . $offset . ", " . $limit .
+            ", " . ($onlyWithName === true ? 'true' : ($onlyWithName === false ? 'false' : 'null')) .
+            ", " . ($onlyWithWebsite === true ? 'true' : ($onlyWithWebsite === false ? 'false' : 'null')) .
+            ", " . ($notRussian === true ? 'true' : ($notRussian === false ? 'false' : 'null')) .
+            ", " . ($onlyValidated === true ? 'true' : ($onlyValidated === false ? 'false' : 'null')) .
+            ", " . ($onlyWithMevAndZeroCommission === true ? 'true' : ($onlyWithMevAndZeroCommission === false ? 'false' : 'null')) .
+            ", NULL" .                       // 12-й параметр: p_validator_ids
+            ", '" . $sortDirection . "'" .   // 13-й параметр: p_sort_direction (ASC/DESC)
+            ");";
+        $query = "SELECT * FROM data.get_validators_test('" . $searchTerm . "', '" . $filterType . "', " . ($userId ?? 'null') . ", '" . $sortColumn . "', " . $offset . ", " . $limit .
+            ", " . ($onlyWithName === true ? 'true' : ($onlyWithName === false ? 'false' : 'null')) .
+            ", " . ($onlyWithWebsite === true ? 'true' : ($onlyWithWebsite === false ? 'false' : 'null')) .
+            ", " . ($notRussian === true ? 'true' : ($notRussian === false ? 'false' : 'null')) .
+            ", " . ($onlyValidated === true ? 'true' : ($onlyValidated === false ? 'false' : 'null')) .
+            ", " . ($onlyWithMevAndZeroCommission === true ? 'true' : ($onlyWithMevAndZeroCommission === false ? 'false' : 'null')) .
+            ", NULL" .                       // 12-й параметр: p_validator_ids
+            ", '" . $sortDirection . "'" .   // 13-й параметр: p_sort_direction (ASC/DESC)
+            ");";
         $res = DB::select($query);
 
         // Преобразуем результат в коллекцию для дальнейшей обработки

@@ -31,7 +31,7 @@ interface ValidatorTableProps {
     totalStakeData: any;
     getOrderedVisibleColumns: () => { name: string; show: boolean }[];
 }
-
+console.log('!!!!!')
 const ValidatorDataTable: React.FC<ValidatorTableProps> = ({
     data,
     columnsConfig,

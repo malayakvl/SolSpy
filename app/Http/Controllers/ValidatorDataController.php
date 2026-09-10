@@ -162,8 +162,10 @@ class ValidatorDataController extends Controller
         // Get total stake data
         $stakeData = $this->totalStakeService->getTotalStake();
         $totalStakeLamports = $stakeData[0]->total_network_stake_sol * 1000000000;
+        $sortDirection = $request->get('sortDirection', 'desc');
+        $sortColumn = $request->get('sortColumn', 'tvc_score');
         // Fetch validators data using service
-        $validators = $this->validatorDataService->fetchDataValidators($userId ?? null, $filterType, $offset, $limit, $totalStakeLamports, 'tvc_score', $searchTerm, $displayOptions);
+        $validators = $this->validatorDataService->fetchDataValidators($userId ?? null, $filterType, $offset, $limit, $totalStakeLamports, $sortColumn, $sortDirection, $searchTerm, $displayOptions);
         $sortedValidators = $validators['validatorsAllData']->toArray();
         $filteredTotalCount = $validators['totalFilteredValidators'];
         // Get top validators
