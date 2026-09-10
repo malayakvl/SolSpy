@@ -20,6 +20,7 @@ export default function TopContentCarousel({
   totalStakeData,
   validatorsData
 }: TopContentCarouselProps) {
+  console.log(topValidatorsData);
   return (
     <div className="flex">
       {/* Top Validators Carousel */}
