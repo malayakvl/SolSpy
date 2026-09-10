@@ -383,18 +383,18 @@ class ValidatorDataService
         //     ->get();
         $topValidators = DB::table('data.validators')
             ->join('data.validator_order', 'data.validator_order.validator_id', '=', 'data.validators.id')
-            ->join('data.validator_scores', function ($join) {
-                $join->on('data.validator_scores.vote_pubkey', '=', 'data.validators.vote_pubkey')
-                    ->whereIn('data.validator_scores.id', function ($query) {
+            ->join('data.validator_score_parameters', function ($join) {
+                $join->on('data.validator_score_parameters.vote_pubkey', '=', 'data.validators.vote_pubkey')
+                    ->whereIn('data.validator_score_parameters.id', function ($query) {
                         $query->selectRaw('MAX(id)')
-                            ->from('data.validator_scores')
+                            ->from('data.validator_score_parameters')
                             ->groupBy('vote_pubkey');
                     });
             })
             ->where('data.validators.is_top', true)
             ->orderBy('data.validator_order.sort_order', 'ASC')
             ->limit(10)
-            ->get();    
+            ->get();
         // Calculate TVC rank and Spy rank for top validators as well
         $topValidatorsWithRanks = $topValidators->map(function ($validator) use ($sortedValidators, $totalStakeLamports) {
             // Calculate TVC rank
