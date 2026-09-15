@@ -87,8 +87,6 @@ class FetchValidatorLogoNames extends Command
                                         'details'    => $item['info']['details'] ?? null,
                                         'updated_at' => now(),
                                     ]);
-                                dd($item['info']);
-                                exit;
                             }
                             DB::table('data.validators')
                                 ->where('node_pubkey', $identity)
