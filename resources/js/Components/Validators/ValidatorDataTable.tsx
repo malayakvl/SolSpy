@@ -1,7 +1,9 @@
-import React from 'react';
-import { renderColumnHeader } from './ValidatorTableComponents';
+import React, { useEffect, useState } from 'react';
 import ValidatorActions from '../../Pages/Validators/Partials/ValidatorActions';
-// Import the validator partial components
+import { TableHeaderCell } from './TableHeaderCell';
+import { Head, usePage, router } from '@inertiajs/react';
+
+// Импорты партиалов для ячеек
 import ValidatorActivatedStake from '../../Pages/ValidatorDatas/Partials/ValidatorActivatedStake';
 import ValidatorCredits from '../../Pages/ValidatorDatas/Partials/ValidatorCredits';
 import ValidatorRate from '../../Pages/ValidatorDatas/Partials/ValidatorRate';
@@ -13,8 +15,33 @@ import ValidatorJiitoScore from '../../Pages/ValidatorDatas/Partials/ValidatorJi
 import TVCScore from '../../Pages/ValidatorDatas/Partials/TVCScore';
 import ValidatorVoteRate from '../../Pages/ValidatorDatas/Partials/ValidatorVoteRate';
 
+// Маппинг заголовков к ключам API
+const SORT_KEY_MAP: Record<string, string> = {
+  'Spy Rank': 'spy_rank',
+  Name: 'name',
+  Status: 'status',
+  'TVC Score': 'tvc_score',
+  'TVC Rank': 'tvc_rank',
+  'Vote Credits': 'vote_credits',
+  'Active Stake': 'activated_stake',
+  'Vote Rate': 'vote_rate',
+  'Jiito Score': 'jiito_score',
+  'Jito Score': 'jiito_score',
+  'Inflation Commission': 'inflation_commission',
+  'MEV Commission': 'mev_commission',
+  Uptime: 'uptime',
+  'Client/Version': 'client_version',
+  'Status SFDP': 'status_sfdp',
+  Location: 'location',
+  Awards: 'awards',
+  Website: 'website',
+  City: 'city',
+  ASN: 'asn',
+  IP: 'ip',
+};
+
 interface ValidatorTableProps {
-  data: any[];
+  validatorData: any[];
   columnsConfig: { name: string; show: boolean }[];
   selectAll: boolean;
   checkedIds: string[];
@@ -22,120 +49,152 @@ interface ValidatorTableProps {
   handleCheckboxChange: (id: string) => void;
   handleBanToggle: (validatorId: number, isBanned: boolean) => void;
   sortClickState: { column: string; direction: string } | null;
-  setSortClickState: React.Dispatch<
-    React.SetStateAction<{ column: string; direction: string } | null>
-  >;
-  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   isLoading: boolean;
-  setIsPaginationOrSorting: React.Dispatch<
-    React.SetStateAction<boolean>
-  > | null;
   epoch: any;
   settingsData: any;
   totalStakeData: any;
   getOrderedVisibleColumns: () => { name: string; show: boolean }[];
+  onSortChange: (sortKey: string, direction: string) => void;
 }
 
-// Маппер имён колонок интерфейса к ключам сортировки в базе/API
-const getSortKeyByColumnName = (columnName: string): string => {
-  switch (columnName.trim()) {
-    case 'Spy Rank':
-      return 'spy_rank';
-    case 'Name':
-      return 'name';
-    case 'TVC Score':
-      return 'tvc_score';
-    case 'TVC Rank':
-      return 'tvc_rank';
-    case 'Vote Credits':
-      return 'vote_credits';
-    case 'Active Stake':
-      return 'activated_stake';
-    case 'Vote Rate':
-      return 'vote_rate';
-    case 'Jiito Score':
-    case 'Jito Score':
-      return 'jiito_score';
-    case 'Inflation Commission':
-    case 'MEV Commission':
-      return 'commission';
-    case 'Uptime':
-      return 'avg_uptime';
-    case 'Client/Version':
-      return 'version';
-    default:
-      return '';
-  }
-};
-
 const ValidatorDataTable: React.FC<ValidatorTableProps> = ({
-  data,
-  columnsConfig,
+  validatorData,
+  totalDataRecords,
   selectAll,
   checkedIds,
   handleSelectAllChange,
   handleCheckboxChange,
   handleBanToggle,
-  sortClickState,
-  setSortClickState,
-  setCurrentPage,
-  isLoading,
-  setIsPaginationOrSorting,
+  sortClickStateOld,
+  isLoadingData,
   epoch,
   settingsData,
   totalStakeData,
   getOrderedVisibleColumns,
 }) => {
-  // 1. Достаем параметры из URL (пример для React Router / Next.js / URLSearchParams)
+  // Достаем активную сортировку из URL или стейта
   const searchParams = new URLSearchParams(window.location.search);
-  const urlSortColumn = searchParams.get('sortColumn');
-  const urlSortDirection = searchParams.get('sortDirection');
+  const [dataFetched, setDataFetched] = useState(false);
+  const [totalRecords, setTotalRecords] = useState<number>(totalDataRecords);
+  const [isPaginationOrSorting, setIsPaginationOrSorting] = useState(false);
+  const [sortClickState, setSortClickState] = useState<{
+    column: string;
+    direction: string;
+  } | null>(null); // Track sort click state
+  const { auth } = usePage().props as unknown as { auth: any };
+  const user = auth?.user;
+  const [data, setData] = useState<any>(validatorData);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // 2. Приоритет: Клик пользователя > Параметр из URL > Дефолтное значение
   const activeSortColumn = (
     sortClickState?.column ||
-    urlSortColumn ||
+    searchParams.get('sortColumn') ||
     'tvc_score'
   )
     .trim()
     .toLowerCase();
-
   const activeSortDirection =
-    sortClickState?.direction || urlSortDirection || 'DESC';
+    sortClickState?.direction || searchParams.get('sortDirection') || 'DESC';
 
   const isAsc = activeSortDirection === 'ASC';
   const highlightClasses = {
-    headerAsc:
-      'bg-emerald-600/40 text-emerald-100 border-x border-t border-emerald-500/40 font-bold transition-colors',
-    cellAsc: 'bg-emerald-500/20 border-x border-emerald-500/20 font-semibold',
-    headerDesc:
-      'bg-indigo-600/40 text-indigo-100 border-x border-t border-indigo-500/40 font-bold transition-colors',
-    cellDesc: 'bg-indigo-500/20 border-x border-indigo-500/20 font-semibold',
+    header: isAsc
+      ? 'bg-emerald-600/40 text-emerald-100 border-x border-t border-emerald-500/40 font-bold'
+      : 'bg-indigo-600/40 text-indigo-100 border-x border-t border-indigo-500/40 font-bold',
+    cell: isAsc
+      ? 'bg-emerald-500/20 border-x border-emerald-500/20 font-semibold'
+      : 'bg-indigo-500/20 border-x border-indigo-500/20 font-semibold',
   };
 
-  const headerClass = isAsc
-    ? highlightClasses.headerAsc
-    : highlightClasses.headerDesc;
-  const cellClass = isAsc
-    ? highlightClasses.cellAsc
-    : highlightClasses.cellDesc;
+  const onSortChange = async (sortKey: string, direction: string) => {
+    if (isLoading) return;
 
-  const renderColumnHeaderLocal = (columnName: string) => {
-    return renderColumnHeader(
-      columnName,
-      sortClickState,
-      setSortClickState,
-      setCurrentPage,
-      isLoading,
-      setIsPaginationOrSorting
+    // 1. Включаем флаг пагинации/сортировки для отображения лоадера
+    setIsPaginationOrSorting(true);
+    setIsLoading(true)
+
+    // 2. Мгновенно подсвечиваем активную колонку
+    setSortClickState({ column: sortKey, direction });
+
+    // 3. ОБНОВЛЯЕМ URL В БРАУЗЕРЕ (сбрасываем страницу на 1)
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('sortColumn', sortKey);
+    urlParams.set('sortDirection', direction);
+    urlParams.set('page', '1');
+
+    const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+    window.history.replaceState({}, '', newUrl);
+
+    // 4. Теперь вызываем fetchData — она прочитает СВЕЖИЙ URL!
+    await fetchData();
+  };
+
+  useEffect(() => {
+    // Set up interval for periodic data fetching
+    const intervalId = setInterval(
+      () => {
+        fetchData();
+      },
+      parseInt(settingsData.update_interval) * 1000
     );
+
+    // Listen for filter changes
+    const handleFilterChange = () => {
+      // Reset to first page when filter changes
+      setCurrentPage(1);
+    };
+
+    //       window.addEventListener('filterChanged', handleFilterChange);
+
+    return () => {
+      clearInterval(intervalId);
+      //           window.removeEventListener('filterChanged', handleFilterChange);
+    };
+  }, []);
+
+  const fetchData = async (showLoader = false) => {
+    // Включаем лоадер, если передан флаг или если сработал локальный стейт
+    if (showLoader || isPaginationOrSorting) {
+      setIsLoading(true);
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentFilterType = urlParams.get('filterType') || 'all';
+    const searchParam = urlParams.get('search') || '';
+    const sortColumn = urlParams.get('sortColumn') || 'tvc_score';
+    const sortDirection = urlParams.get('sortDirection') || 'DESC';
+    const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
+
+    try {
+      let url = user
+        ? `/api/fetch-validators-auth?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}&responseType=json`
+        : `/api/scored-validators?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}&responseType=json`;
+
+      if (searchParam) {
+        url += `&search=${encodeURIComponent(searchParam)}`;
+      }
+
+      const response = await axios.get(url);
+      setData(response.data.validatorsData);
+      setTotalRecords(response.data.totalCount);
+
+      if (!dataFetched) {
+        setDataFetched(true);
+        setIsLoading(false)
+      }
+
+      setSortClickState(null);
+    } catch (error) {
+      console.error('Error:', error);
+      setSortClickState(null);
+    } finally {
+      // Гасим лоадер ТОЛЬКО ПОСЛЕ того, как пришел ответ и обновился стейт
+      setIsLoading(false);
+      setIsPaginationOrSorting(false);
+    }
   };
 
-  const renderColumnCellLocal = (
-    columnName: string,
-    validator: any,
-    index: number
-  ) => {
+  const renderCellContent = (columnName: string, validator: any) => {
     switch (columnName) {
       case 'Spy Rank':
         return <ValidatorSpyRank validator={validator} />;
@@ -143,20 +202,12 @@ const ValidatorDataTable: React.FC<ValidatorTableProps> = ({
         return validator.avatar_url || validator.avatar_file_url ? (
           <img
             src={validator.avatar_url || validator.avatar_file_url}
-            alt={`${validator.name} avatar`}
+            alt={validator.name}
             className="w-8 h-8 rounded-full"
-            onError={e => {
-              e.currentTarget.style.display = 'none';
-              const fallback = document.createElement('div');
-              fallback.className =
-                'w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500';
-              fallback.textContent = 'SP';
-              e.currentTarget.parentNode?.appendChild(fallback);
-            }}
           />
         ) : (
           <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-            <span className="text-xs text-gray-500 font-medium">SP</span>
+            <span className="text-xs text-gray-500">SP</span>
           </div>
         );
       case 'Name':
@@ -192,10 +243,6 @@ const ValidatorDataTable: React.FC<ValidatorTableProps> = ({
         return validator.commission !== undefined
           ? `${parseFloat(validator.commission).toFixed(2)}%`
           : 'N/A';
-      case 'Jito Score':
-        return validator.jito_commission !== undefined
-          ? parseFloat(validator.jito_commission).toFixed(4)
-          : 'N/A';
       case 'Uptime':
         return validator.uptime;
       case 'Client/Version':
@@ -226,31 +273,11 @@ const ValidatorDataTable: React.FC<ValidatorTableProps> = ({
 
   return (
     <div className="overflow-x-auto relative min-h-[200px]">
-      {/* 🚀 Оверлей Лоадера при загрузке/сортировке */}
       {isLoading && (
-        <div className="absolute inset-0 z-20 bg-slate-900/60 backdrop-blur-[1px] flex items-center justify-center transition-all duration-200">
+        <div className="absolute inset-0 z-20 bg-slate-900/60 backdrop-blur-[1px] flex items-center justify-center">
           <div className="flex flex-col items-center gap-3 px-5 py-3 rounded-xl bg-slate-800/90 border border-slate-700/80 shadow-2xl">
-            <svg
-              className="animate-spin h-7 w-7 text-indigo-400"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-            <span className="text-xs font-medium text-slate-200 tracking-wide">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-400"></div>
+            <span className="text-xs font-medium text-slate-200">
               Updating data...
             </span>
           </div>
@@ -260,70 +287,63 @@ const ValidatorDataTable: React.FC<ValidatorTableProps> = ({
       <table className="min-w-full divide-y divide-gray-200 validator-table">
         <thead>
           <tr>
-            <th className="relative">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={selectAll}
-                  onChange={handleSelectAllChange}
-                />
-              </div>
+            <th>
+              <input
+                type="checkbox"
+                checked={selectAll}
+                onChange={handleSelectAllChange}
+              />
             </th>
             <th>Actions</th>
             {getOrderedVisibleColumns().map(column => {
-              const sortKey = getSortKeyByColumnName(column.name).toLowerCase();
-              const isSorted = !!sortKey && activeSortColumn === sortKey;
+              const sortKey = SORT_KEY_MAP[column.name];
+              const isSorted =
+                !!sortKey && activeSortColumn === sortKey.toLowerCase();
 
               return (
-                <th key={column.name} className={isSorted ? headerClass : ''}>
-                  {renderColumnHeaderLocal(column.name)}
-                </th>
+                <TableHeaderCell
+                  key={column.name}
+                  title={column.name}
+                  sortKey={sortKey}
+                  activeSortColumn={activeSortColumn}
+                  activeSortDirection={activeSortDirection}
+                  isLoading={isLoading}
+                  onSort={onSortChange}
+                />
               );
             })}
           </tr>
         </thead>
-        <tbody
-          className={
-            isLoading
-              ? 'opacity-40 transition-opacity duration-200 pointer-events-none'
-              : 'transition-opacity duration-200'
-          }
-        >
-          {data.map((validator, index) => (
+        <tbody className={isLoading ? 'opacity-40 pointer-events-none' : ''}>
+          {data.map(validator => (
             <tr
               key={validator.id}
               className={validator.is_highlighted ? 'bg-selected' : ''}
             >
-              <td className="text-left text-white">
-                <div className="pl-[10px]">
-                  <input
-                    key={`checkbox-${validator.id}`}
-                    type="checkbox"
-                    id={validator.id}
-                    checked={checkedIds.includes(validator.id)}
-                    onChange={() => handleCheckboxChange(validator.id)}
-                  />
-                </div>
+              <td className="text-left text-white pl-[10px]">
+                <input
+                  type="checkbox"
+                  checked={checkedIds.includes(validator.id)}
+                  onChange={() => handleCheckboxChange(validator.id)}
+                />
               </td>
               <td className="text-center text-white">
                 <ValidatorActions
-                  key={`actions-${validator.id}`}
                   validator={validator}
                   onBanToggle={handleBanToggle}
                 />
               </td>
               {getOrderedVisibleColumns().map((column, colIndex) => {
-                const sortKey = getSortKeyByColumnName(
-                  column.name
-                ).toLowerCase();
-                const isSorted = !!sortKey && activeSortColumn === sortKey;
+                const sortKey = SORT_KEY_MAP[column.name];
+                const isSorted =
+                  !!sortKey && activeSortColumn === sortKey.toLowerCase();
 
                 return (
                   <td
                     key={`${validator.id}-${colIndex}`}
-                    className={`text-white ${isSorted ? cellClass : ''}`}
+                    className={`text-white ${isSorted ? highlightClasses.cell : ''}`}
                   >
-                    {renderColumnCellLocal(column.name, validator, index)}
+                    {renderCellContent(column.name, validator)}
                   </td>
                 );
               })}

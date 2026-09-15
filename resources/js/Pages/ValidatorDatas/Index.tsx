@@ -182,31 +182,27 @@ export default function Index(validatorsData) {
         }
     };
 
-    useEffect(() => {
-        // Set up interval for periodic data fetching
-        const intervalId = setInterval(() => {
-            fetchData();
-        }, parseInt(validatorsData.settingsData.update_interval) * 1000);
-        
-        // Listen for filter changes
-        const handleFilterChange = () => {
-            // Reset to first page when filter changes
-            setCurrentPage(1);
-        };
-        
-        window.addEventListener('filterChanged', handleFilterChange);
-        
-        return () => {
-            clearInterval(intervalId);
-            window.removeEventListener('filterChanged', handleFilterChange);
-        };
-    }, []);
+//     useEffect(() => {
+//         // Set up interval for periodic data fetching
+//         const intervalId = setInterval(() => {
+//             fetchData();
+//         }, parseInt(validatorsData.settingsData.update_interval) * 1000);
+//
+//         // Listen for filter changes
+//         const handleFilterChange = () => {
+//             // Reset to first page when filter changes
+//             setCurrentPage(1);
+//         };
+//
+//         window.addEventListener('filterChanged', handleFilterChange);
+//
+//         return () => {
+//             clearInterval(intervalId);
+//             window.removeEventListener('filterChanged', handleFilterChange);
+//         };
+//     }, []);
     
-    // Fetch data when currentPage changes
-    // useEffect(() => {
-    //     fetchData();
-    // }, [currentPage]);
-    
+
     // Listen for URL changes to trigger data refresh
     useEffect(() => {
         const handleUrlChange = () => {
@@ -277,124 +273,129 @@ export default function Index(validatorsData) {
     };
 
     const fetchData = async () => {
-        // Show loading indicator only for pagination and sorting operations
+      // Show loading indicator only for pagination and sorting operations
+      if (isPaginationOrSorting) {
+        setIsLoading(true);
+      }
+      // Get filter value and other parameters from current URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const currentFilterType = urlParams.get('filterType') || 'all';
+      const searchParam = urlParams.get('search') || '';
+      const sortColumn = urlParams.get('sortColumn') || 'tvc_score';
+      const sortDirection = urlParams.get('sortDirection') || 'DESC';
+      const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
+      try {
+        // Build URL with all parameters
+        // Use authenticated endpoint if user is logged in, otherwise use public endpoint
+        let url = user
+          ? `/api/fetch-validators-auth?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}&responseType=json`
+          : `/api/scored-validators?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}&responseType=json`;
+
+        if (searchParam) {
+          url += `&search=${encodeURIComponent(searchParam)}`;
+        }
+
+        const response = await axios.get(url);
+        // console.log('Fetched data:', response.data); // Add this line to debug
+        setData(response.data.validatorsData);
+        setTotalRecords(response.data.totalCount);
+
+        // Mark that we've fetched data at least once
+        if (!dataFetched) {
+          setDataFetched(true);
+        }
+
+        // Reset sort click state after data is fetched
+        setSortClickState(null);
+      } catch (error) {
+        console.error('Error:', error);
+        // Reset sort click state even if there's an error
+        setSortClickState(null);
+      } finally {
+        // Hide loading indicator after pagination and sorting operations
         if (isPaginationOrSorting) {
-            setIsLoading(true);
+          setIsLoading(false);
+          // Reset the flag
+          setIsPaginationOrSorting(false);
         }
-        // Get filter value and other parameters from current URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const currentFilterType = urlParams.get('filterType') || 'all';
-        const searchParam = urlParams.get('search') || '';
-        const sortColumn = urlParams.get('sortColumn') || 'tvc_score';
-        const sortDirection = urlParams.get('sortDirection') || 'DESC';
-        const currentPageFromUrl = parseInt(urlParams.get('page')) || 1;
-        try {
-            // Build URL with all parameters
-            // Use authenticated endpoint if user is logged in, otherwise use public endpoint
-            let url = user ? 
-                `/api/fetch-validators-auth?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}&responseType=json` :
-                `/api/scored-validators?page=${currentPageFromUrl}&filterType=${currentFilterType}&sortColumn=${sortColumn}&sortDirection=${sortDirection}&responseType=json`;
-                
-            if (searchParam) {
-                url += `&search=${encodeURIComponent(searchParam)}`;
-            }
-            
-            const response = await axios.get(url);
-            // console.log('Fetched data:', response.data); // Add this line to debug
-            setData(response.data.validatorsData);
-            setTotalRecords(response.data.totalCount);
-            
-            // Mark that we've fetched data at least once
-            if (!dataFetched) {
-                setDataFetched(true);
-            }
-            
-            // Reset sort click state after data is fetched
-            setSortClickState(null);
-        } catch (error) {
-            console.error('Error:', error);
-            // Reset sort click state even if there's an error
-            setSortClickState(null);
-        } finally {
-            // Hide loading indicator after pagination and sorting operations
-            if (isPaginationOrSorting) {
-                setIsLoading(false);
-                // Reset the flag
-                setIsPaginationOrSorting(false);
-            }
-        }
+      }
     };
 
     return (
-        <AuthenticatedLayout header={<Head />} auth={auth}>
-            <Head title={msg.get('validators.title')} />
-            <div className="py-0">
-                {/* Loading overlay - only shown during pagination and sorting */}
-                {isLoading && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white p-6 rounded-lg shadow-lg">
-                            <div className="flex flex-col items-center">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-                                <p className="text-gray-700">{msg.get('validators.loading-data')}</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                
-                <div className="p-4 sm:p-8 mb-8 content-data bg-content">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold">{msg.get('validators.title')} New Page &nbsp;</h2>
-                    </div>
-                    
-                    {/* Top Validators and News Section */}
-                    <TopContentCarousel 
-                      topValidatorsData={validatorsData.topValidatorsData}
-                      topNewsData={validatorsData.topNewsData}
-                      epoch={epoch}
-                      settingsData={validatorsData.settingsData}
-                      totalStakeData={validatorsData.totalStakeData}
-                      validatorsData={validatorsData.validators}
-                    />
-                    <div className="flex justify-between items-start mt-10">
-                        <div className="flex-1">
-                            <ValidatorFilters 
-                              filterType={filterTypeDataSelector}
-                              onFilterChange={handleFilterChange}
-                              isAdmin={isAdmin}
-                              onGearClick={handleGearClick}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="mt-6">
-                        <ValidatorDataTable
-                          data={data}
-                          columnsConfig={columnsConfig}
-                          selectAll={selectAll}
-                          checkedIds={checkedIds}
-                          handleSelectAllChange={handleSelectAllChange}
-                          handleCheckboxChange={handleCheckboxChange}
-                          handleBanToggle={handleBanToggle}
-                          sortClickState={sortClickState}
-                          setSortClickState={setSortClickState}
-                          setCurrentPage={setCurrentPage}
-                          isLoading={isLoading}
-                          setIsPaginationOrSorting={setIsPaginationOrSorting}
-                          epoch={epoch}
-                          settingsData={validatorsData.settingsData}
-                          totalStakeData={validatorsData.totalStakeData}
-                          getOrderedVisibleColumns={getOrderedVisibleColumns}
-                        />
-                        
-                        <ValidatorPagination 
-                          currentPage={currentPage}
-                          totalPages={totalPages}
-                          filterType={filterTypeDataSelector}
-                          onPageChange={handlePageChange}
-                        />
-                    </div>
+      <AuthenticatedLayout header={<Head />} auth={auth}>
+        <Head title={msg.get('validators.title')} />
+        <div className="py-0">
+          {/* Loading overlay - only shown during pagination and sorting */}
+          {isLoading && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg">
+                <div className="flex flex-col items-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+                  <p className="text-gray-700">
+                    {msg.get('validators.loading-data')}
+                  </p>
                 </div>
+              </div>
             </div>
-        </AuthenticatedLayout>
+          )}
+
+          <div className="p-4 sm:p-8 mb-8 content-data bg-content">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">
+                {msg.get('validators.title')} New Page &nbsp;
+              </h2>
+            </div>
+
+            {/* Top Validators and News Section */}
+            <TopContentCarousel
+              topValidatorsData={validatorsData.topValidatorsData}
+              topNewsData={validatorsData.topNewsData}
+              epoch={epoch}
+              settingsData={validatorsData.settingsData}
+              totalStakeData={validatorsData.totalStakeData}
+              validatorsData={validatorsData.validators}
+            />
+            <div className="flex justify-between items-start mt-10">
+              <div className="flex-1">
+                <ValidatorFilters
+                  filterType={filterTypeDataSelector}
+                  onFilterChange={handleFilterChange}
+                  isAdmin={isAdmin}
+                  onGearClick={handleGearClick}
+                />
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <ValidatorDataTable
+                validatorData={data}
+                totalDataRecords={totalRecords}
+                columnsConfig={columnsConfig}
+                selectAll={selectAll}
+                checkedIds={checkedIds}
+                handleSelectAllChange={handleSelectAllChange}
+                handleCheckboxChange={handleCheckboxChange}
+                handleBanToggle={handleBanToggle}
+                sortClickState={sortClickState}
+                setSortClickState={setSortClickState}
+                setCurrentPage={setCurrentPage}
+                isLoadingData={isLoading}
+                setIsPaginationOrSorting={setIsPaginationOrSorting}
+                epoch={epoch}
+                settingsData={validatorsData.settingsData}
+                totalStakeData={validatorsData.totalStakeData}
+                getOrderedVisibleColumns={getOrderedVisibleColumns}
+              />
+
+              <ValidatorPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                filterType={filterTypeDataSelector}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          </div>
+        </div>
+      </AuthenticatedLayout>
     );
 }

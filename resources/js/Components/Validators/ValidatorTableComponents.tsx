@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faSortUp,
@@ -16,485 +16,542 @@ import ValidatorSFDP from '../../Pages/Validators/Partials/ValidatorSFDP';
 import ValidatorStatus from '../../Pages/Validators/Partials/ValidatorStatus';
 import ValidatorJiitoScore from '../../Pages/Validators/Partials/ValidatorJiitoScore';
 import ValidatorTVCScore from '../../Pages/Validators/Partials/ValidatorTVCScore';
+import { showOverlayAction } from '../../Redux/Layout/index';
+import { useSelector, useDispatch } from 'react-redux';
+
+console.log('ValidatorTableComponent');
+
 // import { faSortUp, faSortDown } from '@fortawesome/free-solid-svg-icons';
 // Shared function to render column headers
-export const renderColumnHeader = (columnName, sortClickState, setSortClickState, setCurrentPage, isLoading = false, setIsPaginationOrSorting = null) => {
-    // Map column names to sort keys
-    const columnSortKeys = {
-        "Name": "name",
-        "Status": "status",
-        "Spy Rank": "spy_rank",
-        "TVC Score": "tvc_score",
-        "TVC Rank": "tvc_rank",
-        "Vote Credits": "vote_credits",
-        "Active Stake": "active_stake",
-        "Vote Rate": "vote_rate",
-        "Inflation Commission": "inflation_commission",
-        "MEV Commission": "mev_commission",
-        "Uptime": "uptime",
-        "Client/Version": "client_version",
-        "Status SFDP": "status_sfdp",
-        "Location": "location",
-        "Awards": "awards",
-        "Website": "website",
-        "City": "city",
-        "ASN": "asn",
-        "IP": "ip",
-        "Jito Score": "jiito_score"
-    };
+export const renderColumnHeader = (
+  columnName,
+  sortClickState,
+  setSortClickState,
+  setCurrentPage,
+  isLoading = false,
+  setIsPaginationOrSorting = null,
+  sortClickAction
+) => {
+  // Map column names to sort keys
+  const columnSortKeys = {
+    Name: 'name',
+    Status: 'status',
+    'Spy Rank': 'spy_rank',
+    'TVC Score': 'tvc_score',
+    'TVC Rank': 'tvc_rank',
+    'Vote Credits': 'vote_credits',
+    'Active Stake': 'activated_stake',
+    'Vote Rate': 'vote_rate',
+    'Inflation Commission': 'inflation_commission',
+    'MEV Commission': 'mev_commission',
+    'Uptime': 'uptime',
+    'Client/Version': 'client_version',
+    'Status SFDP': 'status_sfdp',
+    'Location': 'location',
+    'Awards': 'awards',
+    'Website': 'website',
+    'City': 'city',
+    ASN: 'asn',
+    IP: 'ip',
+    'Jito Score': 'jiito_score',
+  };
 
-    // Get sort key for this column
-    const sortKey = columnSortKeys[columnName];
-    // Get current sort parameters from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentSortColumn = urlParams.get('sortColumn') || 'id';
-    const currentSortDirection = urlParams.get('sortDirection') || 'ASC';
+  // Get sort key for this column
+  const sortKey = columnSortKeys[columnName];
+  // Get current sort parameters from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentSortColumn = urlParams.get('sortColumn') || 'id';
+  const currentSortDirection = urlParams.get('sortDirection') || 'ASC';
+  const dispatch = useDispatch();
 
-    // Handle sort click
-    const handleSort = (direction) => {
-        // If already loading, don't trigger another sort
-        if (isLoading) return;
 
-        // Set flag to indicate this is a sorting operation
-        if (setIsPaginationOrSorting) {
-            setIsPaginationOrSorting(true);
-        }
-
-        // Set sort click state for immediate visual feedback
-        setSortClickState({column: sortKey, direction});
-
-        // Update URL with sort parameters
-        const newUrlParams = new URLSearchParams(window.location.search);
-        newUrlParams.set('sortColumn', sortKey);
-        newUrlParams.set('sortDirection', direction);
-
-        // Update the browser URL
-        const newUrl = `${window.location.pathname}?${newUrlParams.toString()}`;
-        window.history.replaceState({}, '', newUrl);
-
-        // Reset to first page when sorting changes
-        // Update URL with new page number
-        newUrlParams.set('page', '1');
-        const newUrlWithPage = `${window.location.pathname}?${newUrlParams.toString()}`;
-        window.history.replaceState({}, '', newUrlWithPage);
-
-        // Update currentPage state
-        // This will trigger the useEffect to fetch data
-        setCurrentPage(1);
-    };
-
-    const renderSortIcons = (
-      sortKey,
-      currentSortColumn,
-      currentSortDirection,
-      sortClickState,
-      isLoading,
-      handleSort
-    ) => {
-      const isAsc =
-        (currentSortColumn === sortKey && currentSortDirection === 'ASC') ||
-        (sortClickState &&
-          sortClickState.column === sortKey &&
-          sortClickState.direction === 'ASC');
-
-      const isDesc =
-        (currentSortColumn === sortKey && currentSortDirection === 'DESC') ||
-        (sortClickState &&
-          sortClickState.column === sortKey &&
-          sortClickState.direction === 'DESC');
-
-      return (
-        <div className="flex flex-col ml-2">
-          <FontAwesomeIcon
-            icon={faSortUp}
-            className={`text-xs cursor-pointer hover:text-blue-500 ${
-              isAsc ? 'text-blue-500' : 'text-gray-400'
-            } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-            onClick={() => handleSort('ASC')}
-          />
-          <FontAwesomeIcon
-            icon={faSortDown}
-            className={`text-xs cursor-pointer hover:text-blue-500 ${
-              isDesc ? 'text-blue-500' : 'text-gray-400'
-            } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-            onClick={() => handleSort('DESC')}
-          />
-        </div>
-      );
-    };
-
-    switch(columnName) {
-        case "Spy Rank":
-            return (
-                <th key="spy-rank" className="cursor-pointer">
-                    <div className="flex items-center justify-between">
-                        <span>Spy Rank</span>
-                        <div className="flex flex-col ml-2">
-                            <FontAwesomeIcon
-                              icon={faSortUp}
-                              className={`text-xs cursor-pointer hover:text-blue-500 ${
-                                    (currentSortColumn === 'spy_rank' && currentSortDirection === 'ASC') ||
-                                    (sortClickState && sortClickState.column === 'spy_rank' && sortClickState.direction === 'ASC')
-                                    ? 'text-blue-500' : 'text-gray-400'
-                                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                              onClick={() => handleSort('ASC')}
-                            />
-                            <FontAwesomeIcon
-                              icon={faSortDown}
-                              className={`text-xs cursor-pointer hover:text-blue-500 ${
-                                    (currentSortColumn === 'spy_rank' && currentSortDirection === 'DESC') ||
-                                    (sortClickState && sortClickState.column === 'spy_rank' && sortClickState.direction === 'DESC')
-                                    ? 'text-blue-500' : 'text-gray-400'
-                                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                              onClick={() => handleSort('DESC')}
-                            />
-                        </div>
-                    </div>
-                </th>
-            );
-        case "Avatar": return <th key="avatar">Avatar</th>;
-        case "Name":
-            return (
-                <th key="name" className="cursor-pointer">
-                    <div className="flex items-center justify-between">
-                        <span>Name</span>
-                        <div className="flex flex-col ml-2">
-                            <FontAwesomeIcon
-                              icon={faSortUp}
-                              className={`text-xs cursor-pointer hover:text-blue-500 ${
-                                    (currentSortColumn === 'name' && currentSortDirection === 'ASC') ||
-                                    (sortClickState && sortClickState.column === 'name' && sortClickState.direction === 'ASC')
-                                    ? 'text-blue-500' : 'text-gray-400'
-                                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                              onClick={() => handleSort('ASC')}
-                            />
-                            <FontAwesomeIcon
-                              icon={faSortDown}
-                              className={`text-xs cursor-pointer hover:text-blue-500 ${
-                                    (currentSortColumn === 'name' && currentSortDirection === 'DESC') ||
-                                    (sortClickState && sortClickState.column === 'name' && sortClickState.direction === 'DESC')
-                                    ? 'text-blue-500' : 'text-gray-400'
-                                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                              onClick={() => handleSort('DESC')}
-                            />
-                        </div>
-                    </div>
-                </th>
-            );
-        case "Status":
-            return (
-                <th key="status" className="cursor-pointer">
-                    <div className="flex items-center justify-between">
-                        <span>Status</span>
-                        <div className="flex flex-col ml-2">
-                            <FontAwesomeIcon
-                              icon={faSortUp}
-                              className={`text-xs cursor-pointer hover:text-blue-500 ${
-                                    (currentSortColumn === 'status' && currentSortDirection === 'ASC') ||
-                                    (sortClickState && sortClickState.column === 'status' && sortClickState.direction === 'ASC')
-                                    ? 'text-blue-500' : 'text-gray-400'
-                                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                              onClick={() => handleSort('ASC')}
-                            />
-                            <FontAwesomeIcon
-                              icon={faSortDown}
-                              className={`text-xs cursor-pointer hover:text-blue-500 ${
-                                    (currentSortColumn === 'status' && currentSortDirection === 'DESC') ||
-                                    (sortClickState && sortClickState.column === 'status' && sortClickState.direction === 'DESC')
-                                    ? 'text-blue-500' : 'text-gray-400'
-                                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                              onClick={() => handleSort('DESC')}
-                            />
-                        </div>
-                    </div>
-                </th>
-            );
-        case "TVC Score":
-            return (
-              <th key="tvc-score" className="cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <span>TVC Score</span>
-                  {renderSortIcons(
-                    'tvc_score',
-                    currentSortColumn,
-                    currentSortDirection,
-                    sortClickState,
-                    isLoading,
-                    handleSort
-                  )}
-                </div>
-              </th>
-            );
-        case "TVC Rank":
-            return (
-                <th key="tvc-rank" className="cursor-pointer">
-                    <div className="flex items-center justify-between">
-                        <span>TVC Rank</span>
-                        <div className="flex flex-col ml-2">
-                            <FontAwesomeIcon
-                              icon={faSortUp}
-                              className={`text-xs cursor-pointer hover:text-blue-500 ${
-                                    (currentSortColumn === 'tvc_rank' && currentSortDirection === 'ASC') ||
-                                    (sortClickState && sortClickState.column === 'tvc_rank' && sortClickState.direction === 'ASC')
-                                    ? 'text-blue-500' : 'text-gray-400'
-                                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                              onClick={() => handleSort('ASC')}
-                            />
-                            <FontAwesomeIcon
-                              icon={faSortDown}
-                              className={`text-xs cursor-pointer hover:text-blue-500 ${
-                                    (currentSortColumn === 'tvc_rank' && currentSortDirection === 'DESC') ||
-                                    (sortClickState && sortClickState.column === 'tvc_rank' && sortClickState.direction === 'DESC')
-                                    ? 'text-blue-500' : 'text-gray-400'
-                                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                              onClick={() => handleSort('DESC')}
-                            />
-                        </div>
-                    </div>
-                </th>
-            );
-        case "Vote Credits":
-            return (
-              <th key="vote-credits" className="cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <span>Vote Credits</span>
-                  {renderSortIcons(
-                    'vote_credits',
-                    currentSortColumn,
-                    currentSortDirection,
-                    sortClickState,
-                    isLoading,
-                    handleSort
-                  )}
-                </div>
-              </th>
-            );
-        case "Active Stake":
-            return (
-              <th key="active-stake" className="cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <span>Active Stake</span>
-                  {renderSortIcons(
-                    'active_stake',
-                    currentSortColumn,
-                    currentSortDirection,
-                    sortClickState,
-                    isLoading,
-                    handleSort
-                  )}
-                </div>
-              </th>
-            );
-        case "Vote Rate":
-            return (
-              <th key="vote-rate" className="cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <span>Vote Rate</span>
-                  {renderSortIcons(
-                    'vote_rate',
-                    currentSortColumn,
-                    currentSortDirection,
-                    sortClickState,
-                    isLoading,
-                    handleSort
-                  )}
-                </div>
-              </th>
-            );
-        case "Jiito Score":
-            return (
-              <th key="jiito-score" className="cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <span>Jiito Score</span>
-                  {renderSortIcons(
-                    'jiito_score',
-                    currentSortColumn,
-                    currentSortDirection,
-                    sortClickState,
-                    isLoading,
-                    handleSort
-                  )}
-                </div>
-              </th>
-            );
-        case "Inflation Commission":
-            return (
-              <th key="inflation-commission" className="cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <span>
-                    Inflation
-                    <br />
-                    Commission
-                  </span>
-                  {renderSortIcons(
-                    'inflation_commission',
-                    currentSortColumn,
-                    currentSortDirection,
-                    sortClickState,
-                    isLoading,
-                    handleSort
-                  )}
-                </div>
-              </th>
-            );
-        case "MEV Commission":
-            return (
-              <th key="mev-commission" className="cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <span>
-                    MEV
-                    <br />
-                    Commission
-                  </span>
-                  {renderSortIcons(
-                    'mev_commission',
-                    currentSortColumn,
-                    currentSortDirection,
-                    sortClickState,
-                    isLoading,
-                    handleSort
-                  )}
-                </div>
-              </th>
-            );
-        case "Uptime":
-            return (
-              <th key="uptime" className="cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <span>Uptime</span>
-                  {renderSortIcons(
-                    'uptime',
-                    currentSortColumn,
-                    currentSortDirection,
-                    sortClickState,
-                    isLoading,
-                    handleSort
-                  )}
-                </div>
-              </th>
-            );
-        case "Client/Version":
-            return (
-              <th key="client-version" className="cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <span>Client/Version</span>
-                  {renderSortIcons(
-                    'client_version',
-                    currentSortColumn,
-                    currentSortDirection,
-                    sortClickState,
-                    isLoading,
-                    handleSort
-                  )}
-                </div>
-              </th>
-            );
-        case "Status SFDP":
-            return (
-              <th key="status-sfdp" className="cursor-pointer">
-                {renderSortIcons(
-                  'status_sfdp',
-                  currentSortColumn,
-                  currentSortDirection,
-                  sortClickState,
-                  isLoading,
-                  handleSort
-                )}
-              </th>
-            );
-        case "Location":
-            return (
-              <th key="location" className="cursor-pointer">
-                {renderSortIcons(
-                  'location',
-                  currentSortColumn,
-                  currentSortDirection,
-                  sortClickState,
-                  isLoading,
-                  handleSort
-                )}
-              </th>
-            );
-        case "Awards":
-            return (
-              <th key="awards" className="cursor-pointer">
-                {renderSortIcons(
-                  'awards',
-                  currentSortColumn,
-                  currentSortDirection,
-                  sortClickState,
-                  isLoading,
-                  handleSort
-                )}
-              </th>
-            );
-        case "Website":
-            return (
-              <th key="website" className="cursor-pointer">
-                {renderSortIcons(
-                  'website',
-                  currentSortColumn,
-                  currentSortDirection,
-                  sortClickState,
-                  isLoading,
-                  handleSort
-                )}
-              </th>
-            );
-        case "City":
-            return (
-                <th key="city" className="cursor-pointer">
-                {renderSortIcons(
-                  'city',
-                  currentSortColumn,
-                  currentSortDirection,
-                  sortClickState,
-                  isLoading,
-                  handleSort
-                )}
-                </th>
-            );
-        case "ASN":
-            return (
-                <th key="asn" className="cursor-pointer">
-                {renderSortIcons(
-                  'asn',
-                  currentSortColumn,
-                  currentSortDirection,
-                  sortClickState,
-                  isLoading,
-                  handleSort
-                )}
-                </th>
-            );
-        case "IP":
-            return (
-                <th key="ip" className="cursor-pointer">
-                {renderSortIcons(
-                  'ip',
-                  currentSortColumn,
-                  currentSortDirection,
-                  sortClickState,
-                  isLoading,
-                  handleSort
-                )}
-                </th>
-            );
-        case "Jito Score":
-            return (
-                <th key="jito-score" className="cursor-pointer">
-                {renderSortIcons(
-                  'jito_score',
-                  currentSortColumn,
-                  currentSortDirection,
-                  sortClickState,
-                  isLoading,
-                  handleSort
-                )}
-                </th>
-            );
-        default: return null;
+  // Handle sort click
+  const handleSort = (direction, sortKey) => {
+    // If already loading, don't trigger another sort
+    if (isLoading) return;
+    console.log('Sort key', sortKey);
+    console.log('Sort direction', direction);
+    // Set flag to indicate this is a sorting operation
+    if (setIsPaginationOrSorting) {
+      setIsPaginationOrSorting(true);
     }
+
+    if (sortClickAction) {
+      sortClickAction(sortKey, direction);
+    }
+
+    // Set sort click state for immediate visual feedback
+    setSortClickState({ column: sortKey, direction });
+//
+//     // Update URL with sort parameters
+    const newUrlParams = new URLSearchParams(window.location.search);
+    newUrlParams.set('sortColumn', sortKey);
+    newUrlParams.set('sortDirection', direction);
+    // Здесь надо показывать лоадер
+    dispatch(showOverlayAction(true));
+
+    // Update the browser URL
+    const newUrl = `${window.location.pathname}?${newUrlParams.toString()}`;
+    window.history.replaceState({}, '', newUrl);
+
+    // Reset to first page when sorting changes
+    // Update URL with new page number
+    newUrlParams.set('page', '1');
+    const newUrlWithPage = `${window.location.pathname}?${newUrlParams.toString()}`;
+    window.history.replaceState({}, '', newUrlWithPage);
+    dispatch(showOverlayAction(false));
+
+    // Update currentPage state
+    // This will trigger the useEffect to fetch data
+    setCurrentPage(1);
+  };
+
+  const renderSortIcons = (
+    sortKey,
+    currentSortColumn,
+    currentSortDirection,
+    sortClickState,
+    isLoading,
+    handleSort
+  ) => {
+    const isAsc =
+      (currentSortColumn === sortKey && currentSortDirection === 'ASC') ||
+      (sortClickState &&
+        sortClickState.column === sortKey &&
+        sortClickState.direction === 'ASC');
+
+    const isDesc =
+      (currentSortColumn === sortKey && currentSortDirection === 'DESC') ||
+      (sortClickState &&
+        sortClickState.column === sortKey &&
+        sortClickState.direction === 'DESC');
+
+    return (
+      <div className="flex flex-col ml-2">
+        <FontAwesomeIcon
+          icon={faSortUp}
+          className={`text-xs cursor-pointer hover:text-blue-500 ${
+            isAsc ? 'text-blue-500' : 'text-gray-400'
+          } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          onClick={() => handleSort('ASC', sortKey)}
+        />
+        <FontAwesomeIcon
+          icon={faSortDown}
+          className={`text-xs cursor-pointer hover:text-blue-500 ${
+            isDesc ? 'text-blue-500' : 'text-gray-400'
+          } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          onClick={() => handleSort('DESC', sortKey)}
+        />
+      </div>
+    );
+  };
+
+  switch (columnName) {
+    case 'Spy Rank':
+      return (
+        <th key="spy-rank" className="cursor-pointer">
+          <div className="flex items-center justify-between">
+            <span>Spy Rank</span>
+            <div className="flex flex-col ml-2">
+              <FontAwesomeIcon
+                icon={faSortUp}
+                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                  (currentSortColumn === 'spy_rank' &&
+                    currentSortDirection === 'ASC') ||
+                  (sortClickState &&
+                    sortClickState.column === 'spy_rank' &&
+                    sortClickState.direction === 'ASC')
+                    ? 'text-blue-500'
+                    : 'text-gray-400'
+                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={() => handleSort('ASC')}
+              />
+              <FontAwesomeIcon
+                icon={faSortDown}
+                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                  (currentSortColumn === 'spy_rank' &&
+                    currentSortDirection === 'DESC') ||
+                  (sortClickState &&
+                    sortClickState.column === 'spy_rank' &&
+                    sortClickState.direction === 'DESC')
+                    ? 'text-blue-500'
+                    : 'text-gray-400'
+                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={() => handleSort('DESC')}
+              />
+            </div>
+          </div>
+        </th>
+      );
+    case 'Avatar':
+      return <th key="avatar">Avatar</th>;
+    case 'Name':
+      return (
+        <th key="name" className="cursor-pointer">
+          <div className="flex items-center justify-between">
+            <span>Name</span>
+            <div className="flex flex-col ml-2">
+              <FontAwesomeIcon
+                icon={faSortUp}
+                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                  (currentSortColumn === 'name' &&
+                    currentSortDirection === 'ASC') ||
+                  (sortClickState &&
+                    sortClickState.column === 'name' &&
+                    sortClickState.direction === 'ASC')
+                    ? 'text-blue-500'
+                    : 'text-gray-400'
+                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={() => handleSort('ASC')}
+              />
+              <FontAwesomeIcon
+                icon={faSortDown}
+                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                  (currentSortColumn === 'name' &&
+                    currentSortDirection === 'DESC') ||
+                  (sortClickState &&
+                    sortClickState.column === 'name' &&
+                    sortClickState.direction === 'DESC')
+                    ? 'text-blue-500'
+                    : 'text-gray-400'
+                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={() => handleSort('DESC')}
+              />
+            </div>
+          </div>
+        </th>
+      );
+    case 'Status':
+      return (
+        <th key="status" className="cursor-pointer">
+          <div className="flex items-center justify-between">
+            <span>Status</span>
+            <div className="flex flex-col ml-2">
+              <FontAwesomeIcon
+                icon={faSortUp}
+                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                  (currentSortColumn === 'status' &&
+                    currentSortDirection === 'ASC') ||
+                  (sortClickState &&
+                    sortClickState.column === 'status' &&
+                    sortClickState.direction === 'ASC')
+                    ? 'text-blue-500'
+                    : 'text-gray-400'
+                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={() => handleSort('ASC')}
+              />
+              <FontAwesomeIcon
+                icon={faSortDown}
+                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                  (currentSortColumn === 'status' &&
+                    currentSortDirection === 'DESC') ||
+                  (sortClickState &&
+                    sortClickState.column === 'status' &&
+                    sortClickState.direction === 'DESC')
+                    ? 'text-blue-500'
+                    : 'text-gray-400'
+                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={() => handleSort('DESC')}
+              />
+            </div>
+          </div>
+        </th>
+      );
+    case 'TVC Score':
+      return (
+        <th key="tvc-score" className="cursor-pointer">
+          <div className="flex items-center justify-between">
+            <span>TVC Score</span>
+            {renderSortIcons(
+              'tvc_score',
+              currentSortColumn,
+              currentSortDirection,
+              sortClickState,
+              isLoading,
+              handleSort
+            )}
+          </div>
+        </th>
+      );
+    case 'TVC Rank':
+      return (
+        <th key="tvc-rank" className="cursor-pointer">
+          <div className="flex items-center justify-between">
+            <span>TVC Rank</span>
+            <div className="flex flex-col ml-2">
+              <FontAwesomeIcon
+                icon={faSortUp}
+                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                  (currentSortColumn === 'tvc_rank' &&
+                    currentSortDirection === 'ASC') ||
+                  (sortClickState &&
+                    sortClickState.column === 'tvc_rank' &&
+                    sortClickState.direction === 'ASC')
+                    ? 'text-blue-500'
+                    : 'text-gray-400'
+                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={() => handleSort('ASC')}
+              />
+              <FontAwesomeIcon
+                icon={faSortDown}
+                className={`text-xs cursor-pointer hover:text-blue-500 ${
+                  (currentSortColumn === 'tvc_rank' &&
+                    currentSortDirection === 'DESC') ||
+                  (sortClickState &&
+                    sortClickState.column === 'tvc_rank' &&
+                    sortClickState.direction === 'DESC')
+                    ? 'text-blue-500'
+                    : 'text-gray-400'
+                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={() => handleSort('DESC')}
+              />
+            </div>
+          </div>
+        </th>
+      );
+    case 'Vote Credits':
+      return (
+        <th key="vote-credits" className="cursor-pointer">
+          <div className="flex items-center justify-between">
+            <span>Vote Credits</span>
+            {renderSortIcons(
+              'vote_credits',
+              currentSortColumn,
+              currentSortDirection,
+              sortClickState,
+              isLoading,
+              handleSort
+            )}
+          </div>
+        </th>
+      );
+    case 'Active Stake':
+      return (
+        <th key="active-stake" className="cursor-pointer">
+          <div className="flex items-center justify-between">
+            <span>Active Stake</span>
+            {renderSortIcons(
+              'activated_stake',
+              currentSortColumn,
+              currentSortDirection,
+              sortClickState,
+              isLoading,
+              handleSort
+            )}
+          </div>
+        </th>
+      );
+    case 'Vote Rate':
+      return (
+        <th key="vote-rate" className="cursor-pointer">
+          <div className="flex items-center justify-between">
+            <span>Vote Rate</span>
+            {renderSortIcons(
+              'vote_rate',
+              currentSortColumn,
+              currentSortDirection,
+              sortClickState,
+              isLoading,
+              handleSort
+            )}
+          </div>
+        </th>
+      );
+    case 'Jiito Score':
+      return (
+        <th key="jiito-score" className="cursor-pointer">
+          <div className="flex items-center justify-between">
+            <span>Jiito Score</span>
+            {renderSortIcons(
+              'jiito_score',
+              currentSortColumn,
+              currentSortDirection,
+              sortClickState,
+              isLoading,
+              handleSort
+            )}
+          </div>
+        </th>
+      );
+    case 'Inflation Commission':
+      return (
+        <th key="inflation-commission" className="cursor-pointer">
+          <div className="flex items-center justify-between">
+            <span>
+              Inflation
+              <br />
+              Commission
+            </span>
+            {renderSortIcons(
+              'inflation_commission',
+              currentSortColumn,
+              currentSortDirection,
+              sortClickState,
+              isLoading,
+              handleSort
+            )}
+          </div>
+        </th>
+      );
+    case 'MEV Commission':
+      return (
+        <th key="mev-commission" className="cursor-pointer">
+          <div className="flex items-center justify-between">
+            <span>
+              MEV
+              <br />
+              Commission
+            </span>
+            {renderSortIcons(
+              'mev_commission',
+              currentSortColumn,
+              currentSortDirection,
+              sortClickState,
+              isLoading,
+              handleSort
+            )}
+          </div>
+        </th>
+      );
+    case 'Uptime':
+      return (
+        <th key="uptime" className="cursor-pointer">
+          <div className="flex items-center justify-between">
+            <span>Uptime</span>
+            {renderSortIcons(
+              'uptime',
+              currentSortColumn,
+              currentSortDirection,
+              sortClickState,
+              isLoading,
+              handleSort
+            )}
+          </div>
+        </th>
+      );
+    case 'Client/Version':
+      return (
+        <th key="client-version" className="cursor-pointer">
+          <div className="flex items-center justify-between">
+            <span>Client/Version</span>
+            {renderSortIcons(
+              'client_version',
+              currentSortColumn,
+              currentSortDirection,
+              sortClickState,
+              isLoading,
+              handleSort
+            )}
+          </div>
+        </th>
+      );
+    case 'Status SFDP':
+      return (
+        <th key="status-sfdp" className="cursor-pointer">
+          {renderSortIcons(
+            'status_sfdp',
+            currentSortColumn,
+            currentSortDirection,
+            sortClickState,
+            isLoading,
+            handleSort
+          )}
+        </th>
+      );
+    case 'Location':
+      return (
+        <th key="location" className="cursor-pointer">
+          {renderSortIcons(
+            'location',
+            currentSortColumn,
+            currentSortDirection,
+            sortClickState,
+            isLoading,
+            handleSort
+          )}
+        </th>
+      );
+    case 'Awards':
+      return (
+        <th key="awards" className="cursor-pointer">
+          {renderSortIcons(
+            'awards',
+            currentSortColumn,
+            currentSortDirection,
+            sortClickState,
+            isLoading,
+            handleSort
+          )}
+        </th>
+      );
+    case 'Website':
+      return (
+        <th key="website" className="cursor-pointer">
+          {renderSortIcons(
+            'website',
+            currentSortColumn,
+            currentSortDirection,
+            sortClickState,
+            isLoading,
+            handleSort
+          )}
+        </th>
+      );
+    case 'City':
+      return (
+        <th key="city" className="cursor-pointer">
+          {renderSortIcons(
+            'city',
+            currentSortColumn,
+            currentSortDirection,
+            sortClickState,
+            isLoading,
+            handleSort
+          )}
+        </th>
+      );
+    case 'ASN':
+      return (
+        <th key="asn" className="cursor-pointer">
+          {renderSortIcons(
+            'asn',
+            currentSortColumn,
+            currentSortDirection,
+            sortClickState,
+            isLoading,
+            handleSort
+          )}
+        </th>
+      );
+    case 'IP':
+      return (
+        <th key="ip" className="cursor-pointer">
+          {renderSortIcons(
+            'ip',
+            currentSortColumn,
+            currentSortDirection,
+            sortClickState,
+            isLoading,
+            handleSort
+          )}
+        </th>
+      );
+    case 'Jito Score':
+      return (
+        <th key="jito-score" className="cursor-pointer">
+          {renderSortIcons(
+            'jito_score',
+            currentSortColumn,
+            currentSortDirection,
+            sortClickState,
+            isLoading,
+            handleSort
+          )}
+        </th>
+      );
+    default:
+      return null;
+  }
 };
 
 // Shared function to render column cells
