@@ -194,19 +194,20 @@ const ValidatorDataTable: React.FC<ValidatorTableProps> = ({
   };
 
   const renderCellContent = (columnName: string, validator: any) => {
+    console.log(validator)
     switch (columnName) {
       case 'Spy Rank':
         return <ValidatorSpyRank validator={validator} />;
       case 'Avatar':
-        return validator.avatar_url || validator.avatar_file_url ? (
+        return validator.avatar_file_url || validator.avatar_file_url ? (
           <img
-            src={validator.avatar_url || validator.avatar_file_url}
+            src={validator.avatar_file_url}
             alt={validator.name}
             className="w-8 h-8 rounded-full"
           />
         ) : (
           <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-            <span className="text-xs text-gray-500">SP</span>
+            <span className="text-xs text-gray-500">{validator.avatar_file_url}</span>
           </div>
         );
       case 'Name':
