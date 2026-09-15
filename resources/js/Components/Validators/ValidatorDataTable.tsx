@@ -180,7 +180,7 @@ const ValidatorDataTable: React.FC<ValidatorTableProps> = ({
 
       if (!dataFetched) {
         setDataFetched(true);
-        setIsLoading(false)
+        setIsLoading(false);
       }
 
       setSortClickState(null);
