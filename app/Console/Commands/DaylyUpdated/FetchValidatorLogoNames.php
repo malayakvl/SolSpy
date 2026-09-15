@@ -78,6 +78,7 @@ class FetchValidatorLogoNames extends Command
                                 'details'  => $item['info']['details'] ?? null,
                             ];
                             if ($identity === 'A23LfQn6khffj2hGhGfXr6P52W2pxrVcCaHVQLYQgiX2') {
+                                dd(1);exit;
                                 DB::table('data.validators')
                                     ->where('node_pubkey', $identity)
                                     ->update([
