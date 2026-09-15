@@ -157,7 +157,6 @@ const ValidatorDataTable: React.FC<ValidatorTableProps> = ({
     if (showLoader || isPaginationOrSorting) {
       setIsLoading(true);
     }
-
     const urlParams = new URLSearchParams(window.location.search);
     const currentFilterType = urlParams.get('filterType') || 'all';
     const searchParam = urlParams.get('search') || '';
