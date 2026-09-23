@@ -77,18 +77,17 @@ class FetchValidatorLogoNames extends Command
                                 'website'  => $item['info']['website'] ?? null,
                                 'details'  => $item['info']['details'] ?? null,
                             ];
-                            if ($identity === 'A23LfQn6khffj2hGhGfXr6P52W2pxrVcCaHVQLYQgiX2') {
-                                dd(1);exit;
-                                DB::table('data.validators')
-                                    ->where('node_pubkey', $identity)
-                                    ->update([
-                                        'name'       => $item['info']['name'] ?? null,
-                                        'avatar_file_url'   => $item['info']['iconUrl'] ?? null,
-                                        'url'    => $item['info']['website'] ?? null,
-                                        'details'    => $item['info']['details'] ?? null,
-                                        'updated_at' => now(),
-                                    ]);
-                            }
+//                            if ($identity === 'A23LfQn6khffj2hGhGfXr6P52W2pxrVcCaHVQLYQgiX2') {
+//                                DB::table('data.validators')
+//                                    ->where('node_pubkey', $identity)
+//                                    ->update([
+//                                        'name'       => $item['info']['name'] ?? null,
+//                                        'avatar_file_url'   => $item['info']['iconUrl'] ?? null,
+//                                        'url'    => $item['info']['website'] ?? null,
+//                                        'details'    => $item['info']['details'] ?? null,
+//                                        'updated_at' => now(),
+//                                    ]);
+//                            }
                             DB::table('data.validators')
                                 ->where('node_pubkey', $identity)
                                 ->update([
